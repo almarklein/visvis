@@ -22,9 +22,9 @@ The core module that defines the BaseFigure and Axes classes.
 Also helper classes for the Figure and Axes (ObjectPickerHelper, 
 Legend, Axis, etc.) are defined here.
 
-$Author: almar@SAS $
-$Date: 2009-11-23 16:20:59 +0100 (Mon, 23 Nov 2009) $
-$Rev: 1308 $
+$Author$
+$Date$
+$Rev$
 
 """
 

@@ -20,9 +20,9 @@
 
 Helps freezing apps made using visvis.
 
-$Author: almar@SAS $
-$Date: 2009-11-23 11:27:16 +0100 (Mon, 23 Nov 2009) $
-$Rev: 1305 $
+$Author$
+$Date$
+$Rev$
 
 """
 import visvis as vv

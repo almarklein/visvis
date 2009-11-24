@@ -27,9 +27,9 @@ phase of the Visvis drawing system. These coordinates are used in the
 eventual drawing to determine how (and how far) the rays should travel.
 GLSL programs are used for rendering the 3D textures. 
 
-$Author: almar@SAS $
-$Date: 2009-11-23 16:20:59 +0100 (Mon, 23 Nov 2009) $
-$Rev: 1308 $
+$Author$
+$Date$
+$Rev$
 
 """
 

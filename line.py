@@ -24,9 +24,9 @@ with markers. It is the object created with the plot() function.
 The lines are drawn simply with OpenGL lines. The markers are drawn
 with OpenGl points if possible, and using sprites otherwise.
 
-$Author: almar@SAS $
-$Date: 2009-11-23 14:16:31 +0100 (Mon, 23 Nov 2009) $
-$Rev: 1307 $
+$Author$
+$Date$
+$Rev$
 
 """
 

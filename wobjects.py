@@ -22,9 +22,9 @@ All wobjects are inserted in this namespace, thereby providing
 the user with a list of all wobjects. All wobjects are also
 inserted in the root visvis namespace.
 
-$Author: almar@SAS $
-$Date: 2009-11-23 11:27:16 +0100 (Mon, 23 Nov 2009) $
-$Rev: 1305 $
+$Author$
+$Date$
+$Rev$
 
 """
 
