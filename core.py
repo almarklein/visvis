@@ -690,7 +690,8 @@ class BaseFigure(base.Wibject):
                     cam = item._cameras['2d']
                 else:
                     cam = item.axes._cameras['2d']
-                ev.x2d, ev.y2d = cam.ScreenToWorld((ev.x, ev.y))
+                if item.parent: # or screen to world cannot be calculated
+                    ev.x2d, ev.y2d = cam.ScreenToWorld((ev.x, ev.y))
             ev.Fire()
 
 

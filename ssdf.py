@@ -58,6 +58,8 @@ files = dict:
     'two.txt'
     'three.txt'
 
+This file and the ssdf standard are free for all to use.
+Copyright (C) 2009 Almar Klein 
 """
 
 import os, sys
@@ -67,10 +69,19 @@ import re
 
 # try importing numpy
 try:
-    import numpy as np
+    import numpy as np    
 except ImportError:
     np = None
-   
+
+# determine float and int types
+if np:
+    floatTypes = (float, np.float32, np.float64)
+    intTypes = (int, np.int8,  np.int16,  np.int32,  np.int64, 
+                    np.uint8, np.uint16, np.uint32, np.uint64)
+else:
+    floatTypes = (float)
+    intTypes = (int)
+
 # if version 2...
 if sys.version_info[0] <= 2:
     try:
@@ -134,7 +145,7 @@ class Struct(object):
             
             def _getValue(val):
                 "Get the value, as suitable for Struct"                
-                if isinstance(val, (str, unicode, float, int) ):
+                if isinstance(val, (str, unicode) + floatTypes + intTypes ):
                     return val
                 if np and isinstance(val, np.ndarray):
                     return val
@@ -474,9 +485,9 @@ def _toString(name, value, indent):
         
     elif isinstance(value, bool):
         lineObject.line += '%i' % int(value)    
-    elif isinstance(value,int):
+    elif isinstance(value,intTypes):
         lineObject.line += '%i' % int(value)
-    elif isinstance(value,float):
+    elif isinstance(value,floatTypes):
         lineObject.line += '%0.12f' % value
     
     # array types
