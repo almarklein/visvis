@@ -42,10 +42,7 @@ from events import *
 from textRender import FontManager, Text, Label
 from line import MarkerManager, Line, lineStyles
 
-
-print "defining VIS ..."
-
-   
+  
 
 class ObjectPickerHelper(object):
     """ A simple class to help picking of the objects.
