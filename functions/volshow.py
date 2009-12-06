@@ -2,7 +2,7 @@
 
 import visvis as vv
 
-def volshow(vol, clim=None, axes= None):
+def volshow(vol, clim=None, axes=None, renderStyle='mip'):
     """ volshow(vol, clim=None, axes= None)
     Display a 3D image (a volume). The default renderStyle is MIP.
     Returns the Texture3D object.
@@ -15,7 +15,7 @@ def volshow(vol, clim=None, axes= None):
         axes = vv.gca()
     
     # create texture
-    t = vv.Texture3D(axes, vol)
+    t = vv.Texture3D(axes, vol, renderStyle)
     
     # set clim
     if isinstance(clim,list):

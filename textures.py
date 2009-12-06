@@ -46,35 +46,31 @@ from events import *
 from base import Wobject
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 
-
-#import visvis.shading as shading
 import points
 
 
-class Shading:
-    """ Shading class. A single instance of this class should be
-    created, which holds the code for the shading code programs. """
-    def __init__(self):
-        path = getResourceDir()
+def loadShaders():
+    """ Fills the shaders dict with the code, loaded from the glsl files. """
+    path = getResourceDir()
+    shaders = {}
+    for filename in os.listdir(path):
+    
+        # only glsl files
+        if not filename.endswith('.glsl'):
+            continue
         
-        for filename in os.listdir(path):
+        # read code
+        f = open( os.path.join(path, filename) )
+        tekst = f.read()
+        f.close()
         
-            # only glsl files
-            if not filename.endswith('.glsl'):
-                continue
-            
-            # read code
-            f = open( os.path.join(path, filename) )
-            tekst = f.read()
-            f.close()
-            
-            # insert into this namespace
-            varname = filename.rstrip('.glsl')
-            self.__dict__[varname] = tekst
-            #g = globals()
-            #g[varname] = tekst
+        # insert into this namespace
+        varname = filename.rstrip('.glsl').lower()
+        shaders[varname] = tekst
+    return shaders
 
-shading = Shading()
+# load shaders
+shaders = loadShaders()
 
 
 class GlslProgram:
@@ -952,22 +948,26 @@ class Texture2D(BaseTexture):
         1 for minor anti aliasing
         2 for medium anti aliasing
         3 for much anti aliasing
+        a string to chose a shader (to allow home-made shaders)
         """
         def fget(self):
             return self._aa
         def fset(self, value):
             if not value:
                 value = 0
-            self._aa = value
-            if self._aa == 1:
-                self._program1.SetFragmentShader(shading.aa1)
-            elif self._aa == 2:
-                self._program1.SetFragmentShader(shading.aa2)
-            elif self._aa >= 3:
-                self._program1.SetFragmentShader(shading.aa3)
-            else:
-                self._program1.SetFragmentShader(shading.aa0)
-                #self._program1.SetFragmentShader("")
+            if isinstance(value, (int,float)):
+                self._aa = value
+                if self._aa == 1:
+                    self._program1.SetFragmentShader(shaders['aa1'])
+                elif self._aa == 2:
+                    self._program1.SetFragmentShader(shaders['aa1'])
+                elif self._aa >= 3:
+                    self._program1.SetFragmentShader(shaders['aa1'])
+                else:
+                    self._program1.SetFragmentShader(shaders['aa0'])
+                    #self._program1.SetFragmentShader("")
+            elif isinstance(value, basestring) and value in shaders:
+                self._program1.SetFragmentShader(shaders[value])
     
 
 class Texture3D(BaseTexture):
@@ -975,18 +975,18 @@ class Texture3D(BaseTexture):
     three dimensions (a volume).
     """
     
-    def __init__(self, parent, data):
+    def __init__(self, parent, data, renderStyle='mip'):
         BaseTexture.__init__(self, parent, data)
         
         self._textype = gl.GL_TEXTURE_3D
         
         # init render style
-        self._renderStyle = 'mip'
-        self._program1.SetFragmentShader(shading.mip)
+        self._renderStyle = renderStyle
+        self._program1.SetFragmentShader(shaders[self._renderStyle])
         self._isoThreshold = 0.0
         
         # for backfacing texture coords
-        self._program2.SetFragmentShader(shading.coord3d)
+        self._program2.SetFragmentShader(shaders['coord3d'])
         self._coordHelper = CoordBackFaceHelper()
 
 
@@ -1196,24 +1196,23 @@ class Texture3D(BaseTexture):
         def fget(self):
             return self._renderStyle
         def fset(self, style):            
-            style = style.lower()            
-            if style in ['mip']:
+            style = style.lower()
+            # first try directly
+            if style in shaders:
                 self._renderStyle = style
-                self._program1.SetFragmentShader(shading.mip)
+                self._program1.SetFragmentShader(shaders[style])
+            # then try aliases
+            elif style in ['mip']:
+                self._renderStyle = 'mip'
+                self._program1.SetFragmentShader(shaders['mip'])
             elif style in ['iso', 'isosurface']:
-                self._renderStyle = style
-                self._program1.SetFragmentShader(shading.isosurface)
-            elif style in ['coord3d', 'coord']:
-                self._renderStyle = style
-                self._program1.SetFragmentShader(shading.coord3d)
-            elif style in ['oldmip']:
-                self._renderStyle = style
-                self._program1.SetFragmentShader(shading.oldmip)
+                self._renderStyle = 'isosurface'
+                self._program1.SetFragmentShader(shaders['isosurface'])
             elif style in ['ray', 'rays', 'raycasting']:
-                self._renderStyle = style
-                self._program1.SetFragmentShader(shading.raycasting1)
+                self._renderStyle = 'raycasting1'
+                self._program1.SetFragmentShader(shaders['raycasting1'])
             else:
-                print "Unknown render style in Texture3d.SetRenderstyle."
+                print "Unknown render style in Texture3d.renderstyle."
 
     @Property
     def isoThreshold():
