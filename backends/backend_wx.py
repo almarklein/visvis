@@ -253,8 +253,7 @@ class Figure(BaseFigure):
         app.ProcessPendingEvents()
         while app.ProcessIdle():
            pass
-        
-        
+
 
 class FigureFrame(wx.Frame):
     """ Define a Frame. This is only to be able to tell whether
@@ -275,9 +274,9 @@ def newFigure():
 class App:
     """ Application instance of wx app, with a visvis API. """
     def __init__(self):
-        # try obtaining the existing app if possible, else create new.
+        # try obtaining the existing app if possible, else create new.        
         self._app = wx.GetApp()
         if self._app is None:
-            self._app = wx.App()
+            self._app = wx.PySimpleApp()
     def run(self):
         wx.GetApp().MainLoop()

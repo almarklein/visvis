@@ -11,7 +11,8 @@ def figure(nr=None):
     
     # check if backends are loaded
     if not backends.newFigure:
-        backends.loadBackend()
+        be = backends.loadBackend()
+        backends.use(be)
     
     # get function to create new figure
     newFigure = backends.newFigure[0]

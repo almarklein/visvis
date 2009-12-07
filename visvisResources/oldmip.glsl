@@ -62,6 +62,7 @@ void main()
     // normalize ray to unit length
     ray = normalize(ray);
     
+    /* When only drawing frontfacing, this is not required
     // If I would take one step, am I still inside my volume?
     // If not, discard this fragment
     vec3 oneStep = edgeLoc + 0.0001*ray;
@@ -76,6 +77,7 @@ void main()
         //return;
         discard;
     }
+    */
     
     // correct ray for data size and daspect
     // correct for aspect twice as we probably have to correct the other

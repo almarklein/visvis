@@ -67,6 +67,7 @@ $Rev$
 """
 
 import os, sys
+import visvis
 from visvis.misc import isFrozen
 
 # The order in which to try loading a backend
@@ -149,6 +150,8 @@ def loadBackend():
             newFigure.pop()      
         newFigure.append( module.newFigure )
         appClass.append( module.App )
+        # return backend name
+        return be
 
 
 def App(backendName):
@@ -180,12 +183,11 @@ def App(backendName):
         backendOrder.remove(backendName)
     backendOrder.insert(0,backendName)
     
-    # load it and check
-    loadBackend()
-    name2 = testLoaded()
+    # load it and check    
+    name2 = loadBackend()
     if not name2 and not isFrozen():
         print 'Warning: no backend could be loaded. Install PyQt4 or wxPython' 
-    elif testLoaded() != backendName:
+    elif name2 != backendName:
         print 'warning, could not load requested backend, loaded %s instead' % name2
     
     # return instance

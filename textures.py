@@ -471,12 +471,19 @@ class MixTexture(object):
         gl.glActiveTexture( gl.GL_TEXTURE0 )
     
     
-    def __del__(self):
+    def _DestroyTexture(self):
         try:
-            gl.glDeleteTextures([self._texId])
+            if self._texId > 0:
+                gl.glDeleteTextures([self._texId])
         except Exception:
             pass
+        self._texId = 0
     
+    
+    def __del__(self):
+        self._DestroyTexture()
+
+
 
 class CoordBackFaceHelper(MixTexture):
     """ A helper class to store the texture coordinates of the backfaces
@@ -492,12 +499,12 @@ class CoordBackFaceHelper(MixTexture):
         """
         # delete if exist
         # todo: If possible, don't do this
-        if self._texId>0 or gl.glIsTexture(self._texId):
-            try:
-                gl.glDeleteTextures([self._texId])
-                self._texId = 0
-            except Exception:
-                pass
+        # todo: the width and height can only be 2**m+2b when not version 2.0
+        # so this function should not be called when opengl 2.0 is not 
+        # available. Well, no textures can be rendered at all when not having
+        # version 2.0...
+#         if self._texId>0 or gl.glIsTexture(self._texId):            
+#             self._DestroyTexture()
         
         # create if it does not exist
         if self._texId==0 or not gl.glIsTexture(self._texId):
@@ -623,17 +630,14 @@ class BaseTexture(Wobject, MixTexture):
     
     def _OnDestroyOpenGlTexture(self):    
         """ Destroy texture, delete the texture from OpenGL memory. """
-        #print "Destroying texture (", self, "), ", 
-        if self._texId > 0:
-            try:
-                gl.glDeleteTextures([self._texId])
-                self._program1.Clear()
-                self._program2.Clear()
-                #print "texture destroyed",
-            except Exception:
-                pass
-            self._texId = 0
-        #print ""
+        # remove texture from opengl memory
+        self._DestroyTexture()
+        # disable shaders
+        self._program1.Clear()
+        self._program2.Clear()
+        # remove coordHelper's texture from memory
+        if hasattr(self, '_coordHelper'):
+            self._coordHelper._DestroyTexture()
     
     
     def OnDestroy(self):
