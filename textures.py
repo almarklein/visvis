@@ -491,9 +491,41 @@ class CoordBackFaceHelper(MixTexture):
     
     def __init__(self):
         MixTexture.__init__(self)
-        self._textype = gl.GL_TEXTURE_2D
+        self._textype = gl.GL_TEXTURE_1D
     
     def CaptureScreen(self):
+        # create if it does not exist
+        if self._texId==0 or not gl.glIsTexture(self._texId):
+            self._DestroyTexture() # todo: buffer again
+        
+        # make texture
+        self._texId = gl.glGenTextures(1)
+        
+        # bind to texture
+        gl.glBindTexture(self._textype, self._texId)
+        
+        # determine rectangle to sample        
+        xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
+        x,y,w,h = xywh[0], xywh[1], xywh[2], xywh[3]
+        
+        # make screenshot
+        gl.glReadBuffer(gl.GL_BACK)
+        im = gl.glReadPixels(x, y, w, h, gl.GL_RGBA, gl.GL_FLOAT)
+        im.shape = w*h, 4
+        im = im.copy()
+        
+        # upload
+        #gl.glTexSubImage1D(gl.GL_TEXTURE_1D, 0, 
+        #        0, h*w, gl.GL_RGBA, gl.GL_FLOAT, im)
+        gl.glTexImage1D(gl.GL_TEXTURE_1D, 0, gl.GL_RGBA, 
+                w*h, 0, gl.GL_RGBA, dtypes[im.dtype.name], im)
+                
+        tmp = gl.GL_NEAREST #gl.GL_LINEAR
+        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MIN_FILTER, tmp)
+        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MAG_FILTER, tmp)
+        
+        
+    def CaptureScreen2(self):
         """ Capture the screen of the backbuffer. It should
         contain texture coordinates coded in the R,G,B channels.
         """
@@ -511,7 +543,7 @@ class CoordBackFaceHelper(MixTexture):
             self._texId = gl.glGenTextures(1)
         
         # bind to texture
-        gl.glBindTexture(gl.GL_TEXTURE_2D, self._texId)
+        gl.glBindTexture(self._textype, self._texId)
         
         # determine rectangle to sample        
         xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
@@ -519,12 +551,14 @@ class CoordBackFaceHelper(MixTexture):
         
         # read texture!
         gl.glReadBuffer(gl.GL_BACK)
-        gl.glCopyTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, 
+        gl.glCopyTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA32F, 
             x, y, w, h, 0)
+        # found a post that must be gl.GL_RGBA32F in order to use it in
+        # a vertex shader. First used gl.GL_RGBA
         
         # Set interpolation parameters. Use linear such that the proper
         # coordinate is sampled even though the coords are stored in 8 bits.
-        tmp = gl.GL_LINEAR
+        tmp = gl.GL_NEAREST #gl.GL_LINEAR
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, tmp)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp)
         
@@ -988,6 +1022,7 @@ class Texture3D(BaseTexture):
         
         # init render style
         self._renderStyle = renderStyle
+        #self._program1.SetVertexShader(shaders['raydefine.vertex'])
         self._program1.SetFragmentShader(shaders[self._renderStyle])
         self._isoThreshold = 0.0
         
@@ -995,7 +1030,8 @@ class Texture3D(BaseTexture):
         self._program2.SetFragmentShader(shaders['coord3d'])
         self._coordHelper = CoordBackFaceHelper()
         self._colormap = Colormap()
-    
+        
+        
     
     def _TexUpload(self):
         """ Upload the texture in OpenGL memory.
@@ -1065,6 +1101,13 @@ class Texture3D(BaseTexture):
         # get viewport
         xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
         
+        # Prepare by setting things to their defaults
+        gl.glPointSize(1)
+        gl.glLineWidth(1)
+        gl.glDisable(gl.GL_LINE_STIPPLE)
+        gl.glDisable(gl.GL_LINE_SMOOTH)
+        gl.glDisable(gl.GL_POINT_SMOOTH)
+        
         # only draw front-facing parts
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glCullFace(gl.GL_BACK)
@@ -1110,6 +1153,9 @@ class Texture3D(BaseTexture):
         self._coordHelper._TexDisable()
         self._colormap._TexDisable()
         gl.glDisable(gl.GL_CULL_FACE)
+        
+        gl.glEnable(gl.GL_LINE_SMOOTH)
+        gl.glEnable(gl.GL_POINT_SMOOTH)
     
     
     def _DrawQuads(self):
@@ -1280,7 +1326,8 @@ class Colormap(MixTexture):
         self._textype = gl.GL_TEXTURE_1D
         
         #self._default = [(0,0,0), (1,0,0), (0,1,0), (0,0,1), (1,1,1)]
-        self._default = [(0,0,0), (1,1,1)]
+        self._default = [(1,0,0), (0,1,0), (0,0,1)]
+        #self._default = [(0,0,0), (1,1,1)]
     
     def _Create(self, data):
         """ Create the texture. """
@@ -1300,8 +1347,8 @@ class Colormap(MixTexture):
         internalformat, format = gl.GL_RGBA, gl.GL_RGBA
         gltype = dtypes[data.dtype.name]
         gl.glTexImage1D(gl.GL_TEXTURE_1D, 0, internalformat, 
-                data.size, 0, format, gltype, data)
-        
+                data.shape[0], 0, format, gltype, data)
+        print data.shape
         # set interpolation and extrapolation parameters            
         tmp = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
         gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MIN_FILTER, tmp)
@@ -1356,13 +1403,13 @@ class Colormap(MixTexture):
         
         # apply
         if data is not None:   
-            # interpolate first
-            #step = (data.shape[0]-1) / 1.0
-            x = np.linspace(0.0 ,1.0, 256)
-            xp = np.linspace(0.0, 1.0, data.shape[0])            
-            data2 = np.zeros((256,4),np.float32)
-            for i in range(3):
-                data2[:,i] = np.interp(x, xp, data[:,i])
-            # create texture
-            self._Create(data2)
+#             # interpolate first
+#             #step = (data.shape[0]-1) / 1.0
+#             x = np.linspace(0.0 ,1.0, 256)
+#             xp = np.linspace(0.0, 1.0, data.shape[0])            
+#             data2 = np.zeros((256,4),np.float32)
+#             for i in range(3):
+#                 data2[:,i] = np.interp(x, xp, data[:,i])
+#             # create texture
+            self._Create(data)
     

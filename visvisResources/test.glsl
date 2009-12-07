@@ -1,9 +1,9 @@
 // the textures
 uniform sampler3D texture; 
-uniform sampler2D backCoords;
+//uniform sampler2D backCoords; // not used
 
-// viewport so we can translate the coordinates...
-uniform vec4 viewport;
+// ratio to tune the number of steps
+uniform float stepRatio;
 
 // the dimensions of the data, to determine stepsize (nx, ny, nz)
 uniform vec3 shape;
@@ -11,31 +11,22 @@ uniform vec3 shape;
 // for window level and window width
 uniform vec2 scaleBias;
 
-// ratio to tune the number of steps
-uniform float stepRatio;
-
+// varyings received from vertex shader
+//varying vec3 totalray;
+//varying float nsteps;
+varying vec3 edgeLoc1;
+varying vec3 edgeLoc2;
 
 void main()
-{    
+{ 
+    //vec3 totalray=vec3(1.0, 1.0, 1.0);
+    //float nsteps = 100.0;
     
     // get current pixel location
-    vec3 edgeLoc1 = vec3(gl_TexCoord[0]);
-    
-    // get normalized screenpos
-    vec2 fragCord = gl_FragCoord.xy;//vec2(0.1,0.1); // gl_FragCoord TODO
-    vec2 screenpos = vec2( (fragCord[0]-viewport[0])/viewport[2], 
-                           (fragCord[1]-viewport[1])/viewport[3] );
-    
-    // get texture coordinate of back face TODO
-    vec3 edgeLoc2 = texture2D( backCoords, screenpos ).rgb;
-    //vec3 edgeLoc2 = vec4(0.1,0.1,0.1,1.0).rgb;
+    //vec3 edgeLoc1 = vec3(gl_TexCoord[0]);
     
     // get vector pointing from front to back (total ray)
     vec3 totalray = edgeLoc2 - edgeLoc1;
-    
-    // uncomment to visualize underlying texture...
-    //gl_FragColor = vec4(edgeLoc2.x, edgeLoc2.y, 0.5, 1.0);
-    //return;
     
     // Calculate amount of steps required
     // The method is surprisingly simple. If you'd do pytagoras, you would
@@ -44,14 +35,14 @@ void main()
     // a very suitable amount of steps results.
     float nf = ( abs(shape[0]*totalray[0]) + abs(shape[1]*totalray[1]) 
                 + abs(shape[2]*totalray[2]) );
-    int n = int( nf * stepRatio );
+    int n = int(nf * stepRatio);
     
     // limit (or only a partial volume will be shown)
     if (n>256)    
         n = 256;
     
     // calculate ray
-    vec3 ray = totalray / float(n);
+    vec3 ray = totalray / float(n); // todo: replace with nsteps
     
     // init value
     float maxval = 0.0;
