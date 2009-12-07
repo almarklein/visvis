@@ -497,14 +497,14 @@ class CoordBackFaceHelper(MixTexture):
         """ Capture the screen of the backbuffer. It should
         contain texture coordinates coded in the R,G,B channels.
         """
-        # delete if exist
-        # todo: If possible, don't do this
+#         # delete if exist                
+#         if self._texId>0 or gl.glIsTexture(self._texId):            
+#             self._DestroyTexture()
+
         # todo: the width and height can only be 2**m+2b when not version 2.0
         # so this function should not be called when opengl 2.0 is not 
         # available. Well, no textures can be rendered at all when not having
         # version 2.0...
-#         if self._texId>0 or gl.glIsTexture(self._texId):            
-#             self._DestroyTexture()
         
         # create if it does not exist
         if self._texId==0 or not gl.glIsTexture(self._texId):
@@ -638,6 +638,8 @@ class BaseTexture(Wobject, MixTexture):
         # remove coordHelper's texture from memory
         if hasattr(self, '_coordHelper'):
             self._coordHelper._DestroyTexture()
+        if hasattr(self, '_colormap'):
+            self._colormap._DestroyTexture()
     
     
     def OnDestroy(self):
@@ -992,8 +994,9 @@ class Texture3D(BaseTexture):
         # for backfacing texture coords
         self._program2.SetFragmentShader(shaders['coord3d'])
         self._coordHelper = CoordBackFaceHelper()
-
-
+        self._colormap = Colormap()
+    
+    
     def _TexUpload(self):
         """ Upload the texture in OpenGL memory.
         """
@@ -1078,6 +1081,8 @@ class Texture3D(BaseTexture):
         self._program1.SetUniformi('texture', [0])
         self._coordHelper._TexEnable(1)
         self._program1.SetUniformi('backCoords', [1])
+        self._colormap._TexEnable(2)
+        self._program1.SetUniformi('colormap', [2])
         
         # set uniforms: parameters
         self._program1.SetUniformf('shape',reversed(list(self._shape)) )
@@ -1103,6 +1108,7 @@ class Texture3D(BaseTexture):
         self._program1.Disable()
         self._TexDisable()
         self._coordHelper._TexDisable()
+        self._colormap._TexDisable()
         gl.glDisable(gl.GL_CULL_FACE)
     
     
@@ -1260,6 +1266,103 @@ class Texture3D(BaseTexture):
         self._TexDisable()        
         gl.glDisable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_DEPTH_TEST)
-        
-        
 
+
+class Colormap(MixTexture):
+    """ A colormap represents a table of colours to map
+    grayscale data.
+    """
+    # Note that the OpenGL imaging subset also implements a colormap,
+    # but it is not guaranteed that the subset is available.
+    
+    def __init__(self):
+        MixTexture.__init__(self)
+        self._textype = gl.GL_TEXTURE_1D
+        
+        #self._default = [(0,0,0), (1,0,0), (0,1,0), (0,0,1), (1,1,1)]
+        self._default = [(0,0,0), (1,1,1)]
+    
+    def _Create(self, data):
+        """ Create the texture. """
+        
+        # first clean up
+        self._DestroyTexture()
+        
+        # generate texture id
+        self._texId = gl.glGenTextures(1)
+        
+        # bind the texture
+        gl.glBindTexture(gl.GL_TEXTURE_1D, self._texId)
+        
+        # todo: we could upload new data rather than creating it anew.
+        
+        # upload
+        internalformat, format = gl.GL_RGBA, gl.GL_RGBA
+        gltype = dtypes[data.dtype.name]
+        gl.glTexImage1D(gl.GL_TEXTURE_1D, 0, internalformat, 
+                data.size, 0, format, gltype, data)
+        
+        # set interpolation and extrapolation parameters            
+        tmp = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
+        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MIN_FILTER, tmp)
+        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MAG_FILTER, tmp)
+        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
+    
+    
+    def _TexEnable(self, texUnit=0):
+        """ Enable the texture. """
+        # make sure it exists
+        if self._texId==0 or not gl.glIsTexture(self._texId):
+            self.Setmap(self._default)
+        
+        # do as normal
+        return MixTexture._TexEnable(self, texUnit)
+    
+    
+    def Setmap(self, *args):
+        """ Setmap(self, (r,g,b), (r,g,b), (r,g,b)), or
+        Setmap(self, [(r,g,b), (r,g,b), (r,g,b)])
+        Set the colormap data. 
+        For now, only accepts lists of lists (or tuples).
+        """
+        
+        # one argument given?
+        if len(args)==1:
+            args = args[0]
+        
+        # init
+        data = None
+        
+        # parse input
+        if isinstance(args, (tuple, list)):
+            data = np.zeros((len(args),4), dtype=np.float32)
+            data[:,3] = 1.0 # init alpha to be all ones
+            count = -1
+            for el in args:
+                count += 1
+                if not hasattr(el,'__len__') or len(el) not in [3,4]:
+                    raise ValueError('Colormap entries must have 3 or 4 elements.')
+                elif len(el)==3:
+                    data[count,0] = el[0]
+                    data[count,1] = el[1]
+                    data[count,2] = el[2]
+                elif len(el)==4:
+                    data[count,0] = el[0]
+                    data[count,1] = el[1]
+                    data[count,2] = el[2]
+                    data[count,3] = el[3]
+        else:
+            raise ValueError("Sory, only accepts lists or tuples for now.")
+        
+        # apply
+        if data is not None:   
+            # interpolate first
+            #step = (data.shape[0]-1) / 1.0
+            x = np.linspace(0.0 ,1.0, 256)
+            xp = np.linspace(0.0, 1.0, data.shape[0])            
+            data2 = np.zeros((256,4),np.float32)
+            for i in range(3):
+                data2[:,i] = np.interp(x, xp, data[:,i])
+            # create texture
+            self._Create(data2)
+    

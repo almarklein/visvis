@@ -1,7 +1,8 @@
 
 // the texture
-uniform sampler3D texture; // I think this works because its 0 by default
-uniform sampler2D backCords; // I think this works because its 0 by default
+uniform sampler3D texture;
+uniform sampler2D backCords;
+uniform sampler1D colormap;
 
 // the dimensions and data aspect of the data, to determine stepsize
 uniform vec3 shape;
@@ -144,7 +145,12 @@ void main()
     }
     
     // finaly, apply window-level window-width
-    gl_FragColor = ( gl_FragColor + scaleBias[1] ) * scaleBias[0];    
+    maxval = ( maxval + scaleBias[1] ) * scaleBias[0];    
+    //gl_FragColor = vec4(maxval, maxval, maxval, 1.0);
+    
+    // apply colormap
+    gl_FragColor = texture1D( colormap, maxval );
+    
     
     // apply a depth?
     //gl_FragDepth = 2.0

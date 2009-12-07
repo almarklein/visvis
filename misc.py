@@ -373,15 +373,6 @@ class Position(object):
         return self._y + self._h
     
 
-class Colormap(object):
-    """ A colormap represents a table of colours to map
-    grayscale data. """
-    # Note that the OpenGL imaging subset also implements a colormap,
-    # But it is not guaranteed that the subset is available.
-    
-    def __init__(self):
-        pass
-
 
 ## Transform classes for wobjects
 
