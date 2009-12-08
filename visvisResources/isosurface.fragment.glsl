@@ -1,54 +1,83 @@
-// the textures
-uniform sampler3D texture; 
-uniform sampler2D backCoords;
+/* Fragment shader for isosurface rendering.
+ * The ray is cast through the volume until it encounters a user-defined
+ * threshold. At that point, the surface normals are calculated to 
+ * produce some lighting effects.
+ *
+ * Currently this renderer is merely a proof of concept; it doesn't look
+ * very nice. I haven't read the chapter on lighting in my OpenGl book 
+ * yet. Will work on this in the future.
+ *
+ * This file is part of Visvis.
+ * Copyright 2009 Almar Klein
+ */
 
-// viewport so we can translate the coordinates...
-uniform vec4 viewport;
+// idea: use the upper or lower value of clim as the threshold?
 
-// the dimensions of the data, to determine stepsize (nx, ny, nz)
+// the 3D texture
+uniform sampler3D texture;
+
+// the dimensions of the data, to determine stepsize
 uniform vec3 shape;
 
-// for window level and window width
-uniform vec2 scaleBias;
-
-// ratio to tune the number of steps
-uniform float stepRatio;
+// varying calculated by vertex shader
+varying vec3 ray;
 
 // threshold
 uniform float th;
 
 
+float d2P(vec3 p, vec3 d, vec4 P)
+{
+    // calculate the distance of a point p to a plane P along direction d.
+    // plane P is defined as ax + by + cz = d    
+    // line is defined as two points on that line
+    
+    // calculate nominator and denominator
+    float nom = -( dot(P.rgb,p) - P.a );
+    float denom =  dot(P.rgb,d);
+    // determine what to return
+    if (nom*denom<=0.0)
+       return 9999999.0; // if negative, or ON the plane, return ~inf
+    else
+        return nom / denom; // return normally
+}
+
+vec4 getRayAndSteps(vec3 edgeLoc)
+{
+    // Given the start pos, returns a corrected version of the ray
+    // and the number of steps combined in a vec4.
+    
+    // Check for all six planes how many rays fit from the start point.
+    // Take the minimum value (not counting negative and 0).
+    float smallest = 9999999.0;
+    smallest = min(smallest, d2P(edgeLoc, ray, vec4(1.0, 0.0, 0.0, 0.0)));
+    smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 1.0, 0.0, 0.0)));
+    smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 0.0, 1.0, 0.0)));
+    smallest = min(smallest, d2P(edgeLoc, ray, vec4(1.0, 0.0, 0.0, 1.0)));
+    smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 1.0, 0.0, 1.0)));
+    smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 0.0, 1.0, 1.0)));
+    
+    // determine amount of steps and correct ray
+    vec4 result;
+    float n = ceil(smallest);
+    result.xyz = ray * (smallest/n);
+    result[3] = n;
+    
+    // done
+    return result;
+}
+
+
 void main()
 {    
     
-    // get current pixel location
-    vec3 edgeLoc1 = vec3(gl_TexCoord[0]);
+    // Get current pixel location.
+    vec3 edgeLoc = vec3(gl_TexCoord[0]);
     
-    // get normalized screenpos
-    vec2 screenpos = vec2( (gl_FragCoord.x-viewport[0])/viewport[2], 
-                           (gl_FragCoord.y-viewport[1])/viewport[3] );
-    
-    // get texture coordinate of back face
-    vec3 edgeLoc2 = texture2D( backCoords, screenpos ).rgb;
-    
-    // get vector pointing from front to back (total ray)
-    vec3 totalray = edgeLoc2 - edgeLoc1;
-    
-    // uncomment to visualize underlying texture...
-    //gl_FragColor = vec4(edgeLoc2.x, edgeLoc2.y, 0.5, 1.0);
-    //return;
-    
-    // Calculate amount of steps required
-    // The method is surprisingly simple. If you'd do pytagoras, you would
-    // want to reduce the stepsize for rays that are not straigh (the less
-    // straight the smaller the steps). By simpy adding the values instead,
-    // a very suitable amount of steps results.
-    float nf = ( abs(shape[0]*totalray[0]) + abs(shape[1]*totalray[1]) 
-                + abs(shape[2]*totalray[2]) );
-    int n = int( nf * stepRatio );
-    
-    // calculate ray
-    vec3 ray = totalray / float(n);
+    // Get ray and steps.
+    vec4 tmp4 = getRayAndSteps(edgeLoc);
+    vec3 ray2 = tmp4.xyz;
+    int n = int(tmp4[3]);
     
     // calculate step
     vec3 step = 1.0 / shape;
@@ -68,7 +97,7 @@ void main()
     for (int i=0; i<n; i++)
     {
         // calculate location        
-        vec3 loc = edgeLoc1 + float(i) * ray;
+        vec3 loc = edgeLoc + float(i) * ray2;
         
         // sample value (avoid if statements)
         float val = texture3D( texture, loc )[0];        
@@ -104,7 +133,7 @@ void main()
                     gl_FrontMaterial.diffuse * lambert;
                 /*
                 // specular does not really work yet
-                vec3 E = normalize(ray);
+                vec3 E = normalize(ray2);
                 vec3 R = reflect(-L, N);
                 float specular = pow( max(dot(R, E), 0.0), 
                     gl_FrontMaterial.shininess );

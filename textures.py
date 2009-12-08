@@ -50,11 +50,14 @@ import points
 
 
 def loadShaders():
-    """ Fills the shaders dict with the code, loaded from the glsl files. """
+    """ load shading code from the files in the resource dir.
+    Returns two dicts with the vertex and fragment shaders, 
+    respectively. """
     path = getResourceDir()
-    shaders = {}
+    vshaders = {}
+    fshaders = {}
     for filename in os.listdir(path):
-    
+        
         # only glsl files
         if not filename.endswith('.glsl'):
             continue
@@ -65,12 +68,17 @@ def loadShaders():
         f.close()
         
         # insert into this namespace
-        varname = filename.rstrip('.glsl').lower()
-        shaders[varname] = tekst
-    return shaders
+        if filename.endswith('.vertex.glsl'):
+            varname = filename[:-12].lower()
+            vshaders[varname] = tekst
+        elif filename.endswith('.fragment.glsl'):
+            varname = filename[:-14].lower()
+            fshaders[varname] = tekst
+    
+    return vshaders, fshaders
 
 # load shaders
-shaders = loadShaders()
+vshaders, fshaders = loadShaders()
 
 
 class GlslProgram:
@@ -998,16 +1006,21 @@ class Texture2D(BaseTexture):
             if isinstance(value, (int,float)):
                 self._aa = value
                 if self._aa == 1:
-                    self._program1.SetFragmentShader(shaders['aa1'])
+                    self._program1.SetFragmentShader(fshaders['aa1'])
                 elif self._aa == 2:
-                    self._program1.SetFragmentShader(shaders['aa1'])
+                    self._program1.SetFragmentShader(fshaders['aa1'])
                 elif self._aa >= 3:
-                    self._program1.SetFragmentShader(shaders['aa1'])
+                    self._program1.SetFragmentShader(fshaders['aa1'])
                 else:
-                    self._program1.SetFragmentShader(shaders['aa0'])
+                    self._program1.SetFragmentShader(fshaders['aa0'])
                     #self._program1.SetFragmentShader("")
-            elif isinstance(value, basestring) and value in shaders:
-                self._program1.SetFragmentShader(shaders[value])
+            elif isinstance(value, basestring):
+                if value in fshaders:
+                    self._program1.SetFragmentShader(fshaders[value])
+                else:
+                    print "Texture2D.aa: unknown shader, no action taken."
+            else:
+                raise ValueError("Texture2D.aa accepts integer or string.")
     
 
 class Texture3D(BaseTexture):
@@ -1020,14 +1033,17 @@ class Texture3D(BaseTexture):
         
         self._textype = gl.GL_TEXTURE_3D
         
-        # init render style
-        self._renderStyle = renderStyle
-        self._program1.SetVertexShader(shaders['raydefine2.vertex'])
-        self._program1.SetFragmentShader(shaders[self._renderStyle])
+        # init render style        
+        self._program1.SetVertexShader(vshaders['calculateray'])
+        #self._program1.SetFragmentShader(fshaders[self._renderStyle])
+        self._renderStyle = ''
+        self.renderStyle = renderStyle
+        if not self._renderStyle:
+            self.renderStyle = 'mip'
         self._isoThreshold = 0.0
         
         # for backfacing texture coords
-        self._program2.SetFragmentShader(shaders['coord3d'])
+        self._program2.SetFragmentShader(fshaders['coord3d'])
         self._coordHelper = CoordBackFaceHelper()
         self._colormap = Colormap()
         
@@ -1098,10 +1114,11 @@ class Texture3D(BaseTexture):
         """ Draw the texture.
         """
         
-        # get viewport
-        xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        
-        # Prepare by setting things to their defaults
+        # Prepare by setting things to their defaults. This might release some
+        # memory so result in a bigger chance that the shader is run in 
+        # hardware mode. On ATI, the line and point smoothing should be off
+        # if you want to use gl_FragCoord. (Yeah, I do not see the connection
+        # either...)
         gl.glPointSize(1)
         gl.glLineWidth(1)
         gl.glDisable(gl.GL_LINE_STIPPLE)
@@ -1122,26 +1139,23 @@ class Texture3D(BaseTexture):
         # enable the texture- and help-textures                
         self._TexEnable(0)
         self._program1.SetUniformi('texture', [0])
-        self._coordHelper._TexEnable(1)
-        self._program1.SetUniformi('backCoords', [1])
+        #self._coordHelper._TexEnable(1)
+        #self._program1.SetUniformi('backCoords', [1])
         self._colormap._TexEnable(2)
         self._program1.SetUniformi('colormap', [2])
         
         # set uniforms: parameters
         self._program1.SetUniformf('shape',reversed(list(self._shape)) )
-        daspect = [abs(i) for i in self.axes.daspect]        
-        self._program1.SetUniformf('daspect', daspect)
         ran = self._climRef.range
         if ran==0:
             ran = 1.0
         th = (self._isoThreshold - self._climRef.min ) / ran
         self._program1.SetUniformf('th', [th]) # in 0:1
         if fast:
-            self._program1.SetUniformf('stepRatio', [0.4])
+            self._program1.SetUniformf('stepRatio', [0.3])
         else:
             self._program1.SetUniformf('stepRatio', [1.0])
         self._program1.SetUniformf('scaleBias', self._ScaleBias_get())        
-        self._program1.SetUniformf('viewport', xywh)
         
         # do the actual drawing
         self._DrawQuads()
@@ -1254,19 +1268,19 @@ class Texture3D(BaseTexture):
         def fset(self, style):            
             style = style.lower()
             # first try directly
-            if style in shaders:
+            if style in fshaders:
                 self._renderStyle = style
-                self._program1.SetFragmentShader(shaders[style])
+                self._program1.SetFragmentShader(fshaders[style])
             # then try aliases
             elif style in ['mip']:
                 self._renderStyle = 'mip'
-                self._program1.SetFragmentShader(shaders['mip'])
+                self._program1.SetFragmentShader(fshaders['mip'])
             elif style in ['iso', 'isosurface']:
                 self._renderStyle = 'isosurface'
-                self._program1.SetFragmentShader(shaders['isosurface'])
+                self._program1.SetFragmentShader(fshaders['isosurface'])
             elif style in ['ray', 'rays', 'raycasting']:
-                self._renderStyle = 'raycasting1'
-                self._program1.SetFragmentShader(shaders['raycasting1'])
+                self._renderStyle = 'raycasting'
+                self._program1.SetFragmentShader(fshaders['raycasting'])
             else:
                 print "Unknown render style in Texture3d.renderstyle."
 

@@ -31,6 +31,7 @@ $Rev$
 import OpenGL.GL as gl
 import OpenGL.GLU as glu
 
+import time
 from points import Point, Pointset
 import numpy as np
 
@@ -244,6 +245,7 @@ class BaseFigure(base.Wibject):
         self._drawTimer = Timer(self, 10, oneshot=True)
         self._drawTimer.Bind(self.OnDraw)
         self._drawTimer.fast = False
+        self._drawtime = time.time() # to calculate fps
     
     @property
     def eventMouseUp(self):
@@ -511,6 +513,11 @@ class BaseFigure(base.Wibject):
         if self._isdestroyed:           
             return
         
+        # calculate fps
+        dt = time.time() - self._drawtime
+        self._drawtime = time.time()
+        #print 'FPS: ', 1.0/dt  # for testing
+        
         # get fast
         fast = self._drawTimer.fast
         
@@ -528,7 +535,7 @@ class BaseFigure(base.Wibject):
         self._pickerHelper.AssignIds(self)
         
         # let 3D textures draw the coordinates of their back-faces
-        self._Draw('pre')
+        #self._Draw('pre')
         
         # draw shape (to backbuffer)
         self._Draw('shape')        

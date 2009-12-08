@@ -319,19 +319,20 @@ class TwoDCamera(BaseCamera):
         gl.glOrtho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy,
                     -100000.0, 100000.0 )
         
+        # Prepare for models ...
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glLoadIdentity()
+        
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
         daspect = self.axes.daspect        
-        gl.glScale( daspect[0], daspect[1] , daspect[2] )
+        gl.glScale( daspect[0], daspect[1], daspect[2] )
         
         # 1. Translate to view location (coordinate where we look at). 
         # Do this first because otherwise the translation is not in world 
         # coordinates.
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], 0.0)
-        
-        # Prepare for models ...
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
-        
+    
+
 
 
 class PolarCamera(TwoDCamera):
@@ -534,6 +535,12 @@ class PolarCamera(TwoDCamera):
         tmp = self.view_az
         gl.glRotate(-tmp, 0.0, 0.0, 1.0)
         
+        # Above is the projection stuff. For the rest, we use the
+        # modelview matrix. This way, the rays to render 3D data can
+        # be calculated easierst and most natural.
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glLoadIdentity()
+        
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
         daspect = self.axes.daspect        
         gl.glScale( daspect[0], daspect[1] , daspect[2] )
@@ -542,9 +549,7 @@ class PolarCamera(TwoDCamera):
         # the translation is not in world coordinates.
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], -self.view_loc[2])
         
-        # Prepare for models ...
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
+        
 
 
 class FlyCamera(PolarCamera):
@@ -804,6 +809,10 @@ class FlyCamera(PolarCamera):
         gl.glRotate(self.view_el-90, 1.0, 0.0, 0.0)        
         gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
         
+        # Prepare for models ...
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glLoadIdentity()
+        
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
         daspect = self.axes.daspect        
         gl.glScale( daspect[0], daspect[1] , daspect[2] )
@@ -811,7 +820,5 @@ class FlyCamera(PolarCamera):
         # 1. Translate to view location. Do this first because otherwise
         # the translation is not in world coordinates.
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], -self.view_loc[2])
-        
-        # Prepare for models ...
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
+
+

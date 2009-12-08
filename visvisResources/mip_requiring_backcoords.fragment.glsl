@@ -1,3 +1,13 @@
+/* Fragment shader for Maximum Intensity Projection (MIP) rendering.
+ * This shader uses a texture with texture coordinates that
+ * were obtained in an earlier render pass. It is not used anymore
+ * because it does not work on laptop with ATI card, and because the
+ * obtaining of the backcoords image produces a lot of overhead. 
+ *
+ * This file is part of Visvis.
+ * Copyright 2009 Almar Klein
+ */
+
 // the textures
 uniform sampler3D texture; 
 uniform sampler2D backCoords;
