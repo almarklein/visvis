@@ -491,9 +491,9 @@ class CoordBackFaceHelper(MixTexture):
     
     def __init__(self):
         MixTexture.__init__(self)
-        self._textype = gl.GL_TEXTURE_1D
+        self._textype = gl.GL_TEXTURE_2D
     
-    def CaptureScreen(self):
+    def CaptureScreenNew(self):
         # create if it does not exist
         if self._texId==0 or not gl.glIsTexture(self._texId):
             self._DestroyTexture() # todo: buffer again
@@ -525,7 +525,7 @@ class CoordBackFaceHelper(MixTexture):
         gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MAG_FILTER, tmp)
         
         
-    def CaptureScreen2(self):
+    def CaptureScreen(self):
         """ Capture the screen of the backbuffer. It should
         contain texture coordinates coded in the R,G,B channels.
         """
@@ -1022,7 +1022,7 @@ class Texture3D(BaseTexture):
         
         # init render style
         self._renderStyle = renderStyle
-        #self._program1.SetVertexShader(shaders['raydefine.vertex'])
+        self._program1.SetVertexShader(shaders['raydefine2.vertex'])
         self._program1.SetFragmentShader(shaders[self._renderStyle])
         self._isoThreshold = 0.0
         
