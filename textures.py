@@ -453,11 +453,16 @@ class MixTexture(object):
     
     
     def _TexEnable(self, texUnit=0):
-        """ Enable the texture, using the given texture unit (max 9).
+        """ _TexEnable(texUnit)
+        Enable (bind) the texture, using the given texture unit (max 9).
+        If the texture is not valid, _TexUpload is called.
         """ 
         # check
+        if self._texId==0 or not gl.glIsTexture(self._texId):
+            self._TexUpload()
         if not gl.glIsTexture(self._texId):
             print "warning enabling texture, the texture is not valid!"
+            return
         # store
         self._texUnit = texUnit
         # select this unit               
@@ -469,7 +474,8 @@ class MixTexture(object):
     
     
     def _TexDisable(self):
-        """ Disable the texture.
+        """ _TexDisable()
+        Disable the texture.
         """
         if self._texUnit >= 0:
             gl.glActiveTexture( gl.GL_TEXTURE0 + self._texUnit )
@@ -477,6 +483,11 @@ class MixTexture(object):
             self._texUnit = -1
         # set active texture unit to default (0)
         gl.glActiveTexture( gl.GL_TEXTURE0 )
+    
+    
+    def _TexUpload(self):
+        """ Implement this to upload the texture in OpenGl memory. """
+        raise NotImplementedError()
     
     
     def _DestroyTexture(self):
@@ -606,9 +617,10 @@ class BaseTexture(Wobject, MixTexture):
         self._climCorrection = 1.0
         self._climRef = Range(0,1) # the "original" range
         
-        # init
+        # init clim and colormap
         self._climRef.Set(data.min(), data.max())
         self.clim = self._climRef.Copy()
+        self._colormap = Colormap()
         
         # create glsl program for this texture...
         self._program1 = program =  GlslProgram()
@@ -664,11 +676,6 @@ class BaseTexture(Wobject, MixTexture):
         if self._data is not None:
             self.SetData(self._data)
     
-
-    def _TexUpload(self):
-        """ Implement this. """
-        raise NotImplementedError
-        
     
     def _OnDestroyOpenGlTexture(self):    
         """ Destroy texture, delete the texture from OpenGL memory. """
@@ -709,6 +716,18 @@ class BaseTexture(Wobject, MixTexture):
             tmp = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp)
     
+    
+    @Property
+    def colormap():
+        """ Get/Set the colormap. The argument must be a tuple/list of 
+        iterables with each element having 3 or 4 values. The argument may
+        also be a Nx3 or Nx4 numpy array. In both cases the data is resampled
+        to create a 256x4 array.
+        """
+        def fget(self):
+            return self._colormap.GetMap()
+        def fset(self, value):
+            self._colormap.SetMap(value)
     
     @Property
     def clim():
@@ -924,34 +943,32 @@ class Texture2D(BaseTexture):
         # set color to white, otherwise with no shading, there is odd scaling
         gl.glColor3f(1.0,1.0,1.0)
         
-        # create if it does not exist
-        if self._texId==0 or not gl.glIsTexture(self._texId):
-            self._TexUpload()
-        
-        # enable texture
-        self._TexEnable(0)
-        
         # draw texture also from beneeth
         #gl.glCullFace(gl.GL_FRONT_AND_BACK)
         
-        # fragment shader on        
+        # fragment shader on
         self._program1.Enable()
-        self._program1.SetUniformi('texture', [0])
+        # textures
+        self._TexEnable(0)
+        self._program1.SetUniformi('texture', [0])        
+        self._colormap._TexEnable(1)
+        self._program1.SetUniformi('colormap', [1])
+        # uniform variables
         k = self._CreateGaussianKernel()
         self._program1.SetUniformf('kernel', k)
         self._program1.SetUniformf('dx', [1.0/self._shape[0]])
-        self._program1.SetUniformf('dy', [1.0/self._shape[1]])  
+        self._program1.SetUniformf('dy', [1.0/self._shape[1]])
         self._program1.SetUniformf('scaleBias', self._ScaleBias_get())
-        #self._program1.SetUniformf('scaleBias', [1.0, 0.0])
+        self._program1.SetUniformi('applyColormap', [len(self._shape)==2])
         
         # do the drawing!
         self._DrawQuads()
-        
-        # fragment shader off
-        self._program1.Disable()
-        
         gl.glFlush()
+        
+        # clean up
+        self._program1.Disable()        
         self._TexDisable()
+        self._colormap._TexDisable()
 
     
     def _DrawQuads(self):
@@ -1004,16 +1021,18 @@ class Texture2D(BaseTexture):
             if not value:
                 value = 0
             if isinstance(value, (int,float)):
+                if value < 0 or value > 3:
+                    print "Texture2D.aa: value should be 0,1,2,3 or a string."
+                    return
                 self._aa = value
                 if self._aa == 1:
                     self._program1.SetFragmentShader(fshaders['aa1'])
                 elif self._aa == 2:
                     self._program1.SetFragmentShader(fshaders['aa1'])
-                elif self._aa >= 3:
+                elif self._aa == 3:
                     self._program1.SetFragmentShader(fshaders['aa1'])
                 else:
                     self._program1.SetFragmentShader(fshaders['aa0'])
-                    #self._program1.SetFragmentShader("")
             elif isinstance(value, basestring):
                 if value in fshaders:
                     self._program1.SetFragmentShader(fshaders[value])
@@ -1045,7 +1064,6 @@ class Texture3D(BaseTexture):
         # for backfacing texture coords
         self._program2.SetFragmentShader(fshaders['coord3d'])
         self._coordHelper = CoordBackFaceHelper()
-        self._colormap = Colormap()
         
         
     
@@ -1129,20 +1147,17 @@ class Texture3D(BaseTexture):
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glCullFace(gl.GL_BACK)
         
-        # create if it does not exist
-        if self._texId==0 or not gl.glIsTexture(self._texId):
-            self._TexUpload()
-       
-        # fragment shader on
+        
+        # fragment shader on (create if it does not exist)
         self._program1.Enable()
         
         # enable the texture- and help-textures                
         self._TexEnable(0)
         self._program1.SetUniformi('texture', [0])
-        #self._coordHelper._TexEnable(1)
-        #self._program1.SetUniformi('backCoords', [1])
-        self._colormap._TexEnable(2)
-        self._program1.SetUniformi('colormap', [2])
+        #self._coordHelper._TexEnable(2)
+        #self._program1.SetUniformi('backCoords', [2])
+        self._colormap._TexEnable(1)
+        self._program1.SetUniformi('colormap', [1])
         
         # set uniforms: parameters
         self._program1.SetUniformf('shape',reversed(list(self._shape)) )
@@ -1152,7 +1167,7 @@ class Texture3D(BaseTexture):
         th = (self._isoThreshold - self._climRef.min ) / ran
         self._program1.SetUniformf('th', [th]) # in 0:1
         if fast:
-            self._program1.SetUniformf('stepRatio', [0.3])
+            self._program1.SetUniformf('stepRatio', [0.4])
         else:
             self._program1.SetUniformf('stepRatio', [1.0])
         self._program1.SetUniformf('scaleBias', self._ScaleBias_get())        
@@ -1301,10 +1316,6 @@ class Texture3D(BaseTexture):
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glCullFace(gl.GL_FRONT)
         
-        # create if it does not exist
-        if self._texId==0 or not gl.glIsTexture(self._texId):
-            self._TexUpload()
-        
         # textures and fragment shader on
         self._TexEnable(0)
         self._program2.Enable()        
@@ -1328,6 +1339,7 @@ class Texture3D(BaseTexture):
         gl.glEnable(gl.GL_DEPTH_TEST)
 
 
+
 class Colormap(MixTexture):
     """ A colormap represents a table of colours to map
     grayscale data.
@@ -1339,12 +1351,19 @@ class Colormap(MixTexture):
         MixTexture.__init__(self)
         self._textype = gl.GL_TEXTURE_1D
         
-        #self._default = [(0,0,0), (1,0,0), (0,1,0), (0,0,1), (1,1,1)]
-        self._default = [(1,0,0), (0,1,0), (0,0,1)]
-        #self._default = [(0,0,0), (1,1,1)]
+        # CT: (0,0,0,0.0), (1,0,0,0.002), (0,0.5,1,0.6), (0,1,0,1)                
+        self._current = [(0,0,0), (1,1,1)]
+        self._data = None
+        self.SetMap(self._current)
     
-    def _Create(self, data):
-        """ Create the texture. """
+    
+    def _TexUpload(self):
+        """ Upload the texture. """
+        
+        # can only create if data is available
+        data = self._data
+        if data is None:
+            return
         
         # first clean up
         self._DestroyTexture()
@@ -1362,7 +1381,7 @@ class Colormap(MixTexture):
         gltype = dtypes[data.dtype.name]
         gl.glTexImage1D(gl.GL_TEXTURE_1D, 0, internalformat, 
                 data.shape[0], 0, format, gltype, data)
-        print data.shape
+        
         # set interpolation and extrapolation parameters            
         tmp = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
         gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MIN_FILTER, tmp)
@@ -1370,19 +1389,42 @@ class Colormap(MixTexture):
         gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
     
     
-    def _TexEnable(self, texUnit=0):
-        """ Enable the texture. """
-        # make sure it exists
-        if self._texId==0 or not gl.glIsTexture(self._texId):
-            self.Setmap(self._default)
+    def _SetData(self, data):
+        """ _SetData(data)
+        Put the data in OpenGl memory. data must be a 256x4 numpy array.
+        """
+        if data is None:
+            return
+        self._data = data
         
-        # do as normal
-        return MixTexture._TexEnable(self, texUnit)
+        if self._texId>0 and gl.glIsTexture(self._texId):
+            # if texture is already loaded, update it now (is fast)        
+            gl.glBindTexture(gl.GL_TEXTURE_1D, self._texId)
+            format, gltype = gl.GL_RGBA, dtypes[data.dtype.name]
+            gl.glTexSubImage1D(gl.GL_TEXTURE_1D, 0, 
+                0, data.shape[0], format, gltype, data)
+        else:
+            # texture will be uploaded when it is needed, using self._data
+            pass
     
     
-    def Setmap(self, *args):
-        """ Setmap(self, (r,g,b), (r,g,b), (r,g,b)), or
-        Setmap(self, [(r,g,b), (r,g,b), (r,g,b)])
+    def GetMap(self):
+        """ GetMap()
+        Get the current texture map, as last set with SetMap().
+        """
+        return self._current
+    
+    
+    def GetData(self):
+        """ GetData()
+        Get the full colormap as a 256x4 numpy array.
+        """
+        return self._data
+    
+    
+    def SetMap(self, *args):
+        """ SetMap(self, (r,g,b), (r,g,b), (r,g,b)), or
+        SetMap(self, [(r,g,b), (r,g,b), (r,g,b)])
         Set the colormap data. 
         For now, only accepts lists of lists (or tuples).
         """
@@ -1390,6 +1432,9 @@ class Colormap(MixTexture):
         # one argument given?
         if len(args)==1:
             args = args[0]
+        
+        # store
+        self._current = args
         
         # init
         data = None
@@ -1412,18 +1457,30 @@ class Colormap(MixTexture):
                     data[count,1] = el[1]
                     data[count,2] = el[2]
                     data[count,3] = el[3]
-        else:
-            raise ValueError("Sory, only accepts lists or tuples for now.")
+        elif isinstance(args, np.ndarray):
+            if args.ndim != 2 or args.shape[1] not in [3,4]:
+                raise ValueError('Colormap entries must have 3 or 4 elements.')
+            elif args.shape[1]==3:
+                data = np.zeros((args.shape[0],4), dtype=np.float32)
+                data[:,3] = 1.0
+                for i in range(3):
+                    data[:,i] = args[i]
+            elif args.shape[1]==4:
+                data = args
+            else:
+                raise ValueError("Invalid argument to set colormap.")
         
         # apply
         if data is not None:   
-#             # interpolate first
-#             #step = (data.shape[0]-1) / 1.0
-#             x = np.linspace(0.0 ,1.0, 256)
-#             xp = np.linspace(0.0, 1.0, data.shape[0])            
-#             data2 = np.zeros((256,4),np.float32)
-#             for i in range(3):
-#                 data2[:,i] = np.interp(x, xp, data[:,i])
-#             # create texture
-            self._Create(data)
+            if data.shape[0] == 256 and data.dtype == np.float32:
+                data2 = data
+            else:
+                # interpolate first            
+                x = np.linspace(0.0, 1.0, 256)
+                xp = np.linspace(0.0, 1.0, data.shape[0])            
+                data2 = np.zeros((256,4),np.float32)
+                for i in range(4):
+                    data2[:,i] = np.interp(x, xp, data[:,i])
+            # store texture
+            self._SetData(data2)
     

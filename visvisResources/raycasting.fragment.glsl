@@ -2,10 +2,7 @@
  * The ray is cast through the volume and at each position we determine
  * color and alpha via the colormap. The result is added to the total
  * color. This is the most generic render style, which can produce the
- * most beautifull images.
- *
- * Currently, this renderer does not do much, because the colormaps are
- * not yet fully implemented.
+ * most beautifull images. 
  *
  * This file is part of Visvis.
  * Copyright 2009 Almar Klein
@@ -75,9 +72,15 @@ void main()
     vec3 ray2 = tmp4.xyz;
     int n = int(tmp4[3]);
     
+    // make floats for scale and bias
+    float sb_scale = scaleBias[0];
+    float sb_bias = scaleBias[1];
+    
+    // calculate normalization factor
+    float alphaFactor = 1.0;//1.0 / tmp4.a;
     
     // init value
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     
     // loop!
     for (int i=0; i<n; i++)
@@ -85,13 +88,22 @@ void main()
         // calculate location        
         vec3 loc = edgeLoc + float(i) * ray2;
         
-        // sample value (avoid if statements)
-        float val = texture3D( texture, loc )[0];        
-        gl_FragColor += val * vec4(1.0, 1.0, 1.0, 0.0 );
+        // sample value and get RGBA
+        float val = texture3D( texture, loc ).r;
+        vec4 color = texture1D( colormap, (val+sb_bias)*sb_scale );
+        
+        // update value
+        //gl_FragColor = gl_FragColor * gl_FragColor.a + color * color.a;
+        float a1 = gl_FragColor.a;
+        float a = color.a / (gl_FragColor.a + color.a + 0.0001);        
+        gl_FragColor = gl_FragColor * (1.0-a) + color * a;
+        gl_FragColor.a = a1 + color.a * alphaFactor;
+        //gl_FragColor += val * vec4(1.0, 1.0, 1.0, 0.0 );
+        //if (gl_FragColor.a >=1.0)
+        //    break;
         
     }
     
-    // Finaly, apply window-level window-width.
-    gl_FragColor = ( gl_FragColor + scaleBias[1] ) * scaleBias[0];
+    // do not apply scale-bias
     
 }

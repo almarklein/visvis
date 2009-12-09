@@ -48,7 +48,12 @@ class GLWidget(GLCanvas):
     """
     
     def __init__(self, figure, parent, *args, **kwargs):     
+        # make sure the window is double buffered (Thanks David!)
+        kwargs.update({'attribList' : [wx.glcanvas.WX_GL_RGBA, 
+            wx.glcanvas.WX_GL_DOUBLEBUFFER, 0]})
+        # call GLCanvas' init method
         GLCanvas.__init__(self, parent, *args, **kwargs)        
+        
         self.figure = figure
         
         # make bindings for events

@@ -139,6 +139,8 @@ class Font(object):
         self.Destroy()
         
         # generate a texture and store ID
+        # we chose a texture id ourselves, so we can chose it to be larger
+        # then X. I can't remember why though... :/
         id = 10
         while gl.glIsTexture(id):
             id += 1
@@ -179,9 +181,9 @@ class Font(object):
         if self._texId > 0:
             try:
                 gl.glDeleteTextures([self._texId])
-                self._texId = 0
             except Exception:
                 pass
+        self._texId = 0
     
     def __del__(self):
         """ Delete when GC cleans up. """        

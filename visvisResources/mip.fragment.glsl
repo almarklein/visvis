@@ -100,10 +100,10 @@ void main()
     
     // Finaly, apply window-level window-width.
     maxval = ( maxval + scaleBias[1] ) * scaleBias[0];    
-    gl_FragColor = vec4(maxval, maxval, maxval, 1.0);
+    //gl_FragColor = vec4(maxval, maxval, maxval, 1.0);
     
     // Apply colormap.
-    //gl_FragColor = texture1D( colormap, maxval );
+    gl_FragColor = texture1D( colormap, maxval );
     
     // Apply a depth?
     //gl_FragDepth = 2.0
