@@ -9,7 +9,6 @@ def ylabel(text, axes=None):
     """
     if axes is None:
         axes = vv.gca()
-    axes = vv.gca()
     axes.yLabel = text
 
 if __name__=='__main__':
