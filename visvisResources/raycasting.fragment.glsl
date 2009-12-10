@@ -103,6 +103,8 @@ void main()
         //    break;
         
     }
+    if (gl_FragColor.a < 0.1)
+        discard;
     
     // do not apply scale-bias
     
