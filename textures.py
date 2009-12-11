@@ -21,11 +21,12 @@
 Defined the texture base class and the Texture2D and Texture3D
 wobjects. 
 
-3D textures are rendered in two stages. First the coordinates of
-the back faces are rendered and stored. This is done in the OnDrawPre
-phase of the Visvis drawing system. These coordinates are used in the
-eventual drawing to determine how (and how far) the rays should travel.
-GLSL programs are used for rendering the 3D textures. 
+2D textures can be visualized without using GLSL. If GLSL is enabled, it
+allows using clim, colormap and antialiasing (aa property).
+
+3D textures are rendered using GLSL shader programs. The shader can be
+selected using texture3D.renderStyle = 'ray', where 'ray' can be the
+name of any of the available fragment shaders.
 
 $Author$
 $Date$
@@ -504,87 +505,6 @@ class MixTexture(object):
 
 
 
-class CoordBackFaceHelper(MixTexture):
-    """ A helper class to store the texture coordinates of the backfaces
-    of a 3D texture. """
-    
-    def __init__(self):
-        MixTexture.__init__(self)
-        self._textype = gl.GL_TEXTURE_2D
-    
-    def CaptureScreenNew(self):
-        # create if it does not exist
-        if self._texId==0 or not gl.glIsTexture(self._texId):
-            self._DestroyTexture() # todo: buffer again
-        
-        # make texture
-        self._texId = gl.glGenTextures(1)
-        
-        # bind to texture
-        gl.glBindTexture(self._textype, self._texId)
-        
-        # determine rectangle to sample        
-        xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        x,y,w,h = xywh[0], xywh[1], xywh[2], xywh[3]
-        
-        # make screenshot
-        gl.glReadBuffer(gl.GL_BACK)
-        im = gl.glReadPixels(x, y, w, h, gl.GL_RGBA, gl.GL_FLOAT)
-        im.shape = w*h, 4
-        im = im.copy()
-        
-        # upload
-        #gl.glTexSubImage1D(gl.GL_TEXTURE_1D, 0, 
-        #        0, h*w, gl.GL_RGBA, gl.GL_FLOAT, im)
-        gl.glTexImage1D(gl.GL_TEXTURE_1D, 0, gl.GL_RGBA, 
-                w*h, 0, gl.GL_RGBA, dtypes[im.dtype.name], im)
-                
-        tmp = gl.GL_NEAREST #gl.GL_LINEAR
-        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MIN_FILTER, tmp)
-        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MAG_FILTER, tmp)
-        
-        
-    def CaptureScreen(self):
-        """ Capture the screen of the backbuffer. It should
-        contain texture coordinates coded in the R,G,B channels.
-        """
-#         # delete if exist                
-#         if self._texId>0 or gl.glIsTexture(self._texId):            
-#             self._DestroyTexture()
-
-        # todo: the width and height can only be 2**m+2b when not version 2.0
-        # so this function should not be called when opengl 2.0 is not 
-        # available. Well, no textures can be rendered at all when not having
-        # version 2.0...
-        
-        # create if it does not exist
-        if self._texId==0 or not gl.glIsTexture(self._texId):
-            self._texId = gl.glGenTextures(1)
-        
-        # bind to texture
-        gl.glBindTexture(self._textype, self._texId)
-        
-        # determine rectangle to sample        
-        xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        x,y,w,h = xywh[0], xywh[1], xywh[2], xywh[3]
-        
-        # read texture!
-        gl.glReadBuffer(gl.GL_BACK)
-        gl.glCopyTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA32F, 
-            x, y, w, h, 0)
-        # found a post that must be gl.GL_RGBA32F in order to use it in
-        # a vertex shader. First used gl.GL_RGBA
-        
-        # Set interpolation parameters. Use linear such that the proper
-        # coordinate is sampled even though the coords are stored in 8 bits.
-        tmp = gl.GL_NEAREST #gl.GL_LINEAR
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, tmp)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp)
-        
-#         data = gl.glReadPixels(x, y, w, h, gl.GL_RGB, gl.GL_FLOAT)
-#         print 'capturing', data.min(), data.max(), data.mean()
-    
-
 dtypes = {  'uint8':gl.GL_UNSIGNED_BYTE,    'int8':gl.GL_BYTE,
             'uint16':gl.GL_UNSIGNED_SHORT,  'int16':gl.GL_SHORT, 
             'uint32':gl.GL_UNSIGNED_INT,    'int32':gl.GL_INT, 
@@ -624,7 +544,6 @@ class BaseTexture(Wobject, MixTexture):
         
         # create glsl program for this texture...
         self._program1 = program =  GlslProgram()
-        self._program2  =  GlslProgram()
         
         # scale and translation transforms
         self._trafo_scale = Transform_Scale()
@@ -638,13 +557,15 @@ class BaseTexture(Wobject, MixTexture):
     
     def SetData(self, data):
         """ Set the data to display. """ 
+        
         # make the figure the current opengl context
         figure = self.axes.GetFigure()
         if not figure:
             return
         else:
             figure._SetCurrent()
-        # ...
+        
+        # upload data
         data2, ii = self._data, isinstance
         if not ( ii(data, np.ndarray) and ii(data2, np.ndarray) ):
             # if data is set to None, remove reference
@@ -666,8 +587,30 @@ class BaseTexture(Wobject, MixTexture):
             # remove old data. This will make textUpload to be called
             # on the first time the texture needs to be drawn.
             self._OnDestroyOpenGlTexture()  # data is uploaded on next draw
-        # keep reference of data
+        
+        # keep reference of data and shape
         self._data = data
+        self._shape = None
+        if hasattr(data, 'shape'):
+            self._shape = data.shape
+        
+        # if Aarray, edit scaling and transform
+        if isinstance(data, points.Aarray):
+            if hasattr(data,'_sampling') and hasattr(data,'_origin'):
+                if isinstance(self, Texture2D):
+                    self._trafo_scale.sx = data.sampling[1]
+                    self._trafo_scale.sy = data.sampling[0]
+                    #
+                    self._trafo_trans.dx = data.origin[1]
+                    self._trafo_trans.dy = data.origin[0]
+                elif isinstance(self, Texture3D):        
+                    self._trafo_scale.sx = data.sampling[2]
+                    self._trafo_scale.sy = data.sampling[1]
+                    self._trafo_scale.sz = data.sampling[0]
+                    #
+                    self._trafo_trans.dx = data.origin[2]
+                    self._trafo_trans.dy = data.origin[1]
+                    self._trafo_trans.dz = data.origin[0]
     
     
     def Refresh(self):
@@ -683,10 +626,7 @@ class BaseTexture(Wobject, MixTexture):
         self._DestroyTexture()
         # disable shaders
         self._program1.Clear()
-        self._program2.Clear()
-        # remove coordHelper's texture from memory
-        if hasattr(self, '_coordHelper'):
-            self._coordHelper._DestroyTexture()
+        # remove colormap's texture from memory        
         if hasattr(self, '_colormap'):
             self._colormap._DestroyTexture()
     
@@ -711,10 +651,10 @@ class BaseTexture(Wobject, MixTexture):
         def fset(self, value):
             self._interpolate = bool(value)
             # bind the texture
-            gl.glBindTexture(gl.GL_TEXTURE_2D, self._texId)
+            gl.glBindTexture(self._textype, self._texId)
             # set interpolation
             tmp = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
-            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp)
+            gl.glTexParameteri(self._textype, gl.GL_TEXTURE_MAG_FILTER, tmp)
     
     
     @Property
@@ -827,13 +767,11 @@ class Texture2D(BaseTexture):
         """ Upload the texture in OpenGL memory.
         """
         
-        # get data
+        # get data and shape
         data = self._data
+        shape = self._shape
         if data is None or self._texId<0:
             return
-        
-        # store shape
-        self._shape = shape = data.shape
         
         # test shape
         if len(shape) == 3:
@@ -871,9 +809,10 @@ class Texture2D(BaseTexture):
             self._texId=-1 # prevent keeping printing this message
         
         # set interpolation and extrapolation parameters            
-        tmp = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, tmp)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp)
+        tmp1 = gl.GL_NEAREST
+        tmp2 = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
+        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, tmp1)
+        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp2)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
         
@@ -992,19 +931,6 @@ class Texture2D(BaseTexture):
         gl.glEnd()
     
     
-    def _Transform(self):
-        # edit scaling and transform
-        data = self._data
-        if isinstance(data, points.Aarray):
-            if hasattr(data,'_sampling') and hasattr(data,'_origin'):
-                self._trafo_scale.sx = data.sampling[1]
-                self._trafo_scale.sy = data.sampling[0]
-                #
-                self._trafo_trans.dx = data.origin[1]
-                self._trafo_trans.dy = data.origin[0]                
-        # call base transform method
-        Wobject._Transform(self)
-    
     
     @Property
     def aa():
@@ -1051,6 +977,7 @@ class Texture3D(BaseTexture):
         BaseTexture.__init__(self, parent, data)
         
         self._textype = gl.GL_TEXTURE_3D
+        self._interpolate = True # looks so much better
         
         # init render style        
         self._program1.SetVertexShader(vshaders['calculateray'])
@@ -1061,11 +988,9 @@ class Texture3D(BaseTexture):
             self.renderStyle = 'mip'
         self._isoThreshold = 0.0
         
-        # for backfacing texture coords
-        self._program2.SetFragmentShader(fshaders['coord3d'])
-        self._coordHelper = CoordBackFaceHelper()
-        
-        
+        # attribut to store array of quads (vertices and texture coords)
+        self._quads = None
+    
     
     def _TexUpload(self):
         """ Upload the texture in OpenGL memory.
@@ -1073,11 +998,12 @@ class Texture3D(BaseTexture):
         
         # get data
         data = self._data
+        shape = self._shape
         if data is None or self._texId<0:
             return
         
-        # store shape
-        self._shape = shape = data.shape
+        # reset quad arrays
+        self._quads = None
         
         # test shape
         if len(shape) != 3:
@@ -1107,11 +1033,12 @@ class Texture3D(BaseTexture):
             self._texId=-1 # prevent keeping printing this message
         
         # set interpolation and extrapolation parameters            
-        tmp = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
-        gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_MIN_FILTER, tmp)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_MAG_FILTER, tmp)
+        tmp1 = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
+        tmp2 = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
+        gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_MIN_FILTER, tmp1)
+        gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_MAG_FILTER, tmp2)
         
-        # Set clamping off. When testing the raycasting, comment these lines!
+        # Set clamping. When testing the raycasting, comment these lines!
         gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
         gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
         gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_WRAP_R, gl.GL_CLAMP)
@@ -1148,14 +1075,12 @@ class Texture3D(BaseTexture):
         gl.glCullFace(gl.GL_BACK)
         
         
-        # fragment shader on (create if it does not exist)
+        # fragment shader on
         self._program1.Enable()
         
-        # enable the texture- and help-textures                
+        # enable the texture- and help-textures (create if it does not exist)
         self._TexEnable(0)
-        self._program1.SetUniformi('texture', [0])
-        #self._coordHelper._TexEnable(2)
-        #self._program1.SetUniformi('backCoords', [2])
+        self._program1.SetUniformi('texture', [0])        
         self._colormap._TexEnable(1)
         self._program1.SetUniformi('colormap', [1])
         
@@ -1178,8 +1103,7 @@ class Texture3D(BaseTexture):
         # clean up
         gl.glFlush()        
         self._program1.Disable()
-        self._TexDisable()
-        self._coordHelper._TexDisable()
+        self._TexDisable()        
         self._colormap._TexDisable()
         gl.glDisable(gl.GL_CULL_FACE)
         
@@ -1187,7 +1111,110 @@ class Texture3D(BaseTexture):
         gl.glEnable(gl.GL_POINT_SMOOTH)
     
     
+    def _CreateQuads(self):
+        
+        # prepare world coordinates
+        x0,x1 = -0.5, self._shape[2]-0.5
+        y0,y1 = -0.5, self._shape[1]-0.5
+        z0,z1 = -0.5, self._shape[0]-0.5
+        
+        # prepare texture coordinates
+        t0, t1 = 0, 1        
+        # if any axis are flipped, make sure the correct polygons are front
+        # facing
+        tmp = 1
+        for i in self.axes.daspect:
+            if i<0:
+                tmp*=-1        
+        if tmp==1:
+            t0, t1 = t1, t0
+            x0, x1 = x1, x0
+            y0, y1 = y1, y0
+            z0, z1 = z1, z0
+        
+        # using glTexCoord* is the same as glMultiTexCoord*(GL_TEXTURE0)
+        # Therefore we need to bind the base texture to 0.
+        
+        # draw. So we draw the six planes of the cube (well not a cube,
+        # a 3d rectangle thingy). The inside is only rendered if the 
+        # vertex is facing front, so only 3 planes are rendered at a        
+        # time...                
+        
+        tex_coord, ver_coord = points.Pointset(3), points.Pointset(3)
+        indices = [0,1,2,3, 4,5,6,7, 3,2,6,5, 0,4,7,1, 0,3,5,4, 1,7,6,2]
+        
+        # bottom
+        tex_coord.Append((t0,t0,t0)); ver_coord.Append((x0, y0, z0)) # 0
+        tex_coord.Append((t1,t0,t0)); ver_coord.Append((x1, y0, z0)) # 1
+        tex_coord.Append((t1,t1,t0)); ver_coord.Append((x1, y1, z0)) # 2
+        tex_coord.Append((t0,t1,t0)); ver_coord.Append((x0, y1, z0)) # 3
+        # top
+        tex_coord.Append((t0,t0,t1)); ver_coord.Append((x0, y0, z1)) # 4    
+        tex_coord.Append((t0,t1,t1)); ver_coord.Append((x0, y1, z1)) # 5
+        tex_coord.Append((t1,t1,t1)); ver_coord.Append((x1, y1, z1)) # 6
+        tex_coord.Append((t1,t0,t1)); ver_coord.Append((x1, y0, z1)) # 7
+#         # front
+#         tex_coord.Append((t0,t1,t0)); ver_coord.Append((x0, y1, z0))
+#         tex_coord.Append((t1,t1,t0)); ver_coord.Append((x1, y1, z0))
+#         tex_coord.Append((t1,t1,t1)); ver_coord.Append((x1, y1, z1))
+#         tex_coord.Append((t0,t1,t1)); ver_coord.Append((x0, y1, z1))
+#         # back
+#         tex_coord.Append((t0,t0,t0)); ver_coord.Append((x0, y0, z0))
+#         tex_coord.Append((t0,t0,t1)); ver_coord.Append((x0, y0, z1))
+#         tex_coord.Append((t1,t0,t1)); ver_coord.Append((x1, y0, z1))
+#         tex_coord.Append((t1,t0,t0)); ver_coord.Append((x1, y0, z0))        
+#         # left
+#         tex_coord.Append((t0,t0,t0)); ver_coord.Append((x0, y0, z0))
+#         tex_coord.Append((t0,t1,t0)); ver_coord.Append((x0, y1, z0))
+#         tex_coord.Append((t0,t1,t1)); ver_coord.Append((x0, y1, z1))
+#         tex_coord.Append((t0,t0,t1)); ver_coord.Append((x0, y0, z1))
+#         # right
+#         tex_coord.Append((t1,t0,t0)); ver_coord.Append((x1, y0, z0))
+#         tex_coord.Append((t1,t0,t1)); ver_coord.Append((x1, y0, z1))
+#         tex_coord.Append((t1,t1,t1)); ver_coord.Append((x1, y1, z1))
+#         tex_coord.Append((t1,t1,t0)); ver_coord.Append((x1, y1, z0))
+        # 
+        
+        # store quad arrays
+#         tex_coord = np.array(tex_coord, dtype='float32')
+#         ver_coord = np.array(ver_coord, dtype='double')
+#         self._quads = (tex_coord, ver_coord, None)
+        self._quads = (tex_coord, ver_coord, np.array(indices,dtype=np.uint8))
+    
+    
     def _DrawQuads(self):
+        """ Draw the quads of the texture. 
+        This is done in a seperate method to reuse code in 
+        OnDraw() and OnDrawShape(). """        
+        
+        # should we draw?
+        if not self._shape:
+            return 
+        
+        # should we create quads?
+        if not self._quads:
+            self._CreateQuads()
+        
+        # get data
+        tex_coord, ver_coord, ind = self._quads
+        
+        # init vertex and texture array
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        gl.glVertexPointerf(ver_coord.data)
+        gl.glTexCoordPointerf(tex_coord.data)
+        
+        # draw
+        gl.glDrawElements(gl.GL_QUADS, len(ind), gl.GL_UNSIGNED_BYTE, ind)
+        #gl.glDrawArrays(gl.GL_QUADS, 0, len(tex_coord)
+        
+        # disable vertex array        
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+    
+    
+    # todo: remove this as soon as I've verified the new method works for OpenGl <2.0
+    def _DrawQuads_old(self):
         """ Draw the quads of the texture. 
         This is done in a seperate method to reuse code in 
         OnDraw() and OnDrawShape(). """        
@@ -1255,22 +1282,6 @@ class Texture3D(BaseTexture):
         gl.glEnd()
     
     
-    def _Transform(self):
-        # edit scaling and transform
-        data = self._data
-        if isinstance(data, points.Aarray):
-            if hasattr(data,'_sampling') and hasattr(data,'_origin'):
-                self._trafo_scale.sx = data.sampling[2]
-                self._trafo_scale.sy = data.sampling[1]
-                self._trafo_scale.sz = data.sampling[0]
-                #
-                self._trafo_trans.dx = data.origin[2]
-                self._trafo_trans.dy = data.origin[1]
-                self._trafo_trans.dz = data.origin[0]
-        # call base transform method
-        Wobject._Transform(self)
-    
-    
     @Property
     def renderStyle():
         """ Get or set the render style to render the volumetric data:
@@ -1308,35 +1319,6 @@ class Texture3D(BaseTexture):
             value = float(value)
             # store
             self._isoThreshold = value
-    
-    
-    def OnDrawPre(self):
-        
-        # only draw back-facing parts
-        gl.glEnable(gl.GL_CULL_FACE)
-        gl.glCullFace(gl.GL_FRONT)
-        
-        # textures and fragment shader on
-        self._TexEnable(0)
-        self._program2.Enable()        
-        self._program2.SetUniformi('texture', [0])
-        
-        # disable depth test for now
-        gl.glDisable(gl.GL_DEPTH_TEST)
-        
-        # do the actual drawing
-        self._DrawQuads()
-        
-        # fetch buffer        
-        gl.glFlush()
-        self._coordHelper.CaptureScreen()
-        
-        # clean up
-        self._program2.Disable()        
-        #gl.glDisable(gl.GL_TEXTURE_3D)
-        self._TexDisable()        
-        gl.glDisable(gl.GL_CULL_FACE)
-        gl.glEnable(gl.GL_DEPTH_TEST)
 
 
 
@@ -1373,8 +1355,6 @@ class Colormap(MixTexture):
         
         # bind the texture
         gl.glBindTexture(gl.GL_TEXTURE_1D, self._texId)
-        
-        # todo: we could upload new data rather than creating it anew.
         
         # upload
         internalformat, format = gl.GL_RGBA, gl.GL_RGBA
@@ -1483,4 +1463,3 @@ class Colormap(MixTexture):
                     data2[:,i] = np.interp(x, xp, data[:,i])
             # store texture
             self._SetData(data2)
-    

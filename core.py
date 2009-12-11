@@ -43,6 +43,9 @@ from events import *
 from textRender import FontManager, Text, Label
 from line import MarkerManager, Line, lineStyles
 
+# a variable to indicate whether to print FPS, for testing
+printFPS = False
+
   
 
 class ObjectPickerHelper(object):
@@ -516,7 +519,8 @@ class BaseFigure(base.Wibject):
         # calculate fps
         dt = time.time() - self._drawtime
         self._drawtime = time.time()
-        #print 'FPS: ', 1.0/dt  # for testing
+        if printFPS:
+            print 'FPS: ', 1.0/dt  # for testing
         
         # get fast
         fast = self._drawTimer.fast
@@ -533,9 +537,6 @@ class BaseFigure(base.Wibject):
         
         # set ids
         self._pickerHelper.AssignIds(self)
-        
-        # let 3D textures draw the coordinates of their back-faces
-        #self._Draw('pre')
         
         # draw shape (to backbuffer)
         self._Draw('shape')        

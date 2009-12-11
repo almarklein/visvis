@@ -14,6 +14,7 @@ uniform sampler1D colormap;
 
 // for window level and window width
 uniform vec2 scaleBias;
+uniform float stepRatio;
 
 // varying calculated by vertex shader
 varying vec3 ray;
@@ -77,7 +78,7 @@ void main()
     float sb_bias = scaleBias[1];
     
     // calculate normalization factor
-    float alphaFactor = 1.0;//1.0 / tmp4.a;
+    float alphaFactor = 1.0/stepRatio;
     
     // init value
     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
@@ -103,9 +104,11 @@ void main()
         //    break;
         
     }
+    
+    // discard fragment if small alpha
     if (gl_FragColor.a < 0.1)
         discard;
     
-    // do not apply scale-bias
+    // Apply a depth? No, does only really make sence for the iso renderer.
     
 }

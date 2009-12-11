@@ -105,6 +105,10 @@ void main()
     // Apply colormap.
     gl_FragColor = texture1D( colormap, maxval );
     
-    // Apply a depth?
+    // discard fragment if small alpha
+    if (gl_FragColor.a < 0.1)
+        discard;
+    
+    // Apply a depth? No, does only really make sence for the iso renderer.
     //gl_FragDepth = 2.0
 }

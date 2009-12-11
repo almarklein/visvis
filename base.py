@@ -107,8 +107,6 @@ class BaseObject(object):
             if self.hitTest:
                 clr = pickerHelper.GetColorFromId(self._id)
                 self.OnDrawShape(clr)
-        elif mode=='pre':
-            self.OnDrawPre()
         elif mode=='screen':
             self.OnDrawScreen()            
         elif mode=='fast':
@@ -180,12 +178,6 @@ class BaseObject(object):
         """ Perform  the opengl commands to draw the shape of the object
         in the given color. 
         If not implemented, the object cannot be picked.
-        """
-        pass
-    
-    def OnDrawPre(self):
-        """ Do some pre-drawing if necessary. This is used by
-        3d textures to render the coordinates of the back faces.
         """
         pass
     
