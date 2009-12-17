@@ -46,8 +46,6 @@ from line import MarkerManager, Line, lineStyles
 # a variable to indicate whether to print FPS, for testing
 printFPS = False
 
-  
-
 class ObjectPickerHelper(object):
     """ A simple class to help picking of the objects.
     An instance of this is attached to each figure. 
@@ -688,7 +686,10 @@ class BaseFigure(base.Wibject):
                 ev.x, ev.y = item.AbsoluteToRelative(x, y)
             elif isinstance(item, base.Wobject):
                 # use axes coordinates                
-                ev.x, ev.y = item.axes.AbsoluteToRelative(x, y)
+                tmp = item.axes
+                if not tmp:
+                    return # if object has no axes, don't do this
+                ev.x, ev.y = tmp.AbsoluteToRelative(x, y)
             if isinstance(item, (base.Wobject, Axes )):
                 # also give 2D coordinates
                 if isinstance(item, Axes):
@@ -765,27 +766,31 @@ class Axes(base.Wibject):
 
     
     def SetLimits(self, rangeX=None, rangeY=None, rangeZ=None):
-        """ Set the limits for data visualisation. These
-        are taken as hints to set the camera view.
-        Each range can be a 2 element tuple or a visvis.Range object.
+        """ SetLimits(rangeX=None, rangeY=None, rangeZ=None)
+        Set the limits for data visualisation. These are taken as hints 
+        to set the camera view. Each range can be None, a 2 element iterable,
+        or a visvis.Range object.
         """
         
         # if tuples, convert to ranges
-        if isinstance(rangeX,(tuple,list)):
-            if len(rangeX)==2:
-                rangeX = Range(rangeX[0], rangeX[1])
-            else:
-                raise ValueError("Tuple limits should be two elements.")
-        if isinstance(rangeY,(tuple,list)):
-            if len(rangeY)==2:
-                rangeY = Range(rangeY[0], rangeY[1])
-            else:
-                raise ValueError("Tuple limits should be two elements.")
-        if isinstance(rangeZ,(tuple,list)):
-            if len(rangeZ)==2:
-                rangeZ = Range(rangeZ[0], rangeZ[1])
-            else:
-                raise ValueError("Tuple limits should be two elements.")
+        if rangeX is None or isinstance(rangeX, Range):
+            pass # ok
+        elif hasattr(rangeX,'__len__') and len(rangeX)==2:            
+            rangeX = Range(rangeX[0], rangeX[1])
+        else:
+            raise ValueError("Limits should be Ranges or two-element iterables.")
+        if rangeY is None or isinstance(rangeY, Range):
+            pass # ok
+        elif hasattr(rangeY,'__len__') and len(rangeY)==2:            
+            rangeY = Range(rangeY[0], rangeY[1])
+        else:
+            raise ValueError("Limits should be Ranges or two-element iterables.")
+        if rangeZ is None or isinstance(rangeZ, Range):
+            pass # ok
+        elif hasattr(rangeZ,'__len__') and len(rangeZ)==2:            
+            rangeZ = Range(rangeZ[0], rangeZ[1])
+        else:
+            raise ValueError("Limits should be Ranges or two-element iterables.")
         
         rX, rY, rZ = rangeX, rangeY, rangeZ
         

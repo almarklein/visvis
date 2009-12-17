@@ -541,6 +541,9 @@ class PolarCamera(TwoDCamera):
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
+        # set light
+        gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, [0.0,0.0,0.0,0.0])
+        
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
         daspect = self.axes.daspect        
         gl.glScale( daspect[0], daspect[1] , daspect[2] )

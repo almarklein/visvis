@@ -53,6 +53,9 @@ def plot(data1, data2=None, data3=None,
     
     if isinstance(data1,Pointset):
         pp = data1
+    elif isinstance(data1,Point):
+        pp = Pointset(data1.ndim)
+        pp.Append(data1)
     else:   
         
         if data1 is None:

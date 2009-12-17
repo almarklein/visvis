@@ -87,7 +87,7 @@ class PhotoStore(threading.Thread):
                 self.photos[index] = im
                 print "loaded", self.filenames[index], '(%i)'%len(self.photos)
         except Exception, why:
-            print "Error:", why.message
+            print "Error:", why
         finally:
             self.thelock.release()
     

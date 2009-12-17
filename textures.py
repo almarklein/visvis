@@ -44,7 +44,7 @@ import math, time, os
 from misc import getResourceDir
 from misc import Property, Range, OpenGLError, Position
 from events import *
-from base import Wobject
+from base import Wobject, getGlVersion
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 
 import points
@@ -82,13 +82,17 @@ def loadShaders():
 vshaders, fshaders = loadShaders()
 
 
+
 class GlslProgram:
     """ GLSL program
     A class representing a GLSL (OpenGL Shading Language) program.
     It provides an easy interface for adding vertex and fragment shaders
     and setting variables used in them.
+    Note: On systems that do not support shading, this class will go in
+    invalid mode.
     """
-    # todo: detect and handle if a computer cannot handle shading code.
+    
+    _toldAboutVersion = False
     
     def __init__(self):
         # ids
@@ -99,30 +103,50 @@ class GlslProgram:
         self._fragmentCode = ''
         self._vertexCode = ''
         
-#         # determine if we can do this at all
-#         tmp = gl.glGetString(gl.GL_VERSION)
-#         self._version = int(tmp[0])
+        # is usable?
+        self._usable = True
+        # can use shaders or not?
+        if getGlVersion() >= '2.0': # todo: is this 2.0 or 2.1?
+            pass
+        else:
+            if not GlslProgram._toldAboutVersion:
+                tmp = "the version of OpenGL on this system does not support GLSL."
+                tmp += " Therefore anti-aliasing, the clim property, colormaps,"
+                tmp += " and 3D rendering are disabled."
+                print "Warning: "+tmp
+                GlslProgram._toldAboutVersion = True
+            self._usable = False
     
+    def IsUsable(self):
+        """ Returns whether the program is usable. """ 
+        return self._usable
     
-    def _IsValid(self):
-        return ( self._programId>0 and gl.glIsProgram(self._programId) )
+    def _IsCompiled(self):
+        if not self._usable:
+            return False
+        else:
+            return ( self._programId>0 and gl.glIsProgram(self._programId) )
     
     
     def Enable(self):
         """ Start using the program. """
-        if (self._fragmentCode or self._vertexCode) and not self._IsValid():
+        if not self._usable:
+            return
+        
+        if (self._fragmentCode or self._vertexCode) and not self._IsCompiled():
             self._CreateProgramAndShaders()
         
-        if self._IsValid():
-            gla.glLinkProgramARB(self._programId)
-            self._checkForOpenglError('Link')
+        if self._IsCompiled():
             gla.glUseProgramObjectARB(self._programId)
             self._checkForOpenglError('Use')
         else:
             gla.glUseProgramObjectARB(0)
     
+    
     def Disable(self):
         """ Stop using the program. """
+        if not self._usable:
+            return
         gla.glUseProgramObjectARB(0)
     
     
@@ -143,10 +167,10 @@ class GlslProgram:
     def SetVertexShaderFromFile(self, path):
         try:
             f = open(path, 'r')
-            code = f.read()
+            code = f.rad()
             f.close()
         except Exception, why:
-            print "Could not create shader: ", why.message            
+            print "Could not create shader: ", why            
         self.SetVertexShader(code)
     
     
@@ -156,7 +180,7 @@ class GlslProgram:
             code = f.read()
             f.close()            
         except Exception, why:
-            print "Could not create shader: ", why.message            
+            print "Could not create shader: ", why            
         self.SetFragmentShader(code)
    
     
@@ -204,9 +228,13 @@ class GlslProgram:
                     gla.glAttachObjectARB(self._programId, myshader)
                     self._checkForOpenglError('AttachShader')
             
+            # link shader
+            gla.glLinkProgramARB(self._programId)
+            self._checkForOpenglError('Link')
+            
         except Exception, why:
             self._programId = -1
-            print "Unable to initialize shader code.", why.message
+            print "Unable to initialize shader code.", why
     
     
     def SetUniformf(self, varname, values):
@@ -215,7 +243,7 @@ class GlslProgram:
         values should be a list of up to four floats ( which 
         are converted to float32).
         """
-        if not self._IsValid():
+        if not self._IsCompiled():
             return
         
         # convert to floats
@@ -241,7 +269,7 @@ class GlslProgram:
         values should be a list of up to four ints ( which 
         are converted to int).
         """
-        if not self._IsValid():
+        if not self._IsCompiled():
             return
         
         # convert to floats
@@ -279,6 +307,8 @@ class GlslProgram:
     def Clear(self):
         """ Clear the program. """
         # clear OpenGL stuff
+        if not self._usable:
+            return
         if self._programId>0:
             try: gla.glDeleteObjectARB(self._programId)
             except Exception: pass
@@ -294,6 +324,34 @@ class GlslProgram:
         " You never know when this is called."
         self.Clear()
 
+
+def downSample(data, ndim):
+    """ Downsample the data. Peforming a simple form of smoothing to prevent
+    aliasing. """
+    if ndim==1:
+        data2 = 0.4 * data
+        data2[1:] += 0.3*data[:-1] 
+        data2[:-1] += 0.3*data[1:]
+        data2 = data2[::2]
+    elif ndim==2:
+        data2 = 0.4 * data        
+        data2[1:,:] += 0.15*data[:-1,:] 
+        data2[:-1,:] += 0.15*data[1:,:]
+        data2[:,1:] += 0.15*data[:,:-1] 
+        data2[:,:-1] += 0.15*data[:,1:,:]
+        data2 = data2[::2,::2]
+    elif ndim==3:
+        data2 = 0.4 * data        
+        data2[1:,:,:] += 0.1*data[:-1,:,:] 
+        data2[:-1,:,:] += 0.1*data[1:,:,:]
+        data2[:,1:,:] += 0.1*data[:,:-1,:] 
+        data2[:,:-1,:] += 0.1*data[:,1:,:]
+        data2[:,:,1:] += 0.1*data[:,:,:-1] 
+        data2[:,:,:-1] += 0.1*data[:,:,1:]        
+        data2 = data2[::2,::2,::2]
+    else:
+        raise ValueError("Cannot downsample data of this dimension.")
+    return data2
 
 def uploadTexture(dimensions, data, editTexture=None):
     """ Upload data to opengl texture. 
@@ -384,12 +442,24 @@ def uploadTexture(dimensions, data, editTexture=None):
                 0, 0, shape[1], shape[0], format, gltype, data)
         else: 
             # test
-            ptarget = gl.GL_PROXY_TEXTURE_2D
-            gl.glTexImage2D(ptarget, 0, internalformat, 
-                shape[1], shape[0], 0, format, gltype, None)
-            width = gl.glGetTexLevelParameteriv(ptarget,0,gl.GL_TEXTURE_WIDTH)
-            if width==0:
-                raise MemoryError("Not enough memory to create 2D texture.")
+            ok, count = False, 0
+            while not ok and count<10:
+                ptarget = gl.GL_PROXY_TEXTURE_2D
+                gl.glTexImage2D(ptarget, 0, internalformat, 
+                    shape[1], shape[0], 0, format, gltype, None)
+                ok = gl.glGetTexLevelParameteriv(ptarget,0,gl.GL_TEXTURE_WIDTH)
+#                 if count<4:
+#                     ok = False # todo: remove this test
+                if not ok:
+                    data = downSample(data, dimensions)
+                    shape = data.shape
+                    count +=1
+            if count:
+                if not ok:
+                    raise MemoryError("Even after ten downsample passes, the data does not fit.")
+                print "Warning: data was downsampled %i times to fit in memory." % count
+            #if width==0:
+            #    raise MemoryError("Not enough memory to create 2D texture.")
             
             # apply
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, internalformat, 
@@ -467,7 +537,7 @@ class MixTexture(object):
         # store
         self._texUnit = texUnit
         # select this unit               
-        gl.glActiveTexture( gl.GL_TEXTURE0 + texUnit )        
+        gl.glActiveTexture( gl.GL_TEXTURE0 + texUnit )   # Opengl v1.3 
         # enable texturing 
         gl.glEnable(self._textype)
         # bind the specified texture
@@ -478,10 +548,12 @@ class MixTexture(object):
         """ _TexDisable()
         Disable the texture.
         """
+        # select active texture if we can
         if self._texUnit >= 0:
-            gl.glActiveTexture( gl.GL_TEXTURE0 + self._texUnit )
-            gl.glDisable(self._textype)
+            gl.glActiveTexture( gl.GL_TEXTURE0 + self._texUnit )            
             self._texUnit = -1
+        # disable
+        gl.glDisable(self._textype)
         # set active texture unit to default (0)
         gl.glActiveTexture( gl.GL_TEXTURE0 )
     
@@ -805,7 +877,7 @@ class Texture2D(BaseTexture):
         try:
             uploadTexture(2,data)
         except Exception, why:
-            print "Warning: ", why.message
+            print "Warning: ", why
             self._texId=-1 # prevent keeping printing this message
         
         # set interpolation and extrapolation parameters            
@@ -885,20 +957,23 @@ class Texture2D(BaseTexture):
         # draw texture also from beneeth
         #gl.glCullFace(gl.GL_FRONT_AND_BACK)
         
-        # fragment shader on
-        self._program1.Enable()
-        # textures
+        # enable texture
         self._TexEnable(0)
-        self._program1.SetUniformi('texture', [0])        
-        self._colormap._TexEnable(1)
-        self._program1.SetUniformi('colormap', [1])
-        # uniform variables
-        k = self._CreateGaussianKernel()
-        self._program1.SetUniformf('kernel', k)
-        self._program1.SetUniformf('dx', [1.0/self._shape[0]])
-        self._program1.SetUniformf('dy', [1.0/self._shape[1]])
-        self._program1.SetUniformf('scaleBias', self._ScaleBias_get())
-        self._program1.SetUniformi('applyColormap', [len(self._shape)==2])
+        
+        # fragment shader on
+        if self._program1.IsUsable():
+            self._program1.Enable()
+            # textures        
+            self._program1.SetUniformi('texture', [0])        
+            self._colormap._TexEnable(1)
+            self._program1.SetUniformi('colormap', [1])
+            # uniform variables
+            k = self._CreateGaussianKernel()
+            self._program1.SetUniformf('kernel', k)
+            self._program1.SetUniformf('dx', [1.0/self._shape[0]])
+            self._program1.SetUniformf('dy', [1.0/self._shape[1]])
+            self._program1.SetUniformf('scaleBias', self._ScaleBias_get())
+            self._program1.SetUniformi('applyColormap', [len(self._shape)==2])
         
         # do the drawing!
         self._DrawQuads()
@@ -1029,7 +1104,7 @@ class Texture3D(BaseTexture):
         try:
             uploadTexture(3,data)
         except Exception, why:
-            print "Warning: ", why.message
+            print "Warning: ", why
             self._texId=-1 # prevent keeping printing this message
         
         # set interpolation and extrapolation parameters            
@@ -1045,7 +1120,7 @@ class Texture3D(BaseTexture):
         
         # reset transfer
         self._ScaleBias_afterUpload()
-    
+        
     
     def OnDrawShape(self, clr):
         """ Implementation of the OnDrawShape method.
@@ -1074,28 +1149,30 @@ class Texture3D(BaseTexture):
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glCullFace(gl.GL_BACK)
         
+        # enable this texture
+        self._TexEnable(0)
         
         # fragment shader on
-        self._program1.Enable()
-        
-        # enable the texture- and help-textures (create if it does not exist)
-        self._TexEnable(0)
-        self._program1.SetUniformi('texture', [0])        
-        self._colormap._TexEnable(1)
-        self._program1.SetUniformi('colormap', [1])
-        
-        # set uniforms: parameters
-        self._program1.SetUniformf('shape',reversed(list(self._shape)) )
-        ran = self._climRef.range
-        if ran==0:
-            ran = 1.0
-        th = (self._isoThreshold - self._climRef.min ) / ran
-        self._program1.SetUniformf('th', [th]) # in 0:1
-        if fast:
-            self._program1.SetUniformf('stepRatio', [0.4])
-        else:
-            self._program1.SetUniformf('stepRatio', [1.0])
-        self._program1.SetUniformf('scaleBias', self._ScaleBias_get())        
+        if self._program1.IsUsable():
+            self._program1.Enable()
+            
+            # bind texture- and help-textures (create if it does not exist)
+            self._program1.SetUniformi('texture', [0])        
+            self._colormap._TexEnable(1)
+            self._program1.SetUniformi('colormap', [1])
+            
+            # set uniforms: parameters
+            self._program1.SetUniformf('shape',reversed(list(self._shape)) )
+            ran = self._climRef.range
+            if ran==0:
+                ran = 1.0
+            th = (self._isoThreshold - self._climRef.min ) / ran
+            self._program1.SetUniformf('th', [th]) # in 0:1
+            if fast:
+                self._program1.SetUniformf('stepRatio', [0.4])
+            else:
+                self._program1.SetUniformf('stepRatio', [1.0])
+            self._program1.SetUniformf('scaleBias', self._ScaleBias_get())        
         
         # do the actual drawing
         self._DrawQuads()
@@ -1119,7 +1196,8 @@ class Texture3D(BaseTexture):
         z0,z1 = -0.5, self._shape[0]-0.5
         
         # prepare texture coordinates
-        t0, t1 = 0, 1        
+        t0, t1 = 0, 1
+        
         # if any axis are flipped, make sure the correct polygons are front
         # facing
         tmp = 1
