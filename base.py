@@ -133,10 +133,15 @@ class BaseObject(object):
     
     
     def Destroy(self):
-        """ Destroy an object. (do not overload, overload OnDestroy())
+        """ Destroy()
+        Destroy the object.
         - Removes itself from the parent's children
+        - Calls DestroyGl() on all its children
         - Calls Destroy() on all its children
         - Calls OnDestroy on itself
+        Note1: do not overload, overload OnDestroy()
+        Note2: it's best not to reuse destroyed objects. To temporary disable
+        an object, better use "ob.parent=None", or "ob.visible=False".
         """
         # We must make this the current OpenGL context because OnDestroy 
         # methods of objects may want to remove textures etc.
@@ -159,8 +164,28 @@ class BaseObject(object):
             child.Destroy()
         # clean up
         self.OnDestroy()
+    
+    
+    def DestroyGl(self, setContext=True):
+        """ DestroyGl() 
+        Destroy the OpenGl objects managed by this object.
+        - Calls DestroyGl() on all its children.
+        - Calls OnDestroyGl() on itself.
+        Note: do not overload, overload OnDestroyGl()
+        """
         
-
+        # make the right openGlcontext current
+        if setContext:
+            fig = self.GetFigure()
+            if fig:
+                fig._SetCurrent()
+        # let children clean up their openGl stuff
+        for child in self._children:
+            child.DestroyGl(False)
+        # clean up our own bits
+        self.OnDestroyGl()
+    
+    
     def __del__(self):
         self.Destroy()
     
@@ -196,9 +221,14 @@ class BaseObject(object):
         pass
         
     def OnDestroy(self):
-        """ Overload this to clean up any resources. """
+        """ Overload this to clean up any resources other than the GL objects. 
+        """
         pass 
     
+    def OnDestroyGl(self):
+        """ Overload this to clean up any OpenGl resources. 
+        """
+        pass 
     
     @Property
     def visible():
@@ -264,20 +294,27 @@ class BaseObject(object):
                 while self in self._parent._wobjects:
                     self._parent._wobjects.remove(self)
             
-            # should we destroy ourselves (because we are removed 
-            # from an OpenGL context)? Note that Destroy()
-            # sets self._parent to None.
+            # Should we destroy GL objects (because we are removed 
+            # from an OpenGL context)? 
             figure1 = self.GetFigure()
             figure2 = None
             if hasattr(value, 'GetFigure'):
                 figure2 = value.GetFigure()
             if figure1 and (figure1 is not figure2):
-                self.Destroy()
+                self.DestroyGl()
             
             # set and add to new parent
             self._parent = value
             if parentChildren is not None:
                 parentChildren.append(self)
+    
+    
+    @property
+    def children(self):
+        """ children
+        Get a shallow copy of the list of children. 
+        """
+        return [child for child in self._children]
     
     
     def GetFigure(self):
@@ -447,9 +484,9 @@ class Wobject(BaseObject):
         
         # the transformations applied to the object
         self.transformations = []
-
-    @property
-    def axes(self):
+    
+    
+    def GetAxes(self):
         par = self.parent
         if par is None:
             return None# raise TypeError("Cannot find axes!")

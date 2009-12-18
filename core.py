@@ -466,6 +466,7 @@ class BaseFigure(base.Wibject):
     
     def OnDestroy(self):
         """ Clean up. """
+        print 'destroying figure'
         # set flag, also make a draw in the next 10 ms, to
         # remove the reference to the widget
         self._isdestroyed = True
@@ -679,23 +680,25 @@ class BaseFigure(base.Wibject):
         
         # fire events
         for item,ev in events:
+            # determine axes
+            if isinstance(item, base.Wobject):
+                axes = item.GetAxes()
+                if not axes:
+                    continue
             ev.Clear()
             ev.button = button
             if isinstance(item, base.Wibject):
                 # use relative coordinates
                 ev.x, ev.y = item.AbsoluteToRelative(x, y)
             elif isinstance(item, base.Wobject):
-                # use axes coordinates                
-                tmp = item.axes
-                if not tmp:
-                    return # if object has no axes, don't do this
-                ev.x, ev.y = tmp.AbsoluteToRelative(x, y)
+                # use axes coordinates
+                ev.x, ev.y = axes.AbsoluteToRelative(x, y)
             if isinstance(item, (base.Wobject, Axes )):
                 # also give 2D coordinates
                 if isinstance(item, Axes):
                     cam = item._cameras['2d']
                 else:
-                    cam = item.axes._cameras['2d']
+                    cam = axes._cameras['2d']
                 if item.parent: # or screen to world cannot be calculated
                     ev.x2d, ev.y2d = cam.ScreenToWorld((ev.x, ev.y))
             ev.Fire()
@@ -807,29 +810,29 @@ class Axes(base.Wibject):
                     tmpZ = Range( pp[:,2].min(), pp[:,2].max() )
                     
                 elif isinstance(ob, textures.Texture2D):
-                    if ob._data is None:
+                    if ob._texture1._dataRef is None:
                         continue
-                    a = ob._data
+                    a = ob._texture1._dataRef
                     if hasattr(a, 'sampling') and hasattr(a, 'origin'):
                         tmpX = Range( a.origin[1], a.shape[1] * a.sampling[1] )
                         tmpY = Range( a.origin[0], a.shape[0] * a.sampling[0] )
                     else:
-                        tmpX = Range( 0, ob._data.shape[1] )
-                        tmpY = Range( 0, ob._data.shape[0] )
+                        tmpX = Range( 0, a.shape[1] )
+                        tmpY = Range( 0, a.shape[0] )
                     tmpZ = None
                 
                 elif isinstance(ob, textures.Texture3D):
-                    if ob._data is None:
+                    if ob._texture1._dataRef is None:
                         continue 
-                    a = ob._data
+                    a = ob._texture1._dataRef
                     if hasattr(a, 'sampling') and hasattr(a, 'origin'):
                         tmpX = Range( a.origin[2], a.shape[2] * a.sampling[2] )
                         tmpY = Range( a.origin[1], a.shape[1] * a.sampling[1] )
                         tmpZ = Range( a.origin[0], a.shape[0] * a.sampling[0] )
                     else:
-                        tmpX = Range( 0, ob._data.shape[2] )
-                        tmpY = Range( 0, ob._data.shape[1] )
-                        tmpZ = Range( 0, ob._data.shape[0] )
+                        tmpX = Range( 0, a.shape[2] )
+                        tmpY = Range( 0, a.shape[1] )
+                        tmpZ = Range( 0, a.shape[0] )
                 
                 else:
                     continue
@@ -920,8 +923,7 @@ class Axes(base.Wibject):
         """ Clear the axes. Removing all wobjects in the scene.
         """
         # remove wobjects
-        wobjects = [w for w in self._wobjects]
-        for w in wobjects:
+        for w in self.wobjects:
             if hasattr(w,'Destroy'):
                 w.Destroy()
         self._wobjects[:] = []
@@ -929,7 +931,15 @@ class Axes(base.Wibject):
         Axis(self)
         # reset other stuff
         self.legend = []
-        
+    
+    
+    @property
+    def wobjects(self):
+        """ wobjects
+        Get a shallow copy of the list of wobjects in the scene. 
+        """
+        return [child for child in self._wobjects]
+    
     
     ## Define more properties
 
@@ -1375,7 +1385,10 @@ class Axis(base.Wobject):
     
     
     def OnDraw(self):
-        if not self.axes.showAxis:
+        axes = self.GetAxes()
+        if not axes:
+            return
+        if not axes.showAxis:
             if self._children:
                 tmp = self._children
                 for child in tmp:
@@ -1385,9 +1398,8 @@ class Axis(base.Wobject):
         try:
             
             # determine whether the used camera is a twoD camera
-            axes = self.axes
             cam = axes.camera
-            isTwoDCam = cam is self.axes._cameras['twod']
+            isTwoDCam = cam is axes._cameras['twod']
             
             # get parameters
             drawGrid = [v for v in axes.showGrid]
@@ -1657,7 +1669,10 @@ class Axis(base.Wobject):
     
     def OnDrawScreen(self):
         """ Actually draw the axis. """
-        if not self.axes._axis:
+        axes = self.GetAxes()
+        if not axes:
+            return
+        if not axes._axis:
             return
         
         # get pointset
@@ -1669,7 +1684,6 @@ class Axis(base.Wobject):
         # prepare for drawing lines
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(pps.data)
-        axes = self.axes
         if axes.camera is axes._cameras['twod']:
             gl.glDisable(gl.GL_LINE_SMOOTH)
         # draw lines

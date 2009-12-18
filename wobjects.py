@@ -62,7 +62,7 @@ class MotionDataContainer(Wobject):
     
     def _Next(self, event):
         
-        a = self.axes
+        a = self.GetAxes()
         if not a:            
             return
         

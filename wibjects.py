@@ -43,8 +43,9 @@ class Title(Label):
         
         # set color
         f = axes.GetFigure()
-        #self.bgcolor = f.bgcolor
-       
+        if f:
+            self.bgcolor = f.bgcolor
+        
         # keep up to date
         axes.eventPosition.Bind(self._OnParentPositionChange)
         self._OnParentPositionChange()

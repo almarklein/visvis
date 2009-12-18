@@ -78,6 +78,7 @@ import OpenGL.GL as gl
 import OpenGL.GLU as glu
 import numpy as np
 
+from textures import TextureObject
 from base import Wobject, Wibject, Box
 from misc import Property, getResourceDir, getColor
 
@@ -119,50 +120,27 @@ escapesKeys = escapes.keys()
 escapesKeys.sort( lambda x,y:len(y)-len(x))
 
 
-class Font(object):
-    """ The Font class holds the texture that contains all the
+class Font(TextureObject):
+    """ A Font object holds the texture that contains all the
     characters. """
     
     def __init__(self, info):
+        TextureObject.__init__(self, gl.GL_TEXTURE_2D)
         
-        # font information
+        # store font information
         self.info = info
         
-        # texture id
-        self._texId = 0
-
-
-    def CreateTexture(self):
-        """ Create an opengl texture with all the characters """
+        # set data
+        self.SetData(self.info.data)
+    
+    def _UploadTexture(self, data, *args):
+        """ Overload to make it an alpha map. """
         
-        # delete old texture
-        self.Destroy()
-        
-        # generate a texture and store ID
-        # we chose a texture id ourselves, so we can chose it to be larger
-        # then X. I can't remember why though... :/
-        id = 10
-        while gl.glIsTexture(id):
-            id += 1
-        self._texId = id
-        
-        # bind the texture        
-        gl.glBindTexture(gl.GL_TEXTURE_2D, self._texId)
-        
-        # upload texture
-        data = self.info.data
         shape = data.shape
-        #glu.gluBuild2DMipmaps(gl.GL_TEXTURE_2D, gl.GL_ALPHA, shape[1],shape[0],
-        #    gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data.tostring())
         gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, 2, shape[1],shape[0], 0,
-            gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data.tostring())
+            gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data)
         # gl.GL_LUMINANCE_ALPHA crashes
         
-        # Set texture parameters.
-        # Mag filter in linear mode may show some artifacts if the fontsize
-        # is larger than the fontsize on the texture, but at least it look
-        # smooth. At a fontsize of 20, the effect starts to occur above 40 
-        # or so.        
         tmp1 = gl.GL_LINEAR #gl.GL_LINEAR
         tmp2 = gl.GL_NEAREST #gl.GL_LINEAR # gl.GL_LINEAR_MIPMAP_NEAREST
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp1)
@@ -175,19 +153,7 @@ class Font(object):
         #glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE)
         #glTexImage2D(GL_TEXTURE_2D, 0, 2, W, H, 0, GL_LUMINANCE_ALPHA, 
         #    GL_UNSIGNED_BYTE, data.tostring());
-    
-    def Destroy(self):
-        """ Delete the texture. """
-        if self._texId > 0:
-            try:
-                gl.glDeleteTextures([self._texId])
-            except Exception:
-                pass
-        self._texId = 0
-    
-    def __del__(self):
-        """ Delete when GC cleans up. """        
-        self.Destroy()
+
 
 
 class FontManager:
@@ -691,13 +657,8 @@ class Text(Wobject, BaseText):
             return
         font = f._fontManager.GetFont(self._fontname)
         
-        # make sure the texture is loaded...
-        if not font._texId or not gl.glIsTexture(font._texId):
-            font.CreateTexture()
-        
         # enable texture
-        gl.glEnable(gl.GL_TEXTURE_2D)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, font._texId)
+        font.Enable()
         
         # prepare, draw in screen coordinates                
         texCords = self._texCords.Copy()
@@ -719,8 +680,8 @@ class Text(Wobject, BaseText):
             gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
             gl.glFlush()
         
-        # disable texture
-        gl.glDisable(gl.GL_TEXTURE_2D)
+        # disable texture and clean up
+        font.Disable()
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 

@@ -50,6 +50,19 @@ from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 import points
 
 
+dtypes = {  'uint8':gl.GL_UNSIGNED_BYTE,    'int8':gl.GL_BYTE,
+            'uint16':gl.GL_UNSIGNED_SHORT,  'int16':gl.GL_SHORT, 
+            'uint32':gl.GL_UNSIGNED_INT,    'int32':gl.GL_INT, 
+            'float32':gl.GL_FLOAT }
+
+# A correction for the clim. For a datatype of uint8, the fragents
+# are mapped between 0 and 1 for 0 and 255 respectively. For int8
+# the values are mapped between -1 and 1 for -127 and 128 respectively.
+climCorrection = { 'uint8':2**8, 'int8':2**7, 'uint16':2**16, 'int16':2**15, 
+                   'uint32':2**32, 'int32':2**31, 'float32':1, 'float64':1,
+                   'bool':2**8}
+
+
 def loadShaders():
     """ load shading code from the files in the resource dir.
     Returns two dicts with the vertex and fragment shaders, 
@@ -154,14 +167,14 @@ class GlslProgram:
         """ Create a vertex shader from code and attach to the program.
         """
         self._vertexCode = code
-        self.Clear()
+        self.DestroyGl()
 
 
     def SetFragmentShader(self, code):
         """ Create a fragment shader from code and attach to the program.
         """
         self._fragmentCode = code
-        self.Clear()
+        self.DestroyGl()
     
     
     def SetVertexShaderFromFile(self, path):
@@ -191,7 +204,7 @@ class GlslProgram:
             return
         
         # clear to be sure
-        self.Clear()
+        self.DestroyGl()
         
         if not self._fragmentCode and not self._vertexCode:
             self._programId = -1  # don't make a shader object
@@ -304,7 +317,7 @@ class GlslProgram:
             return False
     
     
-    def Clear(self):
+    def DestroyGl(self):
         """ Clear the program. """
         # clear OpenGL stuff
         if not self._usable:
@@ -322,7 +335,7 @@ class GlslProgram:
     
     def __del__(self):
         " You never know when this is called."
-        self.Clear()
+        self.DestroyGl()
 
 
 def downSample(data, ndim):
@@ -353,217 +366,345 @@ def downSample(data, ndim):
         raise ValueError("Cannot downsample data of this dimension.")
     return data2
 
-def uploadTexture(dimensions, data, editTexture=None):
-    """ Upload data to opengl texture. 
-    If editTexture is None, creates a new texture. This is done 
-    in a save way by first trying with a proxy. editTexture can
-    also be given (it should be the id of the texture to edit),
-    in which case the data can be uploaded much faster. It is the
-    responsibility of the caller to make sure that the data to
-    change has the exact same dimension.
-    
-    The dimensions must be given, otherwise there is ambiguety 
-    for NxNx3 data (is it 3D or 2D color?).
-    """
-    
-    # make singles if doubles (sadly opengl does not know about doubles)
-    if data.dtype == np.float64:
-        data = data.astype(np.float32)
-    # dito for bools
-    if data.dtype == np.bool:
-        data = data.astype(np.uint8)
-    
-    # determine type
-    thetype = data.dtype.name
-    try:
-        gltype = dtypes[thetype]
-    except Exception:
-        raise ValueError("Cannot convert datatype %s." % thetype)
-    
-    # process depending on data shape and given dimensions
-    shape = data.shape 
-    
-    if dimensions==1:        
-        
-        if len(shape)==1:
-            internalformat = gl.GL_LUMINANCE8
-            format = gl.GL_LUMINANCE
-        elif len(shape)==2 and shape[1] == 1:
-            internalformat = gl.GL_LUMINANCE8
-            format = gl.GL_LUMINANCE
-        elif len(shape)==2 and shape[1] == 3:
-            internalformat = gl.GL_RGB
-            format = gl.GL_RGB
-        elif len(shape)==2 and shape[1] == 4:
-            internalformat = gl.GL_RGBA
-            format = gl.GL_RGBA
-        else:
-            raise ValueError("Cannot create 1D texture, data of invalid shape.")
-        
-        if editTexture:
-            # edit data for existing texture
-            gl.glBindTexture(gl.GL_TEXTURE_1D, editTexture)
-            gl.glTexSubImage1D(gl.GL_TEXTURE_1D, 0, 
-                0, shape[0], format, gltype, data)
-        else:        
-            # test
-            ptarget = gl.GL_PROXY_TEXTURE_1D
-            gl.glTexImage1D(ptarget, 0, internalformat, 
-                shape[0], 0, format, gltype, None)
-            width = gl.glGetTexLevelParameteriv(ptarget,0,gl.GL_TEXTURE_WIDTH)
-            if width==0:
-                raise MemoryError("Not enough memory to create 1D texture.")
-            
-            # apply
-            gl.glTexImage1D(gl.GL_TEXTURE_1D, 0, internalformat, 
-                shape[0], 0, format, gltype, data)
-        
-    elif dimensions==2:
-        
-        if len(shape)==2:
-            internalformat = gl.GL_LUMINANCE8
-            format = gl.GL_LUMINANCE
-        elif len(shape)==3 and shape[2]==1:
-            internalformat = gl.GL_LUMINANCE8
-            format = gl.GL_LUMINANCE
-        elif len(shape)==3 and shape[2]==3:
-            internalformat = gl.GL_RGB
-            format = gl.GL_RGB
-        elif len(shape)==3 and shape[2]==4:
-            internalformat = gl.GL_RGBA
-            format = gl.GL_RGBA
-        else:
-            raise ValueError("Cannot create 2D texture, data of invalid shape.")
-        
-        if editTexture:
-            # edit data for existing texture
-            gl.glBindTexture(gl.GL_TEXTURE_2D, editTexture)
-            gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 
-                0, 0, shape[1], shape[0], format, gltype, data)
-        else: 
-            # test
-            ok, count = False, 0
-            while not ok and count<10:
-                ptarget = gl.GL_PROXY_TEXTURE_2D
-                gl.glTexImage2D(ptarget, 0, internalformat, 
-                    shape[1], shape[0], 0, format, gltype, None)
-                ok = gl.glGetTexLevelParameteriv(ptarget,0,gl.GL_TEXTURE_WIDTH)
-#                 if count<4:
-#                     ok = False # todo: remove this test
-                if not ok:
-                    data = downSample(data, dimensions)
-                    shape = data.shape
-                    count +=1
-            if count:
-                if not ok:
-                    raise MemoryError("Even after ten downsample passes, the data does not fit.")
-                print "Warning: data was downsampled %i times to fit in memory." % count
-            #if width==0:
-            #    raise MemoryError("Not enough memory to create 2D texture.")
-            
-            # apply
-            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, internalformat, 
-                shape[1], shape[0], 0, format, gltype, data)
-    
-    elif dimensions==3 and len(shape)==3:
-        
-        if len(shape)==3:
-            internalformat = gl.GL_LUMINANCE8
-            format = gl.GL_LUMINANCE
-        elif len(shape)==4 and shape[3]==1:
-            internalformat = gl.GL_LUMINANCE8
-            format = gl.GL_LUMINANCE
-        elif len(shape)==4 and shape[3]==3:
-            internalformat = gl.GL_RGB
-            format = gl.GL_RGB
-        elif len(shape)==4 and shape[3]==4:
-            internalformat = gl.GL_RGBA
-            format = gl.GL_RGBA
-        else:
-            raise ValueError("Cannot create 3D texture, data of invalid shape.")
-        
-        if editTexture:
-            # edit data for existing texture
-            gl.glBindTexture(gl.GL_TEXTURE_3D, editTexture)
-            gl.glTexSubImage3D(gl.GL_TEXTURE_3D, 0, 
-                0, 0, 0, shape[2], shape[1], shape[0], format, gltype, data)
-        else:
-            # test
-            ptarget = gl.GL_PROXY_TEXTURE_3D
-            gl.glTexImage3D(ptarget, 0, internalformat, 
-                shape[2], shape[1], shape[0], 0, format, gltype, None)
-            width = gl.glGetTexLevelParameteriv(ptarget,0,gl.GL_TEXTURE_WIDTH)
-            if width==0:
-                raise MemoryError("Not enough memory to create 3D texture.")
-            
-            # apply
-            gl.glTexImage3D(gl.GL_TEXTURE_3D, 0, internalformat, 
-                shape[2], shape[1], shape[0], 0, format, gltype, data)
-    
-    else:
-        raise ValueError("Cannot create texture, data shape does not match dimensions.")
-    
-    
 
 
-class MixTexture(object):
-    """ Very basic texture class that is later mixed with Wobject to
-    produce actual visvis textures. This class can be used to manage
-    openGl textures though...
+class TextureObject(object):
+    """ TextureObject(texType)
+    
+    Basic texture class that wraps an OpenGl texture. It manages the OpenGl
+    class and exposes a rather high-level interface to it.
+    
+    texType is one of gl.GL_TEXTURE_1D, gl.GL_TEXTURE_2D, gl.GL_TEXTURE_3D
+    and specifies whether this is a 1D, 2D or 3D texture.
+    
+    Exposed methods:
+    - Enable() call be for using
+    - Disable() call after using
+    - SetData() update the data    
+    - DestroyGl() remove only the texture from OpenGl memory.
+    - Destroy() remove textures and reference to data.
+    Note: this is not a Wobject nor Wibject.
     """
     
-    def __init__(self):
-        # texture ID               
+    # One could argue to use polymorphism to implement 3 classes: one for 
+    # each dimension. Yes you could, but the way to handle the data and
+    # communicate with OpenGl is so similar I chose not to. I use the
+    # texType to determine which function to call. 
+    
+    def __init__(self, texType):
+        
+        # Check given texture type
+        tmp = [gl.GL_TEXTURE_1D, gl.GL_TEXTURE_2D, gl.GL_TEXTURE_3D]
+        if texType not in tmp:
+            raise ValueError("texType should be one of gl.GL_TEXTURE_*D.")
+        
+        # Store the texture type. This attribute is used to make the 
+        # choices for which OpenGl functions to use etc.
+        self._texType = texType
+        
+        # Texture ID. This is an integer by which OpenGl identifies the 
+        # texture.
         self._texId = 0
         
-        # store the used texture unit for easier disabling
+        # To store the used texture unit so we can disable it properly.
         self._texUnit = -1
         
-        # the texture type (the inheriting class must make sure to set this!)
-        self._textype = gl.GL_TEXTURE_2D
+        # The shape of the data as uploaded to OpenGl. Is None if no
+        # data was uploaded. Note that the self._shape does not have to 
+        # be self._dataRef.shape; the data might be downsampled.
+        self._shape = None
+        
+        # A reference (not a weak one) to the original data as given with 
+        # SetData. We need this in order to re-upload the texture if it is 
+        # moved to another OpenGl context (other figure).
+        # Note that the self._shape does not have to be self._dataRef.shape.
+        self._dataRef = None
+        
+        # A flag to indicate that the data in self._dataRef should be uploaded.
+        # 0 signifies no upload required. 1 signifies an update is required.
+        # -1 signifies the current data failed to upload last time.
+        self._uploadFlag = 0
     
     
-    def _TexEnable(self, texUnit=0):
-        """ _TexEnable(texUnit)
+    def Enable(self, texUnit=0):
+        """ Enable(texUnit)
         Enable (bind) the texture, using the given texture unit (max 9).
-        If the texture is not valid, _TexUpload is called.
+        If necessary, will upload/update the texture in OpenGl memory now.
         """ 
-        # check
-        if self._texId==0 or not gl.glIsTexture(self._texId):
-            self._TexUpload()
+        
+        # did last time go alright?
+        troubleLastTime = (self._uploadFlag == -1)
+        
+        # If texture invalid, tell to upload
+        if self._texId == 0 or not gl.glIsTexture(self._texId):            
+            if not troubleLastTime: # prevent keep trying to update
+                self._uploadFlag = 1
+        
+        # If we should upload/update, do that now. (SetData also sets the flag)
+        if self._uploadFlag==1:
+            self._SetDataNow()
+        
+        # check if ok now
         if not gl.glIsTexture(self._texId):
-            print "warning enabling texture, the texture is not valid!"
+            if not troubleLastTime:
+                tmp = " (Hiding message for future draws.)"
+                print "Warning enabling texture, the texture is not valid."+tmp
             return
-        # store
+        
+        # Store texture-Unit-id, and activate 
         self._texUnit = texUnit
-        # select this unit               
         gl.glActiveTexture( gl.GL_TEXTURE0 + texUnit )   # Opengl v1.3 
-        # enable texturing 
-        gl.glEnable(self._textype)
-        # bind the specified texture
-        gl.glBindTexture(self._textype, self._texId)
+        
+        # Enable texturing, and bind to texture
+        gl.glEnable(self._texType)
+        gl.glBindTexture(self._texType, self._texId)
     
     
-    def _TexDisable(self):
-        """ _TexDisable()
-        Disable the texture.
+    def Disable(self):
+        """ Disable()
+        Disable the texture. It's safe to call this, even if the texture
+        was not enabled.
         """
-        # select active texture if we can
+        
+        # Select active texture if we can
         if self._texUnit >= 0:
             gl.glActiveTexture( gl.GL_TEXTURE0 + self._texUnit )            
             self._texUnit = -1
-        # disable
-        gl.glDisable(self._textype)
-        # set active texture unit to default (0)
+        
+        # Disable
+        gl.glDisable(self._texType)
+        
+        # Set active texture unit to default (0)
         gl.glActiveTexture( gl.GL_TEXTURE0 )
     
+   
+    def SetData(self, data):
+        """ SetData(data)
+        Set the data to display. If possible, will update the data in the
+        existing texture (is possible if of the same shape).
+        """
+        
+        # check data
+        if not isinstance(data, np.ndarray):
+            raise ValueError("Data should be a numpy array.")
+        
+        # check shape (raises ValueError if not ok)
+        try:
+            self._GetFormat(data.shape)
+        except ValueError:
+            raise # reraise from here
+        
+        # ok, store data and raise flag
+        self._dataRef = data
+        self._uploadFlag = 1
     
-    def _TexUpload(self):
-        """ Implement this to upload the texture in OpenGl memory. """
-        raise NotImplementedError()
+    
+    def _SetDataNow(self):
+        """ Make sure the data in self._dataRef is uploaded to 
+        OpenGl memory. If possible, update the data rather than 
+        create a new texture object.
+        """
+        
+        # set flag to failes (set to success at the end)
+        self._uploadFlag = -1
+        
+        # Get data. 
+        if self._dataRef is None:
+            return
+        data = self._dataRef
+        
+        # Make singles if doubles (sadly opengl does not know about doubles)
+        if data.dtype == np.float64:
+            data = data.astype(np.float32)
+        # dito for bools
+        if data.dtype == np.bool:
+            data = data.astype(np.uint8)
+        
+        # Determine type
+        thetype = data.dtype.name
+        if not thetype in dtypes:
+            # this should not happen, since we concert incompatible types
+            raise ValueError("Cannot convert datatype %s." % thetype)
+        gltype = dtypes[thetype]
+        
+        # Determine format
+        internalformat, format = self._GetFormat(data.shape)
+        
+        # determine dimensions
+        D = {gl.GL_TEXTURE_1D:1, gl.GL_TEXTURE_2D:2, gl.GL_TEXTURE_3D:3}
+        ndim = D[self._texType]
+        
+        # Can we update or should we upload?        
+        
+        if (    gl.glIsTexture(self._texId) and 
+                self._shape and (data.shape == self._shape) ):
+            # We can update.
+            
+            # Bind to texture
+            gl.glBindTexture(self._texType, self._texId)
+            
+            # update            
+            self._UpdateTexture(data, ndim, internalformat, format, gltype)
+        
+        else:
+            # We should upload.
+            
+            # Remove any old data. 
+            self.DestroyGl()
+            
+            # Create texture object
+            self._texId = gl.glGenTextures(1)
+            
+            # Bind to texture
+            gl.glBindTexture(self._texType, self._texId)
+            
+            # test whether it fits, downsample if necessary
+            ok, count = False, 0
+            while not ok and count<8:
+                ok = self._TestUpload(data,ndim, internalformat,format,gltype)
+                if not ok:
+                    data = downSample(data, ndim)
+                    count += 1
+            
+            # give warning or error
+            if count and not ok:                
+                raise MemoryError(  "Could not upload texture to OpenGL, " +
+                                    "even after 8 times downsampling.")
+            elif count:
+                print(  "Warning: data was downscaled " + str(count) + 
+                        " times to fit it in OpenGL memory." )
+            
+            # upload!
+            self._UploadTexture(data, ndim, internalformat, format, gltype)
+            
+            # keep reference of data shape (as loaded to opengl)
+            self._shape = data.shape
+        
+        
+        # flag success
+        self._uploadFlag = 0
     
     
-    def _DestroyTexture(self):
+    
+    def _UpdateTexture(self, data, ndim, internalformat, format, gltype):
+        """ Update an existing texture object. It should have been 
+        checked whether this is possible (same shape).
+        """
+        
+        # define dict
+        D = {   1: (gl.glTexSubImage1D, gl.GL_TEXTURE_1D),
+                2: (gl.glTexSubImage2D, gl.GL_TEXTURE_2D),
+                3: (gl.glTexSubImage3D, gl.GL_TEXTURE_3D)}
+        
+        # determine function and target from texType
+        uploadFun, target = D[ndim]
+        
+        # Build argument list
+        shape = [i for i in reversed( list(data.shape[:ndim]) )]
+        args = [target, 0] + [0 for i in shape] + shape + [format,gltype,data]
+        
+        # Upload!
+        uploadFun(*tuple(args))
+    
+    
+    def _TestUpload(self, data, ndim, internalformat, format, gltype):
+        """ Test whether we can create a texture of the given shape.
+        Returns True if we can, False if we can't.
+        """
+        
+        # define dict
+        D = {   1: (gl.glTexImage1D, gl.GL_PROXY_TEXTURE_1D),
+                2: (gl.glTexImage2D, gl.GL_PROXY_TEXTURE_2D),
+                3: (gl.glTexImage3D, gl.GL_PROXY_TEXTURE_3D)}
+        
+        # determine function and target from texType
+        uploadFun, target = D[ndim]
+        
+        # build args list
+        shape = [i for i in reversed( list(data.shape[:ndim]) )]
+        args = [target, 0, internalformat] + shape + [0, format, gltype, None]
+        
+        # do fake upload
+        uploadFun(*tuple(args))
+        
+        # test and return
+        ok = gl.glGetTexLevelParameteriv(target, 0, gl.GL_TEXTURE_WIDTH)
+        return bool(ok)
+    
+    
+    def _UploadTexture(self, data, ndim, internalformat, format, gltype):
+        """ Upload a texture to the current texture object. 
+        It should have been verified that the texture will fit.
+        """
+        
+        # define dict
+        D = {   1: (gl.glTexImage1D, gl.GL_TEXTURE_1D),
+                2: (gl.glTexImage2D, gl.GL_TEXTURE_2D),
+                3: (gl.glTexImage3D, gl.GL_TEXTURE_3D)}
+        
+        # determine function and target from texType
+        uploadFun, target = D[ndim]
+        
+        # build args list
+        shape = [i for i in reversed( list(data.shape[:ndim]) )]
+        args = [target, 0, internalformat] + shape + [0, format, gltype, data]
+        
+        # call
+        uploadFun(*tuple(args))
+    
+    
+    def _GetFormat(self, shape):
+        """ Get internalformat and format, based on the self._texType
+        and the shape. If the shape does not match with the texture
+        type, an exception is raised.
+        """
+        
+        if self._texType == gl.GL_TEXTURE_1D:
+            if len(shape)==1:
+                iformat, format = gl.GL_LUMINANCE8, gl.GL_LUMINANCE
+            elif len(shape)==2 and shape[1] == 1:
+                iformat, format = gl.GL_LUMINANCE8, gl.GL_LUMINANCE
+            elif len(shape)==2 and shape[1] == 3:
+                iformat, format = gl.GL_RGB, gl.GL_RGB
+            elif len(shape)==2 and shape[1] == 4:
+                iformat, format = gl.GL_RGBA, gl.GL_RGBA
+            else:
+                raise ValueError("Cannot create 1D texture, data of invalid shape.")
+        
+        elif self._texType == gl.GL_TEXTURE_2D:
+        
+            if len(shape)==2:
+                iformat, format = gl.GL_LUMINANCE8, gl.GL_LUMINANCE                
+            elif len(shape)==3 and shape[2]==1:
+                iformat, format = gl.GL_LUMINANCE8, gl.GL_LUMINANCE
+            elif len(shape)==3 and shape[2]==3:
+                iformat, format = gl.GL_RGB, gl.GL_RGB
+            elif len(shape)==3 and shape[2]==4:
+                iformat, format = gl.GL_RGBA, gl.GL_RGBA
+            else:
+                raise ValueError("Cannot create 2D texture, data of invalid shape.")
+        
+        elif self._texType == gl.GL_TEXTURE_3D:
+        
+            if len(shape)==3:
+                iformat, format = gl.GL_LUMINANCE8, gl.GL_LUMINANCE
+            elif len(shape)==4 and shape[3]==1:
+                iformat, format = gl.GL_LUMINANCE8, gl.GL_LUMINANCE
+            elif len(shape)==4 and shape[3]==3:
+                iformat, format = gl.GL_RGB, gl.GL_RGB
+            elif len(shape)==4 and shape[3]==4:
+                iformat, format = gl.GL_RGBA, gl.GL_RGBA
+            else:
+                raise ValueError("Cannot create 3D texture, data of invalid shape.")
+        
+        return iformat, format
+    
+    
+    def DestroyGl(self):
+        """ DestroyGl()
+        Removes the texture from OpenGl memory. The internal reference
+        to the original data is kept though.
+        """
         try:
             if self._texId > 0:
                 gl.glDeleteTextures([self._texId])
@@ -572,34 +713,139 @@ class MixTexture(object):
         self._texId = 0
     
     
-    def __del__(self):
-        self._DestroyTexture()
-
-
-
-dtypes = {  'uint8':gl.GL_UNSIGNED_BYTE,    'int8':gl.GL_BYTE,
-            'uint16':gl.GL_UNSIGNED_SHORT,  'int16':gl.GL_SHORT, 
-            'uint32':gl.GL_UNSIGNED_INT,    'int32':gl.GL_INT, 
-            'float32':gl.GL_FLOAT }
-
-# A correction for the clim. For a datatype of uint8, the fragents
-# are mapped between 0 and 1 for 0 and 255 respectively. For int8
-# the values are mapped between -1 and 1 for -127 and 128 respectively.
-climCorrection = { 'uint8':2**8, 'int8':2**7, 'uint16':2**16, 'int16':2**15, 
-                   'uint32':2**32, 'int32':2**31, 'float32':1, 'float64':1,
-                   'bool':2**8}
-
-
-class BaseTexture(Wobject, MixTexture):
-    """ Base texture class for visvis 2D and 3D textures. """
-    
-    def __init__(self, parent, data):
-        Wobject.__init__(self, parent)
-        MixTexture.__init__(self)
-        
-        # the data and its shape
+    def Destroy(self):
+        """ Destroy()
+        Really destroy data. 
+        """  
+        # remove OpenGl bits      
+        self.DestroyGl()
+        # remove internal reference
+        self._dataRef = None
         self._shape = None
-        self._data = None
+    
+    
+    def __del__(self):
+        self.Destroy()
+
+
+class Colormap(TextureObject):
+    """ Colormap()
+    A colormap represents a table of colours to map
+    grayscale data.
+    """
+    
+    # Note that the OpenGL imaging subset also implements a colormap,
+    # but it is not guaranteed that the subset is available.
+    
+    def __init__(self):
+        TextureObject.__init__(self, gl.GL_TEXTURE_1D)
+        
+        # CT: (0,0,0,0.0), (1,0,0,0.002), (0,0.5,1,0.6), (0,1,0,1)                
+        self._current = [(0,0,0), (1,1,1)]
+        self.SetMap(self._current)
+    
+    
+    def _UploadTexture(self, data, *args):
+        """ Overloaded version to upload the texture. """
+        
+        # let the original class do the work
+        TextureObject._UploadTexture(self, data, *args)
+        
+        # set interpolation and extrapolation parameters            
+        tmp = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
+        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MIN_FILTER, tmp)
+        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MAG_FILTER, tmp)
+        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
+    
+    
+    def GetMap(self):
+        """ GetMap()
+        Get the current texture map, as last set with SetMap().
+        """
+        return self._current
+    
+    
+    def GetData(self):
+        """ GetData()
+        Get the full colormap as a 256x4 numpy array.
+        """
+        return self._dataRef
+    
+    
+    def SetMap(self, *args):
+        """ SetMap(self, (r,g,b), (r,g,b), (r,g,b)), or
+        SetMap(self, [(r,g,b), (r,g,b), (r,g,b)])
+        Set the colormap data. 
+        For now, only accepts lists of lists (or tuples).
+        """
+        
+        # one argument given?
+        if len(args)==1:
+            args = args[0]
+        
+        # store
+        self._current = args
+        
+        # init
+        data = None
+        
+        # parse input
+        if isinstance(args, (tuple, list)):
+            data = np.zeros((len(args),4), dtype=np.float32)
+            data[:,3] = 1.0 # init alpha to be all ones
+            count = -1
+            for el in args:
+                count += 1
+                if not hasattr(el,'__len__') or len(el) not in [3,4]:
+                    raise ValueError('Colormap entries must have 3 or 4 elements.')
+                elif len(el)==3:
+                    data[count,0] = el[0]
+                    data[count,1] = el[1]
+                    data[count,2] = el[2]
+                elif len(el)==4:
+                    data[count,0] = el[0]
+                    data[count,1] = el[1]
+                    data[count,2] = el[2]
+                    data[count,3] = el[3]
+        elif isinstance(args, np.ndarray):
+            if args.ndim != 2 or args.shape[1] not in [3,4]:
+                raise ValueError('Colormap entries must have 3 or 4 elements.')
+            elif args.shape[1]==3:
+                data = np.zeros((args.shape[0],4), dtype=np.float32)
+                data[:,3] = 1.0
+                for i in range(3):
+                    data[:,i] = args[i]
+            elif args.shape[1]==4:
+                data = args
+            else:
+                raise ValueError("Invalid argument to set colormap.")
+        
+        # apply
+        if data is not None:   
+            if data.shape[0] == 256 and data.dtype == np.float32:
+                data2 = data
+            else:
+                # interpolate first            
+                x = np.linspace(0.0, 1.0, 256)
+                xp = np.linspace(0.0, 1.0, data.shape[0])            
+                data2 = np.zeros((256,4),np.float32)
+                for i in range(4):
+                    data2[:,i] = np.interp(x, xp, data[:,i])
+            # store texture
+            #self._data = data2
+            self.SetData(data2)
+
+
+class TextureObjectToVisualize(TextureObject):
+    """ A texture object aimed more towards visualization. 
+    This is what is actually used in Texture2D and Texture3D objects.
+    It has no propererties, but some private attributes
+    which are set by the real interface (the Texture*D objects).
+    Basically, it handles the color limits.
+    """
+    
+    def __init__(self, texType, data):
+        TextureObject.__init__(self, texType)
         
         # interpolate?
         self._interpolate = False
@@ -611,7 +857,128 @@ class BaseTexture(Wobject, MixTexture):
         
         # init clim and colormap
         self._climRef.Set(data.min(), data.max())
-        self.clim = self._climRef.Copy()
+        self._clim = self._climRef.Copy()
+    
+    
+    def _UploadTexture(self, data, ndim, *args):
+        """ "Overloaded" method to upload texture data
+        """
+        
+        # Set alignment to 1. It is 4 by default, but my data array has no
+        # strides, so in order for the image not to be distorted, I set it 
+        # to 1. I assume graphics cards can still render in hardware. If 
+        # not, I would have to add one or two rows to my data instead.
+        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT,1)
+        
+        # init transferfunctions and set clim to full range
+        self._ScaleBias_init(data.dtype.name)
+        
+        # create texture
+        TextureObject._UploadTexture(self, data, ndim, *args)
+        
+        # set interpolation and extrapolation parameters            
+        tmp1 = gl.GL_NEAREST
+        tmp2 = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
+        gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MIN_FILTER, tmp1)
+        gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MAG_FILTER, tmp2)
+        gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
+        gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
+        
+        # reset transfer
+        self._ScaleBias_afterUpload()
+        
+        # should we correct for downsampling?
+        factor = self._dataRef.shape[0] / float(data.shape[0])
+        if factor > 1:
+            self._trafo_scale.sx *= factor 
+            self._trafo_scale.sy *= factor
+            if ndim==3:
+                self._trafo_scale.sz *= factor
+        
+        # Set clamping. When testing the raycasting, comment these lines!
+        if ndim==3:
+            gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
+            gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
+            gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_R, gl.GL_CLAMP)
+    
+    
+    def _OnUpdate(self, data, *args):
+        """ "Overloaded" method to update texture data
+        """
+        
+        # init transferfunctions and set clim to full range
+        self._ScaleBias_init(data.dtype.name)
+        
+        # create texture
+        self._texture1._UpdateTexture(data, *args)
+        
+        # reset transfer
+        self._ScaleBias_afterUpload()
+    
+    
+    def _ScaleBias_init(self, datatype):
+        """ Given the climRef (which is set to data.min() and data.max())
+        in constructor, set the scale 
+        and bias for copying data to opengl memory. Correct for the dataype.
+        Also set the default value for clim to the full data range.
+        
+        More info: OpenGL will map the full range of the datatype
+        to 0:1 for unsigned datatypes, and to -1:1 for signed datatypes.
+        For floats, 0:1 is mapped to 0:1. We modify the scale, such that
+        the full range of the data (not the datatype) is scaled between 0:1.
+        This way we can also visualize float data with values other than 0:1.
+        """
+        # store data range as a reference and init clim with that
+        #self._clim = self._climRef.Copy()
+        # calculate scale and bias
+        ran = self._climRef.range
+        if ran==0:
+            ran = 1.0
+        scale = climCorrection[datatype] / ran
+        bias = -self._climRef.min / ran
+        # set transfer functions
+        gl.glPixelTransferf(gl.GL_RED_SCALE, scale)
+        gl.glPixelTransferf(gl.GL_GREEN_SCALE, scale)
+        gl.glPixelTransferf(gl.GL_BLUE_SCALE, scale)
+        gl.glPixelTransferf(gl.GL_RED_BIAS, bias)
+        gl.glPixelTransferf(gl.GL_GREEN_BIAS, bias)
+        gl.glPixelTransferf(gl.GL_BLUE_BIAS, bias)
+    
+    
+    def _ScaleBias_afterUpload(self):
+        """ Reset the transferfunctions. """
+        gl.glPixelTransferf(gl.GL_RED_SCALE, 1.0)
+        gl.glPixelTransferf(gl.GL_GREEN_SCALE, 1.0)
+        gl.glPixelTransferf(gl.GL_BLUE_SCALE, 1.0)
+        gl.glPixelTransferf(gl.GL_RED_BIAS, 0.0)
+        gl.glPixelTransferf(gl.GL_GREEN_BIAS, 0.0)
+        gl.glPixelTransferf(gl.GL_BLUE_BIAS, 0.0)
+    
+    
+    def _ScaleBias_get(self):
+        """ Given clim, get scale and bias to apply in shader."""
+        # ger ranges and correct if zero
+        r1, r2 = self._clim.range, self._climRef.range
+        if r1==0:
+            r1 = 1.0
+        if r2==0:
+            r2 = 1.0
+        # calculate scale and bias
+        scale = self._climRef.range / r1
+        bias = (self._climRef.min - self._clim.min) / r2    
+        return scale, bias
+
+
+class BaseTexture(Wobject):
+    """ Base texture class for visvis 2D and 3D textures. """
+    
+    def __init__(self, parent, data):
+        Wobject.__init__(self, parent)
+        
+        # create texture (remember, this is an abstract class)
+        self._texture1 = None
+        
+        # create colormap
         self._colormap = Colormap()
         
         # create glsl program for this texture...
@@ -622,49 +989,13 @@ class BaseTexture(Wobject, MixTexture):
         self._trafo_trans = Transform_Translate()
         self.transformations.append(self._trafo_trans)
         self.transformations.append(self._trafo_scale)        
-        
-        # set data
-        self.SetData(data)
-
+    
     
     def SetData(self, data):
         """ Set the data to display. """ 
         
-        # make the figure the current opengl context
-        figure = self.axes.GetFigure()
-        if not figure:
-            return
-        else:
-            figure._SetCurrent()
-        
-        # upload data
-        data2, ii = self._data, isinstance
-        if not ( ii(data, np.ndarray) and ii(data2, np.ndarray) ):
-            # if data is set to None, remove reference
-            self.OnDestroy()
-        elif gl.glIsTexture(self._texId) and (data.shape == self._data.shape):
-            # ok, we can upload fast!            
-            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT,1)
-            self._ScaleBias_init(data.dtype.name)
-            if self._textype == gl.GL_TEXTURE_1D:
-                uploadTexture(1, data, self._texId)
-            elif self._textype == gl.GL_TEXTURE_2D:
-                uploadTexture(2, data, self._texId)
-            elif self._textype == gl.GL_TEXTURE_3D:
-                uploadTexture(3, data, self._texId)
-            else:
-                raise RuntimeError("Invalid texture type!")
-            self._ScaleBias_afterUpload()
-        else:
-            # remove old data. This will make textUpload to be called
-            # on the first time the texture needs to be drawn.
-            self._OnDestroyOpenGlTexture()  # data is uploaded on next draw
-        
-        # keep reference of data and shape
-        self._data = data
-        self._shape = None
-        if hasattr(data, 'shape'):
-            self._shape = data.shape
+        # set data to texture
+        self._texture1.SetData(data)
         
         # if Aarray, edit scaling and transform
         if isinstance(data, points.Aarray):
@@ -686,47 +1017,52 @@ class BaseTexture(Wobject, MixTexture):
     
     
     def Refresh(self):
-        """ Refresh the data. Updates the OpenGL texture that we kept 
-        a reference of. same as t.SetData(t._data)"""
-        if self._data is not None:
-            self.SetData(self._data)
+        """ Refresh the data. """
+        data = self._texture1._dataRef
+        if data is not None:
+            self._texture1.SetData(data)
+   
     
-    
-    def _OnDestroyOpenGlTexture(self):    
-        """ Destroy texture, delete the texture from OpenGL memory. """
+    def OnDestroyGl(self):
+        """ Clean up OpenGl resources. """
+        
         # remove texture from opengl memory
-        self._DestroyTexture()
-        # disable shaders
-        self._program1.Clear()
+        self._texture1.DestroyGl()
+        
+        # clear shaders
+        self._program1.DestroyGl()
+        
         # remove colormap's texture from memory        
         if hasattr(self, '_colormap'):
-            self._colormap._DestroyTexture()
+            self._colormap.DestroyGl()
     
     
     def OnDestroy(self):
-        # remove opengl texture data
-        self._OnDestroyOpenGlTexture()
-        # remove reference to data so it can be cleaned up (important)
-        self._data = None 
+        """ Clean up any resources. """
+        # clean up thorougly
+        self._texture1.Destroy()
+        if hasattr(self, '_colormap'):
+            self._colormap.Destroy()
     
     
     def OnDrawFast(self):
         self.OnDraw(True)
-
-
+    
+    
     @Property
     def interpolate():
         """ Interpolate the image when zooming in (using linear interpolation).
         """
         def fget(self):
-            return self._interpolate
+            return self._texture1._interpolate
         def fset(self, value):
-            self._interpolate = bool(value)
+            self._texture1._interpolate = bool(value)
             # bind the texture
-            gl.glBindTexture(self._textype, self._texId)
+            texType = self._texture1._texType            
+            gl.glBindTexture(texType, self._texture1._texId)
             # set interpolation
-            tmp = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
-            gl.glTexParameteri(self._textype, gl.GL_TEXTURE_MAG_FILTER, tmp)
+            tmp = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[bool(value)]
+            gl.glTexParameteri(texType, gl.GL_TEXTURE_MAG_FILTER, tmp)
     
     
     @Property
@@ -747,11 +1083,11 @@ class BaseTexture(Wobject, MixTexture):
         clim.max is white.
         """
         def fget(self):
-            return self._clim
+            return self._texture1._clim
         def fset(self, value):
             if not isinstance(value, Range):
                 value = Range(value)
-            self._clim = value
+            self._texture1._clim = value
     
     
     def SetClim(self, *minmax):
@@ -761,65 +1097,26 @@ class BaseTexture(Wobject, MixTexture):
         Takes a bit more time than clim though (which basically takes no
         time at all).
         """
-        if len(minmax)==1:
+        if len(minmax)==0:
+            # set default values
+            data = self._texture1._dataRef
+            if data is None:
+                return 
+            minmax = data.min(), data.max()
+        
+        elif len(minmax)==1:
+            # a range was given
             minmax = minmax[0]
-        # Set climref.
-        self._climRef.Set(minmax[0], minmax[1])
-        self._clim.Set(minmax[0], minmax[1])
+            
+        # Set climref and clim
+        self._texture1._climRef.Set(minmax[0], minmax[1])
+        self._texture1._clim.Set(minmax[0], minmax[1])
+        
         # Clear texture, on next draw, it is uploaded again, using
         # the newly set climref.
-        self._OnDestroyOpenGlTexture()
+        self._texture1.DestroyGl()
     
-    
-    def _ScaleBias_init(self, datatype):
-        """ Given the climRef (which is set to data.min() and data.max())
-        in constructor, set the scale 
-        and bias for copying data to opengl memory. Correct for the dataype.
-        Also set the default value for clim to the full data range.
-        
-        More info: OpenGL will map the full range of the datatype
-        to 0:1 for unsigned datatypes, and to -1:1 for signed datatypes.
-        For floats, 0:1 is mapped to 0:1. We modify the scale, such that
-        the full range of the data (not the datatype) is scaled between 0:1.
-        This way we can also visualize float data with values other than 0:1.
-        """
-        # store data range as a reference and init clim with that
-        #self.clim = self._climRef.Copy()
-        # calculate scale and bias
-        ran = self._climRef.range
-        if ran==0:
-            ran = 1.0
-        scale = climCorrection[datatype] / ran
-        bias = -self._climRef.min / ran
-        # set transfer functions
-        gl.glPixelTransferf(gl.GL_RED_SCALE, scale)
-        gl.glPixelTransferf(gl.GL_GREEN_SCALE, scale)
-        gl.glPixelTransferf(gl.GL_BLUE_SCALE, scale)
-        gl.glPixelTransferf(gl.GL_RED_BIAS, bias)
-        gl.glPixelTransferf(gl.GL_GREEN_BIAS, bias)
-        gl.glPixelTransferf(gl.GL_BLUE_BIAS, bias)
-        
-    def _ScaleBias_afterUpload(self):
-        """ Reset the transferfunctions. """
-        gl.glPixelTransferf(gl.GL_RED_SCALE, 1.0)
-        gl.glPixelTransferf(gl.GL_GREEN_SCALE, 1.0)
-        gl.glPixelTransferf(gl.GL_BLUE_SCALE, 1.0)
-        gl.glPixelTransferf(gl.GL_RED_BIAS, 0.0)
-        gl.glPixelTransferf(gl.GL_GREEN_BIAS, 0.0)
-        gl.glPixelTransferf(gl.GL_BLUE_BIAS, 0.0)
-    
-    def _ScaleBias_get(self):
-        """ Given clim, get scale and bias to apply in shader."""
-        # ger ranges and correct if zero
-        r1, r2 = self.clim.range, self._climRef.range
-        if r1==0:
-            r1 = 1.0
-        if r2==0:
-            r2 = 1.0
-        # calculate scale and bias
-        scale = self._climRef.range / r1
-        bias = (self._climRef.min - self.clim.min) / r2    
-        return scale, bias
+
 
 
 class Texture2D(BaseTexture):
@@ -831,65 +1128,16 @@ class Texture2D(BaseTexture):
     def __init__(self, parent, data):
         BaseTexture.__init__(self, parent, data)
         
-        # set antialiasing
+        # create texture and set data
+        self._texture1 = TextureObjectToVisualize(gl.GL_TEXTURE_2D, data)
+        self.SetData(data)
+        
+#         # register upload and update callbacks
+#         self._texture1.updateCallback = self._OnUpdate
+#         self._texture1.uploadCallback = self._OnUpload
+        
+        # init antialiasing
         self._aa = 0
-        self._textype = gl.GL_TEXTURE_2D
-    
-    def _TexUpload(self):
-        """ Upload the texture in OpenGL memory.
-        """
-        
-        # get data and shape
-        data = self._data
-        shape = self._shape
-        if data is None or self._texId<0:
-            return
-        
-        # test shape
-        if len(shape) == 3:
-            if shape[2] not in [3,4]:
-                self._texId=-1 # prevent keeping printing this message
-                raise ValueError("Cannot create texture, texture is not 2D!")
-        elif len(shape) == 2:            
-            pass # ok
-        else:
-            self._texId=-1 # prevent keeping printing this message
-            raise ValueError("Cannot Create texture, texture is not 2D!")
-                
-        # if we get here, we hope to get no errors
-        
-        # generate texture id
-        self._texId = gl.glGenTextures(1)
-        
-        # bind the texture
-        gl.glBindTexture(gl.GL_TEXTURE_2D, self._texId)
-        
-        # Set alignment to 1. It is 4 by default, but my data array has no
-        # strides, so in order for the image not to be distorted, I set it 
-        # to 1. I assume graphics cards can still render in hardware. If 
-        # not, I would have to add one or two rows to my data instead.
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT,1)
-        
-        # init transferfunctions and set clim to full range
-        self._ScaleBias_init(data.dtype.name)
-        
-        # create texture
-        try:
-            uploadTexture(2,data)
-        except Exception, why:
-            print "Warning: ", why
-            self._texId=-1 # prevent keeping printing this message
-        
-        # set interpolation and extrapolation parameters            
-        tmp1 = gl.GL_NEAREST
-        tmp2 = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, tmp1)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp2)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
-        
-        # reset transfer
-        self._ScaleBias_afterUpload()
     
     
     def _CreateGaussianKernel(self):
@@ -898,15 +1146,14 @@ class Texture2D(BaseTexture):
         following indices: 3 2 1 0 1 2 3
         """
         
-        if not self.axes:
+        figure = self.GetFigure()
+        axes = self.GetAxes()
+        if not figure or not axes:
             return 1,0,0,0
         
         # determine relative kernel size
-        figure = self.axes.GetFigure()
-        if not figure:
-            return 1,0,0,0
         w,h = figure.GetSize()
-        cam = self.axes.camera
+        cam = axes.camera
         sx = (cam.view_zoomx / 1.0 ) / w
         sy = (cam.view_zoomy / 1.0 ) / h
         # correct for fact that humans prefer sharpness
@@ -958,44 +1205,49 @@ class Texture2D(BaseTexture):
         #gl.glCullFace(gl.GL_FRONT_AND_BACK)
         
         # enable texture
-        self._TexEnable(0)
+        self._texture1.Enable(0)
+        
+        # _texture._shape is a good indicator of a valid texture
+        if not self._texture1._shape:
+            return
         
         # fragment shader on
         if self._program1.IsUsable():
             self._program1.Enable()
             # textures        
             self._program1.SetUniformi('texture', [0])        
-            self._colormap._TexEnable(1)
+            self._colormap.Enable(1)
             self._program1.SetUniformi('colormap', [1])
             # uniform variables
+            shape = self._texture1._shape # how it is in opengl
             k = self._CreateGaussianKernel()
             self._program1.SetUniformf('kernel', k)
-            self._program1.SetUniformf('dx', [1.0/self._shape[0]])
-            self._program1.SetUniformf('dy', [1.0/self._shape[1]])
-            self._program1.SetUniformf('scaleBias', self._ScaleBias_get())
-            self._program1.SetUniformi('applyColormap', [len(self._shape)==2])
+            self._program1.SetUniformf('dx', [1.0/shape[0]])
+            self._program1.SetUniformf('dy', [1.0/shape[1]])
+            self._program1.SetUniformf('scaleBias', self._texture1._ScaleBias_get())
+            self._program1.SetUniformi('applyColormap', [len(shape)==2])
         
         # do the drawing!
         self._DrawQuads()
         gl.glFlush()
         
         # clean up
-        self._program1.Disable()        
-        self._TexDisable()
-        self._colormap._TexDisable()
-
+        self._texture1.Disable()
+        self._colormap.Disable()
+        self._program1.Disable()
+    
     
     def _DrawQuads(self):
         """ Draw the quads of the texture. 
         This is done in a seperate method to reuse code in 
         OnDraw() and OnDrawShape(). """        
-        if not self._shape:
+        if not self._texture1._shape:
             return        
         
-        # prepare (note the 0.5 offset to make sure the center of the pixel
-        # is in the correct position)
-        x1,y2 = -0.5,-0.5
-        x2,y1 = self._shape[1]-0.5, self._shape[0]-0.5
+        # The -0.5 offset is to center pixels/voxels. This works correctly
+        # for anisotropic data.
+        x1, x2 = -0.5, self._texture1._shape[1]-0.5
+        y2, y1 = -0.5, self._texture1._shape[0]-0.5
         
         # draw
         gl.glBegin(gl.GL_QUADS)
@@ -1051,76 +1303,35 @@ class Texture3D(BaseTexture):
     def __init__(self, parent, data, renderStyle='mip'):
         BaseTexture.__init__(self, parent, data)
         
-        self._textype = gl.GL_TEXTURE_3D
-        self._interpolate = True # looks so much better
+        # create texture and set data
+        self._texture1 = TextureObjectToVisualize(gl.GL_TEXTURE_3D, data)
+        self.SetData(data)
         
-        # init render style        
+#         # register upload and update callbacks
+#         self._texture1.updateCallback = self._OnUpdate
+#         self._texture1.uploadCallback = self._OnUpload
+        
+        # init interpolation
+        self._texture1._interpolate = True # looks so much better
+        
+        # init iso shader param
+        self._isoThreshold = 0.0
+        
+        # init vertex shader
         self._program1.SetVertexShader(vshaders['calculateray'])
-        #self._program1.SetFragmentShader(fshaders[self._renderStyle])
+        # init fragment shader, be robust if user gives invalid method
         self._renderStyle = ''
         self.renderStyle = renderStyle
         if not self._renderStyle:
             self.renderStyle = 'mip'
-        self._isoThreshold = 0.0
         
         # attribut to store array of quads (vertices and texture coords)
         self._quads = None
     
     
-    def _TexUpload(self):
-        """ Upload the texture in OpenGL memory.
-        """
-        
-        # get data
-        data = self._data
-        shape = self._shape
-        if data is None or self._texId<0:
-            return
-        
-        # reset quad arrays
-        self._quads = None
-        
-        # test shape
-        if len(shape) != 3:
-            self._texId=-1 # prevent keeping printing this message
-            raise ValueError("Given data is not 3D.")
-        
-        # generate texture id
-        self._texId = gl.glGenTextures(1)
-        
-        # bind the texture        
-        gl.glBindTexture(gl.GL_TEXTURE_3D, self._texId)
-        
-        # Set alignment to 1. It is 4 by default, but my data array has no
-        # strides, so in order for the image not to be distorted, I set it 
-        # to 1. I assume graphics cards can still render in hardware. If 
-        # not, I would have to add one or two rows to my data instead.
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT,1)
-        
-        # init transferfunctions and set clim to full range
-        self._ScaleBias_init(data.dtype.name)
-        
-        # create texture
-        try:
-            uploadTexture(3,data)
-        except Exception, why:
-            print "Warning: ", why
-            self._texId=-1 # prevent keeping printing this message
-        
-        # set interpolation and extrapolation parameters            
-        tmp1 = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
-        tmp2 = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
-        gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_MIN_FILTER, tmp1)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_MAG_FILTER, tmp2)
-        
-        # Set clamping. When testing the raycasting, comment these lines!
-        gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_WRAP_R, gl.GL_CLAMP)
-        
-        # reset transfer
-        self._ScaleBias_afterUpload()
-        
+    
+    
+    
     
     def OnDrawShape(self, clr):
         """ Implementation of the OnDrawShape method.
@@ -1133,6 +1344,13 @@ class Texture3D(BaseTexture):
     def OnDraw(self, fast=False):
         """ Draw the texture.
         """
+        
+        # enable this texture
+        self._texture1.Enable(0)
+        
+        # _texture._shape is a good indicator of a valid texture
+        if not self._texture1._shape:
+            return
         
         # Prepare by setting things to their defaults. This might release some
         # memory so result in a bigger chance that the shader is run in 
@@ -1149,51 +1367,59 @@ class Texture3D(BaseTexture):
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glCullFace(gl.GL_BACK)
         
-        # enable this texture
-        self._TexEnable(0)
-        
         # fragment shader on
         if self._program1.IsUsable():
             self._program1.Enable()
             
             # bind texture- and help-textures (create if it does not exist)
             self._program1.SetUniformi('texture', [0])        
-            self._colormap._TexEnable(1)
+            self._colormap.Enable(1)
             self._program1.SetUniformi('colormap', [1])
             
             # set uniforms: parameters
-            self._program1.SetUniformf('shape',reversed(list(self._shape)) )
-            ran = self._climRef.range
+            shape = self._texture1._shape # as in opengl
+            self._program1.SetUniformf('shape',reversed(list(shape)) )
+            ran = self._texture1._climRef.range
             if ran==0:
                 ran = 1.0
-            th = (self._isoThreshold - self._climRef.min ) / ran
+            th = (self._isoThreshold - self._texture1._climRef.min ) / ran
             self._program1.SetUniformf('th', [th]) # in 0:1
             if fast:
                 self._program1.SetUniformf('stepRatio', [0.4])
             else:
                 self._program1.SetUniformf('stepRatio', [1.0])
-            self._program1.SetUniformf('scaleBias', self._ScaleBias_get())        
+            self._program1.SetUniformf('scaleBias', self._texture1._ScaleBias_get())        
         
         # do the actual drawing
         self._DrawQuads()
         
         # clean up
         gl.glFlush()        
+        self._texture1.Disable()
+        self._colormap.Disable()
         self._program1.Disable()
-        self._TexDisable()        
-        self._colormap._TexDisable()
+        #
         gl.glDisable(gl.GL_CULL_FACE)
-        
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glEnable(gl.GL_POINT_SMOOTH)
     
     
     def _CreateQuads(self):
         
-        # prepare world coordinates
-        x0,x1 = -0.5, self._shape[2]-0.5
-        y0,y1 = -0.5, self._shape[1]-0.5
-        z0,z1 = -0.5, self._shape[0]-0.5
+        axes = self.GetAxes()
+        if not axes:
+            return
+        
+        # Note that we could determine the world coordinates and use
+        # them directly here. However, the way that we do it now (using
+        # the transformations) is to be preferred, because that way the
+        # transformations are applied via the ModelView matrix stack,
+        # and can easily be made undone in the raycaster.
+        # The -0.5 offset is to center pixels/voxels. This works correctly
+        # for anisotropic data.
+        x0,x1 = -0.5, self._texture1._shape[2]-0.5
+        y0,y1 = -0.5, self._texture1._shape[1]-0.5
+        z0,z1 = -0.5, self._texture1._shape[0]-0.5
         
         # prepare texture coordinates
         t0, t1 = 0, 1
@@ -1201,7 +1427,7 @@ class Texture3D(BaseTexture):
         # if any axis are flipped, make sure the correct polygons are front
         # facing
         tmp = 1
-        for i in self.axes.daspect:
+        for i in axes.daspect:
             if i<0:
                 tmp*=-1        
         if tmp==1:
@@ -1266,7 +1492,7 @@ class Texture3D(BaseTexture):
         OnDraw() and OnDrawShape(). """        
         
         # should we draw?
-        if not self._shape:
+        if not self._texture1._shape:
             return 
         
         # should we create quads?
@@ -1296,20 +1522,20 @@ class Texture3D(BaseTexture):
         """ Draw the quads of the texture. 
         This is done in a seperate method to reuse code in 
         OnDraw() and OnDrawShape(). """        
-        if not self._shape:
+        if not self._texture1._shape:
             return 
         
         # prepare world coordinates
-        x0,x1 = -0.5, self._shape[2]-0.5
-        y0,y1 = -0.5, self._shape[1]-0.5
-        z0,z1 = -0.5, self._shape[0]-0.5
+        x0,x1 = -0.5, self._texture1._shape[2]-0.5
+        y0,y1 = -0.5, self._texture1._shape[1]-0.5
+        z0,z1 = -0.5, self._texture1._shape[0]-0.5
         
         # prepare texture coordinates
         t0, t1 = 0, 1        
         # if any axis are flipped, make sure the correct polygons are front
         # facing
         tmp = 1
-        for i in self.axes.daspect:
+        for i in self.GetAxes().daspect:
             if i<0:
                 tmp*=-1        
         if tmp==1:
@@ -1399,145 +1625,105 @@ class Texture3D(BaseTexture):
             self._isoThreshold = value
 
 
-
-class Colormap(MixTexture):
-    """ A colormap represents a table of colours to map
-    grayscale data.
+class MultiTexture3D(Texture3D):
+    """ MultiTexture3D(parent, data1, data2)
+    This is an example of what multi-texturing would look like
+    in Visvis. Not tested.
     """
-    # Note that the OpenGL imaging subset also implements a colormap,
-    # but it is not guaranteed that the subset is available.
     
-    def __init__(self):
-        MixTexture.__init__(self)
-        self._textype = gl.GL_TEXTURE_1D
+    def __init__(self, parent, data1, data2):
+        Texture3D.__init__(self, parent, data1)
         
-        # CT: (0,0,0,0.0), (1,0,0,0.002), (0,0.5,1,0.6), (0,1,0,1)                
-        self._current = [(0,0,0), (1,1,1)]
-        self._data = None
-        self.SetMap(self._current)
+        # create second texture and set data
+        self._texture2 = TextureObject(gl.GL_TEXTURE_3D)
+        self.SetData(data2)
     
     
-    def _TexUpload(self):
-        """ Upload the texture. """
+    def OnDraw(self, fast=False):
+        """ Draw the texture.
+        """
         
-        # can only create if data is available
-        data = self._data
-        if data is None:
+        # enable textures
+        self._texture1.Enable(0)
+        self._texture2.Enable(0)
+        
+        # _texture._shape is a good indicator of a valid texture
+        if not self._texture1._shape or not self._texture2._shape:
             return
         
-        # first clean up
-        self._DestroyTexture()
+        # Prepare by setting things to their defaults. This might release some
+        # memory so result in a bigger chance that the shader is run in 
+        # hardware mode. On ATI, the line and point smoothing should be off
+        # if you want to use gl_FragCoord. (Yeah, I do not see the connection
+        # either...)
+        gl.glPointSize(1)
+        gl.glLineWidth(1)
+        gl.glDisable(gl.GL_LINE_STIPPLE)
+        gl.glDisable(gl.GL_LINE_SMOOTH)
+        gl.glDisable(gl.GL_POINT_SMOOTH)
         
-        # generate texture id
-        self._texId = gl.glGenTextures(1)
+        # only draw front-facing parts
+        gl.glEnable(gl.GL_CULL_FACE)
+        gl.glCullFace(gl.GL_BACK)
         
-        # bind the texture
-        gl.glBindTexture(gl.GL_TEXTURE_1D, self._texId)
-        
-        # upload
-        internalformat, format = gl.GL_RGBA, gl.GL_RGBA
-        gltype = dtypes[data.dtype.name]
-        gl.glTexImage1D(gl.GL_TEXTURE_1D, 0, internalformat, 
-                data.shape[0], 0, format, gltype, data)
-        
-        # set interpolation and extrapolation parameters            
-        tmp = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
-        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MIN_FILTER, tmp)
-        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MAG_FILTER, tmp)
-        gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
-    
-    
-    def _SetData(self, data):
-        """ _SetData(data)
-        Put the data in OpenGl memory. data must be a 256x4 numpy array.
-        """
-        if data is None:
-            return
-        self._data = data
-        
-        if self._texId>0 and gl.glIsTexture(self._texId):
-            # if texture is already loaded, update it now (is fast)        
-            gl.glBindTexture(gl.GL_TEXTURE_1D, self._texId)
-            format, gltype = gl.GL_RGBA, dtypes[data.dtype.name]
-            gl.glTexSubImage1D(gl.GL_TEXTURE_1D, 0, 
-                0, data.shape[0], format, gltype, data)
-        else:
-            # texture will be uploaded when it is needed, using self._data
-            pass
-    
-    
-    def GetMap(self):
-        """ GetMap()
-        Get the current texture map, as last set with SetMap().
-        """
-        return self._current
-    
-    
-    def GetData(self):
-        """ GetData()
-        Get the full colormap as a 256x4 numpy array.
-        """
-        return self._data
-    
-    
-    def SetMap(self, *args):
-        """ SetMap(self, (r,g,b), (r,g,b), (r,g,b)), or
-        SetMap(self, [(r,g,b), (r,g,b), (r,g,b)])
-        Set the colormap data. 
-        For now, only accepts lists of lists (or tuples).
-        """
-        
-        # one argument given?
-        if len(args)==1:
-            args = args[0]
-        
-        # store
-        self._current = args
-        
-        # init
-        data = None
-        
-        # parse input
-        if isinstance(args, (tuple, list)):
-            data = np.zeros((len(args),4), dtype=np.float32)
-            data[:,3] = 1.0 # init alpha to be all ones
-            count = -1
-            for el in args:
-                count += 1
-                if not hasattr(el,'__len__') or len(el) not in [3,4]:
-                    raise ValueError('Colormap entries must have 3 or 4 elements.')
-                elif len(el)==3:
-                    data[count,0] = el[0]
-                    data[count,1] = el[1]
-                    data[count,2] = el[2]
-                elif len(el)==4:
-                    data[count,0] = el[0]
-                    data[count,1] = el[1]
-                    data[count,2] = el[2]
-                    data[count,3] = el[3]
-        elif isinstance(args, np.ndarray):
-            if args.ndim != 2 or args.shape[1] not in [3,4]:
-                raise ValueError('Colormap entries must have 3 or 4 elements.')
-            elif args.shape[1]==3:
-                data = np.zeros((args.shape[0],4), dtype=np.float32)
-                data[:,3] = 1.0
-                for i in range(3):
-                    data[:,i] = args[i]
-            elif args.shape[1]==4:
-                data = args
+        # fragment shader on
+        if self._program1.IsUsable():
+            self._program1.Enable()
+            
+            # bind texture- and help-textures (create if it does not exist)
+            self._program1.SetUniformi('texture', [0])        
+            self._colormap.Enable(1)
+            self._program1.SetUniformi('colormap', [1])
+            
+            # set uniforms: parameters
+            shape = self._texture1._shape # as in opengl
+            self._program1.SetUniformf('shape',reversed(list(shape)) )
+            ran = self._climRef.range
+            if ran==0:
+                ran = 1.0
+            th = (self._isoThreshold - self._climRef.min ) / ran
+            self._program1.SetUniformf('th', [th]) # in 0:1
+            if fast:
+                self._program1.SetUniformf('stepRatio', [0.4])
             else:
-                raise ValueError("Invalid argument to set colormap.")
+                self._program1.SetUniformf('stepRatio', [1.0])
+            self._program1.SetUniformf('scaleBias', self._ScaleBias_get())        
         
-        # apply
-        if data is not None:   
-            if data.shape[0] == 256 and data.dtype == np.float32:
-                data2 = data
-            else:
-                # interpolate first            
-                x = np.linspace(0.0, 1.0, 256)
-                xp = np.linspace(0.0, 1.0, data.shape[0])            
-                data2 = np.zeros((256,4),np.float32)
-                for i in range(4):
-                    data2[:,i] = np.interp(x, xp, data[:,i])
-            # store texture
-            self._SetData(data2)
+        # do the actual drawing
+        self._DrawQuads()
+        
+        # clean up
+        gl.glFlush()        
+        self._texture1.Disable()
+        self._texture2.Disable()
+        self._colormap.Disable()
+        self._program1.Disable()
+        #
+        gl.glDisable(gl.GL_CULL_FACE)
+        gl.glEnable(gl.GL_LINE_SMOOTH)
+        gl.glEnable(gl.GL_POINT_SMOOTH)
+
+
+    def OnDestroyGl(self):
+        """ Clean up OpenGl resources. """
+        
+        # remove texture from opengl memory
+        self._texture1.DestroyGl()
+        self._texture2.DestroyGl()
+        
+        # clear shaders
+        self._program1.DestroyGl()
+        
+        # remove colormap's texture from memory        
+        if hasattr(self, '_colormap'):
+            self._colormap.DestroyGl()
+    
+    
+    def OnDestroy(self):
+        """ Clean up any resources. """
+        # clean up thorougly
+        self._texture1.Destroy()
+        self._texture2.Destroy()
+        if hasattr(self, '_colormap'):
+            self._colormap.Destroy()
+
