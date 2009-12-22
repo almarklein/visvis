@@ -95,7 +95,7 @@ def loadShaders():
 vshaders, fshaders = loadShaders()
 
 
-
+# todo: also make CG shaders, they say on the web they are more predictable.
 class GlslProgram:
     """ GLSL program
     A class representing a GLSL (OpenGL Shading Language) program.
@@ -244,7 +244,7 @@ class GlslProgram:
             # link shader
             gla.glLinkProgramARB(self._programId)
             self._checkForOpenglError('Link')
-            
+        
         except Exception, why:
             self._programId = -1
             print "Unable to initialize shader code.", why
@@ -302,10 +302,10 @@ class GlslProgram:
             gl.glUniform4iARB(loc, values[0], values[1], values[2], values[3])
     
     
-    def _checkForOpenglError(self, s):
+    def _checkForOpenglError(self, s):        
         e = gl.glGetError()
         if (e != gl.GL_NO_ERROR):
-            raise OpenGLError('GLERROR: ' + s + ' ' + glu.gluErrorString(e))
+            raise OpenGLError('GLERROR: ' + str(s) + ' ' + glu.gluErrorString(e))
     
     
     def _ProcessErrors(self, glObject):
@@ -1281,9 +1281,9 @@ class Texture2D(BaseTexture):
                 if self._aa == 1:
                     self._program1.SetFragmentShader(fshaders['aa1'])
                 elif self._aa == 2:
-                    self._program1.SetFragmentShader(fshaders['aa1'])
+                    self._program1.SetFragmentShader(fshaders['aa2'])
                 elif self._aa == 3:
-                    self._program1.SetFragmentShader(fshaders['aa1'])
+                    self._program1.SetFragmentShader(fshaders['aa3'])
                 else:
                     self._program1.SetFragmentShader(fshaders['aa0'])
             elif isinstance(value, basestring):
@@ -1298,6 +1298,11 @@ class Texture2D(BaseTexture):
 class Texture3D(BaseTexture):
     """ A data type that represents structured data in
     three dimensions (a volume).
+    
+    If the drawing hangs, your video drived decided to render in 
+    software mode. This is unfortunately (as far as I know) not possible 
+    to detect programatically. It might help if your data is shaped a 
+    power of 2. The mip renderer is the 'easiest' for most systems to render.
     """
     
     def __init__(self, parent, data, renderStyle='mip'):
@@ -1592,6 +1597,9 @@ class Texture3D(BaseTexture):
             - mip: maximum intensity projection
             - iso: isosurface rendering
             - rays: ray casting
+        If drawing takes reaaaaally long, your system renders in software
+        mode. Try rendering data that is shaped with a power of two. This 
+        helps on some cards.
         """
         def fget(self):
             return self._renderStyle

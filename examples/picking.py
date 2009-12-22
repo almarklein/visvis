@@ -9,7 +9,7 @@ rectangle is a child of the yellow rectangle.
 
 import numpy as np
 import visvis as vv
-vv.use('qt4')
+app = vv.use('qt4')
 
 f= vv.clf()
 l1 = vv.plot([1,2,3,2,4], lw=3)
@@ -34,8 +34,16 @@ def picker(event):
             event.x2d, event.y2d), event.owner
 def entering(event):
     print "Entering", event.x,event.y, event.owner
+    if hasattr(event.owner, 'lc'):
+        event.owner.picker_lc = event.owner.lc
+        event.owner.lc = 'y'
+        f.Draw()
+
 def leaving(event):
     print "Leaving", event.x,event.y, event.owner
+    if hasattr(event.owner, 'picker_lc'):
+        event.owner.lc = event.owner.picker_lc
+        f.Draw()
 
 for ob in [f,a,b1,b2, l1, l2, t1]:
     ob.hitTest = True # otherwise we cannot detect them
@@ -43,3 +51,4 @@ for ob in [f,a,b1,b2, l1, l2, t1]:
     ob.eventEnter.Bind(entering)
     ob.eventLeave.Bind(leaving)
     
+app.run()

@@ -43,9 +43,9 @@ from misc import Property, Range, OpenGLError, getColor
 from base import Wobject
 
 
-# int('1010101010101010',2)
-lineStyles = {  ':':int('1100110011001100',2),  '--':int('1111000011110000',2),
-                '-.':int('1111000011110000',2), '.-':int('1111100001100000',2),
+# int('1010101010101010',2)  int('1100110011001100',2)
+lineStyles = {  ':':int('1010101010101010',2),  '--':int('1111000011110000',2),
+                '-.':int('1110010011100100',2), '.-':int('1110010011100100',2),
                 '-':False, '+':False}
 
 
@@ -441,7 +441,7 @@ class Line(Wobject):
         def fget(self):
             return self._lc
         def fset(self, value):
-            tmp = getColor(value, 'lineColor')
+            value = getColor(value, 'lineColor')
             self._lc = value
     
     
@@ -486,7 +486,7 @@ class Line(Wobject):
         def fget(self):
             return self._mc
         def fset(self, value):
-            tmp = getColor(value, 'markerColor')
+            value = getColor(value, 'markerColor')
             self._mc = value
     
     @Property

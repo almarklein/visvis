@@ -90,8 +90,6 @@ void main()
     V = normalize(V);
     
     
-    // init value
-    float maxval = 0.0;
     
     // loop!
     for (int i=0; i<n; i++)
