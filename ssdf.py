@@ -84,9 +84,9 @@ else:
 
 # if version 2...
 if sys.version_info[0] <= 2:
-    try:
-        assert simplestr        
-    except NameError:
+#     try:
+#         assert simplestr        
+#     except NameError:
         simplestr = str
         bytes = str
         str = unicode
@@ -145,7 +145,7 @@ class Struct(object):
             
             def _getValue(val):
                 "Get the value, as suitable for Struct"                
-                if isinstance(val, (str, unicode) + floatTypes + intTypes ):
+                if isinstance(val, (basestring,) + floatTypes + intTypes ):
                     return val
                 if np and isinstance(val, np.ndarray):
                     return val

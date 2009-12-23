@@ -57,6 +57,11 @@ vec4 getRayAndSteps(vec3 edgeLoc)
     smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 1.0, 0.0, 1.0)));
     smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 0.0, 1.0, 1.0)));
     
+    // round-off errors can cause the value to be very large.
+    // an n of 100.000 is pretty save
+    if (smallest > 9999.0)
+        smallest = 1.0;
+    
     // determine amount of steps and correct ray
     vec4 result;
     float n = ceil(smallest);

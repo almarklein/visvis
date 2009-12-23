@@ -779,8 +779,9 @@ class Line(Wobject):
         
         # clean up        
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        
     
-    def __delete__(self):
-        pass
+    
+    def OnDestroy(self):
+        # clean up some memory
+        self._points.Clear()
     

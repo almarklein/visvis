@@ -466,7 +466,6 @@ class BaseFigure(base.Wibject):
     
     def OnDestroy(self):
         """ Clean up. """
-        print 'destroying figure'
         # set flag, also make a draw in the next 10 ms, to
         # remove the reference to the widget
         self._isdestroyed = True

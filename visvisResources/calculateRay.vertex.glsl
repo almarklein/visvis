@@ -37,10 +37,10 @@ void main()
     vec3 p22 = vec3(p2[0], p2[1], p2[2]) / p2[3];
     ray = p22-p11;
     
-    // Normalize ray to unit length.
+    // Normalize ray to unit length.    
     ray = normalize(ray);
     
-    // Make the ray represent a the lengt of a single voxel.
+    // Make the ray represent the length of a single voxel.
     ray = ray / shape;
     ray = ray * 0.58; // 1 over root of three = 0.577
     
