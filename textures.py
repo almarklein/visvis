@@ -116,7 +116,7 @@ class GlslProgram:
         
         # is usable?
         self._usable = True
-        if not getOpenGlCapable('2.0', # todo: is this version 2.0 or 2.1?
+        if not getOpenGlCapable('2.0',
             'anti-aliasing, the clim property, colormaps and 3D rendering'):
             self._usable = False
     
@@ -905,9 +905,6 @@ class TextureObjectToVisualize(TextureObject):
         # init clim and colormap
         self._climRef.Set(data.min(), data.max())
         self._clim = self._climRef.Copy()
-        
-        # set data
-        self.SetData(data)
     
     
     def _UploadTexture(self, data, *args):
@@ -1048,7 +1045,7 @@ class BaseTexture(Wobject):
         self._texture1.SetData(data)
         
         # if Aarray, edit scaling and transform
-        if isinstance(data, points.Aarray):
+        if isinstance(data, points.Aarray):            
             if hasattr(data,'_sampling') and hasattr(data,'_origin'):
                 if isinstance(self, Texture2D):
                     self._trafo_scale.sx = data.sampling[1]
@@ -1070,7 +1067,7 @@ class BaseTexture(Wobject):
         """ Refresh the data. """
         data = self._texture1._dataRef
         if data is not None:
-            self._texture1.SetData(data)
+            self.SetData(data)
    
     
     def OnDestroyGl(self):
@@ -1180,10 +1177,7 @@ class Texture2D(BaseTexture):
         
         # create texture and set data
         self._texture1 = TextureObjectToVisualize(2, data)
-        
-#         # register upload and update callbacks
-#         self._texture1.updateCallback = self._OnUpdate
-#         self._texture1.uploadCallback = self._OnUpload
+        self.SetData(data)
         
         # init antialiasing
         self._aa = 0
@@ -1359,10 +1353,7 @@ class Texture3D(BaseTexture):
         
         # create texture and set data
         self._texture1 = TextureObjectToVisualize(3, data)
-        
-#         # register upload and update callbacks
-#         self._texture1.updateCallback = self._OnUpdate
-#         self._texture1.uploadCallback = self._OnUpload
+        self.SetData(data)
         
         # init interpolation
         self._texture1._interpolate = True # looks so much better
