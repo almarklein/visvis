@@ -66,7 +66,7 @@ from constants import *
 from events import Timer, processEvents
 from misc import Position, Range
 from misc import (Transform_Translate, Transform_Scale, Transform_Rotate)
-from base import getGlVersion
+from misc import getOpenGlInfo
 
 from wibjects import *
 from wobjects import *

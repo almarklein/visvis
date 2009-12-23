@@ -39,7 +39,7 @@ import math, time, os
 
 from points import Point, Pointset
 
-from misc import Property, Range, OpenGLError, getColor
+from misc import Property, Range, OpenGLError, getColor, getOpenGlCapable
 from base import Wobject
 
 
@@ -57,7 +57,7 @@ class Sprite:
         preferably shaped with a power of two. """        
         self._texId = 0
         self._data = data
-    
+        self._canUse = False # set to True if OpenGl version high enough
     
     def Create(self):
         """ Create an OpenGL texture from the data. """
@@ -77,7 +77,11 @@ class Sprite:
         shape = self._data.shape
         gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_ALPHA, shape[0], shape[1], 
             0, gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, self._data)
-
+        
+        # detemine now if we can use point sprites
+        self._canUse = getOpenGlCapable('2.0',
+            'point sprites (for advanced markers)')
+    
     
     def Enable(self):
         """ Enable the sprite, drawing points after calling this
@@ -85,6 +89,9 @@ class Sprite:
         
         if not self._texId:
             self.Create()
+        
+        if not self._canUse:
+            return # canUse is assigned in Create()
         
         # bind to texture
         gl.glEnable(gl.GL_TEXTURE_2D)
@@ -104,8 +111,9 @@ class Sprite:
     
     def Disable(self):
         """ Return to normal points. """
-        gl.glDisable(gl.GL_TEXTURE_2D)
-        gl.glDisable(gl.GL_POINT_SPRITE)
+        if self._canUse:
+            gl.glDisable(gl.GL_TEXTURE_2D)
+            gl.glDisable(gl.GL_POINT_SPRITE)
 
 
     def Destroy(self):
@@ -604,8 +612,10 @@ class Line(Wobject):
         # init blending. Only use constant blendfactor when alpha<1
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         if self._alpha1<1:
-            gl.glBlendFunc(gl.GL_CONSTANT_ALPHA,gl.GL_ONE_MINUS_CONSTANT_ALPHA)
-            gl.glBlendColor(0.0,0.0,0.0, self._alpha1)
+            if getOpenGlCapable('1.4','transparant points and lines'):
+                gl.glBlendFunc(gl.GL_CONSTANT_ALPHA,
+                    gl.GL_ONE_MINUS_CONSTANT_ALPHA)
+                gl.glBlendColor(0.0,0.0,0.0, self._alpha1)
             gl.glDisable(gl.GL_DEPTH_TEST)
         
         # get color
@@ -651,8 +661,10 @@ class Line(Wobject):
         # init blending. Only use constant blendfactor when alpha<1
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         if self._alpha1<1:
-            gl.glBlendFunc(gl.GL_CONSTANT_ALPHA,gl.GL_ONE_MINUS_CONSTANT_ALPHA)
-            gl.glBlendColor(0.0,0.0,0.0, self._alpha1)
+            if getOpenGlCapable('1.4','transparant points and lines'):
+                gl.glBlendFunc(gl.GL_CONSTANT_ALPHA,
+                    gl.GL_ONE_MINUS_CONSTANT_ALPHA)
+                gl.glBlendColor(0.0,0.0,0.0, self._alpha1)
             gl.glDisable(gl.GL_DEPTH_TEST)
         
         # init vertex array

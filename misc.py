@@ -28,10 +28,61 @@ $Rev$
 """
 
 import sys, os
-
+import OpenGL.GL as gl
 
 class OpenGLError(Exception):
     pass
+
+
+# get opengl version
+_glInfo = [None]*4
+
+def getOpenGlInfo():
+    """ getOpenGlInfo()
+    Get information about the OpenGl version on this system. 
+    Returned is a tuple (version, vendor, renderer, extensions) 
+    Note that this function will return 4 Nones if the openGl 
+    context is not set. 
+    """
+    if not _glInfo[0]:
+        _glInfo[0] = gl.glGetString(gl.GL_VERSION)
+        _glInfo[1] = gl.glGetString(gl.GL_VENDOR)
+        _glInfo[2] = gl.glGetString(gl.GL_RENDERER)
+        _glInfo[3] = gl.glGetString(gl.GL_EXTENSIONS)
+    return tuple(_glInfo)
+
+_glLimitations = {}
+def getOpenGlCapable(version, what=None):
+    """ getOpenGlCapable(version, what)
+    Returns True if the OpenGl version on this system is equal or higher 
+    than the one specified and False otherwise.
+    If False, will display a message to inform the user, but only the first 
+    time that this limitation occurs (identified by the second argument).
+    """
+    
+    # obtain version of system
+    curVersion = _glInfo[0]
+    if not curVersion:
+        curVersion, dum1, dum2, dum3 = getOpenGlInfo()
+        if not curVersion:
+            return False # OpenGl context not set, better safe than sory
+    
+    # make sure version is a string
+    if isinstance(version, (int,float)):
+        version = str(version)
+    
+    # test
+    if curVersion >= version :
+        return True
+    else:
+        # print message?
+        if what and (what not in _glLimitations):
+            _glLimitations[what] = True
+            tmp = "Warning: the OpenGl version on this system is too low "
+            tmp += "to support " + what + ". "
+            tmp += "Try updating your drives or buy a new (nvidia) video card."
+            print tmp
+        return False
 
 
 def Property(function):

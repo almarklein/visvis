@@ -42,15 +42,6 @@ from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 from misc import getColor
 from events import *
 
-# get opengl version
-_glVersion=[None]
-def getGlVersion():
-    """ getGlVersion()
-    Get openGl version on this system. Note that this function will only
-    return something of an openGl context is active. """
-    if not _glVersion[0]:
-        _glVersion[0] = gl.glGetString(gl.GL_VERSION)
-    return _glVersion[0]
 
 class BaseObject(object):
     """ The base class for wibjects and wobjects.

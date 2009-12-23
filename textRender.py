@@ -125,7 +125,7 @@ class Font(TextureObject):
     characters. """
     
     def __init__(self, info):
-        TextureObject.__init__(self, gl.GL_TEXTURE_2D)
+        TextureObject.__init__(self, 2)
         
         # store font information
         self.info = info
@@ -141,18 +141,12 @@ class Font(TextureObject):
             gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data)
         # gl.GL_LUMINANCE_ALPHA crashes
         
-        tmp1 = gl.GL_LINEAR #gl.GL_LINEAR
-        tmp2 = gl.GL_LINEAR #gl.GL_LINEAR # gl.GL_LINEAR_MIPMAP_NEAREST
+        tmp1 = gl.GL_LINEAR
+        tmp2 = gl.GL_LINEAR
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp1)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, tmp2)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
-        #gl.glTexEnvf(gl.GL_TEXTURE_ENV, gl.GL_TEXTURE_ENV_MODE,gl.GL_MODULATE)
-        
-        # from glfont lib
-        #glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE)
-        #glTexImage2D(GL_TEXTURE_2D, 0, 2, W, H, 0, GL_LUMINANCE_ALPHA, 
-        #    GL_UNSIGNED_BYTE, data.tostring());
 
 
 

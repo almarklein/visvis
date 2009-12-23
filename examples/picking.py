@@ -15,8 +15,8 @@ f= vv.clf()
 l1 = vv.plot([1,2,3,2,4], lw=3)
 l2 = vv.plot([4,6,5,1,3], lc='r', mc='r', lw=3)
 
-im = np.zeros((10,10)); im[7:9,:]=1; im[:,7:9]=0.6
-t1 = vv.imshow(im)
+# im = np.zeros((10,10)); im[7:9,:]=1; im[:,7:9]=0.6
+# t1 = vv.imshow(im)
 
 b1 = vv.Box(f)
 b1.position = 0.1, 0.2, 100, 40
@@ -45,7 +45,7 @@ def leaving(event):
         event.owner.lc = event.owner.picker_lc
         f.Draw()
 
-for ob in [f,a,b1,b2, l1, l2, t1]:
+for ob in [f,a,b1,b2, l1, l2]:#, t1]:
     ob.hitTest = True # otherwise we cannot detect them
     ob.eventMouseDown.Bind(picker)
     ob.eventEnter.Bind(entering)
