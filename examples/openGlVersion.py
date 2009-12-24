@@ -1,13 +1,24 @@
 import visvis as vv
-app=vv.App('wx')
+app = vv.use('wx')
 
-vv.figure() # we need to create an opengl context
+# we need to create an opengl context
+f=vv.figure() 
 
-descriptions = ['version','vendor', 'renderer', 'extensions']
-info = vv.getOpenGlInfo()
+# get info
+version, vendor, renderer, ext = vv.getOpenGlInfo()
+if not ext:
+    ext = ''
 
-print 'Information about the OpenGl version on this system:'
-for des, i in zip(descriptions,info):
-    print (des+':').ljust(12), i
+# remove figure
+f.Close()
 
+# print!
+print 'Information about the OpenGl version on this system:\n'
+print 'version:    ', version
+print 'vendor:     ', vendor
+print 'renderer:   ', renderer
+print 'extensions: ', len(ext.split()),'different extensions'
+
+# let the widget close and then wait
 app.run()
+raw_input('\nPress enter to continue...')

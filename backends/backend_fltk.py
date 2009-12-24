@@ -178,7 +178,7 @@ class GLWidget(fltk.Fl_Gl_Window):
         # I don't know how to destroy ...
         # I hope that the fact that the figure.OnDestroy() removes 
         # the widget's reference is enough...        
-        self.figure.widget = None
+        self.figure._widget = None
     
     def OnFocus(self, event):
         BaseFigure._currentNr = self.figure.nr
@@ -194,32 +194,32 @@ class Figure(BaseFigure):
     def __init__(self, *args, **kwargs):
         
         # create widget
-        self.widget = GLWidget(self, *args, **kwargs)
+        self._widget = GLWidget(self, *args, **kwargs)
         
         # call original init AFTER we created the widget
         BaseFigure.__init__(self)
     
     def _SetCurrent(self):
         """ make this scene the current context """
-        self.widget.make_current()
+        self._widget.make_current()
         #pass
         
         
     def _SwapBuffers(self):
         """ Swap the memory and screen buffer such that
         what we rendered appears on the screen """
-        self.widget.swap_buffers()
+        self._widget.swap_buffers()
 
     def _SetTitle(self, title):
         """ Set the title of the figure... """
-        window = self.widget
+        window = self._widget
         if hasattr(window,'label'):
             window.label(title)
     
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
         # select widget to resize. If it 
-        widget = self.widget       
+        widget = self._widget       
         # apply
         widget.position(x,y)
         widget.size(w, h)
@@ -227,20 +227,23 @@ class Figure(BaseFigure):
     def _GetPosition(self):
         """ Get the position of the widget. """
         # select widget to resize. If it 
-        widget = self.widget        
+        widget = self._widget        
         # get and return        
         return widget.x(), widget.y(), widget.w(), widget.h()
 
     def _ProcessEvents(self):
         app = fltk.Fl.wait(0) 
-
+    
+    def Close(self):
+        self._widget.OnClose()
+    
 
 def newFigure():
     """ Create a window with a figure widget.
     """
     figure = Figure(560, 420, "Figure")    
-    figure.widget.size_range(100,100,0,0,0,0)    
-    figure.widget.show() # Show AFTER canvas is added
+    figure._widget.size_range(100,100,0,0,0,0)    
+    figure._widget.show() # Show AFTER canvas is added
     return figure
 
 

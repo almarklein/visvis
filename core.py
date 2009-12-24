@@ -339,6 +339,9 @@ class BaseFigure(base.Wibject):
         raise NotImplemented()
     
     
+    def Close(self):
+        """ Close the widget, also calls Destroy(). """
+    
     ## Properties
     
     @Property

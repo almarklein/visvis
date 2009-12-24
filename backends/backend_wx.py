@@ -202,7 +202,7 @@ class Figure(BaseFigure):
     def __init__(self, parent, *args, **kwargs):
         
         # create widget
-        self.widget = GLWidget(self, parent, *args, **kwargs)
+        self._widget = GLWidget(self, parent, *args, **kwargs)
         
         # call original init AFTER we created the widget
         BaseFigure.__init__(self)
@@ -210,7 +210,7 @@ class Figure(BaseFigure):
     def _SetCurrent(self):
         """ make this scene the current context """
         try:
-            self.widget.SetCurrent()
+            self._widget.SetCurrent()
         except Exception:
             # can happen when trying to call this method after            
             # the window was destroyed.
@@ -219,18 +219,18 @@ class Figure(BaseFigure):
     def _SwapBuffers(self):
         """ Swap the memory and screen buffer such that
         what we rendered appears on the screen """
-        self.widget.SwapBuffers()
+        self._widget.SwapBuffers()
 
     def _SetTitle(self, title):
         """ Set the title of the figure... """
-        window = self.widget.Parent
+        window = self._widget.Parent
         if hasattr(window,'SetTitle'):
             window.SetTitle(title)
     
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
         # select widget to resize. If it 
-        widget = self.widget
+        widget = self._widget
         if isinstance(widget.Parent, FigureFrame):
             widget = widget.Parent
         # apply
@@ -241,7 +241,7 @@ class Figure(BaseFigure):
     def _GetPosition(self):
         """ Get the position of the widget. """
         # select widget to resize. If it 
-        widget = self.widget
+        widget = self._widget
         if isinstance(widget.Parent, FigureFrame):
             widget = widget.Parent
         # get and return
@@ -258,6 +258,9 @@ class Figure(BaseFigure):
         app.ProcessPendingEvents()
         while app.ProcessIdle():
            pass
+    
+    def Close(self):
+        self._widget.Parent.Close()
 
 
 class FigureFrame(wx.Frame):

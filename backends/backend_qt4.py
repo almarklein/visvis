@@ -171,7 +171,7 @@ class Figure(BaseFigure):
         self.__doc__ = BaseFigure.__doc__
         
         # create widget
-        self.widget = GLWidget(self, parent, *args, **kwargs)
+        self._widget = GLWidget(self, parent, *args, **kwargs)
         
         # call original init AFTER we created the widget
         BaseFigure.__init__(self)
@@ -179,41 +179,44 @@ class Figure(BaseFigure):
     def _SetCurrent(self):
         """ Make this scene the current OpenGL context. 
         """
-        self.widget.makeCurrent()
+        self._widget.makeCurrent()
         
     def _SwapBuffers(self):
         """ Swap the memory and screen buffer such that
         what we rendered appears on the screen """
-        self.widget.swapBuffers()
+        self._widget.swapBuffers()
         
     def _SetTitle(self, title):
         """ Set the title of the figure. Note that this
         does not have to work if the Figure is uses as
         a widget in an application.
         """
-        self.widget.setWindowTitle(title)
+        self._widget.setWindowTitle(title)
 
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
-        self.widget.setGeometry(x, y, w, h)
+        self._widget.setGeometry(x, y, w, h)
     
     def _GetPosition(self):
         """ Get the position of the widget. """        
-        tmp = self.widget.geometry()
+        tmp = self._widget.geometry()
         return tmp.left(), tmp.top(), tmp.width(), tmp.height()
     
     def _ProcessEvents(self):
         app = QtGui.qApp
         app.processEvents()
+    
+    def Close(self):
+        self._widget.close()
 
 
 def newFigure():
     """ function that produces a new Figure object, the widget
     in a window. """
     fig = Figure(None)
-    #fig.widget.resize(560,420)    
-    fig.widget.resize(560,720) # to tecognize qt windows
-    fig.widget.show()
+    #fig._widget.resize(560,420)    
+    fig._widget.resize(560,720) # to tecognize qt windows
+    fig._widget.show()
     return fig
   
 
