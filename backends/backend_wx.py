@@ -258,8 +258,9 @@ class Figure(BaseFigure):
         while app.ProcessIdle():
            pass
     
-    def Close(self):
-        self._widget.Parent.Close()
+    def _Close(self):
+        if self._widget.Parent:
+            self._widget.Parent.Close()
 
 
 class FigureFrame(wx.Frame):

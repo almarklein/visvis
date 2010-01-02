@@ -339,7 +339,7 @@ class BaseFigure(base.Wibject):
         raise NotImplemented()
     
     
-    def Close(self):
+    def _Close(self):
         """ Close the widget, also calls Destroy(). """
     
     ## Properties
@@ -498,10 +498,15 @@ class BaseFigure(base.Wibject):
     
     def OnDestroy(self):
         """ Clean up. """
+        # close the figure instance
+        if not self._isdestroyed:
+            self._Close()
+        
         # set flag, also make a draw in the next 10 ms, to
         # remove the reference to the widget
         self._isdestroyed = True
         self.Draw()
+        
         # remove from list
         for nr in BaseFigure._figures.keys():
             if BaseFigure._figures[nr] is self:

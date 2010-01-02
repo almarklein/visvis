@@ -233,7 +233,7 @@ class Figure(BaseFigure):
     def _ProcessEvents(self):
         app = fltk.Fl.wait(0) 
     
-    def Close(self):
+    def _Close(self):
         self._widget.OnClose()
     
 

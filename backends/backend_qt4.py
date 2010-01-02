@@ -204,7 +204,7 @@ class Figure(BaseFigure):
         app = QtGui.qApp
         app.processEvents()
     
-    def Close(self):
+    def _Close(self):
         self._widget.close()
 
 
