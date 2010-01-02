@@ -378,9 +378,7 @@ class Wibject(BaseObject):
             # setting the owner is important to be able to
             # calculate the position in pixels, as we need
             # the parent for that!
-            self._position._owner = self
-            # notify the change
-            self.eventPosition.Fire()
+            self._position.SetOwner(self) # this also fires the position event
     
     
     @Property
@@ -392,12 +390,6 @@ class Wibject(BaseObject):
             self._bgcolor = getColor(value, 'setting bgcolor')
     
     
-    def GetSize(self):
-        """ Return the size in pixels. """
-        tmp = self.position.InPixels()
-        return tmp.w, tmp.h
-    
-    
     def RelativeToAbsolute(self, *xy):
         """ Transform the given x-y coordinates from this wibject's
         relative coordinates to absolute figure coordinates. """
@@ -405,8 +397,8 @@ class Wibject(BaseObject):
             xy = xy[0]
         if self.parent:
             x,y = self.parent.RelativeToAbsolute(*xy)
-            tmp = self.position.InPixels()
-            return x+tmp.x, y+tmp.y
+            tmp = self.position
+            return x+tmp.left, y+tmp.top
         else:
             return xy[0], xy[1]
     
@@ -418,12 +410,12 @@ class Wibject(BaseObject):
             xy = xy[0]        
         if self.parent:
             x,y = self.parent.AbsoluteToRelative(*xy)
-            tmp = self.position.InPixels()
-            return x-tmp.x, y-tmp.y
+            tmp = self.position
+            return x-tmp.left, y-tmp.top
         else:
             return xy[0], xy[1]
     
-    
+    # todo: allow transforms only for wobjects? not wibjects
     def _Transform(self):
         """ Apply a translation such that the wibject is 
         drawn in the correct place. """
@@ -431,9 +423,9 @@ class Wibject(BaseObject):
         if not self.parent:
             return            
         # get posision in screen coordinates
-        pos = self.position.InPixels()
+        pos = self.position
         # apply
-        gl.glTranslatef(pos.x,pos.y,0.0)
+        gl.glTranslatef(pos.left,pos.top,0.0)
 
 
     def OnDrawShape(self, clr):
@@ -442,7 +434,7 @@ class Wibject(BaseObject):
         by position.
         """
         gl.glColor(clr[0], clr[1], clr[2], 1.0)
-        w,h = self.GetSize()
+        w,h = self.position.size
         gl.glBegin(gl.GL_POLYGON)
         gl.glVertex2f(0,0)
         gl.glVertex2f(0,h)
@@ -534,7 +526,7 @@ class Box(Wibject):
     def OnDraw(self, fast=False):
         
         # get dimensions        
-        w,h = self.GetSize()
+        w,h = self.position.size
         
         # draw plane
         if self._bgcolor:        

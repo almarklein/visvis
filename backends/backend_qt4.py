@@ -130,12 +130,10 @@ class GLWidget(QtOpenGL.QGLWidget):
         ev.Clear()
         ev.Fire() 
         
-    def resizeGL(self, width, height):
-        """ QT event when window is resized.
+    def resizeEvent(self, event):
+        """ QT event when the widget is resized.
         """
         self.figure._OnResize()
-        # redraw on resize 
-        #self.figure.Draw()
     
     def closeEvent(self, event):
         ev = self.figure.eventClose

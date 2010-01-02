@@ -132,7 +132,7 @@ class TwoDCamera(BaseCamera):
         """
         
         # get window size
-        w,h = self.axes.GetSize()
+        w,h = self.axes.position.size
         w,h = float(w), float(h)
         
         # get range and translation for x and y   
@@ -182,7 +182,7 @@ class TwoDCamera(BaseCamera):
             x, y = x_y[0], x_y[1] # in case the input is 3d
         
         # get window size
-        w, h = self.axes.GetSize()
+        w, h = self.axes.position.size
         w, h = float(w), float(h) 
         
         # get zoom factor
@@ -257,11 +257,11 @@ class TwoDCamera(BaseCamera):
             
             # get movement in x (in pixels) and normalize
             factorx = float(self.ref_mloc[0] - mloc[0])
-            factorx /= self.axes.GetSize()[0]
+            factorx /= self.axes.position.left
             
             # get movement in y (in pixels) and normalize
             factory = float(self.ref_mloc[1] - mloc[1])
-            factory /= self.axes.GetSize()[1]
+            factory /= self.axes.position.top
             
             # apply (use only y-factor if daspect is valid).
             if self.axes.daspectAuto:
@@ -296,7 +296,7 @@ class TwoDCamera(BaseCamera):
         
         # correct for window size        
         if not self.axes.daspectAuto:
-            w, h = self.axes.GetSize()
+            w, h = self.axes.position.size
             w, h = float(w), float(h)        
             if w / h > 1:#self.ylim.range / self.xlim.range:
                 fx *= w/h
@@ -452,7 +452,7 @@ class PolarCamera(TwoDCamera):
             # rotate
             
             # get normalized delta values
-            sze = self.axes.GetSize()
+            sze = self.axes.position.size
             d_az = float( self.ref_mloc[0] - mloc[0] ) / sze[0]
             d_el = -float( self.ref_mloc[1] - mloc[1] ) / sze[1]
             
@@ -476,11 +476,11 @@ class PolarCamera(TwoDCamera):
             
             # get movement in x (in pixels) and normalize
             factorx = float(self.ref_mloc[0] - mloc[0])
-            factorx /= self.axes.GetSize()[0]
+            factorx /= self.axes.position.left
             
             # get movement in y (in pixels) and normalize
             factory = float(self.ref_mloc[1] - mloc[1])
-            factory /= self.axes.GetSize()[1]
+            factory /= self.axes.position.top
             
             # apply (use only y-factor if daspect is valid.
             if self.axes.daspectAuto:
@@ -511,7 +511,7 @@ class PolarCamera(TwoDCamera):
         
         # correct for window size        
         if not self.axes.daspectAuto:
-            w, h = self.axes.GetSize()
+            w, h = self.axes.position.size
             w, h = float(w), float(h)        
             if w / h > 1:#self.ylim.range / self.xlim.range:
                 fx *= w/h
@@ -721,7 +721,7 @@ class FlyCamera(PolarCamera):
             # rotate
             
             # get normalized delta values
-            sze = self.axes.GetSize()
+            sze = self.axes.position.size
             d_az = float( self.ref_mloc[0] - mloc[0] ) / sze[0]
             d_el = -float( self.ref_mloc[1] - mloc[1] ) / sze[1]
             
@@ -745,11 +745,11 @@ class FlyCamera(PolarCamera):
             
             # get movement in x (in pixels) and normalize
             factorx = float(self.ref_mloc[0] - mloc[0])
-            factorx /= self.axes.GetSize()[0]
+            factorx /= self.axes.position.left
             
             # get movement in y (in pixels) and normalize
             factory = float(self.ref_mloc[1] - mloc[1])
-            factory /= self.axes.GetSize()[1]
+            factory /= self.axes.position.top
             
             # apply (use only y-factor if daspect is valid.
             if self.axes.daspectAuto:
@@ -787,7 +787,7 @@ class FlyCamera(PolarCamera):
         
         # correct for window size        
         if not self.axes.daspectAuto:
-            w, h = self.axes.GetSize()
+            w, h = self.axes.position.size
             w, h = float(w), float(h)        
             if w / h > 1:#self.ylim.range / self.xlim.range:
                 fx *= w/h

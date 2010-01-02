@@ -399,6 +399,16 @@ class BaseFigure(base.Wibject):
         """ Get the position of the mouse in the figure. """
         return self._mousepos
     
+    # ===== Notes about positioning figures.  =====
+    # Moving a figure by dragging it with the mouse or programatically 
+    # using the undelying widget directly does not fire a position event.
+    # On resizing it does, because all backends call _OnResize() when this
+    # happens. Setting the position using the position property simply
+    # updates the position, which will make the eventPosition being fired
+    # which makes the bound _OnPositionChange() being called, which updates
+    # the actual position and or size of the underlying widget (via the
+    # backend-implemented _SetPosition().
+    
     @Property
     def position():
         """ The position for the figure works a bit different than for
@@ -406,18 +416,31 @@ class BaseFigure(base.Wibject):
         It represents the position on screen or the position in the 
         parent widget in an application. """
         def fget(self):
-            self._position = pos = Position(self._GetPosition())
-            pos._owner = self
-            return pos
+            # Update the position by asking the backend
+            # Note we need to use privates to avoid position.Update() being
+            # called
+            thepos = self._GetPosition()
+            self._position._x, self._position._y = thepos[0], thepos[1]
+            self._position._w, self._position._h = thepos[2], thepos[3]
+            self._position._inpixels = tuple(thepos)
+            return self._position
+        
         def fset(self,value):
-            # allow setting x and y only
-            if isinstance(value,(tuple,list)) and len(value) == 2:
+            # check input
+            value = [int(v) for v in value]
+            if len(value) not in [2,4]:
+                raise ValueError("Position must consist of 2 or 4 elements.")
+            for v in value[2:]:
+                if v < 2:
+                    raise ValueError(   "Figure heigh and weight " +
+                                        "must be given in absolute pixels.")
+            # allow setting x and y only            
+            if len(value) == 2:
                 value = value[0], value[1], self._position.w, self._position.h
             # make pos 
             self._position = Position(value)
-            # don't make absolute: negative screen coordinates may also occur!
-            # apply            
-            self.eventPosition.Fire()
+            self._position.SetOwner(self)
+    
     
     def _OnPositionChange(self,event=None):
         """ When the position was programatically changed, we should
@@ -428,16 +451,22 @@ class BaseFigure(base.Wibject):
         #if self._resizing:
         #    return
         pos1 = self._GetPosition()
-        pos2 = tuple( [int(i) for i in self._position.AsTuple()] )
+        pos2 = tuple( [int(i) for i in self._position] )
         if pos1 != pos2:
             self._SetPosition( *pos2 )
+    
     
     def _OnResize(self, event=None):
         """ Called when the figure is resized.
         This should initiate the event_position event, but not by firing
         the event_position of this object, otherwise it is not propagated.
         """        
+        # Allow position tree to update
         self.position._Changed()
+        # Draw, but not too often. Note that QT only calls this AFTER the
+        # resizing, while wx can often call this DURING resizing, thus
+        # the relatively large delay.
+        self.Draw(timeout=200)
     
     
     ## Extra methods
@@ -481,7 +510,7 @@ class BaseFigure(base.Wibject):
                 break
     
     
-    def Draw(self, fast=False):
+    def Draw(self, fast=False, timeout=10):
         """ Draw the figure. Collects draw commands
         and only draws every 10 ms.
         """
@@ -495,8 +524,9 @@ class BaseFigure(base.Wibject):
             self.OnDraw()
         if not self._drawTimer.isRunning:
             # restart timer
-            self._drawTimer.Start()
-
+            self._drawTimer.Start(timeout)
+    
+    
     def DrawNow(self, fast=False):
         """ Draw the figure now and let the GUI toolkit process its events.
         Use this if you want to update your figure while running some
@@ -738,6 +768,7 @@ class Axes(base.Wibject):
         
         # axis properties                
         self._xlabel, self._ylabel, self._zlabel = '','',''
+        self._xlabelCorr, self._ylabelCorr = 0, 0
         self._tickFontSize = 10
         self._gridLineStyle = ':'
         self._xticks, self._yticks, self._zticks = None, None, None
@@ -943,6 +974,30 @@ class Axes(base.Wibject):
         return [child for child in self._wobjects]
     
     
+    def _CorrectPositionForLabels(self):
+        """ Correct the position for the labels. """
+        
+        # init correction
+        xlabelCorr, ylabelCorr = 0, 0
+        
+        # correction should be applied for 2D camera and a valid label
+        if self.camera is self._cameras['2d']:
+            if self.showAxis:
+                xlabelCorr += 20
+                ylabelCorr += 80
+                if self.xLabel:
+                    xlabelCorr += 20
+                if self.yLabel:
+                    ylabelCorr += 20
+        
+        # check the difference
+        if xlabelCorr != self._xlabelCorr or ylabelCorr != self._ylabelCorr:
+            dy = self._xlabelCorr - xlabelCorr # dy for xlabel is not a typo
+            dx = self._ylabelCorr - ylabelCorr
+            self._xlabelCorr, self._ylabelCorr = xlabelCorr, ylabelCorr
+            # apply
+            self.position.Correct(-dx, 0, dx, dy)
+    
     ## Define more properties
 
     @Property
@@ -971,8 +1026,8 @@ class Axes(base.Wibject):
         if not figure:
             return 0,0
         x,y = figure.mousepos
-        pos = self.position.InPixels()
-        return x-pos[0], y-pos[1]
+        pos = self.position
+        return x-pos.left, y-pos.top
     
     
     @Property
@@ -1192,20 +1247,25 @@ class Axes(base.Wibject):
         """ Clean up. """
         self.Clear()
         # the wibjects are destoyed automatically by the Destroy command.
-   
+    
+    
     def OnDraw(self, mode='normal'):
         """ Draw the background of the axes and the wobjects in it.
         """
         
         # size of figure ...
-        w,h = self.parent.GetSize()
+        w,h = self.parent.position.size
         
-        # find actual position in pixels
-        pos = self.position.InPixels((w,h))
+        # correct size for labels
+        self._CorrectPositionForLabels()
+        
+        # Find actual position in pixels, do not allow negative values
+        pos = self.position.InPixels()
+        pos.w, pos.h = max(pos.w, 1), max(pos.h, 1)
         
         # set viewport (note that OpenGL has origin in lower-left, visvis
         # in upper-left)
-        gl.glViewport(pos.x, h-pos.y2, pos.w, pos.h)        
+        gl.glViewport(pos.x, h-pos.bottom, pos.w, pos.h)        
         
         gl.glDisable(gl.GL_DEPTH_TEST)
         
@@ -1246,7 +1306,7 @@ class Axes(base.Wibject):
         # set camera to screen coordinates.
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
-        gl.glOrtho( pos.x, pos.x2 , h-pos.y2, h-pos.y, -100000, 100000 )
+        gl.glOrtho( pos.x, pos.right , h-pos.bottom, h-pos.y, -100000, 100000 )
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
@@ -1290,12 +1350,13 @@ class Axes(base.Wibject):
         pickerHelper = self.GetFigure()._pickerHelper
         
         # get position
-        w,h = self.parent.GetSize()
-        pos = self.position.InPixels((w,h))
+        w,h = self.parent.position.size
+        pos = self.position.InPixels()
+        pos.w, pos.h = max(pos.w, 1), max(pos.h, 1)
         
         # set viewport (note that OpenGL has origin in lower-left, visvis
         # in upper-left)
-        gl.glViewport(pos.x, h-pos.y2, pos.w, pos.h) 
+        gl.glViewport(pos.x, h-pos.bottom, pos.w, pos.h) 
         
         # prepare for drawing background
         gl.glMatrixMode(gl.GL_PROJECTION)        
@@ -1352,6 +1413,13 @@ class Axes(base.Wibject):
         if f:
             f._currentAxes = self
         
+
+# A note about tick labels. We format these using '%1.4g', which means
+# they will have 4 significance, and will automatically displayed in
+# exp notation if necessary. This means that the largest string is
+# x.xxxE+yyy -> 10 characters. This corresponds to around 80 pixels.
+# So a margin of at least 80 pixels should be kept to the left of each
+# axes. This margin should be at least 16 for the bottom of the axes.
 
 class Axis(base.Wobject):
     """ An Axis object represents the lines and ticks that make
@@ -1558,9 +1626,9 @@ class Axis(base.Wobject):
                 for tick in ticks:
                     # get tick location
                     p1 = firstCorner.Copy()
-                    p1[d] = tick                    
+                    p1[d] = tick
                     # get little tail to indicate tick
-                    p2 = p1.Copy()                    
+                    p2 = p1.Copy()
                     p2 = p2 - tv
                     if isTwoDCam:
                         factor = ( tick-firstCorner[d] ) / vector_c[d]
@@ -1573,7 +1641,7 @@ class Axis(base.Wobject):
                         ppc.Append(p1)
                         ppc.Append(p2)
                     # put textlabel at tick                    
-                    text = '%1.4g' % tick                    
+                    text = '%1.4g' % tick
                     textDict = self._textDicts[d]
                     if text in textDict and textDict[text] in self._children:
                         t = textDict[text]
@@ -1841,15 +1909,15 @@ class Legend(base.Box):
     
     def _OnDown(self, event):
         f = self.GetFigure()
-        tmp = self.position.InPixels()
-        self._moving = tmp.x - f.mousepos[0], tmp.y-f.mousepos[1]
+        tmp = self.position
+        self._moving = tmp.left - f.mousepos[0], tmp.top - f.mousepos[1]
     
     def _OnMove(self, event):
         if not self._moving:
             return
         else:
-            self.position.x = max([ event.x + self._moving[0], 0 ])
-            self.position.y = max([ event.y + self._moving[1], 0 ])
+            self.position.x = event.x + self._moving[0]
+            self.position.y = event.y + self._moving[1]
             event.owner.Draw()
     
     def _OnUp(self, event):

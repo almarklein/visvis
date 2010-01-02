@@ -41,23 +41,31 @@ class Title(Label):
         self.halign = 0
         self.fontSize = 12
         
+        # store axes, because when OnDestroy is called, parent is None
+        self._axes = axes
+        
         # set color
         f = axes.GetFigure()
         if f:
             self.bgcolor = f.bgcolor
         
-        # keep up to date
-        axes.eventPosition.Bind(self._OnParentPositionChange)
-        self._OnParentPositionChange()
-        # does not work, because figure does not produce callback!
+        # set position
+        self.position = 0, -20, 1, 15
         
-    def _OnParentPositionChange(self, event=None):
-        """ set position to be just above the axes. """
-        axes = self.parent
-        if axes:                    
-            pos = axes.position.InPixels()
-            self.position = 0, -(pos.h+20), 1, 15
-
+        # correct axes' position
+        pos = axes.position
+        dy = -20        
+        axes.position.Correct(0, -dy, 0, dy) 
+    
+    
+    def OnDestroy(self):
+        # correct axes' position
+        axes = self._axes
+        self._axes = None
+        if axes:
+            pos = axes.position
+            dy = 20
+            axes.position.Correct(0, -dy, 0, dy) 
 
 class Polygon:
     """ A generic polygon. 

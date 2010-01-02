@@ -167,7 +167,6 @@ class GLWidget(fltk.Fl_Gl_Window):
     
     def OnResize(self, event):        
         self.figure._OnResize()     
-        #self.figure.Draw()        
     
     def OnClose(self, event=None):    
         ev = self.figure.eventClose

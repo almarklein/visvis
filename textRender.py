@@ -557,7 +557,7 @@ class BaseText():
         
         # Move anchor in label
         if isinstance(self, Label):
-            w,h = self.GetSize()
+            w,h = self.position.size
             # determine whether the text is vertical or horizontal
             halign, valign = self._halign, self._valign
             if self._angle > 135 or self._angle < -135:

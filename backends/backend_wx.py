@@ -174,7 +174,6 @@ class GLWidget(GLCanvas):
     
     def OnResize(self, event):      
         self.figure._OnResize()
-        self.figure.Draw()
         event.Skip()
     
     def OnClose(self, event):

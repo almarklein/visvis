@@ -11,8 +11,8 @@ def gca():
         # create axes
         a = vv.Axes(f)
         a.cameraType = 'twod'
-        #a.position = vv.Position(0.1, 0.1, -0.2, -0.2)
-        a.position = vv.Position(70, 40, -100, -90)
+        #a.position = vv.Position(2, 2, -4, -4)
+        a.position = vv.Position(10, 10, -20, -20)
     return a
     
     

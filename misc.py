@@ -158,13 +158,10 @@ class Range(object):
 
 
 class Position(object):
-    """ Indicates a position: left, top, width, height.
+    """ Indicates a position: x, y, w, h.
     
-    It also provides short (x, y, w, h) properties to get/set 
-    them and allows setting via indexing. Additionally the properties
-    x2, right, y2 and bottom are also provided, which simply calculate
-    x+w and y+h respectively. Use these only on a Position instance with 
-    all absolute values (can be obtained using InPixels()).
+    It provides short (x, y, w, h) properties to change the position
+    and allows getting/setting via indexing. 
     
     Create using Position(x,y,w,h), or Position(pos), where pos 
     is a 4 element list or tuple, or another Position.
@@ -172,24 +169,29 @@ class Position(object):
     Each element can be either:
     - The integer pixel value in screen coordinates.
     - The relative (floating point) value between 0.0 and 1.0.
-    - The value may be negative, in which case the difference from the 
-      parent's full width/height is taken. So (-200, 50, 150,-100), with
-      a parent's w/h of (500,500) is equal to ( 300, 50, 150, 400), thus
-      allowing aligning to the right edge, and easier centering. Negative
-      values may also be used with relative values.
+    - The value may be negative. For the width and height the difference 
+      from the parent's full width/height is taken. So (-200, 50, 150,-100), 
+      with a parent's w/h of (500,500) is equal to ( -200, 50, 150, 400), thus
+      allowing aligning to the right/bottom edge, and easier centering. 
+      Negative values may also be used with relative values.
     
     Remarks:
     - relative/absoulte/negative values may be mixed.
     - x and y are considered relative on <-1, 1> 
     - w and h are considered relative on [-1, 1]    
-    - the value 0 can always be considered absolute    
+    - the value 0 can always be considered absolute 
+    
+    The long named properties express the position in pixel coordinates.
+    Internally a version in pixel coordinates is buffered, which is kept
+    up to date. These long named (read-only) properties are:
+    left, top, width, height, right, bottom, topLeft, bottomRight, size.
+    (the latter three return two-element tuples)
+    
     """
     
     def __init__(self, *pos):
         
         # initial check
-        if len(pos)==0:
-            raise ValueError("A position consists of 4 values!")
         if len(pos)==1:
             pos= pos[0]
         
@@ -197,8 +199,8 @@ class Position(object):
         if isinstance(pos, Position):
             self._x, self._y = pos._x, pos._y
             self._w, self._h = pos._w, pos._h
-            self._owner = None
-            #self._owner = pos._owner (I don't think we want this!)
+            self._inpixels = pos._inpixels
+            self._owner = None # don't copy the owner
             return
         
         # check length
@@ -206,35 +208,81 @@ class Position(object):
             raise ValueError("A position consists of 4 values!")
         
         # set
-        self._x = pos[0]
-        self._y = pos[1]
-        self._w = pos[2]
-        self._h = pos[3]
+        self._x, self._y, self._w, self._h = pos[0], pos[1], pos[2], pos[3]
+        
+        # init position in pixels (as a tuple)
+        self._inpixels = None
         
         # init owner, 
         # the wibject sets this in the f_set part of the position property
         self._owner = None
-        
-        # make sure non-relative items are int
-        self._GetRelative()
+    
     
     
     def Copy(self):
-        """ Make a copy. Otherwise you'll point to the same object! """
+        """ Copy()
+        Make a copy. Otherwise you'll point to the same object! """
         return Position(self)
     
     
+    def InPixels(self):
+        """ InPixels()
+        Return a copy, but in pixel coordinates. """
+        p = Position(self.left, self.top, self.width, self.height)
+        p._inpixels = self._inpixels
+        return p
+    
+    
+    def __repr__(self):
+        return "<Position %1.2f, %1.2f,  %1.2f, %1.2f>" % (
+            self.x, self.y, self.w, self.h)
+    
+    
+    ## For keeping _inpixels up-to-date
+    
+    
+    def SetOwner(self, object):
+        """ _SetOwner(object)
+        Set the owner of this position instance and call _Update().
+        """
+        if not hasattr(object, '_position'):
+            # a bit ugly, but we cannot know the wibject class.
+            raise ValueError('Only wibject instances can own a position.')
+        self._owner = object
+        self._Update() # will call change as the inpixels changes
+    
+    
+    def _Update(self):
+        """ _Update()
+        Re-obtain the position in pixels. If the obtained position
+        differs from the current position-in-pixels, _Changed()
+        is called.
+        """
+        
+        # get old version, obtain and store new version
+        ip1 = self._inpixels
+        ip2 = self._inpixels = self._CalculateInPixels()
+        
+        # current inpixels was still None
+        if ip2:
+            if ip1 != ip2: # also if ip1 is None
+                self._Changed()
+    
+    
     def _Changed(self):
-        """ Notify owner. """
-        # an owner is almost always a wibject, which has an event
-        # for when this happens ...
-        # note to also fire the events for the children!
+        """ _Changed()
+        To be called when the position was changed. 
+        Will fire the owners eventPosition and will call
+        _Update() on the position objects of all the owners
+        children.
+        """
         if self._owner:           
-            if hasattr(self._owner,'eventPosition'):
-                self._owner.eventPosition.Fire()                
+            if hasattr(self._owner, 'eventPosition'):
+                self._owner.eventPosition.Fire()
+                #print 'firing position event for', self._owner
             for child in self._owner._children:
-                if hasattr(child,'position'):
-                    child.position._Changed()
+                if hasattr(child, '_position'):
+                    child._position._Update()
     
     
     def _GetRelative(self):
@@ -247,48 +295,42 @@ class Position(object):
         for i in range(2):
             if self[i] > -1 and self[i] < 1 and self[i]!=0:
                 relative[i] = 1
-            else:
-                # make sure its int
-                if i==0:  self._x = int(self._x)
-                else:  self._y = int(self._y)
         for i in range(2,4):            
             if self[i] >= -1 and self[i] <= 1 and self[i]!=0:
                 relative[i] = 1
-            else:
-                # make sure its int
-                if i==2:  self._w = int(self._w)
-                else:  self._h = int(self._h)
-                
         # return
         return relative
     
     
-    def AsTuple(self):
-        """ Return the postion as a tuple of four values. """ 
-        return (self._x, self._y, self._w, self._h)
+    def _GetInPixels(self):
+        """ Return the position in screen coordinates as a tuple. 
+        A buffered instance is returned, that is kept up to date.
+        """
+        # should we calculate it?
+        if not self._inpixels:
+            self._inpixels = self._CalculateInPixels()        
+        # return it
+        return self._inpixels
     
     
-    def InPixels(self, w_h=None):
-        """ Return the position in screen coordinates as a Position. 
-        If all coordinates are already absolute, return self.Copy().
-        If w_h is given, this is used as the parent's width/height.
-        If not, the parent's position is obtained. 
+    def _CalculateInPixels(self):
+        """ Return the position in screen coordinates as a tuple. 
         """
         
         # test if this is easy
         relatives = self._GetRelative()
         negatives = [int(self[i]<0) for i in range(4)]
         if max(relatives)==0 and max(negatives)==0:
-            return self.Copy()
+            return self._x, self._y, self._w, self._h
         
-        
+        # if owner is a figure, it cannot have relative values
+        if hasattr(self._owner, '_SwapBuffers'):
+            return self._x, self._y, self._w, self._h
+            
         # test if we can calculate
         if not self._owner or not hasattr(self._owner,'parent'):
             raise Exception("Can only calculate the position in pixels"+
                             " if the position instance is owned by a wibject!")
-        # if owner is a figure, it can have negative numbers yes...
-        if hasattr(self._owner, '_SwapBuffers'):
-            return self.Copy()
         # else, the owner must have a parent...
         if self._owner.parent is None:
             print self._owner
@@ -296,21 +338,47 @@ class Position(object):
                             " if the owner has a parent!")
         
         # get width/height of parent
-        tmp = self._owner.parent.position.InPixels()
-        whwh = (tmp.w, tmp.h, tmp.w, tmp.h)
+        tmp = self._owner.parent.position
+        whwh = tmp.width, tmp.height
+        whwh = (whwh[0], whwh[1], whwh[0], whwh[1])
         
         # calculate!
-        pos = self.Copy()
+        pos = [self._x, self._y, self._w, self._h]
         for i in range(4):
             if relatives[i]:
                 pos[i] = pos[i]*whwh[i]
-            if negatives[i]:
+            if i>1 and negatives[i]:
                 pos[i] = whwh[i] + pos[i]
             # make sure it's int (even if user supplied floats > 1)
-            pos[i] = int(pos[i]) 
+            pos[i] = int(pos[i])
         
         # done
-        return pos
+        return tuple(pos)
+    
+    
+    ## For getting and setting
+    
+    
+    def Correct(self, dx=0, dy=0, dw=0, dh=0):
+        """ Correct the position by suplying a delta amount of pixels.
+        The correction is only applied if the attribute is absolute.
+        """
+        
+        # get relatives
+        relatives = self._GetRelative()
+        
+        # apply correction if we can
+        if dx and not relatives[0]:
+            self._x += int(dx) 
+        if dy and not relatives[1]:
+            self._y += int(dy)
+        if dw and not relatives[2]:
+            self._w += int(dw) 
+        if dh and not relatives[3]:
+            self._h += int(dh) 
+        
+        # we need an update now
+        self._Update()
     
     
     def __getitem__(self,index):
@@ -323,6 +391,7 @@ class Position(object):
         else:
             raise IndexError("Position only accepts indices 0,1,2,3!")
     
+    
     def __setitem__(self,index, value):
         if not isinstance(index,int):
             raise IndexError("Position only accepts single indices!")
@@ -333,13 +402,7 @@ class Position(object):
         else:
             raise IndexError("Position only accepts indices 0,1,2,3!")
         self._Changed()
-
-
-    def __repr__(self):
-        return "<Position %1.2f, %1.2f,  %1.2f, %1.2f>" % (
-            self.x, self.y, self.w, self.h)
     
-    ## Short named properties
     
     @Property
     def x():
@@ -373,56 +436,52 @@ class Position(object):
             self._h = value
             self._Changed()
     
-    @property
-    def x2(self):
-        return self._x + self._w
+    ## Long names properties expressed in pixels
     
     @property
-    def y2(self):
-        return self._y + self._h
+    def left(self):
+        tmp = self._GetInPixels()
+        return tmp[0]
     
-    ## Long names properties
+    @property
+    def top(self):
+        tmp = self._GetInPixels()
+        return tmp[1]
     
-    @Property
-    def left():
-        def fget(self):
-            return self._x
-        def fset(self,value):
-            self._x = value
-            self._Changed()
+    @property
+    def width(self):
+        tmp = self._GetInPixels()
+        return tmp[2]
     
-    @Property
-    def top():
-        def fget(self):
-            return self._y
-        def fset(self,value):
-            self._y = value
-            self._Changed()
+    @property
+    def height(self):
+        tmp = self._GetInPixels()
+        return tmp[3]
     
-    @Property
-    def width():
-        def fget(self):
-            return self._w
-        def fset(self,value):
-            self._w = value
-            self._Changed()
-    
-    @Property
-    def height():
-        def fget(self):
-            return self._h
-        def fset(self,value):
-            self._h = value
-            self._Changed()
-
     @property
     def right(self):
-        return self._x + self._w
+        tmp = self._GetInPixels()
+        return tmp[0] + tmp[2]
     
     @property
     def bottom(self):
-        return self._y + self._h
+        tmp = self._GetInPixels()
+        return tmp[1] + tmp[3]
     
+    @property
+    def topLeft(self):
+        tmp = self._GetInPixels()
+        return tmp[0], tmp[1]
+    
+    @property
+    def bottomRight(self):
+        tmp = self._GetInPixels()
+        return tmp[0] + tmp[2], tmp[1] + tmp[3]
+    
+    @property
+    def size(self):
+        tmp = self._GetInPixels()
+        return tmp[2], tmp[3]
 
 
 ## Transform classes for wobjects
