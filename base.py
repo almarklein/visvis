@@ -36,6 +36,7 @@ import OpenGL.GLU as glu
 
 import numpy as np
 import math, time
+import weakref
 
 from misc import Property, Range, OpenGLError, Transform_Base
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
@@ -55,6 +56,8 @@ class BaseObject(object):
     """
     
     def __init__(self, parent):
+        # wheter or not the object has been destroyed
+        self._destroyed = False
         # whether or not to draw the object
         self._visible = True
         # whether the object can be clicked
@@ -95,6 +98,10 @@ class BaseObject(object):
         shape can be an ObjectPickerHelper instance in which
         case only shape is drawn. 
         """
+        # are we alive
+        if self._destroyed:
+            print "Warning, cannot draw destroyed object:", self
+            return 
         # only draw if visible
         if not self.visible:
             return
@@ -187,6 +194,7 @@ class BaseObject(object):
         # Actual destroy
         self.OnDestroyGl()
         self.OnDestroy()
+        self._destroyed = True
         
         # Leave home (using the property causes recursion)        
         if hasattr(self._parent, '_children'):
@@ -257,7 +265,10 @@ class BaseObject(object):
     def OnDestroy(self):
         """ Overload this to clean up any resources other than the GL objects. 
         """
-        pass 
+        for att in self.__dict__.values():
+            if isinstance(att, BaseEvent):
+                att.Unbind()
+             
     
     def OnDestroyGl(self):
         """ Overload this to clean up any OpenGl resources. 
@@ -424,34 +435,6 @@ class Wibject(BaseObject):
             self._bgcolor = getColor(value, 'setting bgcolor')
     
     
-    def RelativeToAbsolute(self, *xy):
-        """ Transform the given x-y coordinates from this wibject's
-        relative coordinates to absolute figure coordinates. """
-        if len(xy)==1:
-            xy = xy[0]
-        if self.parent:
-#             x,y = self.parent.RelativeToAbsolute(*xy)
-            tmp = self.position
-#             return x+tmp.left, y+tmp.top
-            return xy[0]+tmp.absLeft, xy[1]+tmp.absTop
-        else:
-            return xy[0], xy[1]
-    
-    # todo: remove this as its so simple?
-    def AbsoluteToRelative(self, *xy):
-        """ Transform the given x-y coordinates from absolute figure
-        coordinates to this object's relative coordinates. """
-        if len(xy)==1:
-            xy = xy[0]        
-        if self.parent:
-#             x,y = self.parent.AbsoluteToRelative(*xy)
-            tmp = self.position
-#             return x-tmp.left, y-tmp.top
-            return xy[0]-tmp.absLeft, xy[1]-tmp.absTop
-        else:
-            return xy[0], xy[1]
-    
-    # todo: allow transforms only for wobjects? not wibjects
     def _Transform(self):
         """ Apply a translation such that the wibject is 
         drawn in the correct place. """
@@ -478,13 +461,7 @@ class Wibject(BaseObject):
         gl.glVertex2f(w,0)
         gl.glEnd()
 
-    
-    def OnDestroy(self):
-        # detach position
-        #self._position = None
-        pass # todo: it happens sometimes that the position is read :/
-        # using weak refs would solve this problem
-        
+
 
 class Wobject(BaseObject):
     """ A visvis.Wobject (world object) is a visual element that 
@@ -589,13 +566,12 @@ class Position(object):
         # test owner
         if not isinstance(owner , Wibject):
             raise ValueError('A positions owner can only be a wibject.')
-                
         
         # set
         self._x, self._y, self._w, self._h = x, y, w, h
         
-        # store owner
-        self._owner = owner
+        # store owner using a weak reference
+        self._owner = weakref.ref(owner) 
         
         # init position in pixels and absolute (as a tuples)
         self._inpixels = None
@@ -611,7 +587,7 @@ class Position(object):
     def Copy(self):
         """ Copy()
         Make a copy. Otherwise you'll point to the same object! """
-        p = Position(self._x, self._y, self._w, self._h, self._owner)
+        p = Position(self._x, self._y, self._w, self._h, self._owner())
         p._inpixels = self._inpixels
         p._absolute = self._absolute
         return p
@@ -620,7 +596,7 @@ class Position(object):
     def InPixels(self):
         """ InPixels()
         Return a copy, but in pixel coordinates. """
-        p = Position(self.left, self.top, self.width, self.height, self._owner)
+        p = Position(self.left,self.top,self.width,self.height, self._owner())
         p._inpixels = self._inpixels
         p._absolute = self._absolute
         return p
@@ -659,11 +635,12 @@ class Position(object):
         children.
         """
         # only notify if this is THE position of the owner (not a copy)
-        if self._owner and self._owner._position is self:           
-            if hasattr(self._owner, 'eventPosition'):
-                self._owner.eventPosition.Fire()
-                #print 'firing position event for', self._owner
-            for child in self._owner._children:
+        owner = self._owner()
+        if owner and owner._position is self:           
+            if hasattr(owner, 'eventPosition'):
+                owner.eventPosition.Fire()
+                #print 'firing position event for', owner
+            for child in owner._children:
                 if hasattr(child, '_position'):
                     child._position._Update()
     
@@ -693,24 +670,27 @@ class Position(object):
         fractionals = self._GetFractionals()
         negatives = [int(self[i]<0) for i in range(4)]
         
+        # get owner
+        owner = self._owner()
+        
         # if owner is a figure, it cannot have relative values
-        if hasattr(self._owner, '_SwapBuffers'):
+        if hasattr(owner, '_SwapBuffers'):
             self._inpixels = (self._x, self._y, self._w, self._h)
             self._absolute = self._inpixels 
             return
         
         # test if we can calculate
-        if not isinstance(self._owner, Wibject):
+        if not isinstance(owner, Wibject):
             raise Exception("Can only calculate the position in pixels"+
                             " if the position instance is owned by a wibject!")
         # else, the owner must have a parent...
-        if self._owner.parent is None:
-            print self._owner
+        if owner.parent is None:
+            print owner
             raise Exception("Can only calculate the position in pixels"+
                             " if the owner has a parent!")
         
         # get width/height of parent
-        ppos = self._owner.parent.position
+        ppos = owner.parent.position
         whwh = ppos.width, ppos.height
         whwh = (whwh[0], whwh[1], whwh[0], whwh[1])
         
@@ -729,7 +709,7 @@ class Position(object):
         
         # abs pos is based on the inpixels version, but x,y corrected. 
         apos = [p for p in pos]
-        if ppos._owner.parent:
+        if ppos._owner().parent:
             apos[0] += ppos.absLeft
             apos[1] += ppos.absTop
         

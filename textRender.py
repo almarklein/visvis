@@ -139,7 +139,7 @@ class Font(TextureObject):
         shape = data.shape
         gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, 2, shape[1],shape[0], 0,
             gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data)
-        # gl.GL_LUMINANCE_ALPHA crashes
+            
         
         tmp1 = gl.GL_LINEAR
         tmp2 = gl.GL_LINEAR
@@ -654,12 +654,14 @@ class Text(Wobject, BaseText):
         # enable texture
         font.Enable()
         
-        # prepare, draw in screen coordinates                
-        texCords = self._texCords.Copy()
-        vertices = self._vertices2.Copy()
-        vertices[:,0] = vertices[:,0] + self._screenx
-        vertices[:,1] = vertices[:,1] + self._screeny
-        vertices[:,2] = 100000 - self._screenz * 200000
+        # prepare
+        texCords = self._texCords#.Copy()
+        vertices = self._vertices2#.Copy()
+        
+        # translate to proper position
+        gl.glPushMatrix()
+        tmp = 100000 - self._screenz * 200000
+        gl.glTranslatef(self._screenx, self._screeny, tmp)
         
         # init vertex and texture array
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
@@ -674,10 +676,12 @@ class Text(Wobject, BaseText):
             gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
             gl.glFlush()
         
-        # disable texture and clean up
+        # disable texture and clean up        
         font.Disable()
+        gl.glPopMatrix()
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        
 
 
 
@@ -697,7 +701,8 @@ class Label(Box, BaseText):
         
         # we need to know about position changes to update alignment
         self.eventPosition.Bind(self._PositionText)
-
+    
+    
     def OnDraw(self):
         """ Draw the text now. """
         

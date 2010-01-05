@@ -199,7 +199,6 @@ class BaseFigure(base.Wibject):
         
         # register
         self._Register()
-        self._isdestroyed = False
         
         # to prevent recursion
         self._resizing = False
@@ -364,7 +363,7 @@ class BaseFigure(base.Wibject):
     @property
     def currentAxes(self):
         """ Get the currently active axes of this figure. 
-        Return None if no axes are present.
+        Return None if no axes are present. 
         """
         
         # init 
@@ -372,7 +371,10 @@ class BaseFigure(base.Wibject):
         
         # check 
         for child in self._children:
-            if not isinstance(child, Axes):
+            if not isinstance(child, AxesContainer):
+                continue
+            child = child.GetAxes()
+            if not child:
                 continue
             if not ca:
                 ca = child
@@ -493,12 +495,12 @@ class BaseFigure(base.Wibject):
         base.Wibject.OnDestroy(self)
         
         # close the figure instance
-        if not self._isdestroyed:
+        if not self._destroyed:
             self._Close()
         
         # set flag, also make a draw in the next 10 ms, to
         # remove the reference to the widget
-        self._isdestroyed = True
+        self._destroyed = True
         self.Draw()
         
         # remove from list
@@ -543,7 +545,7 @@ class BaseFigure(base.Wibject):
         again to only draw the shapes for picking. 
         """
         # are we alive?
-        if self._isdestroyed:           
+        if self._destroyed:           
             return
         
         # calculate fps
@@ -719,11 +721,13 @@ class BaseFigure(base.Wibject):
             ev.Clear()
             ev.button = button
             if isinstance(item, base.Wibject):
-                # use relative coordinates
-                ev.x, ev.y = item.AbsoluteToRelative(x, y)
+                if item.parent: # use relative coordinates if not a figure
+                    ev.x, ev.y = x-item.position.absLeft, y-item.position.absTop
+                else:
+                    ev.x, ev.y = x, y
             elif isinstance(item, base.Wobject):
                 # use axes coordinates
-                ev.x, ev.y = axes.AbsoluteToRelative(x, y)
+                ev.x, ev.y = x-axes.position.absLeft, y-axes.position.absTop
             if isinstance(item, (base.Wobject, Axes )):
                 # also give 2D coordinates
                 if isinstance(item, Axes):
@@ -734,9 +738,7 @@ class BaseFigure(base.Wibject):
                     ev.x2d, ev.y2d = cam.ScreenToWorld((ev.x, ev.y))
             ev.Fire()
 
-# todo: give "axes" property of some sort. Also should be removed
-# when axes is destroyed.
-# todo: always create an axes in a container.
+
 class AxesContainer(base.Wibject):
     """ AxesContainer
     
@@ -746,29 +748,43 @@ class AxesContainer(base.Wibject):
     has a position in pixels by default.
     
     This container is Destroyed once the axes is removed. 
-    We advice not to attach wibjects to an instance of this class.
+    
+    The only correct way to create (and obtain a reference to) 
+    an AxesContainer instance is to use:
+    axes = vv.Axes(figure)
+    container = axes.parent
+    
+    You can attach wibjects to an instance of this class, but note that
+    the container object is destroyed as soon as the axes is gone.
     """
     
-    def __init__(self, *args, **kwargs):
-        base.Wibject.__init__(self, *args, **kwargs)
+    def __init__(self, parent, *args, **kwargs):
+        
+        # check that the parent is a Figure 
+        if not isinstance(parent, BaseFigure):
+            raise Exception("The given parent for an AxesContainer " +
+                            "should be a Figure.")
+        base.Wibject.__init__(self, parent, *args, **kwargs)
         self.position = 0,0,1,1
     
     
     def GetAxes(self):
         """ Get the axes, creates a new axes object if it has none. """
-        for child in self.children:
-            if isinstance( child, Axes):
+        if self._children:
+            child = self._children[0]
+            if isinstance(child, Axes):
                 return child
-        else:
-            # create axes
-            return Axes(self)
+        return None
     
     
     def _DrawTree(self, *args, **kwargs):
         """ Pass on. """
-        if self._children:
-            self._children[0]._DrawTree(*args, **kwargs)
-
+        axes = self.GetAxes()
+        if axes:
+            axes._DrawTree(*args, **kwargs)
+        else:
+            self.Destroy()
+    
 
 class Axes(base.Wibject):
     """ An Axes contains a scene with a local coordinate frame 
@@ -780,12 +796,20 @@ class Axes(base.Wibject):
     element tuple. The sign of the elements indicate axes being flipped.
     """ 
     
-    def __init__(self, figure):
+    def __init__(self, parent):
         
-        # check that the parent is a figure
-        if not isinstance(figure, (BaseFigure, AxesContainer)):
-            raise Exception("The given parent for an Axes should be a Figure.")
-        base.Wibject.__init__(self, figure)
+        # check that the parent is a Figure or AxesContainer
+        if isinstance(parent, AxesContainer):
+            figure = parent.parent 
+        elif isinstance(parent, BaseFigure):            
+            figure = parent
+            parent = AxesContainer(figure)
+        else:
+            raise Exception("The given parent for an Axes " +
+                            "should be a Figure or AxesContainer.")
+        
+        # call base __init__
+        base.Wibject.__init__(self, parent)
         
         # objects in the scene. The Axes is the only wibject that
         # can contain wobjects. Basically, the Axes is the root
@@ -821,7 +845,7 @@ class Axes(base.Wibject):
         # init the background color of this axes
         self.bgcolor = 1,1,1  # remember that bgcolor is a property
         
-        # bind to event
+        # bind to event (no need to unbind because it's our own)
         self.eventMouseDown.Bind(self._OnMouseDown)
         
         # create Axis and legend
@@ -1281,7 +1305,11 @@ class Axes(base.Wibject):
         """ Clean up. """
         base.Wibject.OnDestroy(self)
         self.Clear()
-        # the wibjects are destoyed automatically by the Destroy command.
+        self.camera = None
+        self._cameras = None
+        # container is destroyed as soon as it notices the axes is gone
+        # any wibjects are destoyed automatically by the Destroy command.
+        
     
     
     def OnDraw(self, mode='normal'):
@@ -1460,8 +1488,6 @@ class Axes(base.Wibject):
 # pixels. The correction applied when visualizing axis (and ticks) is 60,
 # because the default offset is 10 pixels for axes.
 
-# todo: fix bug that when zooming a lot, many labels are created which
-# are never destroyed. 
 # todo: increase performance by drawing all text with one command by 
 # combining all texture coords and vertices?
 
@@ -1503,9 +1529,8 @@ class Axis(base.Wobject):
         if not axes:
             return
         if not axes.showAxis:
-            if self._children:
-                tmp = self._children
-                for child in tmp:
+            if self._children:                
+                for child in self.children:
                     child.Destroy()
             return
         
@@ -1587,12 +1612,19 @@ class Axis(base.Wobject):
                 rs = ( vector_s.x**2 + vector_s.y**2 ) ** 0.5
                 pixelsPerUnit = rs/rc
                 
+                # should we correct tick Dist?
+                minTickDist = self._minTickDist
+                if isTwoDCam and d==0:
+                    mm = max(abs(lim.min),abs(lim.max))
+                    if mm >= 10000:
+                        minTickDist = 80 
+                
                 # Try all tickunits, starting from the smallest, until we find 
-                # one which results in a distance between ticks more that 
+                # one which results in a distance between ticks more than
                 # X pixels.
                 try:
                     for tickUnit in self._tickUnits:
-                        if tickUnit * pixelsPerUnit >= self._minTickDist:
+                        if tickUnit * pixelsPerUnit >= minTickDist:
                             break
                     # if the numbers are VERY VERY large (which is very unlikely)
                     if tickUnit*pixelsPerUnit < self._minTickDist:
@@ -1608,7 +1640,7 @@ class Axis(base.Wobject):
                     ticks = self._GetTicks(tickUnit, lim)
                 
                 # Get index of corner to put ticks at
-                i0 = 0; bestVal = 999999999
+                i0 = 0; bestVal = 999999999999999999999999
                 for i in range(4):
                     if d==2: val = corners4_s[i].x
                     else: val = corners4_s[i].y
@@ -1645,10 +1677,9 @@ class Axis(base.Wobject):
                 p1 = corners4_c[i0] + vector_c * 0.5
                 key = '_label_'
                 if key in textDict and textDict[key] in self._children:
-                    t = textDict[key]
+                    t = textDict.pop(key)
                     t.text = labels[d]
                     t.x, t.y, t.z = p1.x, p1.y, p1.z
-                    del textDict[key] # remove from dict
                 else:
                     #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
                     t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
@@ -1687,21 +1718,21 @@ class Axis(base.Wobject):
                         ppc.Append(p2)
                     # convert tick to text (strip zeros in exponent)
                     text = '%1.4g' % tick
-                    i = text.find('e')
-                    if i>0:
-                        front = text[:i+2]
-                        text = front + text[i+2:].lstrip('0')
+                    iExp = text.find('e')
+                    if iExp>0:
+                        front = text[:iExp+2]
+                        text = front + text[iExp+2:].lstrip('0')
                     # put textlabel at tick                     
                     textDict = self._textDicts[d]
-                    if text in textDict and textDict[text] in self._children:
-                        t = textDict[text]
+                    if tick in textDict and textDict[tick] in self._children:
+                        t = textDict.pop(tick)
                         t.x, t.y, t.z = p2.x, p2.y, p2.z
-                        del textDict[text] # remove from dict
                     else:
                         t = Text(self,text, p2.x,p2.y,p2.z, 'sans')
                     # add to dict 
-                    newTextDicts[d][text] = t                    
+                    newTextDicts[d][tick] = t                    
                     # set other properties right
+                    t.visible = True
                     if t.fontSize != axes.tickFontSize:
                         t.fontSize = axes.tickFontSize
                     if d==2:
@@ -1721,6 +1752,18 @@ class Axis(base.Wobject):
                         else:
                             t.halign = 1
                             t.valign = -1
+                
+                # We should hide this last tick if it sticks out
+                if isTwoDCam and d==0:
+                    # prepare text object to produce _vertices and _screenx
+                    t._Compile()
+                    t.OnDraw()
+                    # get positions
+                    tmp1 = axes.position.right + 10 
+                    tmp2 = t._screenx + t._vertices1[:,0].max() / 2
+                    # apply
+                    if t._vertices1 and tmp1 < tmp2:
+                        t.visible = False
                 
                 # get gridlines
                 if drawGrid[d] or drawMinorGrid[d]:
@@ -1790,6 +1833,7 @@ class Axis(base.Wobject):
         except Exception:
             self.Destroy()
             raise
+        
     
     
     def OnDrawScreen(self):
@@ -1805,6 +1849,8 @@ class Axis(base.Wobject):
             return
         pps = self._pps
         pps[:,2] = 100000 - pps[:,2] * 200000
+        # Note: this does not work well for older systems, making gridlines 
+        # be drawn over Line objects.
         
         # prepare for drawing lines
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
@@ -1963,9 +2009,9 @@ class Legend(base.Box):
     
     
     def _OnDown(self, event):
-        f = self.GetFigure()
-        tmp = self.position
-        self._moving = tmp.left - f.mousepos[0], tmp.top - f.mousepos[1]
+        f = self.GetFigure()        
+        pos = self.position
+        self._moving = pos.left-f.mousepos[0], pos.top-f.mousepos[1]
     
     def _OnMove(self, event):        
         if not self._moving:
@@ -1983,10 +2029,10 @@ class Legend(base.Box):
         """ Add a line and label to our pool. """
         # get y position
         index = len(self._wobjects)
-        y = self._yoffset + self._yspacing * (index)
+        y = self._yoffset + self._yspacing * (index)        
         # create label
         label = Label(self)
-        label.bgcolor=''                        
+        label.bgcolor=''
         label.position = self._xoffset*2 + self._linelen, y        
         y2 = label.position.h / 2
         # create 2-element pointset

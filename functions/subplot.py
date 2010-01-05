@@ -70,18 +70,17 @@ def subplot(*args):
     
     # check if an axes is there
     for a in f._children:
-        if isinstance(a, (Axes, AxesContainer)):           
+        if isinstance(a, AxesContainer):           
             n = laysin( cols, rows, getcenter(f, a) )
             if n == nr:
                 # make current and return
-                if isinstance(a, AxesContainer):
-                    a = a.GetAxes()
+                a = a.GetAxes()
                 f._currentAxes = a
                 return a
     
     # create axes in container
-    c = AxesContainer(f)
-    a = c.GetAxes()
+    a = Axes(f)
+    c = a.parent
     
     # calculate relative coordinates
     dx, dy = 1.0/cols, 1.0/rows
@@ -95,26 +94,6 @@ def subplot(*args):
     # done
     return a
     
-#     # mmm, we should create an axes then.
-#     # We want to make the margins smaller as more axes are present 
-#     # in the figure, but not too small, or the ticks and labels wont fit.
-#     # I found that the square root of dx and dy works pretty good.
-#     a = vv.Axes(f)
-#     dx, dy = 1.0/cols, 1.0/rows
-#     y = int( nr / cols )
-#     x = int( nr % cols )
-# #     a.position.x = (dx * x) + 0.05*dx    
-# #     a.position.y = (dy * y) + 0.05*dy
-# #     a.position.w = 0.9*dx
-# #     a.position.h = 0.9*dy
-#     a.position.x = (dx * x) + 0.15*dx**0.5
-#     a.position.y = (dy * y) + 0.08*dx**0.5
-#     a.position.w = dx - 0.20*dx**0.5
-#     a.position.h = dy - 0.18*dy**0.5
-#     
-#     # make current and return
-#     f._currentAxes = a
-#     return a
     
 
 if __name__ == "__main__":
@@ -123,5 +102,5 @@ if __name__ == "__main__":
     a2=vv.subplot(224)    
     a3=vv.subplot(221)
     a3=vv.subplot(333)
-    a3.Draw()
+    f.Draw()
     print a1 is a3

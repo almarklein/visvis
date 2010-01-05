@@ -41,10 +41,8 @@ class Title(Label):
         self.halign = 0
         self.fontSize = 12
         
-        # set color
-        f = axes.GetFigure()
-        if f:
-            self.bgcolor = f.bgcolor
+        # set back color to be transparant
+        self.bgcolor = ''
         
         # set position
         self.position = 0, -20, 1, 15

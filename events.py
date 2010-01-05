@@ -43,7 +43,7 @@ class BaseEvent:
     """
     def __init__(self, owner):
         # users should not change type, owner or handlers.       
-        self._owner = owner
+        self._owner = weakref.ref(owner)
         self._handlers = []
         self.Clear()
     
@@ -61,7 +61,7 @@ class BaseEvent:
     @property
     def owner(self):
         """ The object that this event belongs to. """
-        return self._owner
+        return self._owner()
 
 
     @property
@@ -81,7 +81,7 @@ class BaseEvent:
         if func in self._handlers:
             print "WARNING: handler %s already present for %s" %(func, self) 
             return
-            
+        
         # add the handler
         self._handlers.append(func)
 
@@ -188,6 +188,17 @@ class EventAfterDraw(BaseEvent):
     pass
 
 
+_callLater_callables = {}
+
+def callLater(delay, callable, *args, **kwargs):
+    """ callLater(delay, callable, *args, **kwargs)
+    Call a callable after a specified amount of time, with the
+    specified args and kwargs. If delay = 0, the callable is called
+    right after the current processing has returned to the main loop."""
+    calltime = time.clock() + delay
+    _callLater_callables[calltime]= (callable, args, kwargs)
+
+
 def processEvents():
     """ Process all events. Checks the status of all timers
     and fires the ones that need to be fired. This method
@@ -217,7 +228,7 @@ class Timer(BaseEvent):
         Timer._timers.append( weakref.ref(self) )
         
         # store info being an event
-        self._owner = owner
+        self._owner = weakref.ref(owner)
         self._handlers = []
         
         # store Timer specific properties        
@@ -268,6 +279,12 @@ class Timer(BaseEvent):
         """ Method used to test all timers whether they should be
         fired. If so, it fires them.
         """
+        
+        # test calLaters first        
+        for calltime in _callLater_callables.keys():
+            if calltime < time.clock():
+                callable, args, kwargs = _callLater_callables.pop(calltime)
+                callable(*args, **kwargs)
         
         timersToRemove = []
         for timerRef in Timer._timers:
