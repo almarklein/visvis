@@ -1,16 +1,18 @@
 """ Make (or return) an axes in a figure, laying the axes out on a grid. """
 
 import visvis as vv
+from visvis.core import Axes, AxesContainer
+
 
 
 def getcenter(f, a):
     """ Get the center (in relative coords) of the axes)."""
     pos = a.position.Copy()
     # make relative
-    relative = pos._GetRelative()
+    relative = pos._GetFractionals()
     for i in range(4):
         if not relative[i]:
-            pos[i] = f.position[i%2+2] / pos[i]
+            pos[i] = pos[i] / f.position[i%2+2]
         if pos[i]<0:
             pos[i] = 1.0 - pos[i]
     return pos.x + pos.w/2.0, pos.y + pos.h/2.0
@@ -36,7 +38,9 @@ def subplot(*args):
     the rows, so subplot(3,2,2) refers to the upper righ axes.
     
     It is checked whether (the center of) an axes is present at the 
-    specified grid location. If so, that axes is returned.
+    specified grid location. If so, that axes is returned. Otherwise
+    a new axes is created at that location.
+    
     """
     
     # parse input
@@ -66,33 +70,51 @@ def subplot(*args):
     
     # check if an axes is there
     for a in f._children:
-        if isinstance(a,vv.Axes):           
+        if isinstance(a, (Axes, AxesContainer)):           
             n = laysin( cols, rows, getcenter(f, a) )
             if n == nr:
                 # make current and return
+                if isinstance(a, AxesContainer):
+                    a = a.GetAxes()
                 f._currentAxes = a
                 return a
     
-    # mmm, we should create an axes then.
-    # We want to make the margins smaller as more axes are present 
-    # in the figure, but not too small, or the ticks and labels wont fit.
-    # I found that the square root of dx and dy works pretty good.
-    a = vv.Axes(f)
+    # create axes in container
+    c = AxesContainer(f)
+    a = c.GetAxes()
+    
+    # calculate relative coordinates
     dx, dy = 1.0/cols, 1.0/rows
     y = int( nr / cols )
     x = int( nr % cols )
-#     a.position.x = (dx * x) + 0.05*dx    
-#     a.position.y = (dy * y) + 0.05*dy
-#     a.position.w = 0.9*dx
-#     a.position.h = 0.9*dy
-    a.position.x = (dx * x) + 0.15*dx**0.5
-    a.position.y = (dy * y) + 0.08*dx**0.5
-    a.position.w = dx - 0.20*dx**0.5
-    a.position.h = dy - 0.18*dy**0.5
     
-    # make current and return
-    f._currentAxes = a
+    # apply positions
+    c.position = dx*x, dy*y, dx, dy
+    a.position = 10, 10, -20, -20
+    print c.position
+    # done
     return a
+    
+#     # mmm, we should create an axes then.
+#     # We want to make the margins smaller as more axes are present 
+#     # in the figure, but not too small, or the ticks and labels wont fit.
+#     # I found that the square root of dx and dy works pretty good.
+#     a = vv.Axes(f)
+#     dx, dy = 1.0/cols, 1.0/rows
+#     y = int( nr / cols )
+#     x = int( nr % cols )
+# #     a.position.x = (dx * x) + 0.05*dx    
+# #     a.position.y = (dy * y) + 0.05*dy
+# #     a.position.w = 0.9*dx
+# #     a.position.h = 0.9*dy
+#     a.position.x = (dx * x) + 0.15*dx**0.5
+#     a.position.y = (dy * y) + 0.08*dx**0.5
+#     a.position.w = dx - 0.20*dx**0.5
+#     a.position.h = dy - 0.18*dy**0.5
+#     
+#     # make current and return
+#     f._currentAxes = a
+#     return a
     
 
 if __name__ == "__main__":

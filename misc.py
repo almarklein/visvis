@@ -18,8 +18,10 @@
 
 """ Module misc
 
-Various things are defined here, that did not fit nicely in any
-other module.
+Various things are defined here that did not fit nicely in any
+other module. This module is also meant to be imported by many
+other visvis modules, and therefore should not depend on other
+visvis modules.
 
 $Author$
 $Date$
@@ -80,7 +82,7 @@ def getOpenGlCapable(version, what=None):
             _glLimitations[what] = True
             tmp = "Warning: the OpenGl version on this system is too low "
             tmp += "to support " + what + ". "
-            tmp += "Try updating your drives or buy a new (nvidia) video card."
+            tmp += "Try updating your drivers or buy a new (nvidia) video card."
             print tmp
         return False
 
@@ -156,36 +158,48 @@ class Range(object):
     def __repr__(self):
         return "<Range %1.2f to %1.2f>" % (self.min, self.max)
 
-
-class Position(object):
+# todo: remove this
+class Position2(object):
     """ Indicates a position: x, y, w, h.
     
     It provides short (x, y, w, h) properties to change the position
     and allows getting/setting via indexing. 
     
     Create using Position(x,y,w,h), or Position(pos), where pos 
-    is a 4 element list or tuple, or another Position.
+    is a 4 element list or tuple, or another Position instance.
     
     Each element can be either:
-    - The integer pixel value in screen coordinates.
-    - The relative (floating point) value between 0.0 and 1.0.
-    - The value may be negative. For the width and height the difference 
-      from the parent's full width/height is taken. So (-200, 50, 150,-100), 
-      with a parent's w/h of (500,500) is equal to ( -200, 50, 150, 400), thus
-      allowing aligning to the right/bottom edge, and easier centering. 
-      Negative values may also be used with relative values.
+    - The integer amount of pixels.
+    - The fractional amount (float value between 0.0 and 1.0) of the parent's
+      width or height.
+    
+    Each value can be negative. For x and y this simply means a negative offset
+    from the parent's left and top. For the width and height the difference 
+    from the parent's full width/height is taken.
+    
+    An example: a position (-10, 0.5, 150,-100), with a parent's size of 
+    (500,500) is equal to (-10, 250, 150, 400) in pixels.
     
     Remarks:
-    - relative/absoulte/negative values may be mixed.
-    - x and y are considered relative on <-1, 1> 
-    - w and h are considered relative on [-1, 1]    
-    - the value 0 can always be considered absolute 
+    - fractional, integer and negative values may be mixed.
+    - x and y are considered fractional on <-1, 1> 
+    - w and h are considered fractional on [-1, 1]    
+    - the value 0 can always be considered in pixels 
     
     The long named properties express the position in pixel coordinates.
     Internally a version in pixel coordinates is buffered, which is kept
     up to date. These long named (read-only) properties are:
-    left, top, width, height, right, bottom, topLeft, bottomRight, size.
-    (the latter three return two-element tuples)
+    left, top, right, bottom, width, height,
+    
+    Further, there are a set of properties which express the position in 
+    absolute coordinates (not relative to the parent wibject):
+    absLeft, absTop, absRight, absBottom    
+    
+    Finally, there properties that return a two-element tuple:
+    topLeft, bottomRight, absTopLeft, absBottomRight, size
+    
+    The methods InPixels() and Absolute() return a (copy) position object
+    which represents the position in pixels and absolute pixels, respectively.
     
     """
     
@@ -200,6 +214,7 @@ class Position(object):
             self._x, self._y = pos._x, pos._y
             self._w, self._h = pos._w, pos._h
             self._inpixels = pos._inpixels
+            self._absolute = pos._absolute
             self._owner = None # don't copy the owner
             return
         
@@ -210,8 +225,9 @@ class Position(object):
         # set
         self._x, self._y, self._w, self._h = pos[0], pos[1], pos[2], pos[3]
         
-        # init position in pixels (as a tuple)
+        # init position in pixels and absolute (as a tuples)
         self._inpixels = None
+        self._absolute = None
         
         # init owner, 
         # the wibject sets this in the f_set part of the position property
@@ -230,6 +246,17 @@ class Position(object):
         Return a copy, but in pixel coordinates. """
         p = Position(self.left, self.top, self.width, self.height)
         p._inpixels = self._inpixels
+        p._absolute = self._absolute
+        return p
+    
+    
+    def Absolute(self):
+        """ Absolute()
+        Return a copy, but in absolute pixel coordinates (not relative to
+        the parent wibject). """
+        p = Position(self.absLeft, self.absTop, self.width, self.height)
+        p._inpixels = self._absolute
+        p._absolute = self._absolute
         return p
     
     
@@ -261,7 +288,8 @@ class Position(object):
         
         # get old version, obtain and store new version
         ip1 = self._inpixels
-        ip2 = self._inpixels = self._CalculateInPixels()
+        self._CalculateInPixels()
+        ip2 = self._inpixels
         
         # current inpixels was still None
         if ip2:
@@ -285,21 +313,21 @@ class Position(object):
                     child._position._Update()
     
     
-    def _GetRelative(self):
+    def _GetFractionals(self):
         """ Get a list which items are considered relative.         
         Also int()'s the items which are not.
         """
         # init
-        relative = [0,0,0,0]        
+        fractionals = [0,0,0,0]        
         # test
         for i in range(2):
             if self[i] > -1 and self[i] < 1 and self[i]!=0:
-                relative[i] = 1
+                fractionals[i] = 1
         for i in range(2,4):            
             if self[i] >= -1 and self[i] <= 1 and self[i]!=0:
-                relative[i] = 1
+                fractionals[i] = 1
         # return
-        return relative
+        return fractionals
     
     
     def _GetInPixels(self):
@@ -308,25 +336,35 @@ class Position(object):
         """
         # should we calculate it?
         if not self._inpixels:
-            self._inpixels = self._CalculateInPixels()        
+           self._CalculateInPixels()        
         # return it
         return self._inpixels
+    
+    
+    def _GetAbsolute(self):
+        """ Return the position in absolute screen coordinates as a tuple. 
+        A buffered instance is returned, that is kept up to date.
+        """
+        # should we calculate it?
+        if not self._absolute:
+            self._CalculateInPixels()        
+        # return it
+        return self._absolute
     
     
     def _CalculateInPixels(self):
         """ Return the position in screen coordinates as a tuple. 
         """
         
-        # test if this is easy
-        relatives = self._GetRelative()
+        # to test if this is easy
+        fractionals = self._GetFractionals()
         negatives = [int(self[i]<0) for i in range(4)]
-        if max(relatives)==0 and max(negatives)==0:
-            return self._x, self._y, self._w, self._h
         
         # if owner is a figure, it cannot have relative values
         if hasattr(self._owner, '_SwapBuffers'):
-            return self._x, self._y, self._w, self._h
-            
+            self._inpixels = (self._x, self._y, self._w, self._h)
+            self._absolute = self._inpixels 
+        
         # test if we can calculate
         if not self._owner or not hasattr(self._owner,'parent'):
             raise Exception("Can only calculate the position in pixels"+
@@ -338,22 +376,32 @@ class Position(object):
                             " if the owner has a parent!")
         
         # get width/height of parent
-        tmp = self._owner.parent.position
-        whwh = tmp.width, tmp.height
+        ppos = self._owner.parent.position
+        whwh = ppos.width, ppos.height
         whwh = (whwh[0], whwh[1], whwh[0], whwh[1])
         
         # calculate!
         pos = [self._x, self._y, self._w, self._h]
-        for i in range(4):
-            if relatives[i]:
-                pos[i] = pos[i]*whwh[i]
-            if i>1 and negatives[i]:
-                pos[i] = whwh[i] + pos[i]
-            # make sure it's int (even if user supplied floats > 1)
-            pos[i] = int(pos[i])
+        if max(fractionals)==0 and max(negatives)==0:
+            pass # no need to calculate
+        else:
+            for i in range(4):
+                if fractionals[i]:
+                    pos[i] = pos[i]*whwh[i]
+                if i>1 and negatives[i]:
+                    pos[i] = whwh[i] + pos[i]
+                # make sure it's int (even if user supplied floats > 1)
+                pos[i] = int(pos[i])
         
-        # done
-        return tuple(pos)
+        # abs pos is based on the inpixels version, but x,y corrected. 
+        apos = [p for p in pos]
+        if ppos._owner.parent:
+            apos[0] += ppos.absLeft
+            apos[1] += ppos.absTop
+        
+        # store
+        self._inpixels = tuple(pos)
+        self._absolute = tuple(apos)
     
     
     ## For getting and setting
@@ -361,20 +409,20 @@ class Position(object):
     
     def Correct(self, dx=0, dy=0, dw=0, dh=0):
         """ Correct the position by suplying a delta amount of pixels.
-        The correction is only applied if the attribute is absolute.
+        The correction is only applied if the attribute is in pixels.
         """
         
-        # get relatives
-        relatives = self._GetRelative()
+        # get fractionals
+        fractionals = self._GetFractionals()
         
         # apply correction if we can
-        if dx and not relatives[0]:
+        if dx and not fractionals[0]:
             self._x += int(dx) 
-        if dy and not relatives[1]:
+        if dy and not fractionals[1]:
             self._y += int(dy)
-        if dw and not relatives[2]:
+        if dw and not fractionals[2]:
             self._w += int(dw) 
-        if dh and not relatives[3]:
+        if dh and not fractionals[3]:
             self._h += int(dh) 
         
         # we need an update now
@@ -401,7 +449,7 @@ class Position(object):
         elif index==3: self._h = value
         else:
             raise IndexError("Position only accepts indices 0,1,2,3!")
-        self._Changed()
+        self._Update()
     
     
     @Property
@@ -410,7 +458,7 @@ class Position(object):
             return self._x
         def fset(self,value):
             self._x = value
-            self._Changed()
+            self._Update()
     
     @Property
     def y():
@@ -418,7 +466,7 @@ class Position(object):
             return self._y
         def fset(self,value):
             self._y = value
-            self._Changed()
+            self._Update()
     
     @Property
     def w():
@@ -426,7 +474,7 @@ class Position(object):
             return self._w
         def fset(self,value):
             self._w = value
-            self._Changed()
+            self._Update()
     
     @Property
     def h():
@@ -434,7 +482,7 @@ class Position(object):
             return self._h
         def fset(self,value):
             self._h = value
-            self._Changed()
+            self._Update()
     
     ## Long names properties expressed in pixels
     
@@ -482,7 +530,39 @@ class Position(object):
     def size(self):
         tmp = self._GetInPixels()
         return tmp[2], tmp[3]
-
+    
+    ## More long names for absolute position
+    
+    @property
+    def absLeft(self):
+        tmp = self._GetAbsolute()
+        return tmp[0]
+    
+    @property
+    def absTop(self):
+        tmp = self._GetAbsolute()
+        return tmp[1]
+    
+    @property
+    def absTopLeft(self):
+        tmp = self._GetAbsolute()
+        return tmp[0], tmp[1]
+    
+    @property
+    def absRight(self):
+        tmp = self._GetAbsolute()
+        return tmp[0] + tmp[2]
+    
+    @property
+    def absBottom(self):
+        tmp = self._GetAbsolute()
+        return tmp[1] + tmp[3]
+    
+    @property
+    def absBottomRight(self):
+        tmp = self._GetAbsolute()
+        return tmp[0] + tmp[2], tmp[1] + tmp[3]
+    
 
 ## Transform classes for wobjects
 

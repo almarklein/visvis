@@ -64,7 +64,7 @@ import os, sys, time
 
 from constants import *
 from events import Timer, processEvents
-from misc import Position, Range
+from misc import Range
 from misc import (Transform_Translate, Transform_Scale, Transform_Rotate)
 from misc import getOpenGlInfo
 

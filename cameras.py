@@ -257,11 +257,11 @@ class TwoDCamera(BaseCamera):
             
             # get movement in x (in pixels) and normalize
             factorx = float(self.ref_mloc[0] - mloc[0])
-            factorx /= self.axes.position.left
+            factorx /= self.axes.position.width
             
             # get movement in y (in pixels) and normalize
             factory = float(self.ref_mloc[1] - mloc[1])
-            factory /= self.axes.position.top
+            factory /= self.axes.position.height
             
             # apply (use only y-factor if daspect is valid).
             if self.axes.daspectAuto:
@@ -476,11 +476,11 @@ class PolarCamera(TwoDCamera):
             
             # get movement in x (in pixels) and normalize
             factorx = float(self.ref_mloc[0] - mloc[0])
-            factorx /= self.axes.position.left
+            factorx /= self.axes.position.width
             
             # get movement in y (in pixels) and normalize
             factory = float(self.ref_mloc[1] - mloc[1])
-            factory /= self.axes.position.top
+            factory /= self.axes.position.height
             
             # apply (use only y-factor if daspect is valid.
             if self.axes.daspectAuto:
@@ -745,11 +745,11 @@ class FlyCamera(PolarCamera):
             
             # get movement in x (in pixels) and normalize
             factorx = float(self.ref_mloc[0] - mloc[0])
-            factorx /= self.axes.position.left
+            factorx /= self.axes.position.width
             
             # get movement in y (in pixels) and normalize
             factory = float(self.ref_mloc[1] - mloc[1])
-            factory /= self.axes.position.top
+            factory /= self.axes.position.height
             
             # apply (use only y-factor if daspect is valid.
             if self.axes.daspectAuto:

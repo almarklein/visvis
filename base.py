@@ -37,7 +37,7 @@ import OpenGL.GLU as glu
 import numpy as np
 import math, time
 
-from misc import Property, Range, OpenGLError, Position, Transform_Base
+from misc import Property, Range, OpenGLError, Transform_Base
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 from misc import getColor
 from events import *
@@ -123,13 +123,46 @@ class BaseObject(object):
         gl.glPopMatrix()
     
     
-    def Destroy(self):
+#     def Destroy(self):
+#         """ Destroy()
+#         Destroy the object.
+#         - Removes itself from the parent's children
+#         - Calls Destroy() on all its children
+#         - Calls OnDestroyGl and OnDestroy on itself
+#         Note1: do not overload, overload OnDestroy()
+#         Note2: it's best not to reuse destroyed objects. To temporary disable
+#         an object, better use "ob.parent=None", or "ob.visible=False".
+#         """
+#         # We must make this the current OpenGL context because OnDestroy 
+#         # methods of objects may want to remove textures etc.
+#         # When you do not do this, you can get really weird bugs.
+#         # This works nice, the children will not need to do this,
+#         # as when they try, THIS object is already detached and fig is None.
+#         fig = self.GetFigure()
+#         if fig:
+#             fig._SetCurrent()
+#         # leave home (using the property causes recursion)        
+#         if hasattr(self._parent, '_children'):
+#             while self in self._parent._children:
+#                 self._parent._children.remove(self)                
+#         if hasattr(self._parent, '_wobjects'):
+#             while self in self._parent._wobjects:
+#                 self._parent._wobjects.remove(self)
+#         self._parent = None
+#         # destroy children
+#         for child in self._children:
+#             child.Destroy()
+#         # clean up
+#         self.OnDestroyGl()
+#         self.OnDestroy()
+    
+    
+    def Destroy(self, setContext=True):
         """ Destroy()
         Destroy the object.
         - Removes itself from the parent's children
-        - Calls DestroyGl() on all its children
         - Calls Destroy() on all its children
-        - Calls OnDestroy on itself
+        - Calls OnDestroyGl and OnDestroy on itself
         Note1: do not overload, overload OnDestroy()
         Note2: it's best not to reuse destroyed objects. To temporary disable
         an object, better use "ob.parent=None", or "ob.visible=False".
@@ -139,10 +172,23 @@ class BaseObject(object):
         # When you do not do this, you can get really weird bugs.
         # This works nice, the children will not need to do this,
         # as when they try, THIS object is already detached and fig is None.
-        fig = self.GetFigure()
-        if fig:
-            fig._SetCurrent()
-        # leave home (using the property causes recursion)        
+        if setContext:
+            fig = self.GetFigure()
+            if fig:
+                fig._SetCurrent()
+        
+        # Destroy children. This will unwind to the leafs of the tree, and
+        # thus call OnDestroy() on childless objects only. This means the
+        # parent of all objects remain intact, which can be necessary for
+        # some objects to clean up nicely. 
+        for child in self.children:
+            child.Destroy(False)
+        
+        # Actual destroy
+        self.OnDestroyGl()
+        self.OnDestroy()
+        
+        # Leave home (using the property causes recursion)        
         if hasattr(self._parent, '_children'):
             while self in self._parent._children:
                 self._parent._children.remove(self)                
@@ -150,11 +196,6 @@ class BaseObject(object):
             while self in self._parent._wobjects:
                 self._parent._wobjects.remove(self)
         self._parent = None
-        # destroy children
-        for child in self._children:
-            child.Destroy()
-        # clean up
-        self.OnDestroy()
     
     
     def DestroyGl(self, setContext=True):
@@ -170,10 +211,12 @@ class BaseObject(object):
             fig = self.GetFigure()
             if fig:
                 fig._SetCurrent()
+        
         # let children clean up their openGl stuff
         for child in self._children:
             child.DestroyGl(False)
-        # clean up our own bits
+        
+        # Clean up our own bits
         self.OnDestroyGl()
     
     
@@ -346,8 +389,7 @@ class Wibject(BaseObject):
         BaseObject.__init__(self, parent)
         
         # the position of the widget within its parent        
-        self._position = Position( 10,10,50,50 )
-        self._position._owner = self
+        self._position = Position( 10,10,50,50, self)
         
         # colors and edge
         self._bgcolor = (0.8,0.8,0.8)
@@ -370,15 +412,7 @@ class Wibject(BaseObject):
         def fget(self):
             return self._position
         def fset(self, value):
-            # allow setting x and y only
-            if isinstance(value,(tuple,list)) and len(value) == 2:
-                value = value[0], value[1], self._position.w, self._position.h
-            # set!
-            self._position = Position(value)
-            # setting the owner is important to be able to
-            # calculate the position in pixels, as we need
-            # the parent for that!
-            self._position.SetOwner(self) # this also fires the position event
+            self._position.Set(value)
     
     
     @Property
@@ -396,22 +430,24 @@ class Wibject(BaseObject):
         if len(xy)==1:
             xy = xy[0]
         if self.parent:
-            x,y = self.parent.RelativeToAbsolute(*xy)
+#             x,y = self.parent.RelativeToAbsolute(*xy)
             tmp = self.position
-            return x+tmp.left, y+tmp.top
+#             return x+tmp.left, y+tmp.top
+            return xy[0]+tmp.absLeft, xy[1]+tmp.absTop
         else:
             return xy[0], xy[1]
     
-    
+    # todo: remove this as its so simple?
     def AbsoluteToRelative(self, *xy):
         """ Transform the given x-y coordinates from absolute figure
         coordinates to this object's relative coordinates. """
         if len(xy)==1:
             xy = xy[0]        
         if self.parent:
-            x,y = self.parent.AbsoluteToRelative(*xy)
+#             x,y = self.parent.AbsoluteToRelative(*xy)
             tmp = self.position
-            return x-tmp.left, y-tmp.top
+#             return x-tmp.left, y-tmp.top
+            return xy[0]-tmp.absLeft, xy[1]-tmp.absTop
         else:
             return xy[0], xy[1]
     
@@ -442,6 +478,13 @@ class Wibject(BaseObject):
         gl.glVertex2f(w,0)
         gl.glEnd()
 
+    
+    def OnDestroy(self):
+        # detach position
+        #self._position = None
+        pass # todo: it happens sometimes that the position is read :/
+        # using weak refs would solve this problem
+        
 
 class Wobject(BaseObject):
     """ A visvis.Wobject (world object) is a visual element that 
@@ -493,6 +536,391 @@ class Wobject(BaseObject):
                 gl.glScale(t.sx, t.sy, t.sz)
             elif isinstance(t, Transform_Rotate):
                 gl.glRotate(t.angle, t.ax, t.ay, t.az)
+
+
+## Help classes
+
+class Position(object):
+    """ Position(x,y,w,h, wibject_instance)
+    
+    A position object indicates and manages the position of a wibject 
+    (the owner of the position). It provides short (x, y, w, h) properties 
+    to change the position and allows getting/setting via indexing. 
+    
+    Each element (x,y,w,h) can be either:
+    - The integer amount of pixels relative to the wibjects paren't 
+      position. 
+    - The fractional amount (float value between 0.0 and 1.0) of the 
+      parent's width or height.
+    
+    Each value can be negative. For x and y this simply means a negative 
+    offset from the parent's left and top. For the width and height the 
+    difference from the parent's full width/height is taken.
+    
+    An example: a position (-10, 0.5, 150,-100), with a parent's size of 
+    (500,500) is equal to (-10, 250, 150, 400) in pixels.
+    
+    Remarks:
+    - fractional, integer and negative values may be mixed.
+    - x and y are considered fractional on <-1, 1> 
+    - w and h are considered fractional on [-1, 1]    
+    - the value 0 can always be considered in pixels 
+    
+    The position class also implements several "long-named" properties that
+    express the position in pixel coordinates. Internally a version in pixel
+    coordinates is buffered, which is kept up to date. These long-named 
+    (read-only) properties are:
+    left, top, right, bottom, width, height,
+    
+    Further, there are a set of properties which express the position in 
+    absolute coordinates (not relative to the wibject's parent):
+    absLeft, absTop, absRight, absBottom    
+    
+    Finally, there are properties that return a two-element tuple:
+    topLeft, bottomRight, absTopLeft, absBottomRight, size
+    
+    The method InPixels() returns a (copy) position object which represents
+    the position in pixels.
+    
+    """
+    
+    def __init__(self, x, y, w, h, owner):
+        
+        # test owner
+        if not isinstance(owner , Wibject):
+            raise ValueError('A positions owner can only be a wibject.')
+                
+        
+        # set
+        self._x, self._y, self._w, self._h = x, y, w, h
+        
+        # store owner
+        self._owner = owner
+        
+        # init position in pixels and absolute (as a tuples)
+        self._inpixels = None
+        self._absolute = None
+        
+        # do not _update() here, beacause the owner will not have assigned
+        # this object to its _position attribute yet.
+        
+        # but we can calculate our own pixels
+        self._CalculateInPixels()
+    
+    
+    def Copy(self):
+        """ Copy()
+        Make a copy. Otherwise you'll point to the same object! """
+        p = Position(self._x, self._y, self._w, self._h, self._owner)
+        p._inpixels = self._inpixels
+        p._absolute = self._absolute
+        return p
+    
+    
+    def InPixels(self):
+        """ InPixels()
+        Return a copy, but in pixel coordinates. """
+        p = Position(self.left, self.top, self.width, self.height, self._owner)
+        p._inpixels = self._inpixels
+        p._absolute = self._absolute
+        return p
+    
+    
+    def __repr__(self):
+        return "<Position %1.2f, %1.2f,  %1.2f, %1.2f>" % (
+            self.x, self.y, self.w, self.h)
+    
+    
+    ## For keeping _inpixels up-to-date
+    
+    
+    def _Update(self):
+        """ _Update()
+        Re-obtain the position in pixels. If the obtained position
+        differs from the current position-in-pixels, _Changed()
+        is called.
+        """
+        
+        # get old version, obtain and store new version
+        ip1 = self._inpixels
+        self._CalculateInPixels()
+        ip2 = self._inpixels
+        
+        if ip2:
+            if ip1 != ip2: # also if ip1 is None
+                self._Changed()
+    
+    
+    def _Changed(self):
+        """ _Changed()
+        To be called when the position was changed. 
+        Will fire the owners eventPosition and will call
+        _Update() on the position objects of all the owners
+        children.
+        """
+        # only notify if this is THE position of the owner (not a copy)
+        if self._owner and self._owner._position is self:           
+            if hasattr(self._owner, 'eventPosition'):
+                self._owner.eventPosition.Fire()
+                #print 'firing position event for', self._owner
+            for child in self._owner._children:
+                if hasattr(child, '_position'):
+                    child._position._Update()
+    
+    
+    def _GetFractionals(self):
+        """ Get a list which items are considered relative.         
+        Also int()'s the items which are not.
+        """
+        # init
+        fractionals = [0,0,0,0]        
+        # test
+        for i in range(2):
+            if self[i] > -1 and self[i] < 1 and self[i]!=0:
+                fractionals[i] = 1
+        for i in range(2,4):            
+            if self[i] >= -1 and self[i] <= 1 and self[i]!=0:
+                fractionals[i] = 1
+        # return
+        return fractionals
+    
+    
+    def _CalculateInPixels(self):
+        """ Return the position in screen coordinates as a tuple. 
+        """
+        
+        # to test if this is easy
+        fractionals = self._GetFractionals()
+        negatives = [int(self[i]<0) for i in range(4)]
+        
+        # if owner is a figure, it cannot have relative values
+        if hasattr(self._owner, '_SwapBuffers'):
+            self._inpixels = (self._x, self._y, self._w, self._h)
+            self._absolute = self._inpixels 
+            return
+        
+        # test if we can calculate
+        if not isinstance(self._owner, Wibject):
+            raise Exception("Can only calculate the position in pixels"+
+                            " if the position instance is owned by a wibject!")
+        # else, the owner must have a parent...
+        if self._owner.parent is None:
+            print self._owner
+            raise Exception("Can only calculate the position in pixels"+
+                            " if the owner has a parent!")
+        
+        # get width/height of parent
+        ppos = self._owner.parent.position
+        whwh = ppos.width, ppos.height
+        whwh = (whwh[0], whwh[1], whwh[0], whwh[1])
+        
+        # calculate!
+        pos = [self._x, self._y, self._w, self._h]
+        if max(fractionals)==0 and max(negatives)==0:
+            pass # no need to calculate
+        else:
+            for i in range(4):
+                if fractionals[i]:
+                    pos[i] = pos[i]*whwh[i]
+                if i>1 and negatives[i]:
+                    pos[i] = whwh[i] + pos[i]
+                # make sure it's int (even if user supplied floats > 1)
+                pos[i] = int(pos[i])
+        
+        # abs pos is based on the inpixels version, but x,y corrected. 
+        apos = [p for p in pos]
+        if ppos._owner.parent:
+            apos[0] += ppos.absLeft
+            apos[1] += ppos.absTop
+        
+        # store
+        self._inpixels = tuple(pos)
+        self._absolute = tuple(apos)
+    
+    
+    ## For getting and setting
+    
+    def Set(self, *args):
+        """ Set(x, y, w, h) or Set(x,y)
+        Set x, y, and optionally w an h.
+        """
+        
+        # if tuple or list was given
+        if len(args)==1 and hasattr(args[0],'__len__'):
+            args = args[0]
+        
+        # apply
+        if len(args)==2:
+            self._x = args[0]
+            self._y = args[1]
+        elif len(args)==4:
+            self._x = args[0]
+            self._y = args[1]
+            self._w = args[2]
+            self._h = args[3]
+        else:
+            raise ValueError("Invalid number of arguments to position.Set().")
+        
+        # we need an update now
+        self._Update()
+    
+    
+    def Correct(self, dx=0, dy=0, dw=0, dh=0):
+        """ Correct the position by suplying a delta amount of pixels.
+        The correction is only applied if the attribute is in pixels.
+        """
+        
+        # get fractionals
+        fractionals = self._GetFractionals()
+        
+        # apply correction if we can
+        if dx and not fractionals[0]:
+            self._x += int(dx) 
+        if dy and not fractionals[1]:
+            self._y += int(dy)
+        if dw and not fractionals[2]:
+            self._w += int(dw) 
+        if dh and not fractionals[3]:
+            self._h += int(dh) 
+        
+        # we need an update now
+        self._Update()
+    
+    
+    def __getitem__(self,index):
+        if not isinstance(index,int):
+            raise IndexError("Position only accepts single indices!")        
+        if index==0: return self._x
+        elif index==1: return self._y
+        elif index==2: return self._w
+        elif index==3: return self._h
+        else:
+            raise IndexError("Position only accepts indices 0,1,2,3!")
+    
+    
+    def __setitem__(self,index, value):
+        if not isinstance(index,int):
+            raise IndexError("Position only accepts single indices!")
+        if index==0: self._x = value
+        elif index==1: self._y = value
+        elif index==2: self._w = value
+        elif index==3: self._h = value
+        else:
+            raise IndexError("Position only accepts indices 0,1,2,3!")
+        # we need an update now
+        self._Update()
+    
+    
+    @Property
+    def x():
+        def fget(self):
+            return self._x
+        def fset(self,value):
+            self._x = value
+            self._Update()
+    
+    @Property
+    def y():
+        def fget(self):
+            return self._y
+        def fset(self,value):
+            self._y = value
+            self._Update()
+    
+    @Property
+    def w():
+        def fget(self):
+            return self._w
+        def fset(self,value):
+            self._w = value
+            self._Update()
+    
+    @Property
+    def h():
+        def fget(self):
+            return self._h
+        def fset(self,value):
+            self._h = value
+            self._Update()
+    
+    ## Long names properties expressed in pixels
+    
+    @property
+    def left(self):
+        tmp = self._inpixels
+        return tmp[0]
+    
+    @property
+    def top(self):
+        tmp = self._inpixels
+        return tmp[1]
+    
+    @property
+    def width(self):
+        tmp = self._inpixels
+        return tmp[2]
+    
+    @property
+    def height(self):
+        tmp = self._inpixels
+        return tmp[3]
+    
+    @property
+    def right(self):
+        tmp = self._inpixels
+        return tmp[0] + tmp[2]
+    
+    @property
+    def bottom(self):
+        tmp = self._inpixels
+        return tmp[1] + tmp[3]
+    
+    @property
+    def topLeft(self):
+        tmp = self._inpixels
+        return tmp[0], tmp[1]
+    
+    @property
+    def bottomRight(self):
+        tmp = self._inpixels
+        return tmp[0] + tmp[2], tmp[1] + tmp[3]
+    
+    @property
+    def size(self):
+        tmp = self._inpixels
+        return tmp[2], tmp[3]
+    
+    ## More long names for absolute position
+    
+    @property
+    def absLeft(self):
+        tmp = self._absolute
+        return tmp[0]
+    
+    @property
+    def absTop(self):
+        tmp = self._absolute
+        return tmp[1]
+    
+    @property
+    def absTopLeft(self):
+        tmp = self._absolute
+        return tmp[0], tmp[1]
+    
+    @property
+    def absRight(self):
+        tmp = self._absolute
+        return tmp[0] + tmp[2]
+    
+    @property
+    def absBottom(self):
+        tmp = self._absolute
+        return tmp[1] + tmp[3]
+    
+    @property
+    def absBottomRight(self):
+        tmp = self._absolute
+        return tmp[0] + tmp[2], tmp[1] + tmp[3]
 
 
 
@@ -558,3 +986,4 @@ class Box(Wibject):
         
         # clean up        
         gl.glEnable(gl.GL_LINE_SMOOTH)
+        

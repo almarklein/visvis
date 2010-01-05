@@ -38,7 +38,7 @@ import numpy as np
 import base
 import textures
 from cameras import TwoDCamera, PolarCamera, FlyCamera
-from misc import Position, Property, Range, OpenGLError
+from misc import Property, Range, OpenGLError
 from events import *
 from textRender import FontManager, Text, Label
 from line import MarkerManager, Line, lineStyles
@@ -92,8 +92,6 @@ class ObjectPickerHelper(object):
         which item is under the mouse. """
         gl.glReadBuffer(gl.GL_BACK)
         xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        #x,y = 0,0
-        #w,h = figure.GetSize()
         x,y,w,h = xywh[0], xywh[1], xywh[2], xywh[3]
         #im = gl.glReadPixels(x, y, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE)
         #im = np.fromstring(im,dtype=np.uint8)
@@ -423,6 +421,7 @@ class BaseFigure(base.Wibject):
             self._position._x, self._position._y = thepos[0], thepos[1]
             self._position._w, self._position._h = thepos[2], thepos[3]
             self._position._inpixels = tuple(thepos)
+            self._position._absolute = tuple(thepos)
             return self._position
         
         def fset(self,value):
@@ -438,8 +437,8 @@ class BaseFigure(base.Wibject):
             if len(value) == 2:
                 value = value[0], value[1], self._position.w, self._position.h
             # make pos 
-            self._position = Position(value)
-            self._position.SetOwner(self)
+            self._position = base.Position( value[0], value[1], 
+                                            value[2], value[3], self)
     
     
     def _OnPositionChange(self,event=None):
@@ -471,13 +470,6 @@ class BaseFigure(base.Wibject):
     
     ## Extra methods
     
-    def GetSize(self):
-        """ Get the size of the figure. """
-        # overload from wibject to deal with the position that 
-        # is a bit different
-        pos = self._GetPosition()
-        return pos[2], pos[3]
-    
     def Clear(self):
         """ Clear the figure. """        
         # remove children
@@ -498,6 +490,8 @@ class BaseFigure(base.Wibject):
     
     def OnDestroy(self):
         """ Clean up. """
+        base.Wibject.OnDestroy(self)
+        
         # close the figure instance
         if not self._isdestroyed:
             self._Close()
@@ -599,7 +593,7 @@ class BaseFigure(base.Wibject):
     def _Draw(self, mode):
         
         # make sure the part to draw to is ok               
-        w,h = self.GetSize()
+        w,h = self.position.size
         
         # clear screen
         
@@ -650,7 +644,7 @@ class BaseFigure(base.Wibject):
         # all wobjects in it. Then it prepares for the wibjects, which are 
         # drawn (via _DrawTree) in the same viewport.
         for child in self._children:
-            if isinstance(child, Axes):
+            if isinstance(child, (Axes, AxesContainer) ):
                 child._DrawTree(mode, pickerHelper)
         
         ## Draw more
@@ -668,7 +662,7 @@ class BaseFigure(base.Wibject):
         
         # draw other children
         for child in self._children:
-            if not isinstance(child, Axes):
+            if not isinstance(child, (Axes, AxesContainer)):
                 child._DrawTree(mode, pickerHelper)
 
     
@@ -740,6 +734,41 @@ class BaseFigure(base.Wibject):
                     ev.x2d, ev.y2d = cam.ScreenToWorld((ev.x, ev.y))
             ev.Fire()
 
+# todo: give "axes" property of some sort. Also should be removed
+# when axes is destroyed.
+# todo: always create an axes in a container.
+class AxesContainer(base.Wibject):
+    """ AxesContainer
+    
+    A simple container wibject class to contain one Axes instance.
+    It is used in subplots: the container has a relative position 
+    that scales with the figure, while the contained axes object
+    has a position in pixels by default.
+    
+    This container is Destroyed once the axes is removed. 
+    We advice not to attach wibjects to an instance of this class.
+    """
+    
+    def __init__(self, *args, **kwargs):
+        base.Wibject.__init__(self, *args, **kwargs)
+        self.position = 0,0,1,1
+    
+    
+    def GetAxes(self):
+        """ Get the axes, creates a new axes object if it has none. """
+        for child in self.children:
+            if isinstance( child, Axes):
+                return child
+        else:
+            # create axes
+            return Axes(self)
+    
+    
+    def _DrawTree(self, *args, **kwargs):
+        """ Pass on. """
+        if self._children:
+            self._children[0]._DrawTree(*args, **kwargs)
+
 
 class Axes(base.Wibject):
     """ An Axes contains a scene with a local coordinate frame 
@@ -754,7 +783,7 @@ class Axes(base.Wibject):
     def __init__(self, figure):
         
         # check that the parent is a figure
-        if not isinstance(figure, BaseFigure):
+        if not isinstance(figure, (BaseFigure, AxesContainer)):
             raise Exception("The given parent for an Axes should be a Figure.")
         base.Wibject.__init__(self, figure)
         
@@ -773,8 +802,8 @@ class Axes(base.Wibject):
         
         # axis properties                
         self._xlabel, self._ylabel, self._zlabel = '','',''
-        self._xlabelCorr, self._ylabelCorr = 0, 0
-        self._tickFontSize = 10
+        self._xCorr, self._yCorr = 0, 0
+        self._tickFontSize = 9
         self._gridLineStyle = ':'
         self._xticks, self._yticks, self._zticks = None, None, None
         self._xgrid, self._ygrid, self._zgrid = False, False, False
@@ -983,23 +1012,23 @@ class Axes(base.Wibject):
         """ Correct the position for the labels. """
         
         # init correction
-        xlabelCorr, ylabelCorr = 0, 0
+        xCorr, yCorr = 0, 0
         
         # correction should be applied for 2D camera and a valid label
         if self.camera is self._cameras['2d']:
             if self.showAxis:
-                xlabelCorr += 20
-                ylabelCorr += 80
+                yCorr += 20
+                xCorr += 60 # there's already a margin of 10 by default
                 if self.xLabel:
-                    xlabelCorr += 20
+                    yCorr += 20
                 if self.yLabel:
-                    ylabelCorr += 20
+                    xCorr += 20
         
         # check the difference
-        if xlabelCorr != self._xlabelCorr or ylabelCorr != self._ylabelCorr:
-            dy = self._xlabelCorr - xlabelCorr # dy for xlabel is not a typo
-            dx = self._ylabelCorr - ylabelCorr
-            self._xlabelCorr, self._ylabelCorr = xlabelCorr, ylabelCorr
+        if xCorr != self._xCorr or yCorr != self._yCorr:
+            dx = self._xCorr - xCorr
+            dy = self._yCorr - yCorr
+            self._xCorr, self._yCorr = xCorr, yCorr
             # apply
             self.position.Correct(-dx, 0, dx, dy)
     
@@ -1250,6 +1279,7 @@ class Axes(base.Wibject):
     
     def OnDestroy(self):
         """ Clean up. """
+        base.Wibject.OnDestroy(self)
         self.Clear()
         # the wibjects are destoyed automatically by the Destroy command.
     
@@ -1259,7 +1289,7 @@ class Axes(base.Wibject):
         """
         
         # size of figure ...
-        w,h = self.parent.position.size
+        w,h = self.GetFigure().position.size
         
         # correct size for labels
         self._CorrectPositionForLabels()
@@ -1270,7 +1300,7 @@ class Axes(base.Wibject):
         
         # set viewport (note that OpenGL has origin in lower-left, visvis
         # in upper-left)
-        gl.glViewport(pos.x, h-pos.bottom, pos.w, pos.h)        
+        gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)        
         
         gl.glDisable(gl.GL_DEPTH_TEST)
         
@@ -1311,7 +1341,8 @@ class Axes(base.Wibject):
         # set camera to screen coordinates.
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
-        gl.glOrtho( pos.x, pos.right , h-pos.bottom, h-pos.y, -100000, 100000 )
+        gl.glOrtho( pos.absLeft, pos.absRight, h-pos.absBottom, h-pos.absTop,
+                    -100000, 100000 )
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
@@ -1355,13 +1386,13 @@ class Axes(base.Wibject):
         pickerHelper = self.GetFigure()._pickerHelper
         
         # get position
-        w,h = self.parent.position.size
+        w,h = self.GetFigure().position.size
         pos = self.position.InPixels()
         pos.w, pos.h = max(pos.w, 1), max(pos.h, 1)
         
         # set viewport (note that OpenGL has origin in lower-left, visvis
         # in upper-left)
-        gl.glViewport(pos.x, h-pos.bottom, pos.w, pos.h) 
+        gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h) 
         
         # prepare for drawing background
         gl.glMatrixMode(gl.GL_PROJECTION)        
@@ -1422,9 +1453,17 @@ class Axes(base.Wibject):
 # A note about tick labels. We format these using '%1.4g', which means
 # they will have 4 significance, and will automatically displayed in
 # exp notation if necessary. This means that the largest string is
-# x.xxxE+yyy -> 10 characters. This corresponds to around 80 pixels.
-# So a margin of at least 80 pixels should be kept to the left of each
-# axes. This margin should be at least 16 for the bottom of the axes.
+# x.xxxE+yyy -> 10 characters. 
+# In practice, the exp will hardly ever be larger than 2 characters. So we
+# strip the zeros in the exponent and assume the (in practice) max string
+# to be "-0.001e+99". With a fontsize of 9, this needs little less than 70
+# pixels. The correction applied when visualizing axis (and ticks) is 60,
+# because the default offset is 10 pixels for axes.
+
+# todo: fix bug that when zooming a lot, many labels are created which
+# are never destroyed. 
+# todo: increase performance by drawing all text with one command by 
+# combining all texture coords and vertices?
 
 class Axis(base.Wobject):
     """ An Axis object represents the lines and ticks that make
@@ -1625,7 +1664,8 @@ class Axis(base.Wobject):
                 if vec.x < 0:
                     vec = vec * -1                
                 t.textAngle = float(vec.Angle() * 180/np.pi)
-                t._textDict = newTextDicts[d] # keep up to date
+                # keep up to date (so label can move itself just beyond ticks)
+                t._textDict = newTextDicts[d] 
                 
                 # Apply Ticks
                 for tick in ticks:
@@ -1645,8 +1685,13 @@ class Axis(base.Wobject):
                     else:
                         ppc.Append(p1)
                         ppc.Append(p2)
-                    # put textlabel at tick                    
+                    # convert tick to text (strip zeros in exponent)
                     text = '%1.4g' % tick
+                    i = text.find('e')
+                    if i>0:
+                        front = text[:i+2]
+                        text = front + text[i+2:].lstrip('0')
+                    # put textlabel at tick                     
                     textDict = self._textDicts[d]
                     if text in textDict and textDict[text] in self._children:
                         t = textDict[text]
@@ -1663,9 +1708,13 @@ class Axis(base.Wobject):
                         t.valign = 0
                         t.halign = 1
                     else: 
-                        if d==1 and isTwoDCam:
-                            t.halign = 1
-                            t.valign = 0
+                        if isTwoDCam:
+                            if d==1:
+                                t.halign = 1
+                                t.valign = 0
+                            else:
+                                t.halign = 0
+                                t.valign = -1
                         elif vector_s.y*vector_s.x >= 0:
                             t.halign = -1
                             t.valign = -1
@@ -1700,6 +1749,7 @@ class Axis(base.Wobject):
             for tmp in self._textDicts:                
                 for t in tmp.values():
                     t.Destroy()
+            
             # for next time ...
             self._textDicts = newTextDicts
             
@@ -1917,7 +1967,7 @@ class Legend(base.Box):
         tmp = self.position
         self._moving = tmp.left - f.mousepos[0], tmp.top - f.mousepos[1]
     
-    def _OnMove(self, event):
+    def _OnMove(self, event):        
         if not self._moving:
             return
         else:
@@ -1963,9 +2013,9 @@ class Legend(base.Box):
         self._stringList = stringList
         
         # clean up labels and lines
-        for line in self._wobjects:
+        for line in [line for line in self._wobjects]:
             line.Destroy()
-        for label in self._children:
+        for label in self.children:
             label.Destroy()
         
         # create new lines and labels
@@ -1991,7 +2041,7 @@ class Legend(base.Box):
         
         # make own size ok
         if self._wobjects:
-            pos =label.position
+            pos = label.position
             self.position.w = maxWidth + pos.x + self._xoffset
             self.position.h = pos.bottom + self._yoffset
             self.visible = True

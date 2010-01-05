@@ -41,9 +41,6 @@ class Title(Label):
         self.halign = 0
         self.fontSize = 12
         
-        # store axes, because when OnDestroy is called, parent is None
-        self._axes = axes
-        
         # set color
         f = axes.GetFigure()
         if f:
@@ -53,17 +50,16 @@ class Title(Label):
         self.position = 0, -20, 1, 15
         
         # correct axes' position
-        pos = axes.position
         dy = -20        
         axes.position.Correct(0, -dy, 0, dy) 
     
     
     def OnDestroy(self):
+        Label.OnDestroy(self)
+        
         # correct axes' position
-        axes = self._axes
-        self._axes = None
+        axes = self.parent
         if axes:
-            pos = axes.position
             dy = 20
             axes.position.Correct(0, -dy, 0, dy) 
 

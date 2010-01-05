@@ -716,13 +716,8 @@ class Label(Box, BaseText):
             return
         font = f._fontManager.GetFont(self._fontname)
         
-         # make sure the texture is loaded...
-        if not font._texId or not gl.glIsTexture(font._texId):
-            font.CreateTexture()
-        
         # enable texture
-        gl.glEnable(gl.GL_TEXTURE_2D)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, font._texId)
+        font.Enable()
         
         # prepare, draw in screen coordinates                
         texCords = self._texCords#.Copy()

@@ -42,7 +42,7 @@ import numpy as np
 import math, time, os
 
 from misc import getResourceDir, getOpenGlCapable
-from misc import Property, Range, OpenGLError, Position
+from misc import Property, Range, OpenGLError
 from events import *
 from base import Wobject
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
@@ -1195,7 +1195,7 @@ class Texture2D(BaseTexture):
             return 1,0,0,0
         
         # determine relative kernel size
-        w,h = figure.GetSize()
+        w,h = figure.position.size
         cam = axes.camera
         sx = (cam.view_zoomx / 1.0 ) / w
         sy = (cam.view_zoomy / 1.0 ) / h
