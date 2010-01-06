@@ -383,6 +383,14 @@ class BaseObject(object):
             return object
         else:
             return None
+    
+    
+    def GetWeakref(self):
+        """ GetWeakref()        
+        Get a weak reference to this object. 
+        Call this object to obtain the real reference, or None if it's dead.
+        """
+        return weakref.ref( self )
 
 
 class Wibject(BaseObject):
@@ -520,9 +528,9 @@ class Wobject(BaseObject):
 class Position(object):
     """ Position(x,y,w,h, wibject_instance)
     
-    A position object indicates and manages the position of a wibject 
-    (the owner of the position). It provides short (x, y, w, h) properties 
-    to change the position and allows getting/setting via indexing. 
+    The position class stores and manages the position of wibjects. Each 
+    wibject has one Position instance associated with it, which can be 
+    obtained (and updated) using its position property.
     
     Each element (x,y,w,h) can be either:
     - The integer amount of pixels relative to the wibjects paren't 

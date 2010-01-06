@@ -206,50 +206,57 @@ class Figure(BaseFigure):
         # call original init AFTER we created the widget
         BaseFigure.__init__(self)
     
+    
     def _SetCurrent(self):
         """ make this scene the current context """
-        try:
-            self._widget.SetCurrent()
-        except Exception:
-            # can happen when trying to call this method after            
-            # the window was destroyed.
-            pass 
-        
+        if not self._destroyed:            
+            try:
+                self._widget.SetCurrent()
+            except Exception:
+                # can happen when trying to call this method after            
+                # the window was destroyed.
+                pass 
+    
+    
     def _SwapBuffers(self):
         """ Swap the memory and screen buffer such that
         what we rendered appears on the screen """
-        self._widget.SwapBuffers()
+        if not self._destroyed:
+            self._widget.SwapBuffers()
 
     def _SetTitle(self, title):
         """ Set the title of the figure... """
-        window = self._widget.Parent
-        if hasattr(window,'SetTitle'):
-            window.SetTitle(title)
+        if not self._destroyed:
+            window = self._widget.Parent
+            if hasattr(window,'SetTitle'):
+                window.SetTitle(title)
     
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
         # select widget to resize. If it 
-        widget = self._widget
-        if isinstance(widget.Parent, FigureFrame):
-            widget = widget.Parent
-        # apply
-        #widget.SetDimensions(x, y, w, h)
-        widget.MoveXY(x,y)
-        widget.SetClientSizeWH(w,h)
-
+        if not self._destroyed:            
+            widget = self._widget
+            if isinstance(widget.Parent, FigureFrame):
+                widget = widget.Parent
+            # apply
+            #widget.SetDimensions(x, y, w, h)
+            widget.MoveXY(x,y)
+            widget.SetClientSizeWH(w,h)
+    
     def _GetPosition(self):
         """ Get the position of the widget. """
         # select widget to resize. If it 
-        widget = self._widget
-        if isinstance(widget.Parent, FigureFrame):
-            widget = widget.Parent
-        # get and return
-        #tmp = widget.GetRect()        
-        #return tmp.left, tmp.top, tmp.width, tmp.height
-        size = widget.GetClientSizeTuple()
-        pos = widget.GetPositionTuple()
-        return pos[0], pos[1], size[0], size[1]
-
+        if not self._destroyed:
+            widget = self._widget
+            if isinstance(widget.Parent, FigureFrame):
+                widget = widget.Parent
+            # get and return
+            #tmp = widget.GetRect()        
+            #return tmp.left, tmp.top, tmp.width, tmp.height
+            size = widget.GetClientSizeTuple()
+            pos = widget.GetPositionTuple()
+            return pos[0], pos[1], size[0], size[1]
+    
     def _ProcessEvents(self):
         # I have no idea why, but the application is not capable of
         # processing mouse events.
@@ -259,7 +266,7 @@ class Figure(BaseFigure):
            pass
     
     def _Close(self):
-        if self._widget.Parent:
+        if self._widget and self._widget.Parent:
             self._widget.Parent.Close()
 
 

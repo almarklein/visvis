@@ -140,7 +140,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         ev.Clear()
         ev.Fire()
         self.figure.Destroy() # destroy figure
-        #self.destroy()  # destroy widget
+        self.destroy()  # destroy widget
         event.accept()
 
     def focusInEvent (self, event):
@@ -177,35 +177,41 @@ class Figure(BaseFigure):
     def _SetCurrent(self):
         """ Make this scene the current OpenGL context. 
         """
-        self._widget.makeCurrent()
+        if not self._destroyed:
+            self._widget.makeCurrent()
         
     def _SwapBuffers(self):
         """ Swap the memory and screen buffer such that
         what we rendered appears on the screen """
-        self._widget.swapBuffers()
+        if not self._destroyed:
+            self._widget.swapBuffers()
         
     def _SetTitle(self, title):
         """ Set the title of the figure. Note that this
         does not have to work if the Figure is uses as
         a widget in an application.
         """
-        self._widget.setWindowTitle(title)
+        if not self._destroyed:
+            self._widget.setWindowTitle(title)
 
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
-        self._widget.setGeometry(x, y, w, h)
+        if not self._destroyed:
+            self._widget.setGeometry(x, y, w, h)
     
     def _GetPosition(self):
         """ Get the position of the widget. """        
-        tmp = self._widget.geometry()
-        return tmp.left(), tmp.top(), tmp.width(), tmp.height()
+        if not self._destroyed:
+            tmp = self._widget.geometry()
+            return tmp.left(), tmp.top(), tmp.width(), tmp.height()
     
     def _ProcessEvents(self):
         app = QtGui.qApp
         app.processEvents()
     
     def _Close(self):
-        self._widget.close()
+        if not self._widget:
+            self._widget.close()
 
 
 def newFigure():

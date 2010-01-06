@@ -46,6 +46,24 @@ from line import MarkerManager, Line, lineStyles
 # a variable to indicate whether to print FPS, for testing
 printFPS = False
 
+
+
+def FindChild(object, cls):
+    # try in children
+    for child in object._children:
+        if isinstance(child, cls):
+            return child
+    else:
+        # try in childrens children
+        for child in object._children:
+            result = FindChild(child, cls)
+            if result:
+                return result
+        else:
+            # no result
+            return None
+
+
 class ObjectPickerHelper(object):
     """ A simple class to help picking of the objects.
     An instance of this is attached to each figure. 
@@ -55,8 +73,7 @@ class ObjectPickerHelper(object):
         self.bits_r, self.bits_g, self.bits_b = 8, 8, 8
         self.curid = 0
         self.screen = None  # the screenshot
-        self.items = []     # variable to list the found items
-        
+    
     def GetId(self):
         """ Get an id.  """        
         self.curid += 1
@@ -121,13 +138,14 @@ class ObjectPickerHelper(object):
             id = self.GetIdFromColor(clr[0],clr[1],clr[2])
         
         # search the object
-        self.items = [figure]  # figure is always at the bottom
+        items = [figure]  # figure is always at the bottom
         if id:
-            self._walkTree(id, figure._children)
+            self._walkTree(id, figure._children, items)
             #print id
         
         # return result
-        return self.items
+        return items
+    
        
     def AssignIds(self, figure):
         self.curid = 0
@@ -147,7 +165,7 @@ class ObjectPickerHelper(object):
                 self._walkTreeAssign(child._wobjects)
             self._walkTreeAssign(child._children)
     
-    def _walkTree(self, id, children):
+    def _walkTree(self, id, children, items):
         """ The walker. """        
         for i in range(len(children)):
             # define child and next child
@@ -158,21 +176,21 @@ class ObjectPickerHelper(object):
             # compare id's
             if id == child._id:                
                 # found it!
-                self.items.append(child)
+                items.append(child)
                 break
             elif id > child._id:
                 if not child2:
                     # last child
-                    self.items.append(child)
+                    items.append(child)
                     if hasattr(child,'_wobjects'):
-                        self._walkTree(id, child._wobjects)
-                    self._walkTree(id, child._children)
+                        self._walkTree(id, child._wobjects, items)
+                    self._walkTree(id, child._children, items)
                 elif id < child2._id:
                     # the child is a subchild!                    
-                    self.items.append(child)
+                    items.append(child)
                     if hasattr(child,'_wobjects'):
-                        self._walkTree(id, child._wobjects)
-                    self._walkTree(id, child._children)
+                        self._walkTree(id, child._wobjects, items)
+                    self._walkTree(id, child._children, items)
                 else:
                     continue
 
@@ -360,39 +378,53 @@ class BaseFigure(base.Wibject):
             if BaseFigure._figures[key] is self:
                 return key
     
-    @property
-    def currentAxes(self):
+    @Property
+    def currentAxes():
         """ Get the currently active axes of this figure. 
         Return None if no axes are present. 
         """
+        def fget(self):
+            
+            # init 
+            curNew = None
+            curOld = self._currentAxes
+            if curOld:
+                curOld = curOld() # because is weak ref            
+            
+            # check 
+            for child in self._children:
+                if not isinstance(child, AxesContainer):
+                    continue
+                child = child.GetAxes()
+                if not child:
+                    continue
+                if not curNew:
+                    curNew = child
+                if child is curOld:
+                    curNew = child
+                    break                
+            
+            # update and return
+            if curNew:
+                self._currentAxes = weakref.ref( curNew )
+            else:
+                self._currentAxes = None
+            return curNew
         
-        # init 
-        ca = None       
-        
-        # check 
-        for child in self._children:
-            if not isinstance(child, AxesContainer):
-                continue
-            child = child.GetAxes()
-            if not child:
-                continue
-            if not ca:
-                ca = child
-            if child is self._currentAxes:
-                ca = child
-                break                
-        
-        # update and return
-        self._currentAxes = ca
-        return ca
-        
+        def fset(self, value):
+            if value is None:
+                self._currentAxes = None
+            elif isinstance(value, Axes):                
+                self._currentAxes = weakref.ref( value )
+            else:
+                raise ValueError('currentAxes must be an Axes instance (or None).')
     
     @property
     def underMouse(self):
         """ Get the object currently under the mouse. Can be None."""
         if not self._underMouse:
             return None
-        return self._underMouse[-1]
+        return self._underMouse[-1]()
     
     @property
     def mousepos(self):
@@ -498,10 +530,20 @@ class BaseFigure(base.Wibject):
         if not self._destroyed:
             self._Close()
         
-        # set flag, also make a draw in the next 10 ms, to
-        # remove the reference to the widget
+        # set flag
         self._destroyed = True
-        self.Draw()
+        
+        # Detach reference to backend widget. We need to keep the widget
+        # alive because we are not allowed to destroy it during its callback.
+        # So we place a reference somewhere, meaning that the widget (and 
+        # thus the Figure instance can be cleaned up after a second figure
+        # has been destroyed. In other words, there will never be more than
+        # one destroyed alive Figure instance (if the user cleans up its
+        # references).
+        # Note that WX really removes the widget and replaces it with a
+        # dummy wrapper.
+        BaseFigure._lastClosedWidget = self._widget
+        self._widget = None
         
         # remove from list
         for nr in BaseFigure._figures.keys():
@@ -545,7 +587,7 @@ class BaseFigure(base.Wibject):
         again to only draw the shapes for picking. 
         """
         # are we alive?
-        if self._destroyed:           
+        if self._destroyed:            
             return
         
         # calculate fps
@@ -675,7 +717,7 @@ class BaseFigure(base.Wibject):
         # make lower
         eventName = eventName.lower()
         # get items now under the mouse
-        items1 = self._underMouse
+        items1 = [item() for item in self._underMouse if item()]
         # init list of events to fire
         events = []
         
@@ -699,7 +741,7 @@ class BaseFigure(base.Wibject):
             events.append( (self, self.eventMotion) ) 
             
             # update
-            self._underMouse = items2
+            self._underMouse = [item.GetWeakref() for item in items2]
         
         elif items1 and eventName.count("down"):            
             item = items1[-1]
@@ -850,10 +892,9 @@ class Axes(base.Wibject):
         
         # create Axis and legend
         Axis(self) # is a wobject
-        self._legend = Legend(self) # is a wibject
         
         # make current
-        figure._currentAxes = self
+        figure.currentAxes = self
     
     
     ## Define more methods
@@ -1010,7 +1051,7 @@ class Axes(base.Wibject):
             figure.Draw(fast)
     
     
-    def Clear(self):
+    def Clear(self, clearForDestruction=False):
         """ Clear the axes. Removing all wobjects in the scene.
         """
         # remove wobjects
@@ -1018,11 +1059,9 @@ class Axes(base.Wibject):
             if hasattr(w,'Destroy'):
                 w.Destroy()
         self._wobjects[:] = []
-        # remake axis object
-        Axis(self)
-        # reset other stuff
-        self.legend = []
-    
+        # remake axis and legend?
+        if not clearForDestruction:
+            Axis(self)
     
     @property
     def wobjects(self):
@@ -1289,22 +1328,26 @@ class Axes(base.Wibject):
     def legend():
         """ The string labels for the legend. """
         def fget(self):
-            return self._legend._stringList            
-        def fset(self, value):
-            self._legend.SetStrings(value)
+            return self.legendWibject._stringList
+        def fset(self, value):            
+            self.legendWibject.SetStrings(value)
     
     @property
     def legendWibject(self):
         """ Get the legend wibject, so for exampe its position
         can be changed programatically. """
-        return self._legend
+        legendWibject = FindChild(self, Legend)
+        if not legendWibject:
+            legendWibject = Legend(self) # create legend object
+        return legendWibject
+    
     
     ## Implement methods
     
     def OnDestroy(self):
         """ Clean up. """
         base.Wibject.OnDestroy(self)
-        self.Clear()
+        self.Clear(True)
         self.camera = None
         self._cameras = None
         # container is destroyed as soon as it notices the axes is gone
@@ -1475,7 +1518,7 @@ class Axes(base.Wibject):
         # make current axes
         f = self.GetFigure()
         if f:
-            f._currentAxes = self
+            f.currentAxes = self
         
 
 # A note about tick labels. We format these using '%1.4g', which means
@@ -1759,11 +1802,13 @@ class Axis(base.Wobject):
                     t._Compile()
                     t.OnDraw()
                     # get positions
-                    tmp1 = axes.position.absRight + 10 
-                    tmp2 = t._screenx + t._vertices1[:,0].max() / 2
-                    # apply
-                    if t._vertices1 and tmp1 < tmp2:
-                        t.visible = False
+                    fig = axes.GetFigure()
+                    if fig:
+                        tmp1 = fig.position.width
+                        tmp2 = t._screenx + t._vertices1[:,0].max() / 2
+                        # apply
+                        if t._vertices1 and tmp1 < tmp2:
+                            t.visible = False
                 
                 # get gridlines
                 if drawGrid[d] or drawMinorGrid[d]:
@@ -1967,19 +2012,13 @@ class AxisLabel(Text):
 
 
 class Legend(base.Box):
-    """ A legend is a wibject that should be the child of an axes.
-    It displays a description for each line in the axes, and is
-    draggable.
+    """ A legend is a wibject that should be a child (does not have
+    to be the direct child) of an axes. It displays a description for 
+    each line in the axes, and is draggable.
     """
     
-    def __init__(self, parent, axes=None):
+    def __init__(self, parent):
         base.Box.__init__(self, parent)
-        
-        # store reference to axes object
-        if axes:
-            self._axes = axes
-        else:
-            self._axes = parent
         
         # params for the layout
         self._linelen = 40
@@ -2064,9 +2103,16 @@ class Legend(base.Box):
         for label in self.children:
             label.Destroy()
         
+        # find axes
+        axes = self.parent
+        while axes and not isinstance(axes, Axes):
+            axes = axes.parent
+        if not axes:
+            return
+        
         # create new lines and labels
         maxWidth = 0
-        for ob in self._axes._wobjects:
+        for ob in axes._wobjects:
             if len(self._wobjects) >= len(stringList):
                 break
             if not isinstance(ob, Line):
@@ -2107,4 +2153,12 @@ class Legend(base.Box):
         # reset some stuff that was set because it was thinking it was drawing
         # in world coordinates.
         gl.glDisable(gl.GL_DEPTH_TEST)
+    
+    
+    def OnDestroy(self):
+        base.Box.OnDestroy(self)
+        
+        # clear lines and such
+        for ob in [ob for ob in self._wobjects]:
+            ob.Destroy()
     

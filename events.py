@@ -31,6 +31,47 @@ import time
 import traceback
 import weakref
 
+
+class CallableObject:
+    """ A class to hold a callable using weak references.
+    It can distinguish between functions and methods. """
+    def __init__(self, c):
+        if hasattr(c,'im_func'):
+            self._func = weakref.ref(c.im_func)
+            self._ob = weakref.ref(c.im_self)
+        else:
+            self._func = weakref.ref(c)
+            self._ob = None
+    
+    def isdead(self):
+        if self._func() is None or (self._ob and self._ob() is None):
+            return True
+        else:
+            return False
+    
+    def call(self, *args):
+        func = self._func()
+        if self._ob:
+            func(self._ob(), *args)
+        else:
+            func(*args)
+    
+    def compare(self, other):
+        # compare func
+        if self._func() is not other._func():
+            return False
+        # compare object
+        if self._ob and other._ob and self._ob() is other._ob():
+            return True
+        elif self._ob is None and other._ob is None:
+            return True
+        else:
+            return False
+    
+    def __str__(self):
+        return self._func().__str__()
+
+
 class BaseEvent:
     """ Base event object
     Contains information about the event: mouse location, mouse button,
@@ -77,13 +118,21 @@ class BaseEvent:
         location for the mouse event and the keycode for the key event.
         """
         
+        # check
+        if not hasattr(func, '__call__'):
+            raise ValueError('Warning: can only bind callables.')
+        
+        # make callable object
+        cnew = CallableObject(func)
+        
         # check -> warn
-        if func in self._handlers:
-            print "WARNING: handler %s already present for %s" %(func, self) 
-            return
+        for c in self._handlers:
+            if cnew.compare(c):
+                print "Warning: handler %s already present for %s" %(func, self)
+                return
         
         # add the handler
-        self._handlers.append(func)
+        self._handlers.append( cnew )
 
 
     def Unbind(self, func=None):
@@ -92,17 +141,24 @@ class BaseEvent:
         if func is None:
             self._handlers[:] = []
         else:
-            L = self._handlers
-            while L.count(func):
-                L.remove(func)
+            cref = CallableObject(func)
+            for c in [c for c in self._handlers]:
+                # remove if callable matches func or object is destroyed
+                if c.compare(cref) or c.isdead():  
+                    self._handlers.remove( c )
     
     
     def Fire(self):
         """ Fire the event, calling all functions that are bound
         to it, untill the event is handled (a handler returns True).
         """
-       
-        # get list of functions 
+        
+        # remove dead weakrefs
+        for c in [c for c in self._handlers]:
+            if c.isdead():         
+                self._handlers.remove( c )
+        
+        # get list of callable functions 
         L = self._handlers
         
         # call event handlers. Call last added first!
@@ -111,7 +167,7 @@ class BaseEvent:
             if handled:
                 break
             try:
-                handled = func(self)
+                handled = func.call(self)
             except Exception, why:
                 # get easier func name
                 s = str(func)
@@ -126,7 +182,7 @@ class BaseEvent:
                 # get traceback
                 type, value, tb = sys.exc_info()
                 tblist = traceback.extract_tb(tb)                
-                list = traceback.format_list(tblist[1:]) # remove "Fire"
+                list = traceback.format_list(tblist[2:]) # remove "Fire"
                 list.extend( traceback.format_exception_only(type, value) )
                 # print
                 print "ERROR calling '%s':" % s

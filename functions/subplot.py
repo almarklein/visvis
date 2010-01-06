@@ -75,7 +75,7 @@ def subplot(*args):
             if n == nr:
                 # make current and return
                 a = a.GetAxes()
-                f._currentAxes = a
+                f.currentAxes = a
                 return a
     
     # create axes in container
