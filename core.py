@@ -1085,7 +1085,7 @@ class Axes(base.Wibject):
             return 0,0
         x,y = figure.mousepos
         pos = self.position
-        return x-pos.left, y-pos.top
+        return x-pos.absLeft, y-pos.absTop
     
     
     @Property
@@ -1759,7 +1759,7 @@ class Axis(base.Wobject):
                     t._Compile()
                     t.OnDraw()
                     # get positions
-                    tmp1 = axes.position.right + 10 
+                    tmp1 = axes.position.absRight + 10 
                     tmp2 = t._screenx + t._vertices1[:,0].max() / 2
                     # apply
                     if t._vertices1 and tmp1 < tmp2:
