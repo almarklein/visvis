@@ -31,7 +31,7 @@ $Rev$
 from base import Wibject, Box
 from textRender import Label
 from core import Axes, BaseFigure, Axis
-
+from simpleWibjects import *
 
 class Title(Label):
     def __init__(self, axes, text):
@@ -65,4 +65,4 @@ class Polygon:
     """ A generic polygon. 
     """
     pass
-    
+

@@ -48,20 +48,20 @@ printFPS = False
 
 
 
-def FindChild(object, cls):
-    # try in children
-    for child in object._children:
-        if isinstance(child, cls):
-            return child
-    else:
-        # try in childrens children
-        for child in object._children:
-            result = FindChild(child, cls)
-            if result:
-                return result
-        else:
-            # no result
-            return None
+# def FindChild(object, cls):
+#     # try in children
+#     for child in object._children:
+#         if isinstance(child, cls):
+#             return child
+#     else:
+#         # try in childrens children
+#         for child in object._children:
+#             result = FindChild(child, cls)
+#             if result:
+#                 return result
+#         else:
+#             # no result
+#             return None
 
 
 class ObjectPickerHelper(object):
@@ -1336,7 +1336,7 @@ class Axes(base.Wibject):
     def legendWibject(self):
         """ Get the legend wibject, so for exampe its position
         can be changed programatically. """
-        legendWibject = FindChild(self, Legend)
+        legendWibject = self.FindObjects(Legend)
         if not legendWibject:
             legendWibject = Legend(self) # create legend object
         return legendWibject

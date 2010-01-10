@@ -385,6 +385,32 @@ class BaseObject(object):
             return None
     
     
+    def FindObjects(self, cls=object, attr='_parent'):
+        """ FindObjects(cls=BaseObject, attr='_parent')
+        Finds the objects in this objects' children, and its childrens
+        children, etc, that are of the given class and have the given
+        attribute (by default all wibjects and wobjects are returned).
+        Searches in the list of wobjects if the object is a wibject and
+        has a _wobject property (like the Axes wibject).
+        """
+        
+        # Init list with result
+        result = []
+        
+        # Try in children
+        for child in self._children:
+            if isinstance(child, cls) and hasattr(child, attr):
+                result.append(child)
+            result.extend( child.FindObjects(cls, attr) )
+        if hasattr(self, '_wobjects'):
+            for child in self._wobjects:
+                if isinstance(child, cls) and hasattr(child, attr):
+                    result.append(child)
+                result.extend( child.FindObjects(cls, attr) )
+        
+        # Done
+        return result
+    
     def GetWeakref(self):
         """ GetWeakref()        
         Get a weak reference to this object. 
@@ -498,6 +524,11 @@ class Wobject(BaseObject):
     
     
     def GetAxes(self):
+        """ GetAxes()
+        Get the axes in which this wobject resides. 
+        Note that this is not necesarily an Axes instance (like the line
+        objects in the Legend wibject).
+        """
         par = self.parent
         if par is None:
             return None# raise TypeError("Cannot find axes!")
@@ -626,9 +657,9 @@ class Position(object):
         """
         
         # get old version, obtain and store new version
-        ip1 = self._inpixels
+        ip1 = self._inpixels + self._absolute
         self._CalculateInPixels()
-        ip2 = self._inpixels
+        ip2 = self._inpixels + self._absolute
         
         if ip2:
             if ip1 != ip2: # also if ip1 is None
