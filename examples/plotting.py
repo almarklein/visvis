@@ -1,4 +1,3 @@
-
 import visvis as vv
 app = vv.App('wx')
 f = vv.clf()

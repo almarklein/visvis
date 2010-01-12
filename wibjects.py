@@ -31,7 +31,8 @@ $Rev$
 from base import Wibject, Box
 from textRender import Label
 from core import Axes, BaseFigure, Axis
-from simpleWibjects import *
+from simpleWibjects import PushButton, ToggleButton, RadioButton, DraggableBox
+from cm import Colorbar, ColormapEditor
 
 class Title(Label):
     def __init__(self, axes, text):

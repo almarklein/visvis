@@ -69,6 +69,11 @@ from misc import (Transform_Translate, Transform_Scale, Transform_Rotate)
 from misc import getOpenGlInfo
 
 import cm
+L = locals()
+for key in cm.colormaps:
+  L[key] = cm.colormaps[key]
+del L
+
 
 from wibjects import *
 from wobjects import *

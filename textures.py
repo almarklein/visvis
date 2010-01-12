@@ -1369,12 +1369,10 @@ class Texture3D(BaseTexture):
         if not self._renderStyle:
             self.renderStyle = 'mip'
         
-        # attribut to store array of quads (vertices and texture coords)
+        # Attribute to store array of quads (vertices and texture coords)
         self._quads = None
-    
-    
-    
-    
+        # Also store daspect, if this changes quads should be recalculated
+        self._daspectStored = (1,1,1)
     
     
     def OnDrawShape(self, clr):
@@ -1453,6 +1451,9 @@ class Texture3D(BaseTexture):
         axes = self.GetAxes()
         if not axes:
             return
+        
+        # Store daspect so we can detect it changing
+        self._daspectStored = axes.daspect
         
         # Note that we could determine the world coordinates and use
         # them directly here. However, the way that we do it now (using
@@ -1535,12 +1536,17 @@ class Texture3D(BaseTexture):
         This is done in a seperate method to reuse code in 
         OnDraw() and OnDrawShape(). """        
         
+        # Get axes
+        axes = self.GetAxes()
+        if not axes:
+            return
+        
         # should we draw?
         if not self._texture1._shape:
             return 
         
         # should we create quads?
-        if not self._quads:
+        if not self._quads or self._daspectStored != axes.daspect:
             self._CreateQuads()
         
         # get data

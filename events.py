@@ -52,9 +52,9 @@ class CallableObject:
     def call(self, *args):
         func = self._func()
         if self._ob:
-            func(self._ob(), *args)
+            return func(self._ob(), *args)
         else:
-            func(*args)
+            return func(*args)
     
     def compare(self, other):
         # compare func

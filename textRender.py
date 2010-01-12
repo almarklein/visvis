@@ -274,7 +274,7 @@ class BaseText():
         self._text = text
         
         # more properties
-        self._size = 10
+        self._size = 9
         self._fontname = fontname
         self._color = (0,0,0)
         self._angle = 0
@@ -585,8 +585,57 @@ class BaseText():
         if vertices is not None and len(vertices):
             self._deltax = vertices[:,0].min(), vertices[:,0].max()
             self._deltay = vertices[:,1].min(), vertices[:,1].max()
-
-
+    
+    
+    def _DrawText(self, x=0, y=0, z=0):
+        
+        # Translate
+        if x or y or z:
+            gl.glPushMatrix()
+            tmp = 100000 - z * 200000
+            gl.glTranslatef(x, y, tmp)
+        
+        # make sure the glyphs are created
+        if self._vertices1 is None or self._texCords is None:
+            self._Compile()
+        if self._vertices2 is None:
+            self._PositionText()
+        
+        # get font instance from figure
+        fig = self.GetFigure()
+        if not fig:
+            return
+        font = fig._fontManager.GetFont(self._fontname)
+        
+        # enable texture
+        font.Enable()
+        
+        # prepare
+        texCords = self._texCords#.Copy()
+        vertices = self._vertices2#.Copy()
+        
+        # init vertex and texture array
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        gl.glVertexPointerf(vertices.data)
+        gl.glTexCoordPointerf(texCords.data)
+        
+        # draw
+        if self.textColor:
+            clr = self.textColor
+            gl.glColor(clr[0], clr[1], clr[2])
+            gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
+            gl.glFlush()
+        
+        # disable texture and clean up     
+        if x or y or z:
+            gl.glPopMatrix()   
+        font.Disable()
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+    
+    
+    
 class Text(Wobject, BaseText):
     """ A string of characters. 
     """
@@ -638,50 +687,8 @@ class Text(Wobject, BaseText):
     
     def OnDrawScreen(self):
         """ Draw the text. """
-        
-        # make sure the glyphs are created
-        if self._vertices1 is None or self._texCords is None:
-            self._Compile()
-        if self._vertices2 is None:
-            self._PositionText()
-        
-        # get font instance from figure
-        f = self.GetFigure()
-        if not f:
-            return
-        font = f._fontManager.GetFont(self._fontname)
-        
-        # enable texture
-        font.Enable()
-        
-        # prepare
-        texCords = self._texCords#.Copy()
-        vertices = self._vertices2#.Copy()
-        
-        # translate to proper position
-        gl.glPushMatrix()
-        tmp = 100000 - self._screenz * 200000
-        gl.glTranslatef(self._screenx, self._screeny, tmp)
-        
-        # init vertex and texture array
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        gl.glVertexPointerf(vertices.data)
-        gl.glTexCoordPointerf(texCords.data)
-        
-        # draw
-        if self.textColor:
-            clr = self.textColor
-            gl.glColor(clr[0], clr[1], clr[2])
-            gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
-            gl.glFlush()
-        
-        # disable texture and clean up        
-        font.Disable()
-        gl.glPopMatrix()
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        
+        self._DrawText( self._screenx, self._screeny, self._screenz)
+    
 
 
 
@@ -706,43 +713,9 @@ class Label(Box, BaseText):
     def OnDraw(self):
         """ Draw the text now. """
         
-        # draw the box
+        # Draw the box
         Box.OnDraw(self)
         
-        # make sure the glyphs are created
-        if self._vertices1 is None or self._texCords is None:
-            self._Compile()
-        if self._vertices2 is None:
-            self._PositionText()
-        
-        # get font instance from figure
-        f = self.GetFigure()
-        if not f:
-            return
-        font = f._fontManager.GetFont(self._fontname)
-        
-        # enable texture
-        font.Enable()
-        
-        # prepare, draw in screen coordinates                
-        texCords = self._texCords#.Copy()
-        vertices = self._vertices2#.Copy()        
-        
-        # init vertex and texture array
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        gl.glVertexPointerf(vertices.data)
-        gl.glTexCoordPointerf(texCords.data)
-        
-        # draw
-        if self.textColor:
-            clr = self.textColor
-            gl.glColor(clr[0], clr[1], clr[2])
-            gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
-            gl.glFlush()
-        
-        # disable texture
-        gl.glDisable(gl.GL_TEXTURE_2D)
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        # Draw the text
+        self._DrawText()
         

@@ -26,15 +26,22 @@ $Rev: 118 $
 
 """
 
+import OpenGL.GL as gl
+
 from events import BaseEvent
 from misc import Property
+from base import Box
 from textRender import Label
+from points import Pointset
+
+# Note that we cannot include the Box and Label class here, since the latter
+# depends on the first, and the BaseText class also needs the Label class.
 
 
 class PushButton(Label):
     """ PushButton(parent, text='', fontname='sans')
-    A button to click on. It is a label with an edgewidth of 1 by default.
-    It's background color changes when the mouse is moved over it.
+    A button to click on. It is a label with an edgewidth of 1, in which
+    text is horizontally aligned. Plus the hittest is put on by default.    
     """
     
     def __init__(self, parent, *args, **kwargs):
@@ -43,26 +50,11 @@ class PushButton(Label):
         # Get an edge
         self.edgeWidth = 1
         
-        # variable to store original bg color
-        self._bgcolor2 = self.bgcolor
+        # Text is centered by default
+        self.halign = 0
         
-        # Bind events
-        self.eventEnter.Bind(self._OnEnter)
-        self.eventLeave.Bind(self._OnLeave)
+        # A button is hittable by default
         self.hitTest = True
-    
-    def _OnEnter(self, event):
-        self._bgcolor2 = self.bgcolor
-        self.bgcolor = (0.8,0.9,0.8)
-        fig = self.GetFigure()
-        if fig:
-            fig.Draw()
-    
-    def _OnLeave(self, event):
-        self.bgcolor = self._bgcolor2
-        fig = self.GetFigure()
-        if fig:
-            fig.Draw()
 
 
 class ToggleButton(PushButton):
@@ -138,4 +130,105 @@ class RadioButton(ToggleButton):
         # Update all so the events are fired
         for but in toggleButtons:
             but._Update()
+
+
+class DraggableBox(Box):
+    """ A Box wibject, but draggable and resizable. 
+    Intended as a base class.
+    """
+    
+    def __init__(self, parent):
+        Box.__init__(self, parent)
+        
+        # Make me draggable
+        self._dragStartPos = None
+        self._dragResizing = False
+        self._dragMouseOver = False
+        
+        # Prepare points to draw
+        self._DragCalcDots()
+        
+        # Bind to own events
+        self.hitTest = True
+        self.eventMouseDown.Bind(self._DragOnDown)
+        self.eventEnter.Bind(self._DragOnEnter)
+        self.eventLeave.Bind(self._DragOnLeave)
+        self.eventPosition.Bind(self._DragCalcDots)
+        
+        # Bind to figure events
+        f = self.GetFigure()
+        f.eventMotion.Bind(self._DragOnMove)
+        f.eventMouseUp.Bind(self._DragOnUp)
+    
+    
+    def _DragCalcDots(self, event=None):
+        w,h = self.position.size
+        dots = Pointset(2)
+        #        
+        dots.Append(3,3); dots.Append(3,6); dots.Append(3,9)
+        dots.Append(6,3); dots.Append(6,6); dots.Append(6,9)
+        dots.Append(9,3); dots.Append(9,6); dots.Append(9,9)
+        #
+        dots.Append(w-3, h-3); dots.Append(w-3, h-6); dots.Append(w-3, h-9)
+        dots.Append(w-6, h-3); dots.Append(w-6, h-6);
+        dots.Append(w-9, h-3);
+        self._dots = dots
+    
+    def _DragOnEnter(self, event):
+        self._dragMouseOver = True
+        fig = self.GetFigure()
+        if fig:
+            fig.Draw()
+    
+    def _DragOnLeave(self, event):
+        self._dragMouseOver = False
+        fig = self.GetFigure()
+        if fig:
+            fig.Draw()
+   
+    def _DragOnDown(self, event):
+        f = self.GetFigure()        
+        pos = self.position
+        # Store position if clicked on draggable arreas
+        if event.x < 10 and event.y < 10:
+            self._dragStartPos = f.mousepos[0],f.mousepos[1]
+        elif event.x > pos.width-10 and event.y > pos.height-10:
+            self._dragStartPos = f.mousepos[0],f.mousepos[1]
+            self._dragResizing = True
+    
+    
+    def _DragOnMove(self, event):        
+        if not self._dragStartPos:
+            return
+        elif self._dragResizing:
+            self.position.w += event.x - self._dragStartPos[0]
+            self.position.h += event.y - self._dragStartPos[1]
+            event.owner.Draw()
+        else: # dragging
+            self.position.x += event.x - self._dragStartPos[0]
+            self.position.y += event.y - self._dragStartPos[1]
+            event.owner.Draw()
+        self._dragStartPos = event.x, event.y
+    
+    def _DragOnUp(self, event):
+        self._DragOnMove(event)
+        self._dragStartPos = None
+        self._dragResizing = False
+    
+    
+    def OnDraw(self):
+        Box.OnDraw(self)
+        
+        if self._dragMouseOver:
+            
+            # Prepare
+            gl.glColor(0,0,0,1)
+            gl.glPointSize(1)
+            gl.glDisable(gl.GL_POINT_SMOOTH)
+            
+            # Draw dots
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+            gl.glVertexPointerf(self._dots.data)
+            gl.glDrawArrays(gl.GL_POINTS, 0, len(self._dots))
+            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         

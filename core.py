@@ -36,6 +36,7 @@ from points import Point, Pointset
 import numpy as np
 
 import base
+import simpleWibjects
 import textures
 from cameras import TwoDCamera, PolarCamera, FlyCamera
 from misc import Property, Range, OpenGLError
@@ -45,23 +46,6 @@ from line import MarkerManager, Line, lineStyles
 
 # a variable to indicate whether to print FPS, for testing
 printFPS = False
-
-
-
-# def FindChild(object, cls):
-#     # try in children
-#     for child in object._children:
-#         if isinstance(child, cls):
-#             return child
-#     else:
-#         # try in childrens children
-#         for child in object._children:
-#             result = FindChild(child, cls)
-#             if result:
-#                 return result
-#         else:
-#             # no result
-#             return None
 
 
 class ObjectPickerHelper(object):
@@ -755,6 +739,9 @@ class BaseFigure(base.Wibject):
         
         # fire events
         for item,ev in events:
+            # can we fire an event at all
+            if item._destroyed:
+                continue
             # determine axes
             if isinstance(item, base.Wobject):
                 axes = item.GetAxes()
@@ -1336,10 +1323,10 @@ class Axes(base.Wibject):
     def legendWibject(self):
         """ Get the legend wibject, so for exampe its position
         can be changed programatically. """
-        legendWibject = self.FindObjects(Legend)
-        if not legendWibject:
-            legendWibject = Legend(self) # create legend object
-        return legendWibject
+        legendWibjects = self.FindObjects(Legend)
+        if not legendWibjects:
+            legendWibjects = [Legend(self)] # create legend object
+        return legendWibjects[-1]
     
     
     ## Implement methods
@@ -1349,7 +1336,7 @@ class Axes(base.Wibject):
         base.Wibject.OnDestroy(self)
         self.Clear(True)
         self.camera = None
-        self._cameras = None
+        self._cameras = {}
         # container is destroyed as soon as it notices the axes is gone
         # any wibjects are destoyed automatically by the Destroy command.
         
@@ -1531,8 +1518,66 @@ class Axes(base.Wibject):
 # pixels. The correction applied when visualizing axis (and ticks) is 60,
 # because the default offset is 10 pixels for axes.
 
-# todo: increase performance by drawing all text with one command by 
-# combining all texture coords and vertices?
+# create tick units
+_tickUnits = []
+for e in range(-10, 21):
+    for i in [10, 20, 25, 50]:
+        _tickUnits.append( i*10**e)
+
+
+def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
+    
+    # Vector from start to end point
+    vec = p1-p0
+    
+    # Calculate all ticks if not given
+    if ticks is None:
+        
+        # Get pixels per unit
+        if lim.range == 0:
+            return [],[],[]
+        pixelsPerUnit = vec.Norm() / lim.range
+        
+        # Try all tickunits, starting from the smallest, until we find 
+        # one which results in a distance between ticks more than
+        # X pixels.
+        try:
+            for tickUnit in _tickUnits:
+                if tickUnit * pixelsPerUnit >= minTickDist:
+                    break
+            # if the numbers are VERY VERY large (which is very unlikely)
+            if tickUnit*pixelsPerUnit < minTickDist:
+                raise ValueError
+        except (ValueError, TypeError):
+            # too small
+            return [],[],[]
+        
+        # Calculate the ticks (the values) themselves
+        ticks = []    
+        firstTick = np.ceil(  lim.min/tickUnit ) * tickUnit
+        lastTick  = np.floor( lim.max/tickUnit ) * tickUnit
+        count = 0
+        ticks = [firstTick]
+        while ticks[-1] < lastTick-tickUnit/2:
+            count += 1
+            ticks.append( firstTick + count*tickUnit )
+    
+    # Calculate tick positions and text
+    ticksPos, ticksText = [], []
+    for tick in ticks:
+        pos = p0 + vec * ( (tick-lim.min) / lim.range )
+        text = '%1.4g' % tick
+        iExp = text.find('e')
+        if iExp>0:
+            front = text[:iExp+2]
+            text = front + text[iExp+2:].lstrip('0')
+        # Store
+        ticksPos.append( pos )
+        ticksText.append( text )
+    
+    # Done
+    return ticks, ticksPos, ticksText
+    
 
 class Axis(base.Wobject):
     """ An Axis object represents the lines and ticks that make
@@ -1765,6 +1810,9 @@ class Axis(base.Wobject):
                     if iExp>0:
                         front = text[:iExp+2]
                         text = front + text[iExp+2:].lstrip('0')
+                    # z-axis has valign=0, thus needs extra space
+                    if d==2:
+                        text+='  '
                     # put textlabel at tick                     
                     textDict = self._textDicts[d]
                     if tick in textDict and textDict[tick] in self._children:
@@ -2011,14 +2059,14 @@ class AxisLabel(Text):
 
 
 
-class Legend(base.Box):
+class Legend(simpleWibjects.DraggableBox):
     """ A legend is a wibject that should be a child (does not have
     to be the direct child) of an axes. It displays a description for 
     each line in the axes, and is draggable.
     """
     
     def __init__(self, parent):
-        base.Box.__init__(self, parent)
+        simpleWibjects.DraggableBox.__init__(self, parent)
         
         # params for the layout
         self._linelen = 40
@@ -2037,31 +2085,6 @@ class Legend(base.Box):
         # by creating a _wobjects attribute, we are allowed to hold
         # wobjects, but our ourselves responsible for drawing them
         self._wobjects = []
-        
-        # make me draggable
-        self._moving = None
-        self.hitTest = True
-        f = self.GetFigure()
-        self.eventMouseDown.Bind(self._OnDown)
-        f.eventMotion.Bind(self._OnMove)
-        f.eventMouseUp.Bind(self._OnUp)
-    
-    
-    def _OnDown(self, event):
-        f = self.GetFigure()        
-        pos = self.position
-        self._moving = pos.left-f.mousepos[0], pos.top-f.mousepos[1]
-    
-    def _OnMove(self, event):        
-        if not self._moving:
-            return
-        else:
-            self.position.x = event.x + self._moving[0]
-            self.position.y = event.y + self._moving[1]
-            event.owner.Draw()
-    
-    def _OnUp(self, event):
-        self._moving=None
     
     
     def _AddLineAndLabel(self):
@@ -2144,7 +2167,7 @@ class Legend(base.Box):
     def OnDraw(self):
         
         # draw box 
-        base.Box.OnDraw(self)
+        simpleWibjects.DraggableBox.OnDraw(self)
         
         # draw lines        
         for line in self._wobjects:
@@ -2156,7 +2179,7 @@ class Legend(base.Box):
     
     
     def OnDestroy(self):
-        base.Box.OnDestroy(self)
+        simpleWibjects.DraggableBox.OnDestroy(self)
         
         # clear lines and such
         for ob in [ob for ob in self._wobjects]:

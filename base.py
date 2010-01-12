@@ -385,14 +385,20 @@ class BaseObject(object):
             return None
     
     
-    def FindObjects(self, cls=object, attr='_parent'):
-        """ FindObjects(cls=BaseObject, attr='_parent')
+    def FindObjects(self, cls=None, attr=None):
+        """ FindObjects(cls=None, attr=None)
         Finds the objects in this objects' children, and its childrens
         children, etc, that are of the given class and have the given
         attribute (by default all wibjects and wobjects are returned).
         Searches in the list of wobjects if the object is a wibject and
         has a _wobject property (like the Axes wibject).
         """
+        
+        # Parse specs
+        if cls is None:
+            cls = object
+        if attr is None:
+            attr = '_parent'
         
         # Init list with result
         result = []
@@ -948,6 +954,8 @@ class Position(object):
     
 class Box(Wibject):
     """ A simple, multi-purpose, rectangle object.
+    It's basically a Wibject, but it can draw itself. Most wibjects will
+    actually inherit from Box, rather than from Wibject.
     """
     def __init__(self, parent):
         Wibject.__init__(self, parent)
