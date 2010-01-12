@@ -1,14 +1,12 @@
 """ SCRIPT photoshow
-An example program that shows all photos in a directory,
+An example app that shows all photos in a directory,
 allowing easy zooming on each photo.
+
+There is also a freeze script that illustrates how a visvis app
+can be frozen using cx_freeze (py2exe and bbfreeze work similarly).
 """
 
-# todo: icon in app
-# todo: name of window (not "figure 1")
-# sometimes first photo is not displayed black?
-# todo: use pyfltk backend
-    
-#from PyQt4 import QtCore, QtGui, QtGui as qt
+
 import wx
 
 import visvis as vv
@@ -21,14 +19,16 @@ import os, gc
 #app = QtGui.QApplication([])
 #vv.backends.use('qt4')
 app = wx.PySimpleApp() 
-vv.backends.use('wx')
+vv.backends.use('wx') # WX is smaller to freeze than QT4
 
 
 # define figure and axes (globals in this module)
 f = vv.figure()
+f._SetTitle('Photoshow')
 a = vv.gca()
 a.position = 0,0,1,1
 a.bgcolor = 0,0,0
+a.showAxis = 0
 
 class PhotoStore(threading.Thread):
     def __init__(self, filenames):
@@ -66,7 +66,7 @@ class PhotoStore(threading.Thread):
             self.thelock.release()
             time.sleep(0.02)
         if thephoto is None:
-            print "warning, photo not available (yet)"
+            print "Warning, photo not available (yet)."
         return thephoto
     
     
@@ -120,7 +120,7 @@ class PhotoStore(threading.Thread):
     
     
     def run(self):
-        
+        """ Mainloop of fotostore thread. """
         indices = [0, 1, -1, 2, -2]#, 3, -3]
         #indices = [0]
         
@@ -149,7 +149,7 @@ class Photoshow:
         self.path = path
         filenames = []
         index = 0
-        for file in os.listdir(path):
+        for file in sorted(os.listdir(path)):
             if file.lower().endswith('.jpg') or file.lower().endswith('.jpeg'):
                 file = os.path.join(path,file)
                 filenames.append(file)
@@ -157,20 +157,25 @@ class Photoshow:
                     index = len(filenames)-1
         self.N = len(filenames)
         
-        self.t = None # for texture
+        # Load texture
+        im = np.zeros((10,10), dtype=np.uint8); im[0,0] = 255
+        self.t = vv.imshow(im)
+        self.t.visible = False
         
-        # set up callbacks
+        # Set up callbacks
         f.eventKeyDown.Bind(self.OnKeyDown)
         f.eventClose.Bind(self.OnClose)
         
-        # create store
+        # Create store
         self.index = index # create index attribute
         self.store = PhotoStore(filenames)
         self.store.start()
+        time.sleep(0.2) # give store a moment
     
     
     def Start(self, index=0):
-        self.ShowPhoto()
+        self.index = -1
+        self.ShowNext()
     
     
     def OnClose(self, event):
@@ -180,62 +185,67 @@ class Photoshow:
     def OnKeyDown(self, event):
         if event.key in [ord(' '), vv.KEY_DOWN, vv.KEY_RIGHT, vv.KEY_PAGEDOWN]:
             # increase index
-            self.index += 1
-            if self.index >= self.N:
-                self.index = 0
-            self.ShowPhoto()
+            self.ShowNext()
         
         elif event.key in [vv.KEY_UP, vv.KEY_LEFT, vv.KEY_PAGEUP]:
             # decrease index
-            self.index -= 1
-            if self.index < 0:
-                self.index = self.N-1
-            self.ShowPhoto()
+            self.ShowPrevious()
         
         elif event.text == '0':
-            if self.t:
-                self.t.aa = 0
-                f.Draw()
-        elif event.text == '1':
-            if self.t:
-                self.t.aa = 1
-                f.Draw()
-        elif event.text == '2':
-            if self.t:
-                self.t.aa = 2
-                f.Draw()
-        elif event.text == '3':
-            if self.t:
-                self.t.aa = 3
-                f.Draw()
-
-    
-    def ShowPhoto(self):
-        
-        # get photo
-        im = self.store.GetPhoto(self.index)
-        if im is None:
-            return
-        
-        if 1:
-            # fast
-            if self.t:
-                self.t.SetData(im)
-            else:
-                a.Clear()
-                self.t = vv.imshow(im,[0,255],a, aa=1)
-            a.SetLimits()
+            self.t.aa = 0
             f.Draw()
+        elif event.text == '1':
+            self.t.aa = 1
+            f.Draw()
+        elif event.text == '2':
+            self.t.aa = 2
+            f.Draw()
+        elif event.text == '3':
+            self.t.aa = 3
+            f.Draw()
+        elif event.text == 'i':
+            self.t.interpolate = not self.t.interpolate
+            f.Draw()
+    
+    
+    def ShowNext(self, previous=False): # Simpler
+        
+        # Increase counter
+        if previous:
+            self.index -= 1
         else:
-            # slow            
-            a.Clear()
-            aa = 1
-            if self.t:
-                aa = self.t.aa            
-            self.t = vv.imshow(im,[0,255],a, aa=aa)
+            self.index += 1
+        if self.index >= self.N:
+            self.index = 0
+        if self.index<0:
+            self.index = self.N-1
+        
+        # Show we're working on it
+        self.t.clim = 0,350
+        f.DrawNow()
+        
+        # Make invisible
+        self.t.visible = False
+        
+        # Load data 
+        im = self.store.GetPhoto(self.index)
+        if im is not None:
+            self.t.SetData(im)
+            self.t.clim = 0,255
+            self.t.visible = True
+            a.SetLimits()
+        
+        # Draw 
+        f.Draw()
+        return self.t.visible
+    
+    
+    def ShowPrevious(self):
+        self.ShowNext(True)
+        
     
 if __name__ == "__main__" or vv.misc.isFrozen():
-    #p = Photoshow(r'C:\tmp\fotos italie 2009')
+#     p = Photoshow(r'C:\tmp\2009 huwelijksreis La Gomera')
     #p = Photoshow(r'K:\temp\almar\fotos spie 2009')
     import sys
     p = Photoshow(sys.argv[1])

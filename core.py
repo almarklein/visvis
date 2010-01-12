@@ -324,7 +324,7 @@ class BaseFigure(base.Wibject):
         
     def _SetTitle(self, title):
         """ Set the title of the figure. Note that this
-        does not have to work if the Figure is uses as
+        does not have to work if the Figure is used as
         a widget in an application.
         """
         raise NotImplemented()
