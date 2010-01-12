@@ -90,7 +90,7 @@ def subplot(*args):
     # apply positions
     c.position = dx*x, dy*y, dx, dy
     a.position = 10, 10, -20, -20
-    print c.position
+    
     # done
     return a
     

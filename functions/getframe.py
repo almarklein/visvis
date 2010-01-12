@@ -21,8 +21,9 @@ def getframe(ob):
     # establish rectangle to sample
     if isinstance(ob, vv.BaseFigure):
         x,y,w,h = 0, 0, ob.position.w, ob.position.h
-    elif isinstance(ob, vv.Axes):        
-        x,y,w,h = ob.position.InPixels().AsTuple()
+    elif isinstance(ob, vv.Axes):
+        x,y = ob.position.topLeft
+        w,h = ob.position.size
         #print ob.GetFigure().position.h, y
         y = ob.GetFigure().position.h - (y+h)
         x+=1; y+=1; w-=1; h-=1;  # first pixel is the bounding box

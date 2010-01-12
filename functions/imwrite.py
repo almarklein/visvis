@@ -32,6 +32,8 @@ def imwrite(filename, image):
     if image.dtype.name == 'uint8':
         pass # ok
     elif image.dtype.name in ['float32', 'float64']:
+        image[image<0] = 0
+        image[image>1] = 1
         image = (image*255).astype(np.uint8)
     else:
         image = image.astype(np.uint8)

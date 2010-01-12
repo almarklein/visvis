@@ -136,10 +136,15 @@ class Font(TextureObject):
     def _UploadTexture(self, data, *args):
         """ Overload to make it an alpha map. """
         
+        # Add lumincance channel
+        data2 = np.zeros((data.shape[0],data.shape[1],2), dtype=np.uint8)
+        data2[:,:,0] = 255
+        data2[:,:,1] = data
+        
         shape = data.shape
         gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, 2, shape[1],shape[0], 0,
-            gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data)
-            
+        #    gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data)
+            gl.GL_LUMINANCE_ALPHA, gl.GL_UNSIGNED_BYTE, data2)
         
         tmp1 = gl.GL_LINEAR
         tmp2 = gl.GL_LINEAR
@@ -227,12 +232,14 @@ class Glyph(object):
         x1 = infoOrigin[ac,0]
         x2 = x1 + infoSize[ac,0]        
         tmp = float(info.data.shape[1])
-        self.s1, self.s2 = (x1) / tmp, (x2-1) / tmp  # not sure yet...
-        #self.s1, self.s2 = (x1+1) / tmp, (x2) / tmp  # -> gets dot for 'i'
+        #self.s1, self.s2 = (x1) / tmp, (x2-1) / tmp  # not sure yet...        
+        #self.s1, self.s2 = (x1+0.4) / tmp, (x2-0.4) / tmp
+        self.s1, self.s2 = (x1+0.4) / tmp, (x2-0.5) / tmp
         y1 = infoOrigin[ac,1]
         y2 = y1 + infoSize[ac,1]
         tmp = float(info.data.shape[0])
-        self.t1, self.t2 = (y1) / tmp, (y2-1) / tmp
+        #self.t1, self.t2 = (y1) / tmp, (y2-1) / tmp
+        self.t1, self.t2 = (y1+0.3) / tmp, (y2-0.3) / tmp
         
         # calculate width on screen, given the size
         factor = size / float(info.fontsize)

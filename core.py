@@ -457,6 +457,7 @@ class BaseFigure(base.Wibject):
             # make pos 
             self._position = base.Position( value[0], value[1], 
                                             value[2], value[3], self)
+            self._position._Changed()
     
     
     def _OnPositionChange(self,event=None):
@@ -1526,6 +1527,12 @@ for e in range(-10, 21):
 
 
 def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
+    """ GetTicks(p0, p1, lim, minTickDist=40, ticks=None)
+    Get the tick values, position and texts.
+    These are calculated from a start end end position and the range
+    of values to map between these two points (which can be 2d or 3d). 
+    if ticks is given, use these values instead.
+    """
     
     # Vector from start to end point
     vec = p1-p0
@@ -1693,39 +1700,15 @@ class Axis(base.Wobject):
                 vector_c = corners8_c[d+1] -corners8_c[0]
                 vector_s = corners8_s[d+1] -corners8_s[0]
                 
-                # get range expressed in coords and screen pixels                
-                rc = lim.range #vector_c.Norm()
-                if rc == 0:
-                    continue
-                rs = ( vector_s.x**2 + vector_s.y**2 ) ** 0.5
-                pixelsPerUnit = rs/rc
-                
-                # should we correct tick Dist?
+                # Should we correct tick Dist?
                 minTickDist = self._minTickDist
                 if isTwoDCam and d==0:
                     mm = max(abs(lim.min),abs(lim.max))
                     if mm >= 10000:
                         minTickDist = 80 
                 
-                # Try all tickunits, starting from the smallest, until we find 
-                # one which results in a distance between ticks more than
-                # X pixels.
-                try:
-                    for tickUnit in self._tickUnits:
-                        if tickUnit * pixelsPerUnit >= minTickDist:
-                            break
-                    # if the numbers are VERY VERY large (which is very unlikely)
-                    if tickUnit*pixelsPerUnit < self._minTickDist:
-                        raise ValueError
-                except (ValueError, TypeError):
-                    # too small
-                    continue
-                
-                # Calculate all ticks
-                if ticksPerDim[d] is not None:
-                    ticks = ticksPerDim[d]
-                else:
-                    ticks = self._GetTicks(tickUnit, lim)
+                # Calculate tick distance in units
+                minTickDist *= vector_c.Norm() / vector_s.Norm()
                 
                 # Get index of corner to put ticks at
                 i0 = 0; bestVal = 999999999999999999999999
@@ -1786,14 +1769,18 @@ class Axis(base.Wobject):
                 # keep up to date (so label can move itself just beyond ticks)
                 t._textDict = newTextDicts[d] 
                 
+                # Get ticks stuff
+                tickValues = ticksPerDim[d] # can be None
+                p1, p2 = firstCorner.Copy(), firstCorner+vector_c                
+                tmp = GetTicks(p1,p2, lim, minTickDist, tickValues)
+                ticks, ticksPos, ticksText = tmp
+                
                 # Apply Ticks
-                for tick in ticks:
-                    # get tick location
-                    p1 = firstCorner.Copy()
-                    p1[d] = tick
+                for tick, pos, text in zip(ticks, ticksPos, ticksText):
                     # get little tail to indicate tick
-                    p2 = p1.Copy()
-                    p2 = p2 - tv
+                    p1 = pos
+                    p2 = pos - tv
+                    # Add tick lines
                     if isTwoDCam:
                         factor = ( tick-firstCorner[d] ) / vector_c[d]
                         p1s = corners4_s[i0] + vector_s * factor
@@ -1804,12 +1791,6 @@ class Axis(base.Wobject):
                     else:
                         ppc.Append(p1)
                         ppc.Append(p2)
-                    # convert tick to text (strip zeros in exponent)
-                    text = '%1.4g' % tick
-                    iExp = text.find('e')
-                    if iExp>0:
-                        front = text[:iExp+2]
-                        text = front + text[iExp+2:].lstrip('0')
                     # z-axis has valign=0, thus needs extra space
                     if d==2:
                         text+='  '

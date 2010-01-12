@@ -1,9 +1,15 @@
 import os, sys
 import ssdf
 
+# vv.imwrite('d:/almar/projects/ims/test0.png', vv.getframe(vv.gcf()))
 fontGenApp = r'"C:\Program Files (x86)\BMFontGen\bmfontgen.exe"'
 
-size = 18 # 20 won't fit, 
+# If the size is even, the even fontsizes in visvis will look much better
+# than the uneven. Matlab uses fontsize 9 for tickmarks by default, but I
+# like even fontsizes better. Additionally, too large size will result in
+# aliasing for smaller fontsizes in visvis.
+
+size = 14 # 18 is good, 20 won't fit, 
 bmsize = 1024
 outdir = 'tmp/'
 
