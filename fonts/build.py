@@ -17,8 +17,8 @@ s = ssdf.new()
 s.serif = ssdf.new()
 s.serif.name = 'FreeSerif'
 
-#fonts = {   'mono':'FreeMono', 'sans':'FreeSans', 'serif':'FreeSerif'}
-fonts = {   'mono':'Courier New', 'sans':'Arial', 'serif':'Times new roman'}
+fonts = {   'mono':'FreeMono', 'sans':'FreeSans', 'serif':'FreeSerif'}
+#fonts = {   'mono':'Courier New', 'sans':'Arial', 'serif':'Times new roman'}
 
 for font in fonts:
     fontName = fonts[font]

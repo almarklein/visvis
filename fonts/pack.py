@@ -86,7 +86,7 @@ def processFont(fontname):
         tmp = line[i1+1:i2]
         tmp = tmp.split('x')    
         if len(tmp)!=2: continue
-        char.size = [int(i) for i in tmp]
+        char.size = [int(float(i)+0.5) for i in tmp]
         # find width
         i = line.find('aw=')
         i1 = line.find("\"",i)

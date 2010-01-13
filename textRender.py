@@ -228,23 +228,15 @@ class Glyph(object):
             infoSize, infoOrigin, infoWidth = (
                 info.size_b, info.origin_b, info.width_b)
         
-        # Find position in texture, normalized to texture coordinates
-        # Note the offsets. they can be chosen to enhance the font's
-        # readability, by in essence, enhancing the readability for one
-        # font size reduces that of another. The same can hold for single
-        # chars even. Well, I found that fontsizes 12-15 (for the bitmap)
-        # work pretty well. Lower values results in to blocky glyphs for 
-        # large fontsizes in visvis, while a higher value results in aliasing
-        # (missing pixels) for small fontsizes in visvis.
-        
+        # Find position in texture, normalized to texture coordinates        
         x1 = infoOrigin[ac,0]
         x2 = x1 + infoSize[ac,0]        
-        tmp = float(info.data.shape[1])        
-        self.s1, self.s2 = (x1+0.3) / tmp, (x2-0.5) / tmp # bitmap 13
+        tmp = float(info.data.shape[1])
+        self.s1, self.s2 = (x1) / tmp, (x2-1) / tmp
         y1 = infoOrigin[ac,1]
         y2 = y1 + infoSize[ac,1]
         tmp = float(info.data.shape[0])
-        self.t1, self.t2 = (y1+0.3) / tmp, (y2-0.4) / tmp 
+        self.t1, self.t2 = (y1) / tmp, (y2-1) / tmp
         
         # calculate width on screen, given the size
         factor = size / float(info.fontsize)
