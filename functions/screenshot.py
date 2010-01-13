@@ -20,28 +20,56 @@ def getCardinalSplineCoefs(t, tension=0.0):
     return c
 
 
-def screenshot(filename, ob, scaleFactor=3, tension=-0.25):
-    """ screenshot(ob, filename, scaleFactor=3, tension=-0.25)
-    Uses vv.getframe(ob) to obtain the image in the figure or axes.
-    Then uses vv.imwrite(filename, ..) to store the resulting image.
+def screenshot(filename, ob, scaleFactor=3, bg=None, tension=-0.25):
+    """ screenshot(ob, filename, scaleFactor=3, bg=None)
     
-    In between the image is interpolated using the given scale factor
-    using high quality bicubic interpolation. The tension controls the
-    responsivenes of the filter. The more negative, the more overshoot,
-    but the more it is capable to make for example font glyphs smooth.
-    If tension is 0, the interpolator is a Catmull-Rom spline.
+    Uses vv.getframe(ob) to obtain the image in the figure or axes. 
+    That image is interpolated with the given scale factor using 
+    high quality bicubic interpolation. Then vv.imwrite(filename, ..)
+    is used to store the resulting image to a file.
     
-    I filename is None, the interpolated image is returned as a numpy
+    Notes:
+    - If bg is given, ob.bgcolor is set to bg before the frame is captured.
+    - If filename is None, the interpolated image is returned as a numpy
     array.
+    
+    Rationale:
+    We'd prefer storing screenshots of plots as vector (eps) images, but 
+    the nature of OpenGl prevents this. By applying high quality inter-
+    polation (using a cardinal spline), the resolution can be improved
+    quite a bit, improving the visibility/smoothness of for lines and 
+    fonts quite a bit. 
+    
     """
+    
+    # The tension controls the
+    # responsivenes of the filter. The more negative, the more overshoot,
+    # but the more it is capable to make for example font glyphs smooth.
+    # If tension is 0, the interpolator is a Catmull-Rom spline.
     
     # Scale must be integer, calc amount of pixels in between 
     s = int(scaleFactor)
     inBetween = s-1
     
-    # Obtain image
+    # Get figure
+    fig = ob
+    if not hasattr(ob, 'DrawNow'):
+        fig = ob.GetFigure()
+    
+    # Set background
+    if bg and fig:
+        bgOld = ob.bgcolor
+        ob.bgcolor = bg
+        fig.DrawNow()  
+    
+    # Obtain image      
     im1 = vv.getframe(ob)
     shape1 = im1.shape
+    
+    # Return background
+    if bg and fig:
+        ob.bgcolor = bgOld
+        fig.Draw()
     
     # Pad original image, so we have no trouble at the edges
     shape2 = shape1[0]+2, shape1[1]+2, 3

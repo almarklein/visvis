@@ -9,7 +9,7 @@ fontGenApp = r'"C:\Program Files (x86)\BMFontGen\bmfontgen.exe"'
 # like even fontsizes better. Additionally, too large size will result in
 # aliasing for smaller fontsizes in visvis.
 
-size = 14 # 18 is good, 20 won't fit, 
+size = 13 # 18 is good, 20 won't fit, 
 bmsize = 1024
 outdir = 'tmp/'
 
