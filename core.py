@@ -811,7 +811,7 @@ class AxesContainer(base.Wibject):
         """ Pass on. """
         axes = self.GetAxes()
         if axes:
-            axes._DrawTree(*args, **kwargs)
+            base.Wibject._DrawTree(self, *args, **kwargs)
         else:
             self.Destroy()
     
@@ -1433,7 +1433,8 @@ class Axes(base.Wibject):
         ortho( 0, w, h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
-        self._Transform()
+        self.parent._Transform() # Container
+        self._Transform() # Self
     
     
     def OnDrawShape(self, clr):
