@@ -140,7 +140,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         ev.Clear()
         ev.Fire()
         self.figure.Destroy() # destroy figure
-        self.destroy()  # destroy widget
+        self.deleteLater() # destroy widget safely
         event.accept()
 
     def focusInEvent (self, event):
@@ -156,8 +156,8 @@ class GLWidget(QtOpenGL.QGLWidget):
         
     def timerUpdate(self):
         """ Enable timers in visvis.
-        """
-        processEvents()
+        """        
+        processEvents()        
         self._timer.start(10)
 
 
@@ -210,7 +210,7 @@ class Figure(BaseFigure):
         app.processEvents()
     
     def _Close(self):
-        if not self._widget:
+        if self._widget:
             self._widget.close()
 
 

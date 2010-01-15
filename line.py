@@ -378,8 +378,7 @@ class Line(Wobject):
         
         # alpha values
         self._alpha1 = 1
-        self._alpha2 = 0
-    
+        
     
     def _AsFloat(self, value, descr):
         """ Make sure a value is a float. """
@@ -644,20 +643,21 @@ class Line(Wobject):
     
     def _DrawPoints(self):
         
-        # get color (use color from edge or face if not present)
+        # get colors (use color from edge or face if not present)
         clr1 = getColor(self.mc)
         clr2 = getColor(self.mec)
-        if not clr1 and not cl2:
-            return
+        
+        # draw face or edge?
+        drawFace = bool(self.mc) # if not ms or mw we would not get here
+        drawEdge = self.mec and self.mew
+        if not drawFace and not DrawEdge:
+            return 
         
         # get figure
         f = self.GetFigure()
         if not f:
             return  
         
-        # draw face or edge?
-        drawFace = clr1 # if not ms or mw we would not get here
-        drawEdge = clr2 and self.mew
         # init blending. Only use constant blendfactor when alpha<1
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         if self._alpha1<1:
@@ -682,7 +682,8 @@ class Line(Wobject):
         gl.glAlphaFunc(gl.GL_GREATER, 0.01)
         
         if self.ms in ['o','.','s'] and not drawEdge:
-            # use standard OpenGL points, faster and anti-aliased
+            # Use standard OpenGL points, faster and anti-aliased
+            # Pure filled points or squares always work.
             
             # choose style
             if self.ms == 's':
@@ -696,8 +697,9 @@ class Line(Wobject):
                 gl.glPointSize(self.mw)
                 gl.glDrawArrays(gl.GL_POINTS, 0, len(self._points))
         
-        elif self.ms in ['o','.','s'] and self.alpha==1:
-            # use standard OpenGL points, faster and anti-aliased
+        elif self.ms in ['o','.','s'] and drawFace and self.alpha==1:
+            # Use standard OpenGL points, faster and anti-aliased
+            # If alpha=1 and we have a filled marker, we can draw in two steps.
             
             # choose style
             if self.ms == 's':
@@ -718,7 +720,7 @@ class Line(Wobject):
             
         #elif self.alpha>0:
         else:
-            # use sprites
+            # Use sprites
             
             # get sprites
             tmp = f._markerManager.GetSprites(self.ms, self.mw, self.mew)
