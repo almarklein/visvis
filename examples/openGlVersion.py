@@ -10,7 +10,7 @@ if not ext:
     ext = ''
 
 # remove figure
-f.Close()
+f.Destroy()
 
 # print!
 print 'Information about the OpenGl version on this system:\n'
