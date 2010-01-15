@@ -81,6 +81,7 @@ import numpy as np
 from textures import TextureObject
 from base import Wobject, Wibject, Box
 from misc import Property, getResourceDir, getColor
+from cameras import depthToZ
 
 class TextException(Exception):
     pass
@@ -596,8 +597,7 @@ class BaseText():
         # Translate
         if x or y or z:
             gl.glPushMatrix()
-            tmp = 100000 - z * 200000
-            gl.glTranslatef(x, y, tmp)
+            gl.glTranslatef(x, y, z)
         
         # make sure the glyphs are created
         if self._vertices1 is None or self._texCords is None:
@@ -691,11 +691,9 @@ class Text(Wobject, BaseText):
     
     def OnDrawScreen(self):
         """ Draw the text. """
-        self._DrawText( self._screenx, self._screeny, self._screenz)
+        self._DrawText( self._screenx, self._screeny, depthToZ(self._screenz) )
     
-
-
-
+    
 class Label(Box, BaseText):    
     """ Label Wibject: A box with text inside. 
     """

@@ -24,7 +24,7 @@ def plot(data1, data2=None, data3=None,
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
             alpha=1, setlimits=True, axes=None, **kwargs):
     """ plot(data1, data2=None, data3=None, 
-            lw=1, lc='b', ls="-", mw=7, mc='', ms='', mew=1, mec='k', 
+            lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
             alpha=1, setlimits=True, axes=None):
     Plot 1, 2 or 3 dimensional data. 
     plot([1,4,2]) plots a 1D signal, with the values plotted along the y-axis

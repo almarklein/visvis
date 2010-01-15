@@ -41,6 +41,48 @@ from misc import *
 from events import Timer
 import math
 
+
+""" Here's a bit on the depth buffer
+for glOrto(x1,y1,x2,y2,n,f) and s the depth buffer depth:
+def calcPrecision(z=0, n=1000, bits=16): # approximates precision
+    z+=n
+    return z * z / ( n * float(1<<bits) - z )
+    
+For 24 bits and more, we're fine with 100.000, but for 16 bits we
+need 3000 or so. The criterion is that at the center, we should be
+able to distinguish between 0.1, 0.0 and -0.1 etc. So we can draw lines
+on top (0.1) then the gridlines (0.0) and then 2d textures (0.1, 0.2, etc.).
+
+"""
+
+
+
+depthBits = [0]
+
+def getDepthValue():
+    if not depthBits[0]:
+        bits = gl.glGetInteger(gl.GL_DEPTH_BITS)
+        if bits:
+            depthBits[0] = bits
+    # Process
+    if depthBits[0] < 24:
+        return 3000
+    else:
+        return 100000
+
+def ortho(x1, x2, y1,y2):
+    """ Like gl.glOrtho() but the z-values are automatically determined
+    dependent on the amount of bits in the depth buffer.
+    """    
+    val = getDepthValue()
+    gl.glOrtho(x1, x2, y1, y2, -val, val)
+
+def depthToZ(depth):
+    """ Get the z-coord, given the depth value. """    
+    val = getDepthValue()
+    return val - depth * 2 * val
+
+
 class BaseCamera(object):
     """ Abstract camera class.
     A camera defines the way the data is viewed and how to interact
@@ -316,8 +358,7 @@ class TwoDCamera(BaseCamera):
         
         # 3. Define part that we view. Remember, we're looking down the
         # z-axis. We zoom here.        
-        gl.glOrtho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy,
-                    -100000.0, 100000.0 )
+        ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         
         # Prepare for models ...
         gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -528,7 +569,7 @@ class PolarCamera(TwoDCamera):
         
         # 4. Define part that we view. Remember, we're looking down the
         # z-axis. We zoom here.                
-        gl.glOrtho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy, -100000.0, 100000.0 )
+        ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         
         # 3. Set viewing angle (this is the only difference with 2D camera)
         gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)

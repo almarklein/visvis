@@ -38,7 +38,7 @@ import numpy as np
 import base
 import simpleWibjects
 import textures
-from cameras import TwoDCamera, PolarCamera, FlyCamera
+from cameras import ortho, depthToZ, TwoDCamera, PolarCamera, FlyCamera
 from misc import Property, Range, OpenGLError
 from events import *
 from textRender import FontManager, Text, Label
@@ -685,7 +685,7 @@ class BaseFigure(base.Wibject):
         # set camera
         gl.glMatrixMode(gl.GL_PROJECTION)        
         gl.glLoadIdentity()        
-        gl.glOrtho( 0, w, h, 0, -100000, 100000 )
+        ortho( 0, w, h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
@@ -1366,7 +1366,7 @@ class Axes(base.Wibject):
         # draw bg
         gl.glMatrixMode(gl.GL_PROJECTION)        
         gl.glLoadIdentity()        
-        gl.glOrtho( 0, 1, 0, 1, -1, 1 )
+        ortho( 0, 1, 0, 1)
         
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
@@ -1400,8 +1400,7 @@ class Axes(base.Wibject):
         # set camera to screen coordinates.
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
-        gl.glOrtho( pos.absLeft, pos.absRight, h-pos.absBottom, h-pos.absTop,
-                    -100000, 100000 )
+        ortho( pos.absLeft, pos.absRight, h-pos.absBottom, h-pos.absTop)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
@@ -1417,7 +1416,7 @@ class Axes(base.Wibject):
             gl.glViewport(0,0,w,h)
             gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glLoadIdentity()
-            gl.glOrtho(0,w,0,h, -100000, 100000 )
+            ortho(0,w,0,h)
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glDisable(gl.GL_DEPTH_TEST)
         else:
@@ -1431,7 +1430,7 @@ class Axes(base.Wibject):
         gl.glDisable(gl.GL_DEPTH_TEST)                
         gl.glMatrixMode(gl.GL_PROJECTION)        
         gl.glLoadIdentity()
-        gl.glOrtho( 0, w, h, 0, -1, 1 )
+        ortho( 0, w, h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         self._Transform()
@@ -1456,7 +1455,7 @@ class Axes(base.Wibject):
         # prepare for drawing background
         gl.glMatrixMode(gl.GL_PROJECTION)        
         gl.glLoadIdentity()        
-        gl.glOrtho( 0, 1, 0, 1, -1, 1 )        
+        ortho( 0, 1, 0, 1)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         # draw background        
@@ -1490,7 +1489,7 @@ class Axes(base.Wibject):
         gl.glDisable(gl.GL_DEPTH_TEST)        
         gl.glMatrixMode(gl.GL_PROJECTION)        
         gl.glLoadIdentity()        
-        gl.glOrtho( 0, pos.w, pos.h, 0, -1, 1 )        
+        ortho( 0, pos.w, pos.h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
     
@@ -1922,9 +1921,7 @@ class Axis(base.Wobject):
         if not hasattr(self, '_pps'):
             return
         pps = self._pps
-        pps[:,2] = 100000 - pps[:,2] * 200000
-        # Note: this does not work well for older systems, making gridlines 
-        # be drawn over Line objects.
+        pps[:,2] = depthToZ( pps[:,2] )
         
         # prepare for drawing lines
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
