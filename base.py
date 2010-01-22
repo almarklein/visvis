@@ -570,10 +570,8 @@ class Position(object):
     obtained (and updated) using its position property.
     
     Each element (x,y,w,h) can be either:
-    - The integer amount of pixels relative to the wibjects paren't 
-      position. 
-    - The fractional amount (float value between 0.0 and 1.0) of the 
-      parent's width or height.
+      * The integer amount of pixels relative to the wibjects parent's position. 
+      * The fractional amount (float value between 0.0 and 1.0) of the parent's width or height.
     
     Each value can be negative. For x and y this simply means a negative 
     offset from the parent's left and top. For the width and height the 
@@ -583,10 +581,10 @@ class Position(object):
     (500,500) is equal to (-10, 250, 150, 400) in pixels.
     
     Remarks:
-    - fractional, integer and negative values may be mixed.
-    - x and y are considered fractional on <-1, 1> 
-    - w and h are considered fractional on [-1, 1]    
-    - the value 0 can always be considered in pixels 
+      * fractional, integer and negative values may be mixed.
+      * x and y are considered fractional on <-1, 1> 
+      * w and h are considered fractional on [-1, 1]    
+      * the value 0 can always be considered in pixels 
     
     The position class also implements several "long-named" properties that
     express the position in pixel coordinates. Internally a version in pixel

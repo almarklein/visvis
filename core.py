@@ -822,6 +822,10 @@ class Axes(base.Wibject):
     how the data is visualized and how the user can interact
     with the data.
     
+    Hier is *deze* _test_ om te kijken of _privates en *args een beetje werken.
+        * bullet 1
+        * bullet 2
+    
     The daspect property gives the aspect ratio of the data. It is a three 
     element tuple. The sign of the elements indicate axes being flipped.
     """ 
@@ -1493,7 +1497,7 @@ class Axes(base.Wibject):
         ortho( 0, pos.w, pos.h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
-    
+        # No need to call transform
     
     def OnDrawFast(self):
         self.OnDraw(mode='fast')

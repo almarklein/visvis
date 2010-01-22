@@ -255,11 +255,8 @@ class Glyph(object):
             self.sizex = self.sizex * smaller
             self.sizey = self.sizey * smaller
             self.width = self.width * smaller#- self.sizex * (1.0-smaller)
-        
-        
-        
 
-class BaseText():
+class BaseText(object):
     """ Base object for the Text wobject and Label wibject.
     fontname may be 'mono', 'sans', or 'serif'.
     """
