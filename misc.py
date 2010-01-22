@@ -157,414 +157,116 @@ class Range(object):
         
     def __repr__(self):
         return "<Range %1.2f to %1.2f>" % (self.min, self.max)
-
-# todo: remove this
-class Position2(object):
-    """ Indicates a position: x, y, w, h.
-    
-    It provides short (x, y, w, h) properties to change the position
-    and allows getting/setting via indexing. 
-    
-    Create using Position(x,y,w,h), or Position(pos), where pos 
-    is a 4 element list or tuple, or another Position instance.
-    
-    Each element can be either:
-    - The integer amount of pixels.
-    - The fractional amount (float value between 0.0 and 1.0) of the parent's
-      width or height.
-    
-    Each value can be negative. For x and y this simply means a negative offset
-    from the parent's left and top. For the width and height the difference 
-    from the parent's full width/height is taken.
-    
-    An example: a position (-10, 0.5, 150,-100), with a parent's size of 
-    (500,500) is equal to (-10, 250, 150, 400) in pixels.
-    
-    Remarks:
-    - fractional, integer and negative values may be mixed.
-    - x and y are considered fractional on <-1, 1> 
-    - w and h are considered fractional on [-1, 1]    
-    - the value 0 can always be considered in pixels 
-    
-    The long named properties express the position in pixel coordinates.
-    Internally a version in pixel coordinates is buffered, which is kept
-    up to date. These long named (read-only) properties are:
-    left, top, right, bottom, width, height,
-    
-    Further, there are a set of properties which express the position in 
-    absolute coordinates (not relative to the parent wibject):
-    absLeft, absTop, absRight, absBottom    
-    
-    Finally, there properties that return a two-element tuple:
-    topLeft, bottomRight, absTopLeft, absBottomRight, size
-    
-    The methods InPixels() and Absolute() return a (copy) position object
-    which represents the position in pixels and absolute pixels, respectively.
-    
-    """
-    
-    def __init__(self, *pos):
-        
-        # initial check
-        if len(pos)==1:
-            pos= pos[0]
-        
-        # special case, another position!
-        if isinstance(pos, Position):
-            self._x, self._y = pos._x, pos._y
-            self._w, self._h = pos._w, pos._h
-            self._inpixels = pos._inpixels
-            self._absolute = pos._absolute
-            self._owner = None # don't copy the owner
-            return
-        
-        # check length
-        if not hasattr(pos,'__len__') or len(pos)!=4:
-            raise ValueError("A position consists of 4 values!")
-        
-        # set
-        self._x, self._y, self._w, self._h = pos[0], pos[1], pos[2], pos[3]
-        
-        # init position in pixels and absolute (as a tuples)
-        self._inpixels = None
-        self._absolute = None
-        
-        # init owner, 
-        # the wibject sets this in the f_set part of the position property
-        self._owner = None
-    
-    
-    
-    def Copy(self):
-        """ Copy()
-        Make a copy. Otherwise you'll point to the same object! """
-        return Position(self)
-    
-    
-    def InPixels(self):
-        """ InPixels()
-        Return a copy, but in pixel coordinates. """
-        p = Position(self.left, self.top, self.width, self.height)
-        p._inpixels = self._inpixels
-        p._absolute = self._absolute
-        return p
-    
-    
-    def Absolute(self):
-        """ Absolute()
-        Return a copy, but in absolute pixel coordinates (not relative to
-        the parent wibject). """
-        p = Position(self.absLeft, self.absTop, self.width, self.height)
-        p._inpixels = self._absolute
-        p._absolute = self._absolute
-        return p
-    
-    
-    def __repr__(self):
-        return "<Position %1.2f, %1.2f,  %1.2f, %1.2f>" % (
-            self.x, self.y, self.w, self.h)
-    
-    
-    ## For keeping _inpixels up-to-date
-    
-    
-    def SetOwner(self, object):
-        """ _SetOwner(object)
-        Set the owner of this position instance and call _Update().
-        """
-        if not hasattr(object, '_position'):
-            # a bit ugly, but we cannot know the wibject class.
-            raise ValueError('Only wibject instances can own a position.')
-        self._owner = object
-        self._Update() # will call change as the inpixels changes
-    
-    
-    def _Update(self):
-        """ _Update()
-        Re-obtain the position in pixels. If the obtained position
-        differs from the current position-in-pixels, _Changed()
-        is called.
-        """
-        
-        # get old version, obtain and store new version
-        ip1 = self._inpixels
-        self._CalculateInPixels()
-        ip2 = self._inpixels
-        
-        # current inpixels was still None
-        if ip2:
-            if ip1 != ip2: # also if ip1 is None
-                self._Changed()
-    
-    
-    def _Changed(self):
-        """ _Changed()
-        To be called when the position was changed. 
-        Will fire the owners eventPosition and will call
-        _Update() on the position objects of all the owners
-        children.
-        """
-        if self._owner:           
-            if hasattr(self._owner, 'eventPosition'):
-                self._owner.eventPosition.Fire()
-                #print 'firing position event for', self._owner
-            for child in self._owner._children:
-                if hasattr(child, '_position'):
-                    child._position._Update()
-    
-    
-    def _GetFractionals(self):
-        """ Get a list which items are considered relative.         
-        Also int()'s the items which are not.
-        """
-        # init
-        fractionals = [0,0,0,0]        
-        # test
-        for i in range(2):
-            if self[i] > -1 and self[i] < 1 and self[i]!=0:
-                fractionals[i] = 1
-        for i in range(2,4):            
-            if self[i] >= -1 and self[i] <= 1 and self[i]!=0:
-                fractionals[i] = 1
-        # return
-        return fractionals
-    
-    
-    def _GetInPixels(self):
-        """ Return the position in screen coordinates as a tuple. 
-        A buffered instance is returned, that is kept up to date.
-        """
-        # should we calculate it?
-        if not self._inpixels:
-           self._CalculateInPixels()        
-        # return it
-        return self._inpixels
-    
-    
-    def _GetAbsolute(self):
-        """ Return the position in absolute screen coordinates as a tuple. 
-        A buffered instance is returned, that is kept up to date.
-        """
-        # should we calculate it?
-        if not self._absolute:
-            self._CalculateInPixels()        
-        # return it
-        return self._absolute
-    
-    
-    def _CalculateInPixels(self):
-        """ Return the position in screen coordinates as a tuple. 
-        """
-        
-        # to test if this is easy
-        fractionals = self._GetFractionals()
-        negatives = [int(self[i]<0) for i in range(4)]
-        
-        # if owner is a figure, it cannot have relative values
-        if hasattr(self._owner, '_SwapBuffers'):
-            self._inpixels = (self._x, self._y, self._w, self._h)
-            self._absolute = self._inpixels 
-        
-        # test if we can calculate
-        if not self._owner or not hasattr(self._owner,'parent'):
-            raise Exception("Can only calculate the position in pixels"+
-                            " if the position instance is owned by a wibject!")
-        # else, the owner must have a parent...
-        if self._owner.parent is None:
-            print self._owner
-            raise Exception("Can only calculate the position in pixels"+
-                            " if the owner has a parent!")
-        
-        # get width/height of parent
-        ppos = self._owner.parent.position
-        whwh = ppos.width, ppos.height
-        whwh = (whwh[0], whwh[1], whwh[0], whwh[1])
-        
-        # calculate!
-        pos = [self._x, self._y, self._w, self._h]
-        if max(fractionals)==0 and max(negatives)==0:
-            pass # no need to calculate
-        else:
-            for i in range(4):
-                if fractionals[i]:
-                    pos[i] = pos[i]*whwh[i]
-                if i>1 and negatives[i]:
-                    pos[i] = whwh[i] + pos[i]
-                # make sure it's int (even if user supplied floats > 1)
-                pos[i] = int(pos[i])
-        
-        # abs pos is based on the inpixels version, but x,y corrected. 
-        apos = [p for p in pos]
-        if ppos._owner.parent:
-            apos[0] += ppos.absLeft
-            apos[1] += ppos.absTop
-        
-        # store
-        self._inpixels = tuple(pos)
-        self._absolute = tuple(apos)
-    
-    
-    ## For getting and setting
-    
-    
-    def Correct(self, dx=0, dy=0, dw=0, dh=0):
-        """ Correct the position by suplying a delta amount of pixels.
-        The correction is only applied if the attribute is in pixels.
-        """
-        
-        # get fractionals
-        fractionals = self._GetFractionals()
-        
-        # apply correction if we can
-        if dx and not fractionals[0]:
-            self._x += int(dx) 
-        if dy and not fractionals[1]:
-            self._y += int(dy)
-        if dw and not fractionals[2]:
-            self._w += int(dw) 
-        if dh and not fractionals[3]:
-            self._h += int(dh) 
-        
-        # we need an update now
-        self._Update()
-    
-    
-    def __getitem__(self,index):
-        if not isinstance(index,int):
-            raise IndexError("Position only accepts single indices!")        
-        if index==0: return self._x
-        elif index==1: return self._y
-        elif index==2: return self._w
-        elif index==3: return self._h
-        else:
-            raise IndexError("Position only accepts indices 0,1,2,3!")
-    
-    
-    def __setitem__(self,index, value):
-        if not isinstance(index,int):
-            raise IndexError("Position only accepts single indices!")
-        if index==0: self._x = value
-        elif index==1: self._y = value
-        elif index==2: self._w = value
-        elif index==3: self._h = value
-        else:
-            raise IndexError("Position only accepts indices 0,1,2,3!")
-        self._Update()
-    
-    
-    @Property
-    def x():
-        def fget(self):
-            return self._x
-        def fset(self,value):
-            self._x = value
-            self._Update()
-    
-    @Property
-    def y():
-        def fget(self):
-            return self._y
-        def fset(self,value):
-            self._y = value
-            self._Update()
-    
-    @Property
-    def w():
-        def fget(self):
-            return self._w
-        def fset(self,value):
-            self._w = value
-            self._Update()
-    
-    @Property
-    def h():
-        def fget(self):
-            return self._h
-        def fset(self,value):
-            self._h = value
-            self._Update()
-    
-    ## Long names properties expressed in pixels
-    
-    @property
-    def left(self):
-        tmp = self._GetInPixels()
-        return tmp[0]
-    
-    @property
-    def top(self):
-        tmp = self._GetInPixels()
-        return tmp[1]
-    
-    @property
-    def width(self):
-        tmp = self._GetInPixels()
-        return tmp[2]
-    
-    @property
-    def height(self):
-        tmp = self._GetInPixels()
-        return tmp[3]
-    
-    @property
-    def right(self):
-        tmp = self._GetInPixels()
-        return tmp[0] + tmp[2]
-    
-    @property
-    def bottom(self):
-        tmp = self._GetInPixels()
-        return tmp[1] + tmp[3]
-    
-    @property
-    def topLeft(self):
-        tmp = self._GetInPixels()
-        return tmp[0], tmp[1]
-    
-    @property
-    def bottomRight(self):
-        tmp = self._GetInPixels()
-        return tmp[0] + tmp[2], tmp[1] + tmp[3]
-    
-    @property
-    def size(self):
-        tmp = self._GetInPixels()
-        return tmp[2], tmp[3]
-    
-    ## More long names for absolute position
-    
-    @property
-    def absLeft(self):
-        tmp = self._GetAbsolute()
-        return tmp[0]
-    
-    @property
-    def absTop(self):
-        tmp = self._GetAbsolute()
-        return tmp[1]
-    
-    @property
-    def absTopLeft(self):
-        tmp = self._GetAbsolute()
-        return tmp[0], tmp[1]
-    
-    @property
-    def absRight(self):
-        tmp = self._GetAbsolute()
-        return tmp[0] + tmp[2]
-    
-    @property
-    def absBottom(self):
-        tmp = self._GetAbsolute()
-        return tmp[1] + tmp[3]
-    
-    @property
-    def absBottomRight(self):
-        tmp = self._GetAbsolute()
-        return tmp[0] + tmp[2], tmp[1] + tmp[3]
     
 
 ## Transform classes for wobjects
+
+# todo: make this part of the points module (and perform isinstance checks)
+from points import Point
+import numpy as np
+class Quaternion(object):
+    """ Quaternion(w, x, y, z)
+    A quaternion is a mathematically convenient way to
+    describe rotations.     
+    """
+    
+    def __init__(self, w=1, x=0, y=0, z=0, normalize=True):
+        self.w = w
+        self.x, self.y, self.z = x, y, z
+        if normalize:
+            self.Normalize()
+    
+    def Copy(self):
+        """ Copy()
+        Create a copy of this quaternion. 
+        """
+        return Quaternion(self.w, self.x, self.y, self.z)
+    
+    def Inverse(self):
+        """ Inverse()
+        Obtain the inverse of the quaternion.
+        This is simply the same quaternion but with the sign of the
+        imaginary parts reversed.
+        """
+        new = self.Copy()
+        new.x *= -1
+        new.y *= -1
+        new.z *= -1
+        return new
+        
+    def Normalize(self):
+        """ Normalize()
+        Make the quaternion unit length.
+        """
+        # Get length
+        L = self.w**2 + self.x**2 + self.y**2 + self.z**2
+        L = L**0.5
+        if not L:
+            raise ValueError('Quaternion cannot have 0-length.')
+        # Correct
+        self.w /= L
+        self.x /= L
+        self.y /= L
+        self.z /= L
+    
+    def __repr__(self):
+        return "<Quaternion object %1.3g + %1.3gi + %1.3gj + %1.3gk>" % (
+                self.w, self.x, self.y, self.z)
+    
+    def __add__(self, q):
+        """ Add quaternions. """
+        new = self.Copy()
+        new.w += q.w
+        new.x += q.x
+        new.y += q.y
+        new.z += q.z
+        new.Normalize()
+        return new
+
+    def __sub__(self, q):
+        """ Subtract quaternions. """
+        new = self.Copy()
+        new.w -= q.w
+        new.x -= q.x
+        new.y -= q.y
+        new.z -= q.z
+        new.Normalize()
+        return new
+
+    def __mul__(self, q2):
+        """ Multiply two quaternions. """
+        new = Quaternion()
+        q1 = self       
+        new.w = q1.w*q2.w - q1.x*q2.x - q1.y*q2.y - q1.z*q2.z
+        new.x = q1.w*q2.x + q1.x*q2.w + q1.y*q2.z - q1.z*q2.y
+        new.y = q1.w*q2.y + q1.y*q2.w + q1.z*q2.x - q1.x*q2.z
+        new.z = q1.w*q2.z + q1.z*q2.w + q1.x*q2.y - q1.y*q2.x
+        return new
+    
+    def Rotate(self, p):
+        """ Rotate()
+        Rotate a Point instance using this quaternion.
+        """
+        import numpy as np
+        # Prepare 
+        p = Quaternion(0, p.x, p.y, p.z, False)
+        q1 = self
+        q2 = self.Inverse()
+        # Apply rotation
+        r = (q1*p)*q2
+        # Make point and return        
+        return Point(r.x, r.y, r.z)
+    
+    @classmethod
+    def FromAxisAngle(cls, angle, ax, ay, az):
+        """FromAxisAngle(angle, ax, ay, ax)
+        Create a quaternion from an axis-angle representation. 
+        (angle should be in radians).
+        """
+        angle2 = angle/2.0
+        sinang2 = np.sin(angle2)
+        return Quaternion( np.cos(angle2), ax*sinang2, ay*sinang2, az*sinang2 )
+    
 
 class Transform_Base(object):
     """ Base transform object. 

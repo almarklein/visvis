@@ -130,40 +130,6 @@ class BaseObject(object):
         gl.glPopMatrix()
     
     
-#     def Destroy(self):
-#         """ Destroy()
-#         Destroy the object.
-#         - Removes itself from the parent's children
-#         - Calls Destroy() on all its children
-#         - Calls OnDestroyGl and OnDestroy on itself
-#         Note1: do not overload, overload OnDestroy()
-#         Note2: it's best not to reuse destroyed objects. To temporary disable
-#         an object, better use "ob.parent=None", or "ob.visible=False".
-#         """
-#         # We must make this the current OpenGL context because OnDestroy 
-#         # methods of objects may want to remove textures etc.
-#         # When you do not do this, you can get really weird bugs.
-#         # This works nice, the children will not need to do this,
-#         # as when they try, THIS object is already detached and fig is None.
-#         fig = self.GetFigure()
-#         if fig:
-#             fig._SetCurrent()
-#         # leave home (using the property causes recursion)        
-#         if hasattr(self._parent, '_children'):
-#             while self in self._parent._children:
-#                 self._parent._children.remove(self)                
-#         if hasattr(self._parent, '_wobjects'):
-#             while self in self._parent._wobjects:
-#                 self._parent._wobjects.remove(self)
-#         self._parent = None
-#         # destroy children
-#         for child in self._children:
-#             child.Destroy()
-#         # clean up
-#         self.OnDestroyGl()
-#         self.OnDestroy()
-    
-    
     def Destroy(self, setContext=True):
         """ Destroy()
         Destroy the object.
@@ -526,7 +492,16 @@ class Wobject(BaseObject):
         BaseObject.__init__(self, parent)
         
         # the transformations applied to the object
-        self.transformations = []
+        self._transformations = []
+    
+    
+    @property
+    def transformations(self):
+        """ Get the list of transformations of this wobject. These
+        should be Transform_Translate, Transform_Scale, or Transform_Rotate
+        instances.
+        """        
+        return self._transformations
     
     
     def GetAxes(self):
@@ -545,7 +520,17 @@ class Wobject(BaseObject):
                 #tmp = "Cannot find axes, error in Wobject/Wibject tree!"
                 #raise TypeError(tmp)
         return par
-
+    
+    
+    def _GetLimits(self):
+        """ _GetLimits()
+        Get the limits in world coordinates between which the object 
+        exists. This is used by the Axes class to set the camera correctly.
+        If returns None, the limits are undefined. 
+        Inheriting Wobject classes should overload this method.
+        """
+        return None
+        
     
     def _Transform(self):
         """ Apply all listed transformations of this wobject. """        

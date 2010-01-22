@@ -46,6 +46,7 @@ from misc import Property, Range, OpenGLError
 from events import *
 from base import Wobject
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
+from misc import Quaternion
 
 import points
 
@@ -949,7 +950,7 @@ class TextureObjectToVisualize(TextureObject):
             gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_R, gl.GL_CLAMP)
     
     
-    def _OnUpdate(self, data, *args):
+    def _UpdateTexture(self, data, *args):
         """ "Overloaded" method to update texture data
         """
         
@@ -957,7 +958,7 @@ class TextureObjectToVisualize(TextureObject):
         self._ScaleBias_init(data.dtype.name)
         
         # create texture
-        self._texture1._UpdateTexture(data, *args)
+        TextureObject._UpdateTexture(self, data, *args)
         
         # reset transfer
         self._ScaleBias_afterUpload()
@@ -1301,6 +1302,51 @@ class Texture2D(BaseTexture):
         gl.glEnd()
     
     
+    def _GetLimits(self):
+        """ _GetLimits()
+        Get the limits in world coordinates between which the object exists.
+        """
+        
+        # Obtain untransformed coords 
+        shape = self._texture1._dataRef.shape
+        x1, x2 = -0.5, shape[1]-0.5
+        y1, y2 = -0.5, shape[0]-0.5
+        z1, z2 = 0, 0
+        
+        from points import Pointset
+        
+        # Make pointset of six cornerpoints
+        pp = Pointset(3)
+        for x in [x1, x2]:
+            for y in [y1, y2]:
+                for z in [z1, z2]:
+                    pp.Append(x,y,z)
+        
+        # Transform these points
+        for i in range(len(pp)):
+            p = pp[i]
+            for t in reversed(self._transformations):
+                if isinstance(t, Transform_Translate):
+                    p.x += t.dx
+                    p.y += t.dy
+                    p.z += t.dz
+                elif isinstance(t, Transform_Scale):
+                    p.x *= t.sx
+                    p.y *= t.sy
+                    p.z *= t.sz
+                elif isinstance(t, Transform_Rotate):
+                    angle = t.angle * np.pi / 180.0
+                    q = Quaternion.FromAxisAngle(angle, t.ax, t.ay, t.az)
+                    p = q.Rotate(p)
+            # Update
+            pp[i] = p                    
+        
+        # Return limits (say nothing about z)
+        xlim = Range( pp[:,0].min(), pp[:,0].max() )
+        ylim = Range( pp[:,1].min(), pp[:,1].max() )
+        zlim = Range( pp[:,2].min(), pp[:,2].max() )
+        return xlim, ylim, zlim
+    
     
     @Property
     def aa():
@@ -1634,6 +1680,34 @@ class Texture3D(BaseTexture):
         gl.glTexCoord3f(t1,t1,t0); gl.glVertex3d(x1, y1, z0)
         # 
         gl.glEnd()
+    
+    
+    def _GetLimits(self):
+        """ _GetLimits()
+        Get the limits in world coordinates between which the object exists.
+        """
+        
+        # Obtain untransformed coords 
+        shape = self._texture1._dataRef.shape
+        x1, x2 = -0.5, shape[2]-0.5
+        y1, y2 = -0.5, shape[1]-0.5
+        z1, z2 = -0.5, shape[0]-0.5
+        
+        # Transform them
+        for t in self._transformations:
+            if isinstance(t, Transform_Translate):
+                x1 += t.dx; x2 += t.dx
+                y1 += t.dy; y2 += t.dy
+                z1 += t.dz; z2 += t.dz
+            elif isinstance(t, Transform_Scale):
+                x1 *= t.sx; x2 *= t.sx
+                y1 *= t.sy; y2 *= t.sy
+                z1 *= t.sz; z2 *= t.sy
+            elif isinstance(t, Transform_Rotate):
+                pass # We don't take this into account.
+        
+        # Return limits (say nothing about z)
+        return Range(x1,x2), Range(y1,y2), Range(z1,z2)
     
     
     @Property

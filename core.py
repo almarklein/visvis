@@ -39,7 +39,7 @@ import base
 import simpleWibjects
 import textures
 from cameras import ortho, depthToZ, TwoDCamera, PolarCamera, FlyCamera
-from misc import Property, Range, OpenGLError
+from misc import Property, Range, OpenGLError, getColor
 from events import *
 from textRender import FontManager, Text, Label
 from line import MarkerManager, Line, lineStyles
@@ -868,6 +868,7 @@ class Axes(base.Wibject):
         self._xminorgrid, self._yminorgrid, self._zminorgrid =False,False,False
         self._box =  True
         self._axis = True
+        self._axisColor = (0,0,0)
         
         # create cameras and select one
         self._cameras = {   'twod': TwoDCamera(self), 
@@ -924,42 +925,50 @@ class Axes(base.Wibject):
         if None in [rX, rY, rZ]:
             
             # find outmost range
-            for ob in self._wobjects:
+            wobjects = self.FindObjects(base.Wobject)
+            for ob in wobjects:
                 
-                if isinstance(ob, Line):
-                    pp = ob._points
-                    if len(pp)==0: continue
-                    tmpX = Range( pp[:,0].min(), pp[:,0].max() )
-                    tmpY = Range( pp[:,1].min(), pp[:,1].max() )
-                    tmpZ = Range( pp[:,2].min(), pp[:,2].max() )
-                    
-                elif isinstance(ob, textures.Texture2D):
-                    if ob._texture1._dataRef is None:
-                        continue
-                    a = ob._texture1._dataRef
-                    if hasattr(a, 'sampling') and hasattr(a, 'origin'):
-                        tmpX = Range( a.origin[1], a.shape[1] * a.sampling[1] )
-                        tmpY = Range( a.origin[0], a.shape[0] * a.sampling[0] )
-                    else:
-                        tmpX = Range( 0, a.shape[1] )
-                        tmpY = Range( 0, a.shape[0] )
-                    tmpZ = None
+                # Ask object what it's limits are
+                tmp = ob._GetLimits()
+                if not tmp:
+                    continue                
+                tmpX, tmpY, tmpZ = tmp
                 
-                elif isinstance(ob, textures.Texture3D):
-                    if ob._texture1._dataRef is None:
-                        continue 
-                    a = ob._texture1._dataRef
-                    if hasattr(a, 'sampling') and hasattr(a, 'origin'):
-                        tmpX = Range( a.origin[2], a.shape[2] * a.sampling[2] )
-                        tmpY = Range( a.origin[1], a.shape[1] * a.sampling[1] )
-                        tmpZ = Range( a.origin[0], a.shape[0] * a.sampling[0] )
-                    else:
-                        tmpX = Range( 0, a.shape[2] )
-                        tmpY = Range( 0, a.shape[1] )
-                        tmpZ = Range( 0, a.shape[0] )
                 
-                else:
-                    continue
+#                 if isinstance(ob, Line):
+#                     pp = ob._points
+#                     if len(pp)==0: continue
+#                     tmpX = Range( pp[:,0].min(), pp[:,0].max() )
+#                     tmpY = Range( pp[:,1].min(), pp[:,1].max() )
+#                     tmpZ = Range( pp[:,2].min(), pp[:,2].max() )
+#                     
+#                 elif isinstance(ob, textures.Texture2D):
+#                     if ob._texture1._dataRef is None:
+#                         continue
+#                     a = ob._texture1._dataRef
+#                     if hasattr(a, 'sampling') and hasattr(a, 'origin'):
+#                         tmpX = Range( a.origin[1], a.shape[1] * a.sampling[1] )
+#                         tmpY = Range( a.origin[0], a.shape[0] * a.sampling[0] )
+#                     else:
+#                         tmpX = Range( 0, a.shape[1] )
+#                         tmpY = Range( 0, a.shape[0] )
+#                     tmpZ = None
+#                 
+#                 elif isinstance(ob, textures.Texture3D):
+#                     if ob._texture1._dataRef is None:
+#                         continue 
+#                     a = ob._texture1._dataRef
+#                     if hasattr(a, 'sampling') and hasattr(a, 'origin'):
+#                         tmpX = Range( a.origin[2], a.shape[2] * a.sampling[2] )
+#                         tmpY = Range( a.origin[1], a.shape[1] * a.sampling[1] )
+#                         tmpZ = Range( a.origin[0], a.shape[0] * a.sampling[0] )
+#                     else:
+#                         tmpX = Range( 0, a.shape[2] )
+#                         tmpY = Range( 0, a.shape[1] )
+#                         tmpZ = Range( 0, a.shape[0] )
+#                 
+#                 else:
+#                     continue
                 
                 # update min/max
                 if rangeX:
@@ -1267,6 +1276,15 @@ class Axes(base.Wibject):
     
     
     @Property
+    def axisColor():
+        """ The color of the box, ticklines and tick marks. """
+        def fget(self):
+            return self._axisColor
+        def fset(self, value):
+            self._axisColor = getColor(value, 'setting bgcolor')
+    
+    
+    @Property
     def showAxis():
         """ Show the the axis. """
         def fget(self):
@@ -1389,14 +1407,15 @@ class Axes(base.Wibject):
         # setup the camera
         self.camera.SetView()
         
-        # draw other stuff        
+        # Draw other stuff, but wait with lines     
         for item in self._wobjects:
             if isinstance(item, (Line,)):
                 pass # draw later
             else:
                 item._DrawTree(mode)
         
-        # draw lines AFTER textures, otherwise they don't blend right
+        # Lines are special case. In order to blend them well, we should
+        # draw textures, meshes etc, first.
         for item in self._wobjects:
             if isinstance(item, Line):
                 item._DrawTree(mode)
@@ -1597,7 +1616,6 @@ class Axis(base.Wobject):
     
     def __init__(self, parent):
         base.Wobject.__init__(self, parent)
-        self._color = 0,0,0
         self._lineWidth = 0.8
         self._minTickDist = 40
         
@@ -1761,6 +1779,7 @@ class Axis(base.Wobject):
                     t.fontSize=10
                 newTextDicts[d][key] = t                
                 t.halign = 0
+                t.textColor = axes._axisColor
                 # move up front
                 if not t in self._children[-3:]:                    
                     self._children.remove(t) 
@@ -1809,8 +1828,9 @@ class Axis(base.Wobject):
                     newTextDicts[d][tick] = t                    
                     # set other properties right
                     t.visible = True
-                    if t.fontSize != axes.tickFontSize:
-                        t.fontSize = axes.tickFontSize
+                    if t.fontSize != axes._tickFontSize:
+                        t.fontSize = axes._tickFontSize
+                    t.textColor = axes._axisColor
                     if d==2:
                         t.valign = 0
                         t.halign = 1
@@ -1881,7 +1901,7 @@ class Axis(base.Wobject):
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)        
             gl.glVertexPointerf(ppc.data)        
             # draw lines
-            clr = self._color
+            clr = axes._axisColor
             gl.glColor(clr[0], clr[1], clr[2])
             gl.glLineWidth(self._lineWidth)
             gl.glDrawArrays(gl.GL_LINES, 0, len(ppc))        
@@ -1900,7 +1920,7 @@ class Axis(base.Wobject):
                 gl.glEnable(gl.GL_LINE_STIPPLE)
                 gl.glLineStipple(1, stipple)
             # draw gridlines
-            clr = self._color
+            clr = axes._axisColor
             gl.glColor(clr[0], clr[1], clr[2])
             gl.glLineWidth(self._lineWidth)            
             gl.glDrawArrays(gl.GL_LINES, 0, len(ppg))        
@@ -1934,7 +1954,7 @@ class Axis(base.Wobject):
         if axes.camera is axes._cameras['twod']:
             gl.glDisable(gl.GL_LINE_SMOOTH)
         # draw lines
-        clr = self._color
+        clr = axes._axisColor
         gl.glColor(clr[0], clr[1], clr[2])
         gl.glLineWidth(self._lineWidth)
         gl.glDrawArrays(gl.GL_LINES, 0, len(pps))

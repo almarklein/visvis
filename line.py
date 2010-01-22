@@ -378,7 +378,7 @@ class Line(Wobject):
         
         # alpha values
         self._alpha1 = 1
-        
+    
     
     def _AsFloat(self, value, descr):
         """ Make sure a value is a float. """
@@ -390,6 +390,33 @@ class Line(Wobject):
             tmp = "the value must be a number equal or larger than zero!"
             raise Exception("Error in %s: %s" % (descr, tmp) )
         return value
+    
+    
+    def _GetLimits(self):
+        """ _GetLimits()
+        Get the limits in world coordinates between which the object exists.
+        """
+        
+        # Obtain untransformed coords 
+        x1, x2 = self._points[:,2].min(), self._points[:,2].max()
+        y1, y2 = self._points[:,1].min(), self._points[:,1].max()
+        z1, z2 = self._points[:,0].min(), self._points[:,0].max()
+        
+        # Transform them
+        for t in self._transformations:
+            if isinstance(t, Transform_Translate):
+                x1 += t.dx; x2 += t.dx
+                y1 += t.dy; y2 += t.dy
+                z1 += t.dz; z2 += t.dz
+            elif isinstance(t, Transform_Scale):
+                x1 *= t.sx; x2 *= t.sx
+                y1 *= t.sy; y2 *= t.sy
+                z1 *= t.sz; z2 *= t.sy
+            elif isinstance(t, Transform_Rotate):
+                pass # We don't take this into account.
+        
+        # Return limits (say nothing about z)
+        return Range(x1,x2), Range(y1,y2), Range(z1,z2)
     
     
     ## Create properties
