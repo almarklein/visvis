@@ -42,6 +42,7 @@ from events import Timer
 import math
 
 
+
 """ Here's a bit on the depth buffer
 for glOrto(x1,y1,x2,y2,n,f) and s the depth buffer depth:
 def calcPrecision(z=0, n=1000, bits=16): # approximates precision
@@ -386,8 +387,9 @@ class PolarCamera(TwoDCamera):
     def OnInit(self):
         
         # camera view params
-        self.view_az = -10.0
-        self.view_el = 30.0
+        self.view_az = -10.0 # azimuth
+        self.view_el = 30.0 # elevation
+        self.view_ro = 0.0 # roll
         self.view_zoomx = 100.0
         self.view_zoomy = 100.0
         self.view_loc = 0,0,0
@@ -397,12 +399,14 @@ class PolarCamera(TwoDCamera):
         self.ref_mloc = 0,0     # mouse location when clicked
         self.ref_but = 0        # mouse button clicked
         self.ref_az = 0         # angles when clicked
-        self.ref_el = 0         
+        self.ref_el = 0
+        self.ref_ro = 0
         self.ref_zoomx = 0      # zoom factors when clicked
         self.ref_zoomy = 0
         
         # detect shift
         self.shiftIsDown = False
+        self.controlIsDown = False
         
         # Bind to events
         axes, figure = self.axes, self.axes.GetFigure()
@@ -417,21 +421,64 @@ class PolarCamera(TwoDCamera):
 
     def Reset(self, event=None):
         
-        # set angles
+        # Set angles
         self.view_az = -10.0
         self.view_el = 30.0
+        self.view_ro = 0.0 
         
-        # set view location and zoom -> this does a refresh
-        TwoDCamera.Reset(self)
+        # get window size
+        w,h = self.axes.position.size
+        w,h = float(w), float(h)
+        
+        # get range and translation for x and y   
+        rx, ry, rz = self.xlim.range, self.ylim.range, self.zlim.range
+        
+        # correct for aspect ratio
+        if not self.axes.daspectAuto:
+            ar = self.axes.daspect
+            rx *= abs( ar[0] )
+            ry *= abs( ar[1] )
+            rz *= abs( ar[2] )
+        
+        # Below this line x and y represent screen coordinates. In screen x, 
+        # only x and y have effect. In screen y, all three dimensions have 
+        # effect, because of the elevation and azimuth.
+        tmp = ( rx**2 + ry**2 )**0.5
+        ry = ( 1*(rx**2 + ry**2) + rz**2 )**0.5
+        rx = tmp
+        
+        # simulate what SetView will do to correct for window size
+        # make fx smaller if SetView will make it larger...
+        if not self.axes.daspectAuto:
+            if w / h > 1:
+                rx /= w/h
+            else:
+                ry /= h/w
+        
+        # make equal if required
+        if not self.axes.daspectAuto:
+            if rx/ry > 1:
+                ry = rx
+            else:
+                rx = ry
+        
+        # apply zoom factors, apply a bit more
+        self.view_zoomx = rx * 1.05
+        self.view_zoomy = ry * 1.05
+        
+        # set center location -> calls refresh
+        BaseCamera.Reset(self)
     
     
     def OnKeyDown(self, event):
         if event.key ==17 and self.ref_but==0:
             self.shiftIsDown = True
-
+        elif event.key == 19 and self.ref_but==0:
+            self.controlIsDown = True
 
     def OnKeyUp(self, event):
         self.shiftIsDown = False
+        self.controlIsDown = False
         self.ref_but = 0 # in case the mouse was also down
     
     
@@ -444,6 +491,8 @@ class PolarCamera(TwoDCamera):
         # store current view parameters
         self.ref_az = self.view_az
         self.ref_el = self.view_el
+        self.ref_ro = self.view_ro
+        #
         self.ref_loc = self.view_loc
         self.ref_zoomx = self.view_zoomx 
         self.ref_zoomy = self.view_zoomy 
@@ -488,7 +537,23 @@ class PolarCamera(TwoDCamera):
             # apply
             self.view_loc = ( self.ref_loc[0] + dx ,  self.ref_loc[1] + dy , 
                 self.ref_loc[2] + dz )
+        
+        elif self.controlIsDown and self.ref_but==1:
+            # Roll
             
+            # get normalized delta values
+            sze = self.axes.position.size
+            d_ro = float( self.ref_mloc[0] - mloc[0] ) / sze[0]
+            
+            # change az and el accordingly
+            self.view_ro = self.ref_ro + d_ro * 90.0
+            
+            # keep within bounds    
+            if self.view_ro < -90:
+                self.view_ro = -90
+            while self.view_ro > 90:
+                self.view_ro = 90
+        
         elif self.ref_but==1:
             # rotate
             
@@ -572,9 +637,9 @@ class PolarCamera(TwoDCamera):
         ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         
         # 3. Set viewing angle (this is the only difference with 2D camera)
+        gl.glRotate(self.view_ro, 0.0, 0.0, 1.0)
         gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
-        tmp = self.view_az
-        gl.glRotate(-tmp, 0.0, 0.0, 1.0)
+        gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
         
         # Above is the projection stuff. For the rest, we use the
         # modelview matrix. This way, the rays to render 3D data can
@@ -582,7 +647,7 @@ class PolarCamera(TwoDCamera):
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
-        # set light
+        # Set light
         gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, [0.0,0.0,0.0,0.0])
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
@@ -592,10 +657,9 @@ class PolarCamera(TwoDCamera):
         # 1. Translate to view location. Do this first because otherwise
         # the translation is not in world coordinates.
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], -self.view_loc[2])
-        
-        
 
 
+# todo: use quaternions to fly it?
 class FlyCamera(PolarCamera):
     """ The fly camera is a funky camera to visualise 3D data.
     

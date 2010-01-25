@@ -43,6 +43,8 @@ from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 from misc import getColor
 from events import *
 
+from points import Pointset, Quaternion
+
 
 class BaseObject(object):
     """ The base class for wibjects and wobjects.
@@ -522,15 +524,56 @@ class Wobject(BaseObject):
         return par
     
     
-    def _GetLimits(self):
+    def _GetLimits(self, *args):
         """ _GetLimits()
         Get the limits in world coordinates between which the object 
         exists. This is used by the Axes class to set the camera correctly.
-        If returns None, the limits are undefined. 
-        Inheriting Wobject classes should overload this method.
+        If None is returned, the limits are undefined. 
+        Inheriting Wobject classes should overload this method. But they can
+        use this method to take all transformations into account by giving
+        the cornerpoints of the untransformed object:
+        xlim, ylim, zlim = Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
         """
-        return None
         
+        # Examine args
+        if not args:
+            return None
+        elif len(args) != 6:
+            raise ValueError("_Getlimits expects 0 or 6 arguments.")
+        
+        # Make pointset of six cornerpoints
+        x1, x2, y1, y2, z1, z2 = args
+        pp = Pointset(3)
+        for x in [x1, x2]:
+            for y in [y1, y2]:
+                for z in [z1, z2]:
+                    pp.Append(x,y,z)
+        
+        # Transform these points
+        for i in range(len(pp)):
+            p = pp[i]
+            for t in reversed(self._transformations):
+                if isinstance(t, Transform_Translate):
+                    p.x += t.dx
+                    p.y += t.dy
+                    p.z += t.dz
+                elif isinstance(t, Transform_Scale):
+                    p.x *= t.sx
+                    p.y *= t.sy
+                    p.z *= t.sz
+                elif isinstance(t, Transform_Rotate):
+                    angle = t.angle * np.pi / 180.0
+                    q = Quaternion.CreateFromAxisAngle(angle, t.ax, t.ay, t.az)
+                    p = q.RotatePoint(p)
+            # Update
+            pp[i] = p                    
+        
+        # Return limits (say nothing about z)
+        xlim = Range( pp[:,0].min(), pp[:,0].max() )
+        ylim = Range( pp[:,1].min(), pp[:,1].max() )
+        zlim = Range( pp[:,2].min(), pp[:,2].max() )
+        return xlim, ylim, zlim
+    
     
     def _Transform(self):
         """ Apply all listed transformations of this wobject. """        

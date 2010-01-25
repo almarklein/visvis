@@ -38,7 +38,7 @@ import numpy as np
 import base
 import simpleWibjects
 import textures
-from cameras import ortho, depthToZ, TwoDCamera, PolarCamera, FlyCamera
+from cameras import (ortho, depthToZ, TwoDCamera, PolarCamera, FlyCamera)
 from misc import Property, Range, OpenGLError, getColor
 from events import *
 from textRender import FontManager, Text, Label
@@ -872,9 +872,9 @@ class Axes(base.Wibject):
         
         # create cameras and select one
         self._cameras = {   'twod': TwoDCamera(self), 
-                            'polar': PolarCamera(self),
+                            'polar': PolarCamera(self),                            
                             'fly': FlyCamera(self)}        
-        self._cameras['3d'] = self._cameras['polar']
+        self._cameras['3d'] = self._cameras['polar']        
         self.camera = self._cameras['2d'] = self._cameras['twod']
         
         # init the background color of this axes
@@ -933,42 +933,6 @@ class Axes(base.Wibject):
                 if not tmp:
                     continue                
                 tmpX, tmpY, tmpZ = tmp
-                
-                
-#                 if isinstance(ob, Line):
-#                     pp = ob._points
-#                     if len(pp)==0: continue
-#                     tmpX = Range( pp[:,0].min(), pp[:,0].max() )
-#                     tmpY = Range( pp[:,1].min(), pp[:,1].max() )
-#                     tmpZ = Range( pp[:,2].min(), pp[:,2].max() )
-#                     
-#                 elif isinstance(ob, textures.Texture2D):
-#                     if ob._texture1._dataRef is None:
-#                         continue
-#                     a = ob._texture1._dataRef
-#                     if hasattr(a, 'sampling') and hasattr(a, 'origin'):
-#                         tmpX = Range( a.origin[1], a.shape[1] * a.sampling[1] )
-#                         tmpY = Range( a.origin[0], a.shape[0] * a.sampling[0] )
-#                     else:
-#                         tmpX = Range( 0, a.shape[1] )
-#                         tmpY = Range( 0, a.shape[0] )
-#                     tmpZ = None
-#                 
-#                 elif isinstance(ob, textures.Texture3D):
-#                     if ob._texture1._dataRef is None:
-#                         continue 
-#                     a = ob._texture1._dataRef
-#                     if hasattr(a, 'sampling') and hasattr(a, 'origin'):
-#                         tmpX = Range( a.origin[2], a.shape[2] * a.sampling[2] )
-#                         tmpY = Range( a.origin[1], a.shape[1] * a.sampling[1] )
-#                         tmpZ = Range( a.origin[0], a.shape[0] * a.sampling[0] )
-#                     else:
-#                         tmpX = Range( 0, a.shape[2] )
-#                         tmpY = Range( 0, a.shape[1] )
-#                         tmpZ = Range( 0, a.shape[0] )
-#                 
-#                 else:
-#                     continue
                 
                 # update min/max
                 if rangeX:
