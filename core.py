@@ -253,7 +253,7 @@ class BaseFigure(base.Wibject):
         self._drawTimer = Timer(self, 10, oneshot=True)
         self._drawTimer.Bind(self.OnDraw)        
         self._drawtime = time.time() # to calculate fps
-        self._drawFast = False
+        self._drawWell = False
     
     @property
     def eventMouseUp(self):
@@ -589,8 +589,9 @@ class BaseFigure(base.Wibject):
         Multiple calls in a short amount of time will result in only
         one redraw.
         """
-        # Set fast (use an or on going not-fast)?
-        self._drawFast = not ( not self._drawFast or not fast )
+        # Set draw well (is reciprocal of fast, this is to handle it easier.)
+        well = not fast
+        self._drawWell = self._drawWell or well
         # If never drawn before, draw now, this is required in WX, otherwise
         # a lot of OpenGL functions won't work...
         if not hasattr(self._drawTimer, '_drawnonce'):
@@ -608,7 +609,7 @@ class BaseFigure(base.Wibject):
         Call this from time to time if you want to update your figure while 
         running some algorithm, and let the figure stay responsive.         
         """        
-        self._drawFast = fast
+        self._drawWell = not fast
         self.OnDraw()
         self._ProcessEvents()
     
@@ -630,7 +631,8 @@ class BaseFigure(base.Wibject):
             print 'FPS: ', 1.0/dt  # for testing
         
         # get fast
-        fast = self._drawFast
+        fast = not self._drawWell
+        self._drawWell = False
         
         # make sure to draw to this canvas/widget
         self._SetCurrent()
