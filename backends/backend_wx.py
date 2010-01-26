@@ -39,6 +39,8 @@ KEYMAP = {  wx.WXK_SHIFT: constants.KEY_SHIFT,
             wx.WXK_DOWN: constants.KEY_DOWN,
             wx.WXK_PAGEUP: constants.KEY_PAGEUP,
             wx.WXK_PAGEDOWN: constants.KEY_PAGEDOWN,
+            wx.WXK_RETURN: constants.KEY_ENTER,
+            wx.WXK_ESCAPE: constants.KEY_ESCAPE
             }
 
 
@@ -258,12 +260,21 @@ class Figure(BaseFigure):
             return pos[0], pos[1], size[0], size[1]
     
     def _ProcessEvents(self):
-        # I have no idea why, but the application is not capable of
-        # processing mouse events.
+        # Get app
         app = wx.GetApp()
-        app.ProcessPendingEvents()
-        while app.ProcessIdle():
-           pass
+        
+        # Keep reference of old eventloop instance
+        old = wx.EventLoop.GetActive()
+        # Create new eventloop and process
+        eventLoop = wx.EventLoop()
+        wx.EventLoop.SetActive(eventLoop)                        
+        while eventLoop.Pending():
+            eventLoop.Dispatch()
+        # Process idle
+        app.ProcessIdle() # otherwise frames do not close
+        # Set back the original
+        wx.EventLoop.SetActive(old)  
+    
     
     def _Close(self):
         if self._widget and self._widget.Parent:

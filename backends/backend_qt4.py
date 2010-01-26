@@ -37,6 +37,9 @@ KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
             QtCore.Qt.Key_Down: constants.KEY_DOWN,
             QtCore.Qt.Key_PageUp: constants.KEY_PAGEUP,
             QtCore.Qt.Key_PageDown: constants.KEY_PAGEDOWN,
+            QtCore.Qt.Key_Enter: constants.KEY_ENTER,
+            QtCore.Qt.Key_Return: constants.KEY_ENTER,
+            QtCore.Qt.Key_Escape: constants.KEY_ESCAPE,
             }
 
 

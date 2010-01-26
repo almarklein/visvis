@@ -397,10 +397,13 @@ class Line(Wobject):
         Get the limits in world coordinates between which the object exists.
         """
         
-        # Obtain untransformed coords 
-        x1, x2 = self._points[:,0].min(), self._points[:,0].max()
-        y1, y2 = self._points[:,1].min(), self._points[:,1].max()
-        z1, z2 = self._points[:,2].min(), self._points[:,2].max()
+        # Obtain untransformed coords (if not an empty set)
+        if not self._points:
+            return None
+        else:
+            x1, x2 = self._points[:,0].min(), self._points[:,0].max()
+            y1, y2 = self._points[:,1].min(), self._points[:,1].max()
+            z1, z2 = self._points[:,2].min(), self._points[:,2].max()
         
         # There we are
         return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
@@ -664,7 +667,7 @@ class Line(Wobject):
         # draw face or edge?
         drawFace = bool(self.mc) # if not ms or mw we would not get here
         drawEdge = self.mec and self.mew
-        if not drawFace and not DrawEdge:
+        if not drawFace and not drawEdge:
             return 
         
         # get figure

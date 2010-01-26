@@ -39,6 +39,6 @@ def figure(nr=None):
             BaseFigure._figures[nr] = None
         # create new figure and return
         fig = newFigure()
-        fig._SetTitle("Figure " + str(fig.nr))
+        fig.title = '' #_SetTitle("Figure " + str(fig.nr))
         return fig
         

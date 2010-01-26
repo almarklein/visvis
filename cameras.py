@@ -40,7 +40,7 @@ import OpenGL.GLU as glu
 from misc import *
 from events import Timer
 import math
-
+import ssdf
 
 
 """ Here's a bit on the depth buffer
@@ -168,7 +168,27 @@ class TwoDCamera(BaseCamera):
         figure.eventMouseUp.Bind( self.OnMouseUp)        
         figure.eventMotion.Bind( self.OnMotion)
         axes.eventDoubleClick.Bind( self.Reset)
-  
+    
+    
+    def GetViewParams(self):
+        """ GetView()
+        Get a structure with view parameters. 
+        """
+        s = ssdf.new()
+        s.loc = self.view_loc
+        s.zoomx = self.view_zoomx
+        s.zoomy = self.view_zoomy
+        return s
+    
+    
+    def SetViewParams(self, s):
+        """ SetView(s)
+        Set the view, given a structure with view parameters. 
+        """
+        self.view_loc = s.loc
+        self.view_zoomx = s.zoomx
+        self.view_zoomy = s.zoomy
+    
     
     def Reset(self, event=None):
         """ Reset the view.        
@@ -417,8 +437,34 @@ class PolarCamera(TwoDCamera):
         figure.eventMouseUp.Bind(self.OnMouseUp)        
         figure.eventMotion.Bind(self.OnMotion)
         axes.eventDoubleClick.Bind(self.Reset)
-
-
+    
+    
+    def GetViewParams(self):
+        """ GetView()
+        Get a structure with view parameters. 
+        """
+        s = ssdf.new()
+        s.loc = self.view_loc
+        s.zoomx = self.view_zoomx
+        s.zoomy = self.view_zoomy
+        s.azimuth = self.view_az
+        s.elevation = self.view_el
+        s.roll = self.view_ro
+        return s
+    
+    
+    def SetViewParams(self, s):
+        """ SetView(s)
+        Set the view, given a structure with view parameters. 
+        """
+        self.view_loc = s.loc
+        self.view_zoomx = s.zoomx
+        self.view_zoomy = s.zoomy
+        self.view_az = s.azimuth
+        self.view_el = s.elevation
+        self.view_ro = s.roll
+    
+    
     def Reset(self, event=None):
         
         # Set angles

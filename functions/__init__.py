@@ -26,9 +26,9 @@ There are three things to take into account when making a new function:
 - The function to add should be the same name as the module in which 
   it is defined. Other helper functions or classes can be defined, but
   these are not inserted in the Visvis namespace.
-- The docstring of the module should be a short (one-line) description.
-  This is used for the on-line documentation. 
-- Please make the function's docstring as descriptive as possible. 
+- The function's docstring should be very descriptive and starting with
+  the function's signature. The docstring is also used to produce the
+  on-line documentation.
 
 $Author$
 $Date$
