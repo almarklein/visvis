@@ -1,5 +1,3 @@
-""" Write an image to disk (requires PIL). """
-
 import numpy as np
 
 try:

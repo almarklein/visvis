@@ -1,7 +1,3 @@
-""" graphical input function.
-This module also serves as a nice picking example.
-"""
-
 import visvis as vv
 from points import Point, Pointset
 import time

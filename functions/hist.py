@@ -1,5 +1,3 @@
-""" Display a histogram plot of the data. """
-
 import visvis as vv
 import numpy as np
 

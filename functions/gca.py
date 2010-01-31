@@ -1,9 +1,8 @@
-""" Get the current axes in the current figure. """
-
 import visvis as vv
 
 def gca():
-    """ gca() - Get the current axes in the current figure.
+    """ gca() 
+    Get the current axes in the current figure.
     """
     f = vv.gcf()
     a = f.currentAxes

@@ -552,8 +552,8 @@ class BaseFigure(base.Wibject):
     ## Implement methods
     
     def OnDestroy(self):
-        """ OnDestroy()
-        Clean up. This method is called when calling Destroy(). """
+        # Clean up. This method is called when calling Destroy().
+        
         base.Wibject.OnDestroy(self)
         
         # close the figure instance
@@ -615,11 +615,10 @@ class BaseFigure(base.Wibject):
     
     
     def OnDraw(self, event=None):
-        """ OnDraw(event=None)
-        This is the actual draw entry point. But we will 
-        call _Draw() to draw first the beatiful pictures and then
-        again to only draw the shapes for picking. 
-        """
+        # This is the actual draw entry point. But we will 
+        # call _Draw() to draw first the beatiful pictures and then
+        # again to only draw the shapes for picking. 
+        
         # are we alive?
         if self._destroyed:            
             return
@@ -1430,8 +1429,7 @@ class Axes(base.Wibject):
     ## Implement methods
     
     def OnDestroy(self):
-        """ OnDestroy()
-        Clean up. """
+        # Clean up.
         base.Wibject.OnDestroy(self)
         self.Clear(True)
         self.camera = None
@@ -1442,9 +1440,7 @@ class Axes(base.Wibject):
     
     
     def OnDraw(self, mode='normal'):
-        """ OnDraw( mode='normal')
-        Draw the background of the axes and the wobjects in it.
-        """
+        # Draw the background of the axes and the wobjects in it.
         
         # size of figure ...
         w,h = self.GetFigure().position.size
@@ -1538,8 +1534,7 @@ class Axes(base.Wibject):
     
     
     def OnDrawShape(self, clr):
-        """ OnDrawShape(clr)
-        Draw the shapes of wobjects. """
+        # Draw the shapes of wobjects.
         
         # get shape
         mode = 'shape'

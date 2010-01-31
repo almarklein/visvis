@@ -1,4 +1,3 @@
-""" Close a figure. """
 import visvis as vv
 
 def close(fig):

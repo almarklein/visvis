@@ -638,7 +638,9 @@ class BaseText(object):
     
     
 class Text(Wobject, BaseText):
-    """ A string of characters. 
+    """ Text(parent, text='', x=0, y=0, z=0, fontname='sans')
+    A wobject representing a string of characters. The text has 
+    a certain position in the scene.
     """
     
     def __init__(self, parent, text='', x=0, y=0, z=0, fontname='sans'):
@@ -687,12 +689,12 @@ class Text(Wobject, BaseText):
     
     
     def OnDrawScreen(self):
-        """ Draw the text. """
         self._DrawText( self._screenx, self._screeny, depthToZ(self._screenz) )
     
     
 class Label(Box, BaseText):    
-    """ Label Wibject: A box with text inside. 
+    """ Label(parent, text='', fontname='sans'
+    A wibject (inherits from box) with text inside. 
     """
     
     def __init__(self, parent, text='', fontname='sans'):
@@ -710,7 +712,6 @@ class Label(Box, BaseText):
     
     
     def OnDraw(self):
-        """ Draw the text now. """
         
         # Draw the box
         Box.OnDraw(self)

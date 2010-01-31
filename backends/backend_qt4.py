@@ -221,8 +221,8 @@ def newFigure():
     """ function that produces a new Figure object, the widget
     in a window. """
     fig = Figure(None)
-    #fig._widget.resize(560,420)    
-    fig._widget.resize(560,720) # to tecognize qt windows
+    fig._widget.resize(560,420)    
+    #fig._widget.resize(560,720) # to tecognize qt windows
     fig._widget.show()
     return fig
   

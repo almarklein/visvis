@@ -1,5 +1,3 @@
-""" Get a snapshot of the current figure or axes. """
-
 import visvis as vv
 
 import OpenGL.GL as gl
@@ -13,6 +11,7 @@ def getframe(ob):
     """ getframe(object)
     Get a snapshot of the current figure or axes.
     It is retured as a numpy array (color image).
+    Also see vv.screenshot().
     """
     
     # we read the pixels as shown on screen.

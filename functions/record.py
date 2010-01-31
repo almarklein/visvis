@@ -1,5 +1,3 @@
-""" Record all drawings done to a figure or axes as a list of images. """
-
 import visvis as vv
 
 from visvis.images2gif import writeGif
@@ -63,9 +61,9 @@ class Recorder:
 
 def record(ob):
     """ record(object)
-    Record all drawings done to a figure or axes.
+    Take a snapshot if the given figure or axes after each draw.
     A Recorder instance is returned, with which the recording can
-    be stopped, continued, exported to gif/swf, or the frames retrieved.
+    be stopped, continued, exported to gif and swf, or the frames retrieved.
     """
     
     # establish wheter we can record that

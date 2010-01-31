@@ -1,5 +1,3 @@
-""" Create a new figure or return the figure with the asociated nr. """
-
 import visvis.backends as backends
 from visvis.core import BaseFigure
 

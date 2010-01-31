@@ -1,5 +1,3 @@
-""" Display a 3D image (a volume). The default renderStyle is MIP. """
-
 import visvis as vv
 
 def volshow(vol, clim=None, axes=None, renderStyle='mip'):

@@ -1,5 +1,3 @@
-""" Set the ylabel of the given or current axes. """
-
 import visvis as vv
 
 def ylabel(text, axes=None):

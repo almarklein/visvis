@@ -1,5 +1,3 @@
-""" Set the zlabel of the given or current axes. """
-
 import visvis as vv
 
 def zlabel(text, axes=None):

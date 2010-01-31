@@ -1,10 +1,10 @@
-""" Get the current figure. """
-
 from visvis.core import BaseFigure
 import visvis as vv
 
 def gcf():
-    """ gcf() - Get the current figure. """
+    """ gcf()
+    Get the current figure. 
+    """
     
     if not BaseFigure._figures:
         # no figure yet

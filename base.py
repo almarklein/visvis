@@ -980,7 +980,7 @@ class Position(object):
     
 class Box(Wibject):
     """ A simple, multi-purpose, rectangle object.
-    It's basically a Wibject, but it can draw itself. Most wibjects will
+    It implements functionality to draw itself. Most wibjects will
     actually inherit from Box, rather than from Wibject.
     """
     def __init__(self, parent):

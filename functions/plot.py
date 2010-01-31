@@ -26,15 +26,21 @@ def plot(data1, data2=None, data3=None,
     """ plot(data1, data2=None, data3=None, 
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
             alpha=1, setlimits=True, axes=None):
-    Plot 1, 2 or 3 dimensional data. 
-    plot([1,4,2]) plots a 1D signal, with the values plotted along the y-axis
-    plot([10,11,12],[1,4,2]) also supplies x coordinates
-    plot([10,11,12],[1,4,2],[8,8,8]) also supplies z coordinates
     
+    Plot 1, 2 or 3 dimensional data:
+      * plot([1,4,2]) plots a 1D signal, with the values plotted along the y-axis
+      * plot([10,11,12],[1,4,2]) also supplies x coordinates
+      * plot([10,11,12],[1,4,2],[8,8,8]) also supplies z coordinates
+      
     The longer names for the line properties can also be used:
-    lineWidth:lw,         lineColor:lc,     lineStyle:ls,
-    markerWidth:mw,       markerColor:mc,   markerStyle:ms,
-    markerEdgeWidth:mew,  markerEdgeColor:mec
+      * lineWidth: lw
+      * lineColor: lc
+      * lineStyle: ls
+      * markerWidth: mw
+      * markerColor: mc
+      * markerStyle: ms
+      * markerEdgeWidth: mew
+      * markerEdgeColor: mec
     
     If setlimits is False, plots the new data without resetting
     the displayed range.

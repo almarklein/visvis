@@ -1,5 +1,3 @@
-""" Read an image from disk (requires PIL). """
-
 import visvis as vv
 import numpy as np
 import os
@@ -11,7 +9,8 @@ except ImportError:
 
 def imread(filename):
     """ imread(filename) 
-    Read image from disk, requires PIL. """
+    Read image from disk, requires PIL. 
+    """
     
     if PIL is None:
         raise RuntimeError("visvis.imread requires the PIL package.")

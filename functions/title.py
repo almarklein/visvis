@@ -1,12 +1,11 @@
-""" Show a title over the given or current axes. """
-
 import visvis as vv
 
 
 def title(text, axes=None):
     """ title(text, axes=None)
     Show a title over the given or current axes. 
-    Remove the title by suplying an empty string. """
+    Remove the title by suplying an empty string. 
+    """
     
     if axes is None:
         axes = vv.gca()

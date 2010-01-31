@@ -1,5 +1,3 @@
-""" Set the xlabel of the given or current axes. """
-
 import visvis as vv
 
 def xlabel(text, axes=None):

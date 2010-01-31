@@ -1,22 +1,24 @@
-""" Display a 2D image. """
-
 import visvis as vv
 
 def imshow(im, clim=None, axes=None, aa=1, interpolate=False):
     """ imshow(im, clim, axes, aa, interpolate=False)
-    Display a 2D image and returns the Texture2D object.
-    - If the image is an anisotropic array (points.Aaray), the appropriate
-      scale and translate transformations are applied.
-    - The daspect of the axes is changed such that the y axes is negative.
-    - The aa and interpolate parameters can be used to specify anti aliasing
-      and (linear) interpolation, respectively.
-    - New images are positioned on z=-0.1, such that lines and points are
-      visible over the image. This z-pos of textures already in the axes
-      are moved backwards if new images are displayed with imshow, such that 
-      the new image is displayed over the older ones.
-      (the set value is Texture2D._trafo_trans.dz)
-    - visvis does not use the "hold on / hold off" system. So if updating 
-      an image, better use Texture2D.Refresh() or do Axes.Clear() first.
+    
+    Display a 2D image and returns the Texture2D object. 
+    
+    If the image is an anisotropic array (vv.points.Aaray), the appropriate         scale and translate transformations are applied. The daspect of the axes
+    is changed such that the y axes is negative.
+    
+    The aa and interpolate parameters can be used to specify anti aliasing
+    and (linear) interpolation, respectively.
+    
+    New images are positioned on z=-0.1, such that lines and points are
+    visible over the image. This z-pos of textures already in the axes
+    are moved backwards if new images are displayed with imshow, such that 
+    the new image is displayed over the older ones.
+    (the set value is Texture2D._trafo_trans.dz)
+    
+    Visvis does not use the "hold on / hold off" system. So if updating 
+    an image, better use Texture2D.Refresh() or do Axes.Clear() first.
     """
     
     # get axes

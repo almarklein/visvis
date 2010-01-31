@@ -1,4 +1,3 @@
-
 import visvis as vv
 import numpy as np
 
@@ -36,10 +35,10 @@ def screenshot(filename, ob, scaleFactor=3, bg=None, tension=-0.25):
     Rationale:
     We'd prefer storing screenshots of plots as vector (eps) images, but 
     the nature of OpenGl prevents this. By applying high quality inter-
-    polation (using a cardinal spline), the resolution can be improved
-    quite a bit, improving the visibility/smoothness of for lines and 
-    fonts quite a bit. 
-    
+    polation (using a cardinal spline), the resolution can be increased, 
+    thereby significantly improving the visibility/smoothness for lines 
+    and fonts. Use this to produce publication quality snapshots of your
+    plots.
     """
     
     # The tension controls the

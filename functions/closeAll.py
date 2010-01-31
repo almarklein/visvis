@@ -1,4 +1,3 @@
-""" Close all figures. """
 import visvis as vv
 
 def closeAll():
