@@ -517,15 +517,15 @@ class Line(Wobject):
             tmp = getColor(value, 'markerEdgeColor')
             self._mec = value
     
-    # create aliases
-    lineWidth = lw
-    lineStyle = ls
-    lineColor = lc
-    markerWidth = mw
-    markerStyle = ms
-    markerColor = mc
-    markerEdgeWidth = mew
-    markerEdgeColor = mec
+#     # create aliases
+#     lineWidth = lw
+#     lineStyle = ls
+#     lineColor = lc
+#     markerWidth = mw
+#     markerStyle = ms
+#     markerColor = mc
+#     markerEdgeWidth = mew
+#     markerEdgeColor = mec
     
     @Property
     def alpha():
