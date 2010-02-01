@@ -411,17 +411,10 @@ class Line(Wobject):
     
     ## Create properties
     
-    @Property
-    def points():
-        """ Temporary to change my code """
-        def fget(self):
-            raise RuntimeError("Use SetPoints()!")
-        def fset(self, value):
-            raise RuntimeError("Use SetPoints()!")
-    
+   
     @Property
     def lw():
-        """ lineWidth: the width of the line in pixels. 
+        """ Get/Set the lineWidth: the width of the line in pixels. 
         If zero, the line is not drawn. """
         def fget(self):
             return self._lw
@@ -430,13 +423,13 @@ class Line(Wobject):
     
     @Property
     def ls():
-        """ lineStyle: the style of the line. 
-        -   a solid line
-        :   a dotted line
-        --  a dashed line
-        -.  a dashdot line
-        .-  dito
-        +   draws a line between each pair of points
+        """ Get/Set the lineStyle: the style of the line. 
+          * -   a solid line
+          * :   a dotted line
+          * --  a dashed line
+          * -.  a dashdot line
+          * .-  dito
+          * +   draws a line between each pair of points
         If None, '' or False is given no line is drawn. """        
         def fget(self):
             return self._ls
@@ -451,17 +444,9 @@ class Line(Wobject):
     
     @Property
     def lc():
-        """ lineColor: the color of the line, as a 3-element tuple or
-        as a character:
-        r - red
-        g - green
-        b - blue
-        y - yellow
-        c - cyan
-        m - magenta
-        k - black
-        w - white
-        """
+        """ Get/Set the lineColor: the color of the line, as a 3-element 
+        tuple or as a single character string (shown in uppercase): 
+        Red, Green, Blue, Yellow, Cyan, Magenta, blacK, White. """
         def fget(self):
             return self._lc
         def fset(self, value):
@@ -471,7 +456,7 @@ class Line(Wobject):
     
     @Property
     def mw():
-        """ markerWidth: the width (bounding box) of the marker 
+        """ Get/Set the markerWidth: the width (bounding box) of the marker 
         in (screen) pixels. If zero no marker is drawn."""
         def fget(self):
             return self._mw
@@ -480,15 +465,15 @@ class Line(Wobject):
     
     @Property
     def ms():
-        """ markerStyle: the style of the marker. 
-        +       : a plus                                        
-        x       : a cross 
-        s       : a square
-        d       : a diamond
-        ^v<>    : an up-, down-, left- or rightpointing triangle        
-        * or p  : a (pentagram star)
-        h       : a hexagram
-        o or .  : a point/circle
+        """ Get/Set the markerStyle: the style of the marker. 
+          * +       : a plus                                        
+          * x       : a cross 
+          * s       : a square
+          * d       : a diamond
+          * ^v<>    : an up-, down-, left- or rightpointing triangle        
+          * * or p  : a (pentagram star)
+          * h       : a hexagram
+          * o or .  : a point/circle
         If None, '', or False is given, no marker is drawn.
         """
         def fget(self):
@@ -504,8 +489,8 @@ class Line(Wobject):
     
     @Property
     def mc():
-        """ markerColor: The color of the face of the marker
-        If None, '', or False, the marker face is not drawn. The edge is. 
+        """ Get/Set the markerColor: The color of the face of the marker
+        If None, '', or False, the marker face is not drawn (but the edge is). 
         """
         def fget(self):
             return self._mc
@@ -515,7 +500,7 @@ class Line(Wobject):
     
     @Property
     def mew():
-        """ markerEdgeWidth: the width of the edge of the marker. 
+        """ Get/Set the markerEdgeWidth: the width of the edge of the marker. 
         If zero no edge is drawn. """
         def fget(self):
             return self._mew
@@ -524,7 +509,8 @@ class Line(Wobject):
     
     @Property
     def mec():
-        """ markerEdgeColor: the color of the edge of the marker. """
+        """ Get/Set the markerEdgeColor: the color of the edge of the marker. 
+        """
         def fget(self):
             return self._mec
         def fset(self, value):
@@ -543,7 +529,7 @@ class Line(Wobject):
     
     @Property
     def alpha():
-        """ The alpha (transparancy) of the line and markers. 
+        """ Get/Set the alpha (transparancy) of the line and markers. 
         When this is < 1, the line cannot be anti-aliased, and it
         is drawn on top of any other wobjects.
         """
@@ -555,20 +541,30 @@ class Line(Wobject):
     ## Set methods
     
     def SetXdata(self, data):
+        """ SetXdata(data)
+        Set the x coordinates of the points of the line. 
+        """
         self._points[0,:] = data
         
     def SetYdata(self, data):
+        """ SetYdata(data)
+        Set the y coordinates of the points of the line. 
+        """
         self._points[1,:] = data
     
     def SetZdata(self, data):
+        """ SetZdata(data)
+        Set the z coordinates of the points of the line. 
+        """
         self._points[2,:] = data
         
     def SetPoints(self, points):
-        """ Set x,y (and optionally z) data at once
+        """ SetPoints(points)
+        Set x,y (and optionally z) data at once
         using a Pointset object. The data is copied, so changes to the given
         points object will not affect the visualized points. 
         If you do want this, use the ._points attribute, but note that it
-        should always have three dimensions
+        should always have three dimensions.
         """
         self._points = points.Copy()
     
@@ -766,9 +762,7 @@ class Line(Wobject):
     
     
     def OnDrawShape(self, clr):
-        """ Draw the shape of the line so we can detect mouse actions
-        on it.
-        """
+        # Draw the shape of the line so we can detect mouse actions
         
         # disable anti aliasing and blending
         gl.glDisable(gl.GL_LINE_SMOOTH)

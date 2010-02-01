@@ -408,7 +408,7 @@ class TextureObject(object):
     - SetData() update the data    
     - DestroyGl() remove only the texture from OpenGl memory.
     - Destroy() remove textures and reference to data.
-    Note: this is not a Wobject nor Wibject.
+    Note: this is not a Wobject nor a Wibject.
     """
     
     # One could argue to use polymorphism to implement 3 classes: one for 
@@ -1017,7 +1017,9 @@ class TextureObjectToVisualize(TextureObject):
 
 
 class BaseTexture(Wobject):
-    """ Base texture class for visvis 2D and 3D textures. """
+    """ BaseTexture(parent, data)
+    Base texture class for visvis 2D and 3D textures. 
+    """
     
     def __init__(self, parent, data):
         Wobject.__init__(self, parent)
@@ -1039,7 +1041,12 @@ class BaseTexture(Wobject):
     
     
     def SetData(self, data):
-        """ Set the data to display. """ 
+        """ SetData(data)
+        (Re)Set the data to display. If the data has the same shape
+        as the data currently displayed, it can be updated very
+        efficiently. If the data is an anisotripic array (vv.points.Aarray)
+        the sampling and origin are (re-)applied.
+        """ 
         
         # set data to texture
         self._texture1.SetData(data)
@@ -1064,14 +1071,18 @@ class BaseTexture(Wobject):
     
     
     def Refresh(self):
-        """ Refresh the data. """
+        """ Refresh()
+        Refresh the data. If the numpy array was changed, calling this 
+        function will re-upload the data to OpenGl, making the change
+        visible. This can be done efficiently.
+        """
         data = self._texture1._dataRef
         if data is not None:
             self.SetData(data)
    
     
     def OnDestroyGl(self):
-        """ Clean up OpenGl resources. """
+        # Clean up OpenGl resources.
         
         # remove texture from opengl memory
         self._texture1.DestroyGl()
@@ -1085,8 +1096,7 @@ class BaseTexture(Wobject):
     
     
     def OnDestroy(self):
-        """ Clean up any resources. """
-        # clean up thorougly
+        # Clean up any resources.
         self._texture1.Destroy()
         if hasattr(self, '_colormap'):
             self._colormap.Destroy()
@@ -1098,8 +1108,8 @@ class BaseTexture(Wobject):
     
     @Property
     def interpolate():
-        """ Interpolate the image when zooming in (using linear interpolation).
-        """
+        """ Get/Set whether to interpolate the image when zooming in 
+        (using linear interpolation). """
         def fget(self):
             return self._texture1._interpolate
         def fset(self, value):
@@ -1116,8 +1126,13 @@ class BaseTexture(Wobject):
     def colormap():
         """ Get/Set the colormap. The argument must be a tuple/list of 
         iterables with each element having 3 or 4 values. The argument may
-        also be a Nx3 or Nx4 numpy array. In both cases the data is resampled
+        also be a Nx3 or Nx4 numpy array. In all cases the data is resampled
         to create a 256x4 array.
+        
+        Visvis defines a number of standard colormaps in the global visvis
+        namespace: 'pink', 'gray', 'winter', 'jet', 'copper', 'spring', 
+        'autumn', 'hot', 'summer', 'hsv', 'bone', 'cool'. A dict of name-
+        colormap pairs is also available as vv.cm.colormaps.
         """
         def fget(self):
             return self._colormap.GetMap()
@@ -1126,8 +1141,8 @@ class BaseTexture(Wobject):
     
     @Property
     def clim():
-        """ Get/Set the contrast limits. For a gray colormap, clim.min is black,
-        clim.max is white.
+        """ Get/Set the contrast limits. For a gray colormap, clim.min 
+        is black, clim.max is white.
         """
         def fget(self):
             return self._texture1._clim
@@ -1167,7 +1182,8 @@ class BaseTexture(Wobject):
 
 
 class Texture2D(BaseTexture):
-    """ A data type that represents structured data in
+    """ Texture2D(parent, data)
+    A data type that represents structured data in
     two dimensions (an image). Supports grayscale, RGB, 
     and RGBA images.
     """
@@ -1230,16 +1246,13 @@ class Texture2D(BaseTexture):
     
     
     def OnDrawShape(self, clr):
-        """ Implementation of the OnDrawShape method.
-        Defines the texture's shape as a rectangle.
-        """        
+        # Implementation of the OnDrawShape method.
         gl.glColor(clr[0], clr[1], clr[2], 1.0)
         self._DrawQuads()
     
 
     def OnDraw(self, fast=False):
-        """ Draw the texture.
-        """
+        # Draw the texture.
         
         # set color to white, otherwise with no shading, there is odd scaling
         gl.glColor3f(1.0,1.0,1.0)
@@ -1318,12 +1331,12 @@ class Texture2D(BaseTexture):
     
     @Property
     def aa():
-        """ Set anti aliasing.
-        0 or False for no anti aliasing
-        1 for minor anti aliasing
-        2 for medium anti aliasing
-        3 for much anti aliasing
-        a string to chose a shader (to allow home-made shaders)
+        """ Get/Set anti aliasing.
+          * 0 or False for no anti aliasing
+          * 1 for minor anti aliasing
+          * 2 for medium anti aliasing
+          * 3 for much anti aliasing
+          * a string to chose a shader (to allow home-made shaders)
         """
         def fget(self):
             return self._aa
@@ -1353,8 +1366,9 @@ class Texture2D(BaseTexture):
     
 
 class Texture3D(BaseTexture):
-    """ A data type that represents structured data in
-    three dimensions (a volume).
+    """ Texture3D(parent, data, renderStyle='mip'
+    
+    A data type that represents structured data in three dimensions (a volume).
     
     If the drawing hangs, your video drived decided to render in 
     software mode. This is unfortunately (as far as I know) not possible 
@@ -1390,16 +1404,13 @@ class Texture3D(BaseTexture):
     
     
     def OnDrawShape(self, clr):
-        """ Implementation of the OnDrawShape method.
-        Defines the texture's shape as a rectangle.
-        """
+        # Implementation of the OnDrawShape method.
         gl.glColor(clr[0], clr[1], clr[2], 1.0)        
         self._DrawQuads()
     
     
     def OnDraw(self, fast=False):
-        """ Draw the texture.
-        """
+        # Draw the texture.
         
         # enable this texture
         self._texture1.Enable(0)
@@ -1516,32 +1527,8 @@ class Texture3D(BaseTexture):
         tex_coord.Append((t0,t1,t1)); ver_coord.Append((x0, y1, z1)) # 5
         tex_coord.Append((t1,t1,t1)); ver_coord.Append((x1, y1, z1)) # 6
         tex_coord.Append((t1,t0,t1)); ver_coord.Append((x1, y0, z1)) # 7
-#         # front
-#         tex_coord.Append((t0,t1,t0)); ver_coord.Append((x0, y1, z0))
-#         tex_coord.Append((t1,t1,t0)); ver_coord.Append((x1, y1, z0))
-#         tex_coord.Append((t1,t1,t1)); ver_coord.Append((x1, y1, z1))
-#         tex_coord.Append((t0,t1,t1)); ver_coord.Append((x0, y1, z1))
-#         # back
-#         tex_coord.Append((t0,t0,t0)); ver_coord.Append((x0, y0, z0))
-#         tex_coord.Append((t0,t0,t1)); ver_coord.Append((x0, y0, z1))
-#         tex_coord.Append((t1,t0,t1)); ver_coord.Append((x1, y0, z1))
-#         tex_coord.Append((t1,t0,t0)); ver_coord.Append((x1, y0, z0))        
-#         # left
-#         tex_coord.Append((t0,t0,t0)); ver_coord.Append((x0, y0, z0))
-#         tex_coord.Append((t0,t1,t0)); ver_coord.Append((x0, y1, z0))
-#         tex_coord.Append((t0,t1,t1)); ver_coord.Append((x0, y1, z1))
-#         tex_coord.Append((t0,t0,t1)); ver_coord.Append((x0, y0, z1))
-#         # right
-#         tex_coord.Append((t1,t0,t0)); ver_coord.Append((x1, y0, z0))
-#         tex_coord.Append((t1,t0,t1)); ver_coord.Append((x1, y0, z1))
-#         tex_coord.Append((t1,t1,t1)); ver_coord.Append((x1, y1, z1))
-#         tex_coord.Append((t1,t1,t0)); ver_coord.Append((x1, y1, z0))
-        # 
         
-        # store quad arrays
-#         tex_coord = np.array(tex_coord, dtype='float32')
-#         ver_coord = np.array(ver_coord, dtype='double')
-#         self._quads = (tex_coord, ver_coord, None)
+        # Store quads
         self._quads = (tex_coord, ver_coord, np.array(indices,dtype=np.uint8))
     
     
@@ -1581,75 +1568,6 @@ class Texture3D(BaseTexture):
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
     
     
-    # todo: remove this as soon as I've verified the new method works for OpenGl <2.0
-    def _DrawQuads_old(self):
-        """ Draw the quads of the texture. 
-        This is done in a seperate method to reuse code in 
-        OnDraw() and OnDrawShape(). """        
-        if not self._texture1._shape:
-            return 
-        
-        # prepare world coordinates
-        x0,x1 = -0.5, self._texture1._shape[2]-0.5
-        y0,y1 = -0.5, self._texture1._shape[1]-0.5
-        z0,z1 = -0.5, self._texture1._shape[0]-0.5
-        
-        # prepare texture coordinates
-        t0, t1 = 0, 1        
-        # if any axis are flipped, make sure the correct polygons are front
-        # facing
-        tmp = 1
-        for i in self.GetAxes().daspect:
-            if i<0:
-                tmp*=-1        
-        if tmp==1:
-            t0, t1 = t1, t0
-            x0, x1 = x1, x0
-            y0, y1 = y1, y0
-            z0, z1 = z1, z0
-        
-        # using glTexCoord* is the same as glMultiTexCoord*(GL_TEXTURE0)
-        # Therefore we need to bind the base texture to 0.
-        
-        # draw. So we draw the six planes of the cube (well not a cube,
-        # a 3d rectangle thingy). The inside is only rendered if the 
-        # vertex is facing front, so only 3 planes are rendered at a        
-        # time...                
-        gl.glBegin(gl.GL_QUADS)
-        # bottom
-        gl.glTexCoord3f(t0,t0,t0); gl.glVertex3d(x0, y0, z0)
-        gl.glTexCoord3f(t1,t0,t0); gl.glVertex3d(x1, y0, z0)
-        gl.glTexCoord3f(t1,t1,t0); gl.glVertex3d(x1, y1, z0)
-        gl.glTexCoord3f(t0,t1,t0); gl.glVertex3d(x0, y1, z0)
-        # top
-        gl.glTexCoord3f(t0,t0,t1); gl.glVertex3d(x0, y0, z1)        
-        gl.glTexCoord3f(t0,t1,t1); gl.glVertex3d(x0, y1, z1)
-        gl.glTexCoord3f(t1,t1,t1); gl.glVertex3d(x1, y1, z1)
-        gl.glTexCoord3f(t1,t0,t1); gl.glVertex3d(x1, y0, z1)
-        # front
-        gl.glTexCoord3f(t0,t1,t0); gl.glVertex3d(x0, y1, z0)
-        gl.glTexCoord3f(t1,t1,t0); gl.glVertex3d(x1, y1, z0)
-        gl.glTexCoord3f(t1,t1,t1); gl.glVertex3d(x1, y1, z1)
-        gl.glTexCoord3f(t0,t1,t1); gl.glVertex3d(x0, y1, z1)
-        # back
-        gl.glTexCoord3f(t0,t0,t0); gl.glVertex3d(x0, y0, z0)
-        gl.glTexCoord3f(t0,t0,t1); gl.glVertex3d(x0, y0, z1)
-        gl.glTexCoord3f(t1,t0,t1); gl.glVertex3d(x1, y0, z1)
-        gl.glTexCoord3f(t1,t0,t0); gl.glVertex3d(x1, y0, z0)        
-        # left
-        gl.glTexCoord3f(t0,t0,t0); gl.glVertex3d(x0, y0, z0)
-        gl.glTexCoord3f(t0,t1,t0); gl.glVertex3d(x0, y1, z0)
-        gl.glTexCoord3f(t0,t1,t1); gl.glVertex3d(x0, y1, z1)
-        gl.glTexCoord3f(t0,t0,t1); gl.glVertex3d(x0, y0, z1)
-        # right
-        gl.glTexCoord3f(t1,t0,t0); gl.glVertex3d(x1, y0, z0)
-        gl.glTexCoord3f(t1,t0,t1); gl.glVertex3d(x1, y0, z1)
-        gl.glTexCoord3f(t1,t1,t1); gl.glVertex3d(x1, y1, z1)
-        gl.glTexCoord3f(t1,t1,t0); gl.glVertex3d(x1, y1, z0)
-        # 
-        gl.glEnd()
-    
-    
     def _GetLimits(self):
         """ _GetLimits()
         Get the limits in world coordinates between which the object exists.
@@ -1667,11 +1585,11 @@ class Texture3D(BaseTexture):
     
     @Property
     def renderStyle():
-        """ Get or set the render style to render the volumetric data:
-            - mip: maximum intensity projection
-            - iso: isosurface rendering
-            - rays: ray casting
-        If drawing takes reaaaaally long, your system renders in software
+        """ Get/Set the render style to render the volumetric data:
+          * mip: maximum intensity projection
+          * iso: isosurface rendering
+          * rays: ray casting (tip: use the ColormapEditor wibject to control transparancy)
+        If drawing takes really long, your system renders in software
         mode. Try rendering data that is shaped with a power of two. This 
         helps on some cards.
         """
@@ -1698,6 +1616,8 @@ class Texture3D(BaseTexture):
 
     @Property
     def isoThreshold():
+        """ Get/Set the isothreshold value used in the isosurface renderer.
+        """
         def fget(self):
             return self._isoThreshold
         def fset(self, value):

@@ -387,7 +387,7 @@ class BaseFigure(base.Wibject):
     
     @Property
     def title():
-        """ Get or set the title of the figure. If an empty string or None, 
+        """ Get/Set the title of the figure. If an empty string or None, 
         will display "Figure X", with X the figure nr.
         """
         def fget(self):
@@ -404,7 +404,7 @@ class BaseFigure(base.Wibject):
     
     @Property
     def currentAxes():
-        """ Get or set the currently active axes of this figure. 
+        """ Get/Set the currently active axes of this figure. 
         Returns None if no axes are present. 
         """
         def fget(self):
@@ -1162,7 +1162,7 @@ class Axes(base.Wibject):
 
     @Property
     def cameraType():
-        """ Get or set the camera type to use. Currently supported are:
+        """ Get/Set the camera type to use. Currently supported are:
           * '2d' - a two dimensional camera that looks down the z-dimension.
           * '3d' - a three dimensional (polar) camera.
           * 'fly' - a camera like a flight sim. Not recommended.
@@ -1193,7 +1193,7 @@ class Axes(base.Wibject):
     
     @Property
     def daspect():
-        """ Get or set the data aspect ratio as a three element tuple. 
+        """ Get/Set the data aspect ratio as a three element tuple. 
         A two element tuple can also be given (then z is assumed 1).
         Values can be negative, in which case the corresponding dimension
         is flipped. Note that if daspectAuto is True, only the sign of the
@@ -1223,7 +1223,7 @@ class Axes(base.Wibject):
     
     @Property
     def daspectAuto():
-        """ Get or set whether to scale the dimensions independently.
+        """ Get/Set whether to scale the dimensions independently.
         If True, the dimensions are scaled independently, and only the sign
         of the axpect ratio is taken into account. If False, the dimensions
         have the scale specified by the daspect property.
@@ -1236,7 +1236,7 @@ class Axes(base.Wibject):
     
     @Property
     def gridLineStyle():
-        """ Get or set the style of the gridlines as a single char similar
+        """ Get/Set the style of the gridlines as a single char similar
         to the lineStyle (ls) property of the line wobject (or in plot). """
         def fget(self):
             return self._gridLineStyle
@@ -1247,7 +1247,7 @@ class Axes(base.Wibject):
             
     @Property
     def showGridX():
-        """ Get or set whether to show a grid for the x dimension. """
+        """ Get/Set whether to show a grid for the x dimension. """
         def fget(self):
             return self._xgrid
         def fset(self, value):
@@ -1255,7 +1255,7 @@ class Axes(base.Wibject):
     
     @Property
     def showGridY():
-        """ Get or set whether to show a grid for the y dimension. """
+        """ Get/Set whether to show a grid for the y dimension. """
         def fget(self):
             return self._ygrid
         def fset(self, value):
@@ -1263,7 +1263,7 @@ class Axes(base.Wibject):
     
     @Property
     def showGridZ():
-        """ Get or set whether to show a grid for the z dimension. """
+        """ Get/Set whether to show a grid for the z dimension. """
         def fget(self):
             return self._zgrid
         def fset(self, value):
@@ -1283,7 +1283,7 @@ class Axes(base.Wibject):
     
     @Property
     def showMinorGridX():
-        """ Get or set whether to show a minor grid for the x dimension. """
+        """ Get/Set whether to show a minor grid for the x dimension. """
         def fget(self):
             return self._xminorgrid
         def fset(self, value):
@@ -1291,7 +1291,7 @@ class Axes(base.Wibject):
     
     @Property
     def showMinorGridY():
-        """ Get or set whether to show a minor grid for the y dimension. """
+        """ Get/Set whether to show a minor grid for the y dimension. """
         def fget(self):
             return self._yminorgrid
         def fset(self, value):
@@ -1299,7 +1299,7 @@ class Axes(base.Wibject):
     
     @Property
     def showMinorGridZ():
-        """ Get or set whether to show a minor grid for the z dimension. """
+        """ Get/Set whether to show a minor grid for the z dimension. """
         def fget(self):
             return self._zminorgrid
         def fset(self, value):
@@ -1321,7 +1321,7 @@ class Axes(base.Wibject):
     
     @Property
     def xTicks():
-        """ Get or set the ticks for the x dimension. 
+        """ Get/Set the ticks for the x dimension. 
         If None, they are determined automatically. """
         def fget(self):
             return self._xticks
@@ -1330,7 +1330,7 @@ class Axes(base.Wibject):
     
     @Property
     def yTicks():
-        """ Get or set the ticks for the y dimension. 
+        """ Get/Set the ticks for the y dimension. 
         If None, they are determined automatically. """
         def fget(self):
             return self._yticks
@@ -1339,7 +1339,7 @@ class Axes(base.Wibject):
     
     @Property
     def zTicks():
-        """ Get or set the ticks for the z dimension. 
+        """ Get/Set the ticks for the z dimension. 
         If None, they are determined automatically. """
         def fget(self):
             return self._zticks
@@ -1349,7 +1349,7 @@ class Axes(base.Wibject):
     
     @Property
     def axisColor():
-        """ Get or set the color of the box, ticklines and tick marks. """
+        """ Get/Set the color of the box, ticklines and tick marks. """
         def fget(self):
             return self._axisColor
         def fset(self, value):
@@ -1358,7 +1358,7 @@ class Axes(base.Wibject):
     
     @Property
     def showAxis():
-        """ Get or set whether to show the the axis. If False will also
+        """ Get/Set whether to show the the axis. If False will also
         hide the grid, minorgrid and box. """
         def fget(self):
             return self._axis
@@ -1368,7 +1368,7 @@ class Axes(base.Wibject):
     
     @Property
     def showBox():
-        """ Get or set whether to show the box of the axis. """
+        """ Get/Set whether to show the box of the axis. """
         def fget(self):
             return self._box
         def fset(self, value):
@@ -1376,7 +1376,7 @@ class Axes(base.Wibject):
     
     @Property
     def tickFontSize():
-        """ Get or set the font size of the tick marks. """
+        """ Get/Set the font size of the tick marks. """
         def fget(self):
             return self._tickFontSize
         def fset(self, value):
@@ -1385,7 +1385,7 @@ class Axes(base.Wibject):
     
     @Property
     def xLabel():
-        """ Get or set the label for the x dimension. """
+        """ Get/Set the label for the x dimension. """
         def fget(self):
             return self._xlabel
         def fset(self, value):
@@ -1393,7 +1393,7 @@ class Axes(base.Wibject):
     
     @Property
     def yLabel():
-        """ Get or set the label for the y dimension. """
+        """ Get/Set the label for the y dimension. """
         def fget(self):
             return self._ylabel
         def fset(self, value):
@@ -1401,7 +1401,7 @@ class Axes(base.Wibject):
     
     @Property
     def zLabel():
-        """ Get or set the label for the z dimension. """
+        """ Get/Set the label for the z dimension. """
         def fget(self):
             return self._zlabel
         def fset(self, value):
@@ -1409,7 +1409,7 @@ class Axes(base.Wibject):
     
     @Property
     def legend():
-        """ Get or set the string labels for the legend. Upon setting,
+        """ Get/Set the string labels for the legend. Upon setting,
         a legend wibject is automatically shown. """
         def fget(self):
             return self.legendWibject._stringList

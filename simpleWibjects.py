@@ -77,7 +77,7 @@ class ToggleButton(PushButton):
     
     @Property
     def state():
-        """ The state of the toggle button: on, or off.
+        """ A boolean expressing the state of the toggle button: on or off.
         """
         def fset(self, value):
             self._state = bool(value)
@@ -87,6 +87,7 @@ class ToggleButton(PushButton):
     
     @property
     def eventStateChanged(self):
+        """ Fires when the state of the button changes. """
         return self._eventStateChanged
     
     def _OnDown(self, event):

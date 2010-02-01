@@ -35,6 +35,11 @@ from simpleWibjects import PushButton, ToggleButton, RadioButton, DraggableBox
 from cm import Colorbar, ColormapEditor
 
 class Title(Label):
+    """ Title(axes, text)
+    A label wibject that places itself at the top of its parent (which
+    should be an Axes). The axes' position is corrected so the title
+    will fit on screen.
+    """
     def __init__(self, axes, text):
         Label.__init__(self, axes, text)
         
