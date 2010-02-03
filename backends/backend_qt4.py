@@ -51,6 +51,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     def __init__(self, figure, parent, *args):
         QtOpenGL.QGLWidget.__init__(self, parent, *args) # kwargs not possible
         self.figure = figure
+        # Note that the default QGLFormat has double buffering enabled.
         
         # enable mouse tracking so mousemove events are always fired.        
         self.setMouseTracking(True)
