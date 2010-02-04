@@ -82,7 +82,7 @@ def getOpenGlCapable(version, what=None):
             _glLimitations[what] = True
             tmp = "Warning: the OpenGl version on this system is too low "
             tmp += "to support " + what + ". "
-            tmp += "Try updating your drivers or buy a new (nvidia) video card."
+            tmp += "Try updating your drivers or buy a new video card."
             print tmp
         return False
 
