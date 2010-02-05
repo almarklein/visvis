@@ -258,11 +258,15 @@ class BaseFigure(base.Wibject):
     @property
     def eventMouseUp(self):
         """ Fired when the mouse is released.
-        (Also on the first click of a double click.) """
+        (Also on the first click of a double click.) 
+        This event is also fired when the mouse is released over any of the
+        figure's children."""
         return self._eventMouseUp
     @property
     def eventMotion(self):
-        """ Fired when the mouse is moved. """
+        """ Fired when the mouse is moved. 
+        This event is also fired when the mouse is released over any of the
+        figure's children."""
         return self._eventMotion
     @property
     def eventKeyDown(self):
@@ -778,15 +782,27 @@ class BaseFigure(base.Wibject):
             # always generate motion event from figure
             events.append( (self, self.eventMotion) ) 
             
-            # update
-            self._underMouse = [item.GetWeakref() for item in items2]
+            # generate motion events for any axes too
+            for item in items2:
+                if isinstance(item, Axes):
+                    events.append( (item, item.eventMotion) ) 
+            
+            # update items under the mouse
+            self._underMouse = [item.GetWeakref() for item in items2]        
+        
+        elif items1 and eventName.count("up"):
+            # always generate up event from figure
+            item = items1[0]
+            events.append( ( item, item.eventMouseUp) )
+            # generate up events for any axes too
+            for item in items1:
+                if isinstance(item, Axes):
+                    events.append( (item, item.eventMouseUp) ) 
         
         elif items1 and eventName.count("down"):            
             item = items1[-1]
-            events.append( ( item, item.eventMouseDown) )
-        elif items1 and eventName.count("up"):
-            item = items1[0]
-            events.append( ( item, item.eventMouseUp) )
+            events.append( ( item, item.eventMouseDown) )        
+        
         elif items1 and eventName.count("double"):
             item = items1[-1]
             events.append( ( item, item.eventDoubleClick) )
@@ -910,6 +926,10 @@ class Axes(base.Wibject):
         
         # call base __init__
         base.Wibject.__init__(self, parent)
+        
+        # motion event
+        self._eventMotion = EventMotion(self)
+        self._eventMouseUp = EventMouseUp(self)
         
         # objects in the scene. The Axes is the only wibject that
         # can contain wobjects. Basically, the Axes is the root
@@ -1159,7 +1179,21 @@ class Axes(base.Wibject):
             self.position.Correct(-dx, 0, dx, dy)
     
     ## Define more properties
-
+    
+    @property
+    def eventMotion(self):
+        """ Fired when the mouse is moved. 
+        This event is also fired when the mouse is released over any of the
+        axes's children. """
+        return self._eventMotion
+    @property
+    def eventMouseUp(self):
+        """ Fired when the mouse is released. 
+        (Also on the first click of a double click.) 
+        This event is also fired when the mouse is released over any of the
+        axes's children. """
+        return self._eventMouseUp
+    
     @Property
     def cameraType():
         """ Get/Set the camera type to use. Currently supported are:

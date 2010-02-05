@@ -19,18 +19,18 @@ def getCardinalSplineCoefs(t, tension=0.0):
     return c
 
 
-def screenshot(filename, ob, scaleFactor=3, bg=None, tension=-0.25):
-    """ screenshot(ob, filename, scaleFactor=3, bg=None)
+def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
+    """ screenshot(filename, ob=None sf=2, bg=None)
     
     Uses vv.getframe(ob) to obtain the image in the figure or axes. 
-    That image is interpolated with the given scale factor using 
+    That image is interpolated with the given scale factor (sf) using 
     high quality bicubic interpolation. Then vv.imwrite(filename, ..)
     is used to store the resulting image to a file.
     
     Notes:
-    - If bg is given, ob.bgcolor is set to bg before the frame is captured.
-    - If filename is None, the interpolated image is returned as a numpy
-    array.
+      * If bg is given, ob.bgcolor is set to bg before the frame is captured.
+      * If filename is None, the interpolated image is returned as a numpy array.
+      * If using a sf larger than 1, the image is best saved in the jpg format.
     
     Rationale:
     We'd prefer storing screenshots of plots as vector (eps) images, but 
@@ -47,8 +47,12 @@ def screenshot(filename, ob, scaleFactor=3, bg=None, tension=-0.25):
     # If tension is 0, the interpolator is a Catmull-Rom spline.
     
     # Scale must be integer, calc amount of pixels in between 
-    s = int(scaleFactor)
+    s = int(sf)
     inBetween = s-1
+    
+    # Object given?
+    if ob is None:
+        ob = vv.gcf()
     
     # Get figure
     fig = ob

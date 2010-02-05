@@ -93,7 +93,7 @@ class BaseObject(object):
     @property
     def eventMouseDown(self):
         """ Fired when the mouse is pressed down on this object (also 
-        the first click of a double click. """
+        the first click of a double click.) """
         return self._eventMouseDown
     @property
     def eventDoubleClick(self):
@@ -260,7 +260,8 @@ class BaseObject(object):
     
     @Property
     def visible():
-        """ Get et whether the object should be drawn or not. """
+        """ Get/Set whether the object should be drawn or not. 
+        If set to False, the hittest is also not performed. """
         def fget(self):
             return self._visible
         def fset(self, value):

@@ -14,8 +14,8 @@ a = vv.gca()
 a.legend = 'line 1', 'line 2', 'line 3'
 a.showGrid = 1
 
-vv.xlabel = 'measurement number'
-vv.ylabel = 'some quantity [unit]'
+a.xlabel = 'measurement number'
+a.ylabel = 'some quantity [unit]'
 vv.title('An example of \b{plotting}')
 
 app.run()
