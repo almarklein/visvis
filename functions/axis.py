@@ -7,13 +7,13 @@ def axis(command, axes=None):
     can also be applied via the properties of the Axes object.
     
     Possible string commands:      
-      * off: hide the axis (Axes.showAxis = True)
-      * on: show the axis (Axes.showAxis = False)
+      * off: hide the axis (Axes.showAxis = False)
+      * on: show the axis (Axes.showAxis = True)
       * equal: make a circle be displayed circular (Axes.daspectAuto = False)
       * auto: change the range for each dimension indepdently (Axes.daspectAuto = True)
       * tight: show all data (Axes.SetLimits())
       * ij: flip the y-axis (make second element of Axes.daspect negative) 
-      * xy: make all elements of Axes.daspect positive) 
+      * xy: (make all elements of Axes.daspect positive) 
     If you want to set an Axes' limits, use Axes.SetLimits(xlim, ylim, zlim).
     """
     
