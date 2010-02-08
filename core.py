@@ -1727,7 +1727,7 @@ class Axis(base.Wobject):
     
     def __init__(self, parent):
         base.Wobject.__init__(self, parent)
-        self._lineWidth = 0.8
+        self._lineWidth = 1 # 0.8
         self._minTickDist = 40
         
         # create tick units
@@ -2010,12 +2010,13 @@ class Axis(base.Wobject):
             
             # prepare for drawing lines
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)        
-            gl.glVertexPointerf(ppc.data)        
+            gl.glVertexPointerf(ppc.data) 
             # draw lines
             clr = axes._axisColor
             gl.glColor(clr[0], clr[1], clr[2])
             gl.glLineWidth(self._lineWidth)
-            gl.glDrawArrays(gl.GL_LINES, 0, len(ppc))        
+            if len(ppc):
+                gl.glDrawArrays(gl.GL_LINES, 0, len(ppc))
             # clean up
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
             
@@ -2034,13 +2035,14 @@ class Axis(base.Wobject):
             clr = axes._axisColor
             gl.glColor(clr[0], clr[1], clr[2])
             gl.glLineWidth(self._lineWidth)            
-            gl.glDrawArrays(gl.GL_LINES, 0, len(ppg))        
+            if len(ppg):
+                gl.glDrawArrays(gl.GL_LINES, 0, len(ppg))
             # clean up
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
             gl.glDisable(gl.GL_LINE_STIPPLE)
             
         except Exception:
-            self.Destroy()
+#             self.Destroy()
             raise
         
     
@@ -2069,7 +2071,8 @@ class Axis(base.Wobject):
         clr = axes._axisColor
         gl.glColor(clr[0], clr[1], clr[2])
         gl.glLineWidth(self._lineWidth)
-        gl.glDrawArrays(gl.GL_LINES, 0, len(pps))
+        if len(pps):
+            gl.glDrawArrays(gl.GL_LINES, 0, len(pps))
         # clean up
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glEnable(gl.GL_LINE_SMOOTH)
