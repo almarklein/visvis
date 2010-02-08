@@ -1,5 +1,5 @@
 import visvis as vv
-from points import Point, Pointset
+from visvis.points import Point, Pointset
 import time
 
 class GinputHelper(object):

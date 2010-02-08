@@ -622,7 +622,7 @@ class BaseText(object):
         gl.glTexCoordPointerf(texCords.data)
         
         # draw
-        if self.textColor:
+        if self.textColor and len(vertices):
             clr = self.textColor
             gl.glColor(clr[0], clr[1], clr[2])
             gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
