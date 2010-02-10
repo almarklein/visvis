@@ -8,10 +8,9 @@ im = vv.imread('lena.png')[:,:,1]
 cmaps = [vv.gray, vv.jet, vv.summer, vv.hot]
 for i in range(4):
     a = vv.subplot(2,2,i+1)
-    t = vv.imshow(im)
+    t = vv.imshow(im, clim=(0,255))
     a.showAxis = 0
     t.colormap = cmaps[i]
     vv.colorbar()
-
 
 app.Run()

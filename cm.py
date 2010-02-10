@@ -549,8 +549,8 @@ class Colorbar(Box):
                 halign, valign = 0, 0
                 xoffset, yoffset = -8, -2
             else:
-                p0 = Point(w, 0)
-                p1 = Point(w, h)
+                p0 = Point(w, h)
+                p1 = Point(w, 0)
                 delta = Point(3,0)
                 halign, valign = -1, 0
                 xoffset, yoffset = 5, -8
