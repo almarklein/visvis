@@ -24,7 +24,7 @@ $Rev$
 
 """
 
-from visvis import BaseFigure, Timer, processEvents, constants
+from visvis import BaseFigure, events, constants
 
 from PyQt4 import QtCore, QtGui, QtOpenGL
 
@@ -161,7 +161,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     def timerUpdate(self):
         """ Enable timers in visvis.
         """        
-        processEvents()        
+        events.processVisvisEvents()        
         self._timer.start(10)
 
 
@@ -232,6 +232,6 @@ class App:
     """ Application instance of wx app, with a visvis API. """
     def __init__(self):
         self._app = QtGui.QApplication([])
-    def run(self):
+    def Run(self):
         QtGui.qApp.exec_()
 

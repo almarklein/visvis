@@ -2042,7 +2042,7 @@ class Axis(base.Wobject):
             gl.glDisable(gl.GL_LINE_STIPPLE)
             
         except Exception:
-#             self.Destroy()
+            self.Destroy() # So the error message does not repeat itself
             raise
         
     

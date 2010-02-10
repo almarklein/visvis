@@ -26,7 +26,7 @@ $Rev$
 
 """
 
-from visvis import BaseFigure, Timer, processEvents, constants
+from visvis import BaseFigure, events, constants
 
 import fltk
 
@@ -184,7 +184,7 @@ class GLWidget(fltk.Fl_Gl_Window):
         
     
     def OnTimerFire(self, event=None):        
-        processEvents()
+        events.processVisvisEvents()
         fltk.Fl.add_timeout(0.01,self.OnTimerFire)
     
 
@@ -250,7 +250,7 @@ class App:
     """ Application instance of fltk app, with a visvis API. """
     def __init__(self):
         pass
-    def run(self):
+    def Run(self):
         fltk.Fl.run()
 
 

@@ -1,6 +1,6 @@
 import visvis as vv
 from visvis.points import Aarray
-app = vv.use('wx')
+app = vv.use()
 
 # Let's say we have lena, but only the even pixels in the y dimension.
 # So each pixel should have twice the size in the y direction.
@@ -23,4 +23,4 @@ a1.daspect = 1,-2 # daspect works x,y,z, the y-axis is flipped for images
 im2 = Aarray(im,(2,1,1))  # sampling is given in y,x,color order
 t2 = vv.imshow(im2, axes=a2)
 
-app.run()
+app.Run()

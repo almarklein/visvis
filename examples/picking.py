@@ -9,7 +9,7 @@ rectangle is a child of the yellow rectangle.
 
 import numpy as np
 import visvis as vv
-app = vv.use('qt4')
+app = vv.use()
 
 f= vv.clf()
 l1 = vv.plot([1,2,3,2,4], lw=3)
@@ -51,4 +51,4 @@ for ob in [f,a,b1,b2, l1, l2]:#, t1]:
     ob.eventEnter.Bind(entering)
     ob.eventLeave.Bind(leaving)
     
-app.run()
+app.Run()

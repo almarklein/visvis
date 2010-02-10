@@ -1,7 +1,7 @@
 import numpy as np
 import visvis as vv
 from visvis.points import Point, Pointset
-app = vv.App('wx')
+app = vv.use()
 
 # create random points
 a = np.random.normal(size=(1000,3))
@@ -17,4 +17,4 @@ a.daspectAuto = False
 l = vv.plot(pp, ms='.', mc='r', mw='9', ls='', mew=0 )
 l.alpha = 0.1
 
-app.run()
+app.Run()

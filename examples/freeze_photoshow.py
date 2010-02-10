@@ -10,8 +10,8 @@ from visvis import freezeHelp
 name = "photoShow"
 #baseDir = 'd:/almar/projects/_p/apps/'
 #srcDir = 'd:/almar/projects/_p/visvis/examples/'
-baseDir = 'c:/projects/PYTHON/apps/'
-srcDir = 'C:/projects/PYTHON/visvis/examples/'
+baseDir = ''
+srcDir = ''
 distDir = baseDir+name+'/'
 scriptFiles = [ 'photoshow.py']
 iconFile = srcDir + 'photoshow.ico'

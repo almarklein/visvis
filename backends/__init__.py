@@ -33,9 +33,11 @@ This module should:
 2.  Contain a function called "newFigure". This function should generate 
     a window with a single Figure widget in it, and return the Figure 
     Object.
-3.  Call visvis.Timer._TestAllTimers() on a regular basis (every 10 ms or
+3.  Contain a class called "App" that implements a method "Run" that enters
+    the GUI toolkit's mainloop.
+4.  Call visvis.Timer._TestAllTimers() on a regular basis (every 10 ms or
     so). To enable timer events.
-4.  Pass through the events enter, leaver, keydown, keyup, resize, close via
+5.  Pass through the events enter, leaver, keydown, keyup, resize, close via
     visvis event system. Pass through events mouseDown, mouseUp, 
     mouseDoubleClick, mouseMove via the figure's _GenerateMouseEvent() method,
     that will fire the events of the appropriate wibjects and wobjects.
@@ -50,15 +52,8 @@ The backend is chosen/selected as follows:
 - If one of them is already loaded, that one is used. If not, it 
   will try loading backends in the order that is defined in the
   variable "backendOrder" in this file. 
-- By calling visvis.backends.use(), the "backendOrder" variable
-  is set to contain only the specified backend.
-
-The appropriate backend is thus automatically determined. Or chosen
-in two ways:
-import visvis as vv
-vv.use('wx')
-or,
-app = vv.App('wx')
+- A user can call vv.use() to load a specific backend and obtain an 
+  App instance.
 
 $Author$
 $Date$
@@ -71,11 +66,17 @@ import visvis
 from visvis.misc import isFrozen
 
 # The order in which to try loading a backend
-backendOrder = ['qt4','wx','fltk', 'tk']
+backendOrder = ['wx', 'qt4', 'fltk' ] # I'd love to put tk in this list
 
 # placeholders
-newFigure = []
-appClass = []
+_placeHolder = []
+
+
+# An overview:
+# - testLoaded tests to see whether any of the backends is already loaded
+# - _loadBackend imports the backend and fills the _placeHolder list.
+# - use is the user friendly function that calls _loadBackend
+
 
 def testLoaded():
     """ Tests to see whether a backend is already loaded.
@@ -108,96 +109,73 @@ def testLoaded():
         return ''
 
 
-def loadBackend():
-    """ Load a backend. and set the newFigure to the appropriate
-    function. If a backend is already loaded, will use that one...
+def _loadBackend(name):
+    """ Load the backend with the specified name.
+    Returns True on success and False otherwise.
     """
     
-    be = testLoaded()
+    # Get module names
+    modName = 'backend_' + name
+    modNameFull = 'visvis.backends.backend_'+name
     
-    if be:
-        # already loaded
-        modNameFull = 'visvis.backends.backend_'+be
-        module = sys.modules[modNameFull]
+    # Try importing the backend
+    try:
+        module = __import__(modNameFull, fromlist=[modName])
+    except ImportError, why:
+        return False
     
-    else:
-        
-        # try loading backends in the right order
-        module = None    
-        for be in backendOrder:
-            modName = 'backend_' + be
-            modNameFull = 'visvis.backends.backend_'+be
-            # try importing the backend
-            try:
-                module = __import__(modNameFull, fromlist=[modName])
-            except ImportError, why:
-                #print "Skipping backend %s: %s" % (be, why)
-                continue
-            # if ok, use it!
-            break
-
-    # do some tests
-    if not module:
-        raise Exception("No suitable backend found!")
-    elif not hasattr(module,'newFigure'):
+    # Do some tests
+    if not hasattr(module,'newFigure'):
         raise Exception("Backend %s does not implement newFigure!" % be)
     elif not hasattr(module,'Figure'):
         raise Exception("Backend %s does not implement Figure class!" % be)
     else:
-        # all good (as far as I can tell)
-        # set newFigure function!
-        while(len(newFigure)):
-            newFigure.pop()      
-        newFigure.append( module.newFigure )
-        appClass.append( module.App )
-        # return backend name
-        return be
+        # All good (as far as I can tell). Update stuff if name does not match.
+        if not _placeHolder or _placeHolder[0] != name:
+            _placeHolder[:] = []
+            _placeHolder.append( name )
+            _placeHolder.append( module.newFigure )
+            _placeHolder.append( module.App() ) # note instantiation
+        return True
 
 
-def App(backendName):
-    """ App(backendName)
-    
-    Factory function that returns an application object.
-    This object wraps the application instance of the selected
-    backend, and has a 'run' method, which starts the backend's
-    main loop.
-    
-    The selected backend is then the backend that visvis will 
-    use from now, and cannot be changed. 
+def use(backendName=None):
+    """ Use the specified backend and return an App instance that has a run()
+    method to enter the GUI toolkit's mainloop.
+    If no backend is given, a suitable backend is tried automatically. 
     """
     
-    # make case insensitive
-    backendName = backendName.lower()
+    # Make case insensitive and check
+    if backendName:
+        backendName = backendName.lower()    
+        if backendName not in backendOrder:
+            raise RuntimeError('Invalid backend name given: "%s".'%backendName)
     
-    # check name
-    if backendName not in backendOrder:
-        raise RuntimeError('Invalid backend name given.')
+    # Get name of the backend currently loaded (can be '')            
+    loadedName = testLoaded()
     
-    # check if a backend was already loaded
-    be = testLoaded()
-    if be and be != backendName:
-        raise RuntimeError("Cannont change backend, %s already loaded." % be)
+#     # Prevent resetting the backend to use
+#     if loadedName and backendName and loadedName != backendName:
+#         raise RuntimeError("Cannot change backend, %s already loaded." % be)
     
-    # ok, put chosen backendname in front
-    while backendName in backendOrder:
-        backendOrder.remove(backendName)
-    backendOrder.insert(0,backendName)
+    # Process
+    if backendName:
+        # Use given
+        if not _loadBackend(backendName):
+            raise RuntimeError('Given backend "%s" could be loaded.' % backendName)
+    elif loadedName:
+        # Use loaded (redo to make sure the placeholder is ok)
+        if not _loadBackend(loadedName):
+            raise RuntimeError('Could not reload backend "%s".' % loadedName)
+    else:
+        # Try any backend        
+        for name in backendOrder:
+            if _loadBackend(name):
+                break
+        else:
+#             if not isFrozen():
+            tmp = "Install PyQt4 or wxPython."
+            raise RuntimeError("None of the backends could be loaded. "+tmp)
     
-    # load it and check    
-    name2 = loadBackend()
-    if not name2 and not isFrozen():
-        print 'Warning: no backend could be loaded. Install PyQt4 or wxPython' 
-    elif name2 != backendName:
-        print 'warning, could not load requested backend, loaded %s instead' % name2
-    
-    # return instance
-    App = appClass[0]
-    return App()
-
-
-def use(backendName):
-    """ Function to let the user explicitly choose a 
-    backend. Can only be used if no figures have been
-    created. Same as App.
-    """
-    return App(backendName)
+    # Return instance
+    return _placeHolder[2]

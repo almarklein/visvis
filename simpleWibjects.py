@@ -228,8 +228,9 @@ class DraggableBox(Box):
             gl.glDisable(gl.GL_POINT_SMOOTH)
             
             # Draw dots
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-            gl.glVertexPointerf(self._dots.data)
-            gl.glDrawArrays(gl.GL_POINTS, 0, len(self._dots))
-            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+            if len(self._dots):
+                gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+                gl.glVertexPointerf(self._dots.data)
+                gl.glDrawArrays(gl.GL_POINTS, 0, len(self._dots))
+                gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         

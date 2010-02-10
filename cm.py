@@ -420,7 +420,7 @@ class CM_NodeWidget(Box):
         
         # Draw lines
         for line in self._allLines:
-            if line is not self._line:
+            if len(line) and line is not self._line:
                 gl.glColor( colors[line] )
                 gl.glVertexPointerf(line.data)
                 gl.glDrawArrays(gl.GL_LINE_STRIP, 0, len(line))

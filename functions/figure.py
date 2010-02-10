@@ -8,12 +8,11 @@ def figure(nr=None):
     """
     
     # check if backends are loaded
-    if not backends.newFigure:
-        be = backends.loadBackend()
-        backends.use(be)
+    if not backends._placeHolder:
+        backends.use()
     
     # get function to create new figure
-    newFigure = backends.newFigure[0]
+    newFigure = backends._placeHolder[1]
     
     # nr given?
     if nr is not None:

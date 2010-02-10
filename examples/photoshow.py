@@ -16,10 +16,8 @@ import os, gc
 
 
 # create app
-#app = QtGui.QApplication([])
-#vv.backends.use('qt4')
 app = wx.PySimpleApp() 
-vv.backends.use('wx') # WX is smaller to freeze than QT4
+vv.use('wx') # WX is smaller to freeze than QT4
 
 
 # define figure and axes (globals in this module)
@@ -78,6 +76,10 @@ class PhotoStore(threading.Thread):
             index = index - len(self.filenames)
         if index < 0:
             index = len(self.filenames) + index
+        
+        # If there is only a few fotos wrap around might not even work
+        if index<0 or index >= len(self.filenames):
+            return
         
         # check availability
         self.thelock.acquire()
