@@ -849,14 +849,14 @@ class AxesContainer(base.Wibject):
     
     When there is one axes in a figure, the container position will
     be "0,0,1,1". For subplots however, the containers are positioned
-    to devide the figure in equal spaces. The contained Axes instances
-    are positioned (relative to the container instance) such that there
-    is margin for the ticks and labels etc.
+    to devide the figure in equal parts. The Axes instances themselves
+    are positioned in pixels, such that when resizing, the margins for
+    the tickmarks and labels remains equal.
     
     The only correct way to create (and obtain a reference to) 
     an AxesContainer instance is to use:
-    axes = vv.Axes(figure)
-    container = axes.parent
+      # axes = vv.Axes(figure)
+      # container = axes.parent
     
     This container is automatically destroyed once the axes is removed. 
     You can attach wibjects to an instance of this class, but note that
