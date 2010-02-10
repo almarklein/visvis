@@ -1,5 +1,6 @@
 import visvis as vv
-app = vv.App('wx')
+app = vv.use()
+
 f = vv.clf()
 a = vv.cla()
 
@@ -18,4 +19,4 @@ a.xlabel = 'measurement number'
 a.ylabel = 'some quantity [unit]'
 vv.title('An example of \b{plotting}')
 
-app.run()
+app.Run()

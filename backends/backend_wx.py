@@ -24,7 +24,7 @@ $Rev$
 
 """
 
-from visvis import BaseFigure, Timer, processEvents, constants
+from visvis import BaseFigure, events, constants
 
 import wx
 from wx.glcanvas import GLCanvas
@@ -194,7 +194,7 @@ class GLWidget(GLCanvas):
         self.figure.Draw()
     
     def OnUpdateTimer(self, event):
-        processEvents()
+        events.processVisvisEvents()
         self._timer.Start() # restart (with same timeout)
 
 
@@ -304,5 +304,5 @@ class App:
         self._app = wx.GetApp()
         if self._app is None:
             self._app = wx.PySimpleApp()
-    def run(self):
+    def Run(self):
         wx.GetApp().MainLoop()

@@ -1561,7 +1561,6 @@ class Texture3D(BaseTexture):
         
         # draw
         gl.glDrawElements(gl.GL_QUADS, len(ind), gl.GL_UNSIGNED_BYTE, ind)
-        #gl.glDrawArrays(gl.GL_QUADS, 0, len(tex_coord)
         
         # disable vertex array        
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)

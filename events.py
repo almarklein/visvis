@@ -244,32 +244,30 @@ class EventAfterDraw(BaseEvent):
     pass
 
 
+# For callLater function
 _callLater_callables = {}
 
-def callLater(delay, callable, *args, **kwargs):
-    """ callLater(delay, callable, *args, **kwargs)
-    Call a callable after a specified amount of time, with the
-    specified args and kwargs. If delay = 0, the callable is called
-    right after the current processing has returned to the main loop."""
-    calltime = time.clock() + delay
-    _callLater_callables[calltime]= (callable, args, kwargs)
-
-
-def processEvents():
-    """ Process all events. Checks the status of all timers
+def processVisvisEvents():
+    """ processVisvisEvents()
+    
+    Process all visvis events. Checks the status of all timers
     and fires the ones that need to be fired. This method
     needs to be called every now and then. 
-    (The backend's processEvents function is modified to do 
-    this).
+    
+    All backends implement a timer that periodically calls this function.
+    
+    To keep a figure responsive while running, periodically call 
+    Figure.DrawNow() or vv.processEvents().
     """
     Timer._TestAllTimers()
+
 
 class Timer(BaseEvent):
     """ Timer(interval=1000, oneshot=True) 
     
     Time class. You can bind callbacks to the timer. The timer is 
     fired when it runs out of time. You can do one-shot runs and 
-    continouos runs.
+    continuous runs.
     
     Setting timer.nolag to True will prevent the timer from falling
     behind. If the previous Fire() was a bit too late the next Fire 

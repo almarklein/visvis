@@ -67,8 +67,8 @@ class Title(Label):
             dy = 20
             axes.position.Correct(0, -dy, 0, dy) 
 
-class Polygon:
-    """ A generic polygon. 
-    """
-    pass
+# class Polygon:
+#     """ A generic polygon. 
+#     """
+#     pass
 

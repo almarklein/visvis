@@ -1,6 +1,6 @@
 import visvis as vv
 import numpy as np
-app = vv.App('wx')
+app = vv.use()
 vv.clf()
 
 # create volume
@@ -24,4 +24,4 @@ t = vv.volshow(vol, renderStyle='mip')
 
 vv.cm.ColormapEditor(vv.gca())
 
-app.run()
+app.Run()

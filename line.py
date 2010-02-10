@@ -587,6 +587,10 @@ class Line(Wobject):
         if pp.ndim != 3:
             raise Exception("Can only draw 3D data!")
         
+        # no need to draw if no points
+        if len(self._points) == 0:
+            return
+        
         # enable anti aliasing and blending
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glEnable(gl.GL_BLEND)
@@ -683,7 +687,6 @@ class Line(Wobject):
         # init vertex array
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(self._points.data)
-        #indices = np.arange(len(self._points), dtype='uint32')
         
         # points drawn on top of points should draw (because we draw
         # the face and edge seperately)

@@ -63,23 +63,22 @@ $Rev$
 import os, sys, time
 
 from constants import *
-from events import Timer, processEvents, callLater
+from events import Timer
 from misc import Range
 from misc import (Transform_Translate, Transform_Scale, Transform_Rotate)
-from misc import getOpenGlInfo
 
 import cm
 L = locals()
 for key in cm.colormaps:
   L[key] = cm.colormaps[key]
-del L
+del L, key
 
 
 from wibjects import *
 from wobjects import *
 
 # do this last
-from backends import use, App
+import backends
 
 from functions import *
 
