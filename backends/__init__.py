@@ -135,7 +135,7 @@ def _loadBackend(name):
             _placeHolder[:] = []
             _placeHolder.append( name )
             _placeHolder.append( module.newFigure )
-            _placeHolder.append( module.App() ) # note instantiation
+            _placeHolder.append( module.App )
         return True
 
 
@@ -173,9 +173,8 @@ def use(backendName=None):
             if _loadBackend(name):
                 break
         else:
-#             if not isFrozen():
             tmp = "Install PyQt4 or wxPython."
             raise RuntimeError("None of the backends could be loaded. "+tmp)
     
     # Return instance
-    return _placeHolder[2]
+    return _placeHolder[2]()
