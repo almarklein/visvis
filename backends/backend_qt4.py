@@ -42,14 +42,14 @@ KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
             QtCore.Qt.Key_Escape: constants.KEY_ESCAPE,
             }
 
-
 class GLWidget(QtOpenGL.QGLWidget):
     """ An OpenGL widget inheriting from PyQt4.QtOpenGL.QGLWidget
     to pass events in the right way to the wrapping Figure class.
     """
     
     def __init__(self, figure, parent, *args):
-        QtOpenGL.QGLWidget.__init__(self, parent, *args) # kwargs not possible
+        QtOpenGL.QGLWidget.__init__(self, parent, *args)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose) # keep cleaned up
         self.figure = figure
         # Note that the default QGLFormat has double buffering enabled.
         
@@ -144,7 +144,6 @@ class GLWidget(QtOpenGL.QGLWidget):
         ev.Clear()
         ev.Fire()
         self.figure.Destroy() # destroy figure
-        self.deleteLater() # destroy widget safely
         event.accept()
 
     def focusInEvent (self, event):
