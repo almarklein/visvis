@@ -278,7 +278,11 @@ class Figure(BaseFigure):
     
     def _Close(self):
         if self._widget and self._widget.Parent:
-            self._widget.Parent.Close()
+            try:
+                self._widget.Parent.Close()
+            except PyAssertionError:
+                # Prevent "wxEVT_MOUSE_CAPTURE_LOST not being processed" error.
+                pass 
 
 
 class FigureFrame(wx.Frame):

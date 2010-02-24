@@ -71,6 +71,8 @@ class BaseObject(object):
         # the id of this object (can change on every draw)
         # used to determine over which object the mouse is.
         self._id = 0
+        # a variable to indicate whether the mouse was pressed down here
+        self._mousePressedDown = False
         
         # set parent
         self.parent = parent
@@ -78,7 +80,8 @@ class BaseObject(object):
         # create events
         self._eventEnter = EventEnter(self)
         self._eventLeave = EventLeave(self)
-        self._eventMouseDown = EventMouseDown(self)        
+        self._eventMouseDown = EventMouseDown(self) 
+        self._eventMouseUp = EventMouseUp(self)       
         self._eventDoubleClick = EventDoubleClick(self)
     
     @property
@@ -95,6 +98,11 @@ class BaseObject(object):
         """ Fired when the mouse is pressed down on this object (also 
         the first click of a double click.) """
         return self._eventMouseDown
+    @property
+    def eventMouseUp(self):
+        """ Fired when the mouse is released. 
+        (Also on the first click of a double click.) """
+        return self._eventMouseUp
     @property
     def eventDoubleClick(self):
         """ Fired when the mouse is double-clicked on this object. """
@@ -368,34 +376,55 @@ class BaseObject(object):
             return None
     
     
-    def FindObjects(self, cls=None, attr=None):
-        """ FindObjects(cls=None, attr=None)
+    def Draw(self, fast=False):
+        """ Draw(fast=False)
+        Calls Draw on the figure if this object is inside one.
+        """
+        fig = self.GetFigure()
+        if fig:
+            fig.Draw()
+    
+    
+    def FindObjects(self, spec):
+        """ FindObjects(pattern)
         Find the objects in this objects' children, and its childrens
-        children, etc, that are of the given class and have the given
-        attribute (by default all wibjects and wobjects are returned).
+        children, etc, that correspond to the given pattern. 
+        
+        The pattern can be a class or tuple of classes, an attribute name 
+        (as a string) that the objects should have, or a callable that 
+        returns True or False given an object. For example
+        'lambda x: ininstance(x, cls)' will do the same as giving a class.
+        
         Searches in the list of wobjects if the object is a wibject and
         has a _wobject property (like the Axes wibject).
         """
         
-        # Parse specs
-        if cls is None:
-            cls = object
-        if attr is None:
-            attr = '_parent'
+        
+        # Parse input
+        if hasattr(spec, 'func_name'):
+            callback = spec
+        elif isinstance(spec, (type, tuple)):
+            callback = lambda x: isinstance(x, spec)
+        elif isinstance(spec, basestring):
+            callback = lambda x: hasattr(x, spec)
+        elif hasattr(spec, '__call__'):
+            callback = spec # other callable
+        else:
+            raise ValueError('Invalid argument for FindObjects')
         
         # Init list with result
         result = []
         
-        # Try in children
+        # Try all children recursively
         for child in self._children:
-            if isinstance(child, cls) and hasattr(child, attr):
+            if callback(child):
                 result.append(child)
-            result.extend( child.FindObjects(cls, attr) )
+            result.extend( child.FindObjects(callback) )
         if hasattr(self, '_wobjects'):
             for child in self._wobjects:
-                if isinstance(child, cls) and hasattr(child, attr):
+                if callback(child):
                     result.append(child)
-                result.extend( child.FindObjects(cls, attr) )
+                result.extend( child.FindObjects(callback) )
         
         # Done
         return result
@@ -542,6 +571,15 @@ class Wobject(BaseObject):
                 #tmp = "Cannot find axes, error in Wobject/Wibject tree!"
                 #raise TypeError(tmp)
         return par
+    
+    
+    def Draw(self, fast=False):
+        """ Draw(fast=False)
+        Calls Draw on the axes if this object is inside one.
+        """
+        fig = self.GetAxes()
+        if fig:
+            fig.Draw()
     
     
     def _GetLimits(self, *args):
@@ -1060,6 +1098,11 @@ class Box(Wibject):
         def fset(self, value):            
             self._edgeWidth = float(value)
     
+    def _GetBgcolorToDraw(self):
+        """ _GetBgcolorToDraw()
+        Can be overloaded to indicate mouse over in buttons. """
+        return self._bgcolor
+    
     def OnDraw(self, fast=False):
         
         # get dimensions        
@@ -1067,7 +1110,7 @@ class Box(Wibject):
         
         # draw plane
         if self._bgcolor:        
-            clr = self.bgcolor
+            clr = self._GetBgcolorToDraw()
             gl.glColor(clr[0], clr[1], clr[2], 1.0)            
             #
             gl.glBegin(gl.GL_POLYGON)
