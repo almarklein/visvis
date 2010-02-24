@@ -165,7 +165,7 @@ class TwoDCamera(BaseCamera):
         # bind events
         axes, figure = self.axes, self.axes.GetFigure()
         axes.eventMouseDown.Bind( self.OnMouseDown)        
-        figure.eventMouseUp.Bind( self.OnMouseUp)        
+        axes.eventMouseUp.Bind( self.OnMouseUp)        
         figure.eventMotion.Bind( self.OnMotion)
         axes.eventDoubleClick.Bind( self.Reset)
     
@@ -434,7 +434,7 @@ class PolarCamera(TwoDCamera):
         figure.eventKeyUp.Bind(self.OnKeyUp)        
         # 
         axes.eventMouseDown.Bind(self.OnMouseDown)
-        figure.eventMouseUp.Bind(self.OnMouseUp)        
+        axes.eventMouseUp.Bind(self.OnMouseUp)        
         figure.eventMotion.Bind(self.OnMotion)
         axes.eventDoubleClick.Bind(self.Reset)
     
@@ -757,7 +757,7 @@ class FlyCamera(PolarCamera):
         figure.eventKeyDown.Bind(self.OnKeyDown)        
         # 
         axes.eventMouseDown.Bind(self.OnMouseDown)
-        figure.eventMouseUp.Bind(self.OnMouseUp)        
+        axes.eventMouseUp.Bind(self.OnMouseUp)        
         #self.axes.figure.eventMotion.Bind(self.OnMotion)
         axes.eventDoubleClick.Bind(self.Reset)
 

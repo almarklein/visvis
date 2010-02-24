@@ -239,7 +239,6 @@ class BaseFigure(base.Wibject):
         self._currentAxes = None
         
         # Create events that only the figure has
-        self._eventMouseUp = EventMouseUp(self)
         self._eventMotion = EventMotion(self)
         self._eventKeyDown = EventKeyDown(self)
         self._eventKeyUp = EventKeyUp(self)        
@@ -255,13 +254,6 @@ class BaseFigure(base.Wibject):
         self._drawtime = time.time() # to calculate fps
         self._drawWell = False
     
-    @property
-    def eventMouseUp(self):
-        """ Fired when the mouse is released.
-        (Also on the first click of a double click.) 
-        This event is also fired when the mouse is released over any of the
-        figure's children."""
-        return self._eventMouseUp
     @property
     def eventMotion(self):
         """ Fired when the mouse is moved. 
@@ -791,19 +783,20 @@ class BaseFigure(base.Wibject):
             self._underMouse = [item.GetWeakref() for item in items2]        
         
         elif items1 and eventName.count("up"):
-            # always generate up event from figure
-            item = items1[0]
-            events.append( ( item, item.eventMouseUp) )
-            # generate up events for any axes too
-            for item in items1:
-                if isinstance(item, Axes):
-                    events.append( (item, item.eventMouseUp) ) 
+            # Find object that was clicked down
+            items = self.FindObjects(lambda x:x._mousePressedDown)
+            for item in items:
+                events.append( (item, item.eventMouseUp) )
+                item._mousePressedDown = False
         
         elif items1 and eventName.count("down"):            
             item = items1[-1]
+            item._mousePressedDown = True
             events.append( ( item, item.eventMouseDown) )        
         
         elif items1 and eventName.count("double"):
+            # Note: we cannot detect double clicking by timing the down-events,
+            # because the toolkit won't fire a down event for the second click.
             item = items1[-1]
             events.append( ( item, item.eventDoubleClick) )
         
@@ -929,7 +922,6 @@ class Axes(base.Wibject):
         
         # motion event
         self._eventMotion = EventMotion(self)
-        self._eventMouseUp = EventMouseUp(self)
         
         # objects in the scene. The Axes is the only wibject that
         # can contain wobjects. Basically, the Axes is the root
@@ -1186,13 +1178,6 @@ class Axes(base.Wibject):
         This event is also fired when the mouse is released over any of the
         axes's children. """
         return self._eventMotion
-    @property
-    def eventMouseUp(self):
-        """ Fired when the mouse is released. 
-        (Also on the first click of a double click.) 
-        This event is also fired when the mouse is released over any of the
-        axes's children. """
-        return self._eventMouseUp
     
     @Property
     def cameraType():

@@ -1,23 +1,30 @@
 """ MODULE points
 usage:
-from points import Point, Pointset [, Aarray]
+from points import Point, Pointset, Aarray, Quaternion
 
 A point represents a location or vector. The dimension of the point 
-is at least 2D. A pointset represents an ordered set (or list) of 
-points. It has methods to add and remove points. Both point instances 
+is at least 2D. 
+
+A pointset represents an ordered set (or list) of points. 
+It has methods to add and remove points. Both point instances 
 and pointset instances have methods for mathematical operations, like 
 for example calculating distances between points and cross correlation. 
 For the Pointset these operations are efficiently applied to all points.
 
-The Aarray class implements numpy.ndarray and provides a way to store
-and handle anisotropic data.
+The Aarray class implements numpy.ndarray and provides a way to manage 
+anisotropic data. 
 
-For more information see the docs in the Point, Pointset, and Aarray classes.
+A Quaternion is a method to describe and work with rotations. It avoids
+the problem of Gimbal lock.
+
+For more information see the docs classes:
+Point, Pointset, Aarray, Quaternion.
 
 This software is free for all to use, change and redistribute.
 
-Author: Almar Klein
-Date: August 2009
+Copyright
+Almar Klein
+Februari 2010
 
 """
 
@@ -975,46 +982,54 @@ class Aarray(np.ndarray):
                 dtype='float32', **kwargs)
     
     Anisotropic array, inherits from numpy.ndarray and adds a sampling 
-    property which gives the sample distance in each dimension. Implements 
-    the following properties and methods:
-        sampling        The distance between samples
-        origin          The origin of the data
-        getStart()      Get the origin of the data in world coordinates
-        getEnd()        Get the end of the data in world coordinates
-        getSize()       Get the size of the data in world coordinates
+    and origin property which gives the sample distance and offset for
+    each dimension. 
+    
+    This class implements the following properties and methods:
+        sampling        The distance between samples as a tuple
+        origin          The origin of the data as a tuple
+        getStart()      Get the origin of the data as a Point instance
+        getEnd()        Get the end of the data as a Point instance
+        getSize()       Get the size of the data as a Point instance
+        sample()        Sample the value at the given point
         pointToIndex()  Given a poin, returns the index in the array
         indexToPoint()  Given an index, returns the world coordinate
     
-    World coordinates are always expressed as points. Whereas indices
-    as well as the "sampling" and "origin" attributes are expressed 
-    as tuples in z,y,x order.
+    World coordinates are expressed as Point instances (except for the 
+    "origin" property). Indices as well as the "sampling" and "origin" 
+    attributes are expressed as tuples in z,y,x order.
     
-    Init using an existing array (which is copied), or the shape of 
-    the new array, in which case it is filled with the value specified 
-    by "fill".
+    Init using an existing array (in which case a view of the given 
+    array is returned), or the shape of the new array, in which case it 
+    is filled with the value specified by "fill" (if given).
+    
+    This class is aware of slicing. This means that when obtaining a part
+    of the data (for exampled 'data[10:20,::2]'), the origin and sampling
+    of the resulting array are set appropriately.
+    
+    When applying mathematical opertaions to the data, or applying 
+    functions that do not change the shape of the data, the sampling
+    and origin are copied to the new array. If a function does change
+    the shape of the data, the sampling are set to all zeros and ones
+    for the origin and sampling, respectively.
     
     """
+    
     def __new__(cls, shapeOrArray, sampling=None, origin=None, fill=None, 
                 dtype='float32', **kwargs):
         
-        data = None        
         if isinstance(shapeOrArray, np.ndarray):
-            data = shapeOrArray
-            shape = data.shape
+            shape = shapeOrArray.shape
+            ob = shapeOrArray.view(cls)
         else:
             shape = shapeOrArray
-        
-        ob = np.ndarray.__new__(cls,shape,dtype=dtype,**kwargs)
+            ob = np.ndarray.__new__(cls, shape, dtype=dtype, **kwargs)
+            if fill is not None:
+                ob.fill(fill)
         
         # init sampling and origin
         ob._sampling = tuple( [1.0 for i in ob.shape] )
         ob._origin = tuple( [0.0 for i in ob.shape] )
-        
-        # copy data?
-        if data is not None:
-            ob[:] = data[:]
-        elif fill is not None:
-            ob[:] = fill
         
         # set them
         if sampling:
@@ -1025,13 +1040,95 @@ class Aarray(np.ndarray):
         # return
         return ob
     
+    
     def __array_finalize__(self, obj):
         """ So the sampling and origin is maintained when doing
         calculations with the array. """
         #if hasattr(obj, '_sampling') and hasattr(obj, '_origin'):
         if isinstance(obj, Aarray):
-            self._sampling = tuple( [i for i in obj._sampling] )        
-            self._origin = tuple( [i for i in obj._origin] )
+            if self.shape == obj.shape:
+                # Copy sampling and origin for math operation
+                self._sampling = tuple( [i for i in obj._sampling] )        
+                self._origin = tuple( [i for i in obj._origin] )
+            else:
+                # Don't bother (__getitem__ will set them after this)
+                # Other functions that change the shape cannot be trusted.
+                self._sampling = tuple( [1.0 for i in self.shape] )
+                self._origin = tuple( [0.0 for i in self.shape] )
+    
+    
+    def __getslice__(self, i, j):
+        # Called only when indexing first dimension and without a step
+        
+        # Call base getitem method      
+        result = np.ndarray.__getslice__(self, i, j)
+        
+        # Perform sampling and origin corrections
+        sampling, origin = self._correctSampling(slice(i,j))
+        result.sampling = sampling
+        result.origin = origin
+        
+        # Done
+        return result
+    
+    
+    def __getitem__(self, index):
+        
+        # Call base getitem method
+        result = np.ndarray.__getitem__(self, index)
+        
+        # If not a scalar, perform sampling and origin corrections
+        # This means there is only a very small performance penalty
+        if isinstance(result, Aarray):            
+            sampling, origin = self._correctSampling(index)
+            result.sampling = sampling
+            result.origin = origin
+        
+        # Return
+        return result
+    
+    
+    def _correctSampling(self, index):
+        """ _correctSampling(index)
+        Get the new sampling and origin when slicing.        
+        """
+        
+        # Init origin and sampling
+        _origin = self._origin
+        _sampling = self._sampling
+        origin = []
+        sampling = []
+        
+        # Get index always as a tuple and complete
+        index2 = [None]*len(self._sampling)
+        if not isinstance(index, tuple):
+            index2[0] = index
+        else:
+            for i in range(len(index)):                    
+                index2[i] = index[i]
+        
+        # Process
+        for i in range(len(index2)):
+            ind = index2[i]            
+            if isinstance(ind, slice):
+                    #print ind.start, ind.step
+                if ind.start is None:
+                    origin.append( _origin[i] )                    
+                else:
+                    origin.append( _origin[i] + ind.start*_sampling[i] )
+                if ind.step is None:
+                    sampling.append(_sampling[i])                
+                else:
+                    sampling.append(_sampling[i]*ind.step)
+            elif ind is None:
+                origin.append( _origin[i] )
+                sampling.append(_sampling[i])
+            else:
+                pass # singleton dimension that pops out
+        
+        # Return 
+        return sampling, origin
+    
     
     def _setSampling(self,sampling):
         if not isinstance(sampling, (list,tuple)):
@@ -1044,7 +1141,8 @@ class Aarray(np.ndarray):
         # set
         tmp = [float(i) for i in sampling]
         self._sampling = tuple(tmp)
-        
+    
+    
     def _getSampling(self):
         # todo: when an array is copied... _sampling and _origin are not copied
         # along... maybe wrap it?
@@ -1062,6 +1160,7 @@ class Aarray(np.ndarray):
     sampling = property(_getSampling, _setSampling, None, 
         "A tuple with the sample distance in each dimension.")
     
+    
     def _setOrigin(self,origin):
         if not isinstance(origin, (list,tuple)):
             raise ValueError("Origin must be specified as a tuple or list.")
@@ -1070,7 +1169,8 @@ class Aarray(np.ndarray):
         # set
         tmp = [float(i) for i in origin]
         self._origin = tuple(tmp)
-        
+    
+    
     def _getOrigin(self):
         l1, l2 = len(self._origin), len(self.shape)
         if  l1 < l2:

@@ -28,7 +28,7 @@ $Rev: 118 $
 
 import OpenGL.GL as gl
 
-from events import BaseEvent
+from events import BaseEvent, EventPress
 from misc import Property
 from base import Box
 from textRender import Label
@@ -36,7 +36,7 @@ from points import Pointset
 
 # Note that we cannot include the Box and Label class here, since the latter
 # depends on the first, and the BaseText class also needs the Label class.
-
+    
 
 class PushButton(Label):
     """ PushButton(parent, text='', fontname='sans')
@@ -55,6 +55,42 @@ class PushButton(Label):
         
         # A button is hittable by default
         self.hitTest = True
+        
+        # And changes appearance on mouse over
+        self._isOver = False
+        self.eventEnter.Bind(self._OnEnter)
+        self.eventLeave.Bind(self._OnLeave)
+        
+        # Create new event and bind handlers to implement it
+        self._eventPress = EventPress(self)
+        self.eventMouseUp.Bind(self._OnPressDetectUp)
+    
+    
+    def _OnEnter(self, event):
+        self._isOver = True
+        self.Draw()
+    
+    def _OnLeave(self, event):
+        self._isOver = False
+        self.Draw()
+    
+    def _GetBgcolorToDraw(self):
+        """ _GetBgcolorToDraw()
+        Can be overloaded to indicate mouse over in buttons. """
+        clr = list(self._bgcolor)
+        if self._isOver:
+            clr = [c+0.05 for c in clr]
+        return clr
+    
+    @property
+    def eventPress(self):
+        """ Fired when the mouse released over the button after a mouseDown. 
+        """
+        return self._eventPress
+    
+    def _OnPressDetectUp(self, event):
+        if self._isOver:
+            self._eventPress.Fire()
 
 
 class ToggleButton(PushButton):
@@ -98,9 +134,7 @@ class ToggleButton(PushButton):
             self.edgeWidth = 2
         else:
             self.edgeWidth = 1        
-        fig = self.GetFigure()
-        if fig:
-            fig.Draw()
+        self.Draw()
         self._eventStateChanged.Fire()
 
 
@@ -152,6 +186,7 @@ class DraggableBox(Box):
         # Bind to own events
         self.hitTest = True
         self.eventMouseDown.Bind(self._DragOnDown)
+        self.eventMouseUp.Bind(self._DragOnUp)
         self.eventEnter.Bind(self._DragOnEnter)
         self.eventLeave.Bind(self._DragOnLeave)
         self.eventPosition.Bind(self._DragCalcDots)
@@ -159,7 +194,7 @@ class DraggableBox(Box):
         # Bind to figure events
         f = self.GetFigure()
         f.eventMotion.Bind(self._DragOnMove)
-        f.eventMouseUp.Bind(self._DragOnUp)
+        
     
     
     def _DragCalcDots(self, event=None):
@@ -177,15 +212,11 @@ class DraggableBox(Box):
     
     def _DragOnEnter(self, event):
         self._dragMouseOver = True
-        fig = self.GetFigure()
-        if fig:
-            fig.Draw()
+        self.Draw()
     
     def _DragOnLeave(self, event):
         self._dragMouseOver = False
-        fig = self.GetFigure()
-        if fig:
-            fig.Draw()
+        self.Draw()
    
     def _DragOnDown(self, event):
         f = self.GetFigure()        
@@ -212,7 +243,6 @@ class DraggableBox(Box):
         self._dragStartPos = event.x, event.y
     
     def _DragOnUp(self, event):
-        self._DragOnMove(event)
         self._dragStartPos = None
         self._dragResizing = False
     

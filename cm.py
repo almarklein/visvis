@@ -212,7 +212,7 @@ class ColormapEditor(DraggableBox):
             # Get real ref
             arg = arg()
             if isinstance(arg, (BaseFigure, Axes)):
-                tmp = arg.FindObjects(attr='_colormap')
+                tmp = arg.FindObjects('_colormap')
                 mapables.extend(tmp)
             elif hasattr(arg, '_colormap'):
                 mapables.append( arg )
@@ -265,8 +265,8 @@ class CM_NodeWidget(Box):
         # Bind events
         fig = self.GetFigure()
         if fig:
-            fig.eventMouseUp.Bind(self._OnUp)
             fig.eventMotion.Bind(self._OnMotion)
+        self.eventMouseUp.Bind(self._OnUp)
         self.eventMouseDown.Bind(self._OnDown)
         self.eventDoubleClick.Bind(self._OnDoubleClick)
         self.hitTest = True # enable firing events
@@ -304,9 +304,7 @@ class CM_NodeWidget(Box):
         self._NodesToLine(self._nodes, self._line)
         
         # Draw (not fast)
-        fig = self.GetFigure()
-        if fig:
-            fig.Draw()
+        self.Draw()
     
     
     def _OnMotion(self, event):
@@ -330,10 +328,8 @@ class CM_NodeWidget(Box):
         # Apply to line
         self._NodesToLine(self._nodes, self._line)
         
-        # Draw (fast)
-        fig = self.GetFigure()
-        if fig:
-            fig.Draw(True)
+        # Draw (fast)        
+        self.Draw(True)
     
     
     def _OnDoubleClick(self, event):
@@ -362,9 +358,7 @@ class CM_NodeWidget(Box):
             self._NodesToLine(nodes, line)
         
         # Draw
-        fig = self.GetFigure()
-        if fig:
-            fig.Draw(True)
+        self.Draw(True)
     
     
     def _NodesToLine(self, nodes, line):
@@ -484,7 +478,7 @@ class Colorbar(Box):
         if par is None:
             return
         elif isinstance(par, (BaseFigure, Axes)):
-            mapables = par.FindObjects(attr='_colormap')
+            mapables = par.FindObjects('_colormap')
         elif isinstance(par, ColormapEditor):
             mapables = par.GetMapables()
         else:

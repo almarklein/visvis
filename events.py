@@ -198,10 +198,7 @@ class EventMouseDown(BaseEvent):
     object. Not fired when over a child of the object. """
     pass
 class EventMouseUp(BaseEvent):
-    """ Fires when the mouse is released while over the 
-    object. NOTE: in most cases you'd best use the eventMouseUp
-    of the figure, otherwise you won't detect mouse-ups when the mouse
-    is moved away from the object while holding it down. """
+    """ Fires when the mouse is released while over the object.  """
     pass
 class EventDoubleClick(BaseEvent):
     """ Fires when the mouse is dubble clicked over the object. """
@@ -243,6 +240,9 @@ class EventAfterDraw(BaseEvent):
     """ Fires right after the figure is drawn. """
     pass
 
+class EventPress(BaseEvent):
+    """ Fired when the mouse released over the button after a mouseDown. 
+    """ 
 
 # For callLater function
 _callLater_callables = {}
