@@ -226,11 +226,11 @@ def newFigure():
     fig._widget.show()
     return fig
   
-
+import weakref
 class App:
-    """ Application instance of wx app, with a visvis API. """
+    """ Application instance of QT4 app, with a visvis API. """
     def __init__(self):
-        self._app = QtGui.QApplication([])
+        app =  QtGui.QApplication([])
     def Run(self):
         QtGui.qApp.exec_()
 

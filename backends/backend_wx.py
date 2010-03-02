@@ -305,8 +305,8 @@ class App:
     """ Application instance of wx app, with a visvis API. """
     def __init__(self):
         # try obtaining the existing app if possible, else create new.        
-        self._app = wx.GetApp()
-        if self._app is None:
-            self._app = wx.PySimpleApp()
+        app = wx.GetApp()
+        if app is None:
+            app = wx.PySimpleApp()
     def Run(self):
         wx.GetApp().MainLoop()
