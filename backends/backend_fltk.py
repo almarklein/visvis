@@ -145,7 +145,7 @@ class GLWidget(fltk.Fl_Gl_Window):
         ev.Fire()
     
     def _ProcessKey(self):
-        """ evaluates the keycode of wx, and transform to visvis key.
+        """ evaluates the keycode of fltk, and transform to visvis key.
         Also produce text version.
         return key, text. """
         key = fltk.Fl.event_key()
