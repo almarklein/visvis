@@ -56,8 +56,8 @@ class PhotoStore(threading.Thread):
         
         # retrieve photo
         thephoto = None
-        t0 = time.clock()+2.0
-        while thephoto is None and time.clock() < t0:
+        t0 = time.time()+2.0
+        while thephoto is None and time.time() < t0:
             self.thelock.acquire()
             if index in self.photos:
                 thephoto = self.photos[index]

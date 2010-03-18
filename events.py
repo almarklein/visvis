@@ -306,7 +306,7 @@ class Timer(BaseEvent):
         
         # put on
         self._running = True
-        self._timestamp = time.clock() + (self.interval/1000.0)
+        self._timestamp = time.time() + (self.interval/1000.0)
     
     
     def Stop(self):
@@ -336,7 +336,7 @@ class Timer(BaseEvent):
         
         # test calLaters first        
         for calltime in _callLater_callables.keys():
-            if calltime < time.clock():
+            if calltime < time.time():
                 callable, args, kwargs = _callLater_callables.pop(calltime)
                 callable(*args, **kwargs)
         
@@ -354,7 +354,7 @@ class Timer(BaseEvent):
                 continue
             
             # has the time passed yet?
-            if time.clock() > timer._timestamp:
+            if time.time() > timer._timestamp:
                 timer.Fire()
             else:
                 continue
@@ -366,7 +366,7 @@ class Timer(BaseEvent):
                 if timer.nolag:
                     timer._timestamp += (timer.interval/1000.0)
                 else:
-                    timer._timestamp = time.clock() + (timer.interval/1000.0)
+                    timer._timestamp = time.time() + (timer.interval/1000.0)
         
         # clean up any dead references
         for timerRef in timersToRemove:
