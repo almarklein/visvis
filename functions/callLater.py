@@ -12,6 +12,6 @@ def callLater(delay, callable, *args, **kwargs):
     
     See also vv.Event
     """
-    calltime = time.clock() + delay
+    calltime = time.time() + delay
     vv.events._callLater_callables[calltime]= (callable, args, kwargs)
     
