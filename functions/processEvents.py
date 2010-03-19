@@ -14,5 +14,5 @@ def processEvents():
     
     fig = vv.gcf()
     if fig is not None:
-        fig._ProcessEvents()
+        fig._ProcessGuiEvents()
     

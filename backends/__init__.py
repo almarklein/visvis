@@ -66,7 +66,7 @@ import visvis
 from visvis.misc import isFrozen
 
 # The order in which to try loading a backend
-backendOrder = ['wx', 'qt4', 'fltk' ] # I'd love to put tk in this list
+backendOrder = ['fltk', 'wx', 'qt4'] # I'd love to put tk in this list
 
 # placeholders
 _placeHolder = []
