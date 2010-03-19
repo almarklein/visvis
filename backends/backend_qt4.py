@@ -134,28 +134,38 @@ class GLWidget(QtOpenGL.QGLWidget):
         ev.Clear()
         ev.Fire() 
         
-    def resizeEvent(self, event):
-        """ QT event when the widget is resized.
-        """
-        self.figure._OnResize()
+#     def resizeEvent(self, event):
+#         """ QT event when the widget is resized.
+#         """        
+#         self.figure._OnResize()
     
     def closeEvent(self, event):
-        ev = self.figure.eventClose
-        ev.Clear()
-        ev.Fire()
-        self.figure.Destroy() # destroy figure
+        if self.figure:
+            self.figure.Destroy()
         event.accept()
 
     def focusInEvent (self, event):
         BaseFigure._currentNr = self.figure.nr
-
-    def paintGl(self):        
-        pass # do nothing, let the paintEvent handler call the Draw()        
     
-    def paintEvent (self,event):
-        """ QT event when window is requested to paint itself.
-        """
-        self.figure.Draw()
+    
+    def initializeGL(self):
+        pass # no need
+    
+    def resizeGL(self, w, h):
+        # This does not work if we implement resizeEvent
+        # todo: Is the behaviour different on linux?
+        self.figure._OnResize()
+    
+#     def paintGL(self):
+#         # makeCurrent() is automatically called before this method is called
+#         self.figure.OnDraw()
+#         self.swapBuffers() # todo: can remove this if also remove in figure.OnDraw
+#         # swapBuffers() is called after this method automatically
+    
+    def paintEvent(self,event):
+        # Use this rather than paintGL, because the latter also swaps buffers,
+        # while visvis already does that.
+        self.figure.OnDraw()
         
     def timerUpdate(self):
         """ Enable timers in visvis.
@@ -195,6 +205,7 @@ class Figure(BaseFigure):
         a widget in an application.
         """
         if not self._destroyed:
+            title = title.replace('Figure', 'qt_Figure')
             self._widget.setWindowTitle(title)
 
     def _SetPosition(self, x, y, w, h):
@@ -208,13 +219,18 @@ class Figure(BaseFigure):
             tmp = self._widget.geometry()
             return tmp.left(), tmp.top(), tmp.width(), tmp.height()
     
-    def _ProcessEvents(self):
+    def _RedrawGui(self):
+        self._widget.update()
+    
+    def _ProcessGuiEvents(self):
         app = QtGui.qApp
         app.processEvents()
     
-    def _Close(self):
-        if self._widget:
-            self._widget.close()
+    def _Close(self, widget):
+        if widget is None:
+            widget = self._widget
+        if widget:
+            widget.close()
 
 
 def newFigure():

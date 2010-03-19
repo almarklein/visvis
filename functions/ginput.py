@@ -117,7 +117,7 @@ def ginput(N=0, axes=None, ms='+', **kwargs):
     
     # Enter a loop
     while ginputHelper.axes:
-        fig._ProcessEvents()
+        fig._ProcessGuiEvents()
         time.sleep(0.1)
     
     # Remove line object and return points

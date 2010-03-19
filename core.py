@@ -250,7 +250,7 @@ class BaseFigure(base.Wibject):
         
         # create a timer to handle the drawing better
         self._drawTimer = Timer(self, 10, oneshot=True)
-        self._drawTimer.Bind(self.OnDraw)        
+        self._drawTimer.Bind(self._DrawTimerTimeOutHandler)        
         self._drawtime = time.time() # to calculate fps
         self._drawWell = False
     
@@ -332,8 +332,15 @@ class BaseFigure(base.Wibject):
         """
         raise NotImplemented()
     
-    def _ProcessEvents(self):
-        """ _ProcessEvents()
+    def _PostDrawRequest(self):
+        """ _PostDrawRequest()
+        Via this method, visvis can request a redraw when something has
+        changed, for example when zooming.
+        """
+        raise NotImplemented()
+    
+    def _ProcessGuiEvents(self):
+        """ _ProcessGuiEvents()
         Process all events in the event queue.
         This is usefull when calling Draw() while an algorithm is 
         running. The figure is then still responsive. 
@@ -359,6 +366,7 @@ class BaseFigure(base.Wibject):
     
     def _Close(self):
         """ Close the widget, also calls Destroy(). """
+        raise NotImplemented()
     
     ## Properties
     
@@ -519,9 +527,7 @@ class BaseFigure(base.Wibject):
         """        
         # Allow position tree to update
         self.position._Changed()
-        # Draw, but not too often. Note that QT only calls this AFTER the
-        # resizing, while wx can often call this DURING resizing, thus
-        # the relatively large delay.
+        # Draw, but not too soon.
         self.Draw(timeout=200)
     
     
@@ -547,20 +553,25 @@ class BaseFigure(base.Wibject):
     
     ## Implement methods
     
-    def OnDestroy(self):
-        # Clean up. This method is called when calling Destroy().
+    def Destroy(self):
+        """ Destroy()
+        Close the figure and clean up all children.
+        """
+        if self._widget is None:
+            #raise RuntimeError('Attempt to Destroy a dead Figure.')
+            # Do not raise error, because we make Wibject.__del__ call Destroy
+            return
         
-        base.Wibject.OnDestroy(self)
+        # Fire event to notify closing while everything is still intact
+        self.eventClose.Clear()
+        self.eventClose.Fire()
         
-        # close the figure instance
-        if not self._destroyed:
-            self._Close()
-        
-        # set flag
-        self._destroyed = True
+        # Clean up
+        base.Wibject.Destroy(self)
         
         # Detach reference to backend widget. We need to keep the widget
-        # alive because we are not allowed to destroy it during its callback.
+        # alive because we are not allowed to destroy it during its
+        # callback.
         # So we place a reference somewhere, meaning that the widget (and 
         # thus the Figure instance can be cleaned up after a second figure
         # has been destroyed. In other words, there will never be more than
@@ -568,9 +579,15 @@ class BaseFigure(base.Wibject):
         # references).
         # Note that WX really removes the widget and replaces it with a
         # dummy wrapper.
-        BaseFigure._lastClosedWidget = self._widget
+        BaseFigure._lastClosedWidget = w = self._widget
         self._widget = None
+        w.figure = None
         
+        # Close widget
+        self._Close(w)
+    
+    
+    def OnDestroy(self):
         # remove from list
         for nr in BaseFigure._figures.keys():
             if BaseFigure._figures[nr] is self:
@@ -588,17 +605,22 @@ class BaseFigure(base.Wibject):
         # Set draw well (is reciprocal of fast, this is to handle it easier.)
         well = not fast
         self._drawWell = self._drawWell or well
-        # If never drawn before, draw now, this is required in WX, otherwise
-        # a lot of OpenGL functions won't work...
-        if not hasattr(self._drawTimer, '_drawnonce'):
-            # call directly
-            self._drawTimer._drawnonce= True
-            self.OnDraw()
+        
+#         # If never drawn before, draw now, this is required in WX, otherwise
+#         # a lot of OpenGL functions won't work...
+#         if not hasattr(self._drawTimer, '_drawnonce'):
+#             # call directly
+#             self._drawTimer._drawnonce= True
+#             self.OnDraw()
         if not self._drawTimer.isRunning:
             # restart timer
             self._drawTimer.Start(timeout)
     
     
+    def _DrawTimerTimeOutHandler(self, event=None):
+        self._RedrawGui() # post event
+    
+        
     def DrawNow(self, fast=False):
         """ DrawNow(fast=False)
         Draw the figure right now and let the GUI toolkit process its events.
@@ -606,8 +628,8 @@ class BaseFigure(base.Wibject):
         running some algorithm, and let the figure stay responsive.         
         """        
         self._drawWell = not fast
-        self.OnDraw()
-        self._ProcessEvents()
+        self._RedrawGui() # post event
+        self._ProcessGuiEvents() # process all events (including our draw)
     
     
     def OnDraw(self, event=None):
@@ -616,7 +638,7 @@ class BaseFigure(base.Wibject):
         # again to only draw the shapes for picking. 
         
         # are we alive?
-        if self._destroyed:            
+        if self._destroyed:
             return
         
         # calculate fps

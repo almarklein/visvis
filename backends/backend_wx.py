@@ -76,6 +76,7 @@ class GLWidget(GLCanvas):
         #
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SET_FOCUS, self.OnFocus)
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
         
         # if lost, tough luck (thus the comment)
         #self.Bind(wx.EVT_MOUSE_CAPTURE_LOST, self.OnMouseUp)
@@ -173,25 +174,33 @@ class GLWidget(GLCanvas):
         ev = self.figure.eventLeave
         ev.Clear()
         ev.Fire()
-    
-    def OnResize(self, event):      
+        
+    def OnResize(self, event): 
         self.figure._OnResize()
         event.Skip()
     
     def OnClose(self, event):
-        ev = self.figure.eventClose
-        ev.Clear()
-        ev.Fire()                
-        self.figure.Destroy()
-        #self.Destroy() is allready done
+        if self.figure:
+            self.figure.Destroy()  
+        #self.Destroy() is done automatically
     
     def OnFocus(self, event):
         BaseFigure._currentNr = self.figure.nr
         event.Skip()
 
     def OnPaint(self, event):
-        event.Skip()
-        self.figure.Draw()
+        # I read that you should always create a PaintDC when implementing
+        # an OnPaint event handler.        
+        a = wx.PaintDC(self) 
+        if self.GetContext(): 
+            self.figure.OnDraw()
+        
+        # todo: skip or not? (On Windows does not seem to matter)
+        event.Skip() 
+        #event.StopPropagation()
+    
+    def OnEraseBackground(self, event):
+        pass # This prevents flicker on Windows
     
     def OnUpdateTimer(self, event):
         events.processVisvisEvents()
@@ -231,6 +240,7 @@ class Figure(BaseFigure):
         if not self._destroyed:
             window = self._widget.Parent
             if hasattr(window,'SetTitle'):
+                title = title.replace('Figure', 'wx_Figure')
                 window.SetTitle(title)
     
     def _SetPosition(self, x, y, w, h):
@@ -259,7 +269,12 @@ class Figure(BaseFigure):
             pos = widget.GetPositionTuple()
             return pos[0], pos[1], size[0], size[1]
     
-    def _ProcessEvents(self):
+    
+    def _RedrawGui(self):
+        self._widget.Refresh()
+    
+    
+    def _ProcessGuiEvents(self):
         # Get app
         app = wx.GetApp()
         
@@ -276,10 +291,12 @@ class Figure(BaseFigure):
         wx.EventLoop.SetActive(old)  
     
     
-    def _Close(self):
-        if self._widget and self._widget.Parent:
+    def _Close(self, widget):
+        if widget is None:
+            widget = self._widget
+        if widget and widget.Parent:
             try:
-                self._widget.Parent.Close()
+                widget.Parent.Close()
             except PyAssertionError:
                 # Prevent "wxEVT_MOUSE_CAPTURE_LOST not being processed" error.
                 pass 

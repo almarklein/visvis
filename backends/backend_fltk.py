@@ -17,8 +17,6 @@
 #   Copyright (C) 2009 Almar Klein
 
 """ The FLTK backend.
-This backend is VERY unstable if multiple figures are used...
-We recommend using the QT4 or WX backend.
 
 $Author$
 $Date$
@@ -50,24 +48,17 @@ class GLWidget(fltk.Fl_Gl_Window):
     """ Implementation of the GL_window, which passes a number of
     events to the Figure object that wraps it.
     """
-    _list = []
     
     def __init__(self, figure, *args, **kwargs):     
         fltk.Fl_Gl_Window.__init__(self, *args, **kwargs)        
         self.figure = figure
         
-        # to determine resizing
-        self._size = (0,0)
-        
-        # callback when closed
+        # Callback when closed
         self.callback(self.OnClose)
         
-        # keep visvis up to date
+        # Keep visvis up to date
         fltk.Fl.add_timeout(0.05,self.OnTimerFire)
-        
-        # add to list to prevent crashing
-        #GLWidget._list.append(list)
-        
+    
     
     def handle(self, event):
         """ All events come in here. """
@@ -92,9 +83,6 @@ class GLWidget(fltk.Fl_Gl_Window):
         
         elif event in [fltk.FL_MOVE, fltk.FL_DRAG]:
             w,h = self.w(), self.h()
-            if w != self._size[0] or h !=self._size[1]:
-                self._size = w, h
-                self.OnResize(None)                
             self.OnMotion(None)
         elif event == fltk.FL_ENTER:
             ev = self.figure.eventEnter
@@ -117,9 +105,16 @@ class GLWidget(fltk.Fl_Gl_Window):
             return 1 # maybe someone else knows what to do with it
         return 1 # event was handled.
     
+    
+    def resize(self, x, y, w, h):
+        # Overload resize function to also draw after resizing
+        fltk.Fl_Gl_Window.resize(self, x, y, w, h)
+        self.figure._OnResize()
+    
     def draw(self):
-        # do the draw commands a short while from now        
-        self.figure.Draw() 
+        # Do the draw commands now
+        self.figure.OnDraw() 
+    
     
     def OnMotion(self, event):
         # update position
@@ -165,25 +160,17 @@ class GLWidget(fltk.Fl_Gl_Window):
                 return key, ''
     
     
-    def OnResize(self, event):        
-        self.figure._OnResize()     
-    
     def OnClose(self, event=None):    
-        ev = self.figure.eventClose
-        ev.Clear()
-        ev.Fire()                
-        self.figure.Destroy()
-        self.hide()
-        # I don't know how to destroy ...
-        # I hope that the fact that the figure.OnDestroy() removes 
-        # the widget's reference is enough...        
-        self.figure._widget = None
+        if self.figure:
+            self.figure.Destroy()
+        self.hide()        
+    
     
     def OnFocus(self, event):
         BaseFigure._currentNr = self.figure.nr
         
     
-    def OnTimerFire(self, event=None):        
+    def OnTimerFire(self, event=None):
         events.processVisvisEvents()
         fltk.Fl.add_timeout(0.01,self.OnTimerFire)
     
@@ -200,8 +187,8 @@ class Figure(BaseFigure):
     
     def _SetCurrent(self):
         """ make this scene the current context """
-        self._widget.make_current()
-        #pass
+        if self._widget:
+            self._widget.make_current()
         
         
     def _SwapBuffers(self):
@@ -213,6 +200,7 @@ class Figure(BaseFigure):
         """ Set the title of the figure... """
         window = self._widget
         if hasattr(window,'label'):
+            title = title.replace('Figure', 'fl_Figure')
             window.label(title)
     
     def _SetPosition(self, x, y, w, h):
@@ -229,20 +217,26 @@ class Figure(BaseFigure):
         widget = self._widget        
         # get and return        
         return widget.x(), widget.y(), widget.w(), widget.h()
-
-    def _ProcessEvents(self):
+    
+    def _RedrawGui(self):
+        self._widget.redraw()
+    
+    def _ProcessGuiEvents(self):
         app = fltk.Fl.wait(0) 
     
-    def _Close(self):
-        self._widget.OnClose()
+    def _Close(self, widget=None):
+        if widget is None:
+            widget = self._widget
+        if widget:
+            widget.OnClose()        
     
 
 def newFigure():
     """ Create a window with a figure widget.
     """
     figure = Figure(560, 420, "Figure")    
-    figure._widget.size_range(100,100,0,0,0,0)    
-    figure._widget.show() # Show AFTER canvas is added
+    figure._widget.size_range(100,100,0,0,0,0)
+    figure._widget.show() # Show AFTER canvas is added    
     return figure
 
 
@@ -253,22 +247,3 @@ class App:
     def Run(self):
         fltk.Fl.run()
 
-
-# # make fltk call the visvis update function ...
-# # fltk.Fl is fltk's global static class (not instance)
-# import types
-# def wait_to_call_visvis(cls, *args):
-#     processEvents()
-#     return fltk.Fl.wait_original(*args)
-# def run_visvis(*args):
-#     while fltk.Fl.wait() > 0:
-#         pass
-#     return 0
-# fltk.Fl.wait_original = fltk._fltk.Fl_wait
-# fltk.Fl.wait = types.MethodType(wait_to_call_visvis, fltk.Fl)
-# # update the run function, because it calls an internal (not
-# # overloaded) wait function. Only do this if run was not overloaded
-# # already (for example to hijack fltk)!
-# if fltk.Fl.run.func_name == 'run':
-#     fltk.Fl.run = types.MethodType(run_visvis, fltk.Fl)
-# 
