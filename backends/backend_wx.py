@@ -24,6 +24,11 @@ $Rev$
 
 """
 
+# NOTICE: wx has the same general problem with OpenGl being kinda 
+# unmanaged and frames not being drawn on Gnome. However, wx seems
+# relatively well workable with only applying a Refresh command 
+# on each Activate command of the main window.
+
 from visvis import BaseFigure, events, constants
 
 import wx
@@ -52,11 +57,16 @@ class GLWidget(GLCanvas):
     def __init__(self, figure, parent, *args, **kwargs):     
         # make sure the window is double buffered (Thanks David!)
         kwargs.update({'attribList' : [wx.glcanvas.WX_GL_RGBA, 
-            wx.glcanvas.WX_GL_DOUBLEBUFFER, 0]})
+            wx.glcanvas.WX_GL_DOUBLEBUFFER]})
         # call GLCanvas' init method
         GLCanvas.__init__(self, parent, *args, **kwargs)        
         
         self.figure = figure
+        
+        # find root window
+        root = self.Parent
+        while root.Parent:
+            root = root.Parent
         
         # make bindings for events
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -71,12 +81,13 @@ class GLWidget(GLCanvas):
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)    
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.Bind(wx.EVT_KEY_UP, self.OnKeyUp)
-        self.Bind(wx.EVT_SIZE, self.OnResize)        
-        self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
+        self.Bind(wx.EVT_SIZE, self.OnResize)
+        root.Bind(wx.EVT_CLOSE, self.OnClose) # Note root
         #
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SET_FOCUS, self.OnFocus)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
+        root.Bind(wx.EVT_ACTIVATE, self.OnActivate) # Note root
         
         # if lost, tough luck (thus the comment)
         #self.Bind(wx.EVT_MOUSE_CAPTURE_LOST, self.OnMouseUp)
@@ -181,8 +192,9 @@ class GLWidget(GLCanvas):
     
     def OnClose(self, event):
         if self.figure:
-            self.figure.Destroy()  
-        #self.Destroy() is done automatically
+            self.figure.Destroy() 
+            self.Destroy() # Hide and delete window
+        event.Skip()
     
     def OnFocus(self, event):
         BaseFigure._currentNr = self.figure.nr
@@ -194,10 +206,13 @@ class GLWidget(GLCanvas):
         a = wx.PaintDC(self) 
         if self.GetContext(): 
             self.figure.OnDraw()
-        
-        # todo: skip or not? (On Windows does not seem to matter)
-        event.Skip() 
-        #event.StopPropagation()
+        event.Skip()
+    
+    def OnActivate(self, event):
+        # When the title bar is dragged in ubuntu
+        if event.GetActive():
+            self.Refresh()
+        event.Skip()
     
     def OnEraseBackground(self, event):
         pass # This prevents flicker on Windows
@@ -220,7 +235,7 @@ class Figure(BaseFigure):
     
     def _SetCurrent(self):
         """ make this scene the current context """
-        if not self._destroyed:            
+        if not self._destroyed and self._widget is not None:            
             try:
                 self._widget.SetCurrent()
             except Exception:
