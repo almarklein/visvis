@@ -24,6 +24,20 @@ $Rev$
 
 """
 
+# NOTICE: OpenGl some problems on Ubuntu (probably due gnome).
+# The drawing of the frame and background seems sometimes be done
+# seperate from the opengl drawings. This means that sometimes the
+# OpenGl stuff is drawn while the frame is not, which results in stuff
+# hangin in "mid-air". Or while dragging the whole window, the frame
+# is drawn, but in it is either rubish (qt) or gray bg (wx). When the
+# frame is not visible, it is still there (you can still resize etc.)
+# This is a known bug of the X Server: 
+# https://wiki.ubuntu.com/RedirectedDirectRendering
+# A solution while the bug is not fixed is to set the visual effects off 
+# in System > Preferences > Appearance.
+# Also note tha wx seems the less affected backend (there is a small fix
+# by redrawing on a Activate event which helps a lot)
+
 from visvis import BaseFigure, events, constants
 
 from PyQt4 import QtCore, QtGui, QtOpenGL
@@ -153,20 +167,25 @@ class GLWidget(QtOpenGL.QGLWidget):
     
     def resizeGL(self, w, h):
         # This does not work if we implement resizeEvent
-        # todo: Is the behaviour different on linux?
         self.figure._OnResize()
-    
-#     def paintGL(self):
-#         # makeCurrent() is automatically called before this method is called
-#         self.figure.OnDraw()
-#         self.swapBuffers() # todo: can remove this if also remove in figure.OnDraw
-#         # swapBuffers() is called after this method automatically
     
     def paintEvent(self,event):
         # Use this rather than paintGL, because the latter also swaps buffers,
         # while visvis already does that.
+        # We could use self.setAutoBufferSwap(False), but it seems not to help.
         self.figure.OnDraw()
-        
+    
+# This is to help draw the frame (see bug above), but I guess one should
+# simply disable it's visual effects
+#     def moveEvent(self, event):
+#         self.update()
+#         
+#     def showEvent(self, event):
+#         # This is to make the frame being drawn on Ubuntu
+#         w, h = self.width(), self.height()
+#         self.resize(w-1,h)
+#         self.resize(w,h)
+    
     def timerUpdate(self):
         """ Enable timers in visvis.
         """        
@@ -186,6 +205,7 @@ class Figure(BaseFigure):
         
         # call original init AFTER we created the widget
         BaseFigure.__init__(self)
+    
     
     def _SetCurrent(self):
         """ Make this scene the current OpenGL context. 
@@ -237,12 +257,11 @@ def newFigure():
     """ function that produces a new Figure object, the widget
     in a window. """
     fig = Figure(None)
-    fig._widget.resize(560,420)    
-    #fig._widget.resize(560,720) # to tecognize qt windows
-    fig._widget.show()
+    fig._widget.show() # In Gnome better to show before resize
+    fig._widget.resize(560,420)
     return fig
   
-import weakref
+
 class App:
     """ Application instance of QT4 app, with a visvis API. """
     def __init__(self):
