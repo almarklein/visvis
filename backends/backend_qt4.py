@@ -56,6 +56,34 @@ KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
             QtCore.Qt.Key_Escape: constants.KEY_ESCAPE,
             }
 
+# todo: get qt4 backend working in IPython
+# # Stuff to be able to create a timer in the main thread, so this backend
+# # can work in IPython
+# from Queue import Queue, Empty
+# class CallbackEventHandler(QtCore.QObject):
+# 
+#     def __init__(self):
+#         QtCore.QObject.__init__(self)
+#         self.queue = Queue()
+# 
+#     def customEvent(self, event):
+#         while True:
+#             try:
+#                 callback, args = self.queue.get_nowait()
+#             except Empty:
+#                 break
+#             try:
+#                 callback(*args)
+#             except Exception:
+#                 print('callback failed: {}'.format(callback))
+# 
+#     def postEventWithCallback(self, callback, *args):
+#         self.queue.put((callback, args))
+#         QtGui.qApp.postEvent(self, QtCore.QEvent(QtCore.QEvent.User))
+# 
+# callbackEventHandler = CallbackEventHandler()
+
+
 class GLWidget(QtOpenGL.QGLWidget):
     """ An OpenGL widget inheriting from PyQt4.QtOpenGL.QGLWidget
     to pass events in the right way to the wrapping Figure class.
@@ -74,14 +102,22 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setFocus() # make the widget have focus...
         
-        # implement timer
+#         # implement timer
+#         self._timer = QtCore.QTimer(self)
+#         self._timer.setInterval(10)  # a bit arbitrary...
+#         self._timer.setSingleShot(True)
+#         self.connect(self._timer, QtCore.SIGNAL('timeout()'), self.timerUpdate)
+#         self._timer.start()
+        self._CreateTimer()
+        
+    
+    def _CreateTimer(self):
         self._timer = QtCore.QTimer(self)
         self._timer.setInterval(10)  # a bit arbitrary...
         self._timer.setSingleShot(True)
         self.connect(self._timer, QtCore.SIGNAL('timeout()'), self.timerUpdate)
         self._timer.start()
-    
-    
+        
     def mousePressEvent(self, event):
         but = 0
         if event.button() == QtCore.Qt.LeftButton:
@@ -265,7 +301,16 @@ def newFigure():
 class App:
     """ Application instance of QT4 app, with a visvis API. """
     def __init__(self):
-        app =  QtGui.QApplication([])
+        pass
+#         if not QtGui.QApplication.instance():
+#             # Keep reference, we're in charge apparantly
+#             # But in an app, we'll probably have app=QtGui.QApplication([])
+#             # somewhere. This means there's two apps, which is not good
+#             # practice...
+#             self._app = QtGui.QApplication([])
     def Run(self):
-        QtGui.qApp.exec_()
+        app = QtGui.QApplication.instance()
+        if not app:
+            app = QtGui.QApplication([])
+        app.exec_()
 

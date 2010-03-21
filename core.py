@@ -633,6 +633,11 @@ class BaseFigure(base.Wibject):
     
     
     def OnDraw(self, event=None):
+        """ OnDraw()
+        Perform the actual drawing. Called by the GUI toolkit paint event
+        handler. Users should not call this method, but use
+        Draw() or DrawNow().
+        """ 
         # This is the actual draw entry point. But we will 
         # call _Draw() to draw first the beatiful pictures and then
         # again to only draw the shapes for picking. 
