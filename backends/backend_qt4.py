@@ -57,32 +57,7 @@ KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
             }
 
 # todo: get qt4 backend working in IPython
-# # Stuff to be able to create a timer in the main thread, so this backend
-# # can work in IPython
-# from Queue import Queue, Empty
-# class CallbackEventHandler(QtCore.QObject):
-# 
-#     def __init__(self):
-#         QtCore.QObject.__init__(self)
-#         self.queue = Queue()
-# 
-#     def customEvent(self, event):
-#         while True:
-#             try:
-#                 callback, args = self.queue.get_nowait()
-#             except Empty:
-#                 break
-#             try:
-#                 callback(*args)
-#             except Exception:
-#                 print('callback failed: {}'.format(callback))
-# 
-#     def postEventWithCallback(self, callback, *args):
-#         self.queue.put((callback, args))
-#         QtGui.qApp.postEvent(self, QtCore.QEvent(QtCore.QEvent.User))
-# 
-# callbackEventHandler = CallbackEventHandler()
-
+# Works on vista PC with Python 2.5.2
 
 class GLWidget(QtOpenGL.QGLWidget):
     """ An OpenGL widget inheriting from PyQt4.QtOpenGL.QGLWidget
@@ -108,16 +83,26 @@ class GLWidget(QtOpenGL.QGLWidget):
 #         self._timer.setSingleShot(True)
 #         self.connect(self._timer, QtCore.SIGNAL('timeout()'), self.timerUpdate)
 #         self._timer.start()
-        self._CreateTimer()
-        
+#         self._CreateTimer()
+
+        # Create low level timer
+        self._timer = QtCore.QBasicTimer()
+        self._timer.start(10,self)
     
-    def _CreateTimer(self):
-        self._timer = QtCore.QTimer(self)
-        self._timer.setInterval(10)  # a bit arbitrary...
-        self._timer.setSingleShot(True)
-        self.connect(self._timer, QtCore.SIGNAL('timeout()'), self.timerUpdate)
-        self._timer.start()
+#     def _CreateTimer(self):
+#         self._timer = QtCore.QTimer(self)
+#         self._timer.setInterval(1)  # a bit arbitrary...
+#         self._timer.setSingleShot(True)
+#         self.connect(self._timer, QtCore.SIGNAL('timeout()'), self.timerUpdate)
+#         self._timer.start()
+    
+    
+    def timerEvent(self, event):       
         
+        # Process visvis events
+        events.processVisvisEvents()
+        # todo: remove timerUpdate below
+    
     def mousePressEvent(self, event):
         but = 0
         if event.button() == QtCore.Qt.LeftButton:
@@ -279,7 +264,8 @@ class Figure(BaseFigure):
         self._widget.update()
     
     def _ProcessGuiEvents(self):
-        app = QtGui.qApp
+        app = QtGui.QApplication.instance()
+        app.flush()
         app.processEvents()
     
     def _Close(self, widget):
@@ -292,25 +278,40 @@ class Figure(BaseFigure):
 def newFigure():
     """ function that produces a new Figure object, the widget
     in a window. """
+    # Make sure the app works
+    app._GetUndelyingApp()
+    
+    # Create figure
     fig = Figure(None)
     fig._widget.show() # In Gnome better to show before resize
     fig._widget.resize(560,420)
+    
+    # Let OpenGl initialize and return
+    fig.DrawNow() 
     return fig
-  
 
-class App:
-    """ Application instance of QT4 app, with a visvis API. """
-    def __init__(self):
-        pass
-#         if not QtGui.QApplication.instance():
-#             # Keep reference, we're in charge apparantly
-#             # But in an app, we'll probably have app=QtGui.QApplication([])
-#             # somewhere. This means there's two apps, which is not good
-#             # practice...
-#             self._app = QtGui.QApplication([])
-    def Run(self):
+
+class App(events.App):
+    """ Application class to wrap the QtGui.QApplication instance
+    in a simple class with a simple interface.     
+    """
+    
+    def _GetUndelyingApp(self):
         app = QtGui.QApplication.instance()
         if not app:
-            app = QtGui.QApplication([])
+            # No application instance has been made, so we have to 
+            # make it. This means we also have to prevent from getting
+            # deleted. We do this by storing it as qApp.
+            QtGui.qApp = app = QtGui.QApplication([])
+        return app
+    
+    def ProcessEvents(self):
+        app = self._GetUndelyingApp()
+        app.flush()
+        app.processEvents()
+    
+    def Run(self):
+        app = self._GetUndelyingApp()
         app.exec_()
 
+app = App()

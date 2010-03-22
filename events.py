@@ -374,5 +374,24 @@ class Timer(BaseEvent):
                 Timer._timers.remove(timerRef)
             except Exception:
                 pass
-                
+
+class App:
+    """ Application class to wrap the GUI applications in a simple class
+    with a simple interface.     
+    
+    This class should be implemented such that multiple instances can
+    be created, and still wrap the same single GUI application instance.
+    
+    The method _GetUndelyingApp() should be called in newFigure() to make
+    sure (as late as possble) that there is a GUI application.
+    """
+    
+    def _GetUndelyingApp(self):
+        raise NotImplemented()
+    
+    def ProcessEvents(self):
+        raise NotImplemented()
+    
+    def Run(self):
+        raise NotImplemented()
     

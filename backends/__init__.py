@@ -68,13 +68,17 @@ from visvis.misc import isFrozen
 # The order in which to try loading a backend
 backendOrder = ['wx', 'qt4', 'fltk'] # I'd love to put tk in this list
 
-# placeholders
-_placeHolder = []
-
+# Placeholder
+class BackendDescription:
+    def __init__(self):
+        self.name = ''
+        self.newFigure = None
+        self.app = None
+currentBackend = BackendDescription()
 
 # An overview:
 # - testLoaded tests to see whether any of the backends is already loaded
-# - _loadBackend imports the backend and fills the _placeHolder list.
+# - _loadBackend imports the backend and sets newFigure and app
 # - use is the user friendly function that calls _loadBackend
 
 
@@ -131,16 +135,16 @@ def _loadBackend(name):
         raise Exception("Backend %s does not implement Figure class!" % be)
     else:
         # All good (as far as I can tell). Update stuff if name does not match.
-        if not _placeHolder or _placeHolder[0] != name:
-            _placeHolder[:] = []
-            _placeHolder.append( name )
-            _placeHolder.append( module.newFigure )
-            _placeHolder.append( module.App )
+        if currentBackend.name != name:
+            currentBackend.name = name
+            currentBackend.newFigure = module.newFigure
+            currentBackend.app = module.App()
         return True
 
 
 def use(backendName=None):
-    """ Use the specified backend and return an App instance that has a run()
+    """ use(backendName=None)
+    Use the specified backend and return an App instance that has a run()
     method to enter the GUI toolkit's mainloop.
     If no backend is given, a suitable backend is tried automatically. 
     """
@@ -154,15 +158,16 @@ def use(backendName=None):
     # Get name of the backend currently loaded (can be '')            
     loadedName = testLoaded()
     
-#     # Prevent resetting the backend to use
-#     if loadedName and backendName and loadedName != backendName:
-#         raise RuntimeError("Cannot change backend, %s already loaded." % be)
+    # Prevent resetting the backend to use
+    if loadedName and backendName and loadedName != backendName:
+        print "Warning: changing backend while %s already loaded." % loadedName
+        #raise RuntimeError("Cannot change backend, %s already loaded." % loadedName)
     
     # Process
     if backendName:
         # Use given
         if not _loadBackend(backendName):
-            raise RuntimeError('Given backend "%s" could be loaded.' % backendName)
+            raise RuntimeError('Given backend "%s" could not be loaded.' % backendName)
     elif loadedName:
         # Use loaded (redo to make sure the placeholder is ok)
         if not _loadBackend(loadedName):
@@ -173,8 +178,8 @@ def use(backendName=None):
             if _loadBackend(name):
                 break
         else:
-            tmp = "Install PyQt4 or wxPython."
+            tmp = "Install PyQt4, wxPython, or fltk."
             raise RuntimeError("None of the backends could be loaded. "+tmp)
     
     # Return instance
-    return _placeHolder[2]()
+    return currentBackend.app

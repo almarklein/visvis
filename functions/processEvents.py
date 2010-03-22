@@ -6,13 +6,13 @@ def processEvents():
     Users can periodically call this function during running 
     an algorithm to keep the figures responsove.
     
-    Note that IEP and IPython with the -wxthread option will 
+    Note that IEP and IPython with the -wthread option will 
     periodically update the GUI events when idle.
     
     Also see Figure.DrawNow()
     """
     
-    fig = vv.gcf()
-    if fig is not None:
-        fig._ProcessGuiEvents()
+    app = vv.backends.currentBackend.app
+    if app:
+        app.ProcessEvents()
     
