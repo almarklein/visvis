@@ -17,5 +17,6 @@ def getOpenGlInfo():
         f = vv.figure() 
         result = vv.misc.getOpenGlInfo()
         f.Destroy()
+        f._ProcessGuiEvents() # so it can close
     
     return result

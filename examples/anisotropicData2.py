@@ -8,7 +8,7 @@ correct scale and position.
 
 import visvis as vv
 from visvis.points import Aarray
-app = vv.use('wx')
+app = vv.use('')
 
 # Load image and make Aarray
 im = vv.imread('lena.png')

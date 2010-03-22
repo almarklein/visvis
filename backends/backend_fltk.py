@@ -57,7 +57,7 @@ class GLWidget(fltk.Fl_Gl_Window):
         self.callback(self.OnClose)
         
         # Keep visvis up to date
-        fltk.Fl.add_timeout(0.05,self.OnTimerFire)
+        fltk.Fl.add_timeout(0.01,self.OnTimerFire)
     
     
     def handle(self, event):
@@ -222,7 +222,7 @@ class Figure(BaseFigure):
         self._widget.redraw()
     
     def _ProcessGuiEvents(self):
-        app = fltk.Fl.wait(0) 
+        fltk.Fl.wait(0) 
     
     def _Close(self, widget=None):
         if widget is None:
@@ -234,16 +234,34 @@ class Figure(BaseFigure):
 def newFigure():
     """ Create a window with a figure widget.
     """
+    app._GetUndelyingApp()
+    
+    # Create figure
     figure = Figure(560, 420, "Figure")    
     figure._widget.size_range(100,100,0,0,0,0)
     figure._widget.show() # Show AFTER canvas is added    
+    
+    # Make OpenGl Initialize and return
+    figure.DrawNow() 
     return figure
 
 
-class App:
-    """ Application instance of fltk app, with a visvis API. """
-    def __init__(self):
-        pass
-    def Run(self):
-        fltk.Fl.run()
 
+
+class App(events.App):
+    """ Application class to wrap the fltk application in a simple class
+    with a simple interface.     
+    """
+    
+    def _GetUndelyingApp(self):
+        return fltk.Fl
+    
+    def ProcessEvents(self):
+        app = self._GetUndelyingApp()
+        app.wait(0) 
+    
+    def Run(self):
+        app = self._GetUndelyingApp()
+        app.run()
+
+app = App()

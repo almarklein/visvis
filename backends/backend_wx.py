@@ -190,10 +190,12 @@ class GLWidget(GLCanvas):
         self.figure._OnResize()
         event.Skip()
     
-    def OnClose(self, event):
+    def OnClose(self, event):        
         if self.figure:
-            self.figure.Destroy() 
+            self.figure.Destroy()             
+            parent = self.Parent
             self.Destroy() # Hide and delete window
+            app.ProcessEvents() # Otherwise the frame might stick         
         event.Skip()
     
     def OnFocus(self, event):
@@ -290,20 +292,7 @@ class Figure(BaseFigure):
     
     
     def _ProcessGuiEvents(self):
-        # Get app
-        app = wx.GetApp()
-        
-        # Keep reference of old eventloop instance
-        old = wx.EventLoop.GetActive()
-        # Create new eventloop and process
-        eventLoop = wx.EventLoop()
-        wx.EventLoop.SetActive(eventLoop)                        
-        while eventLoop.Pending():
-            eventLoop.Dispatch()
-        # Process idle
-        app.ProcessIdle() # otherwise frames do not close
-        # Set back the original
-        wx.EventLoop.SetActive(old)  
+        app.ProcessEvents()
     
     
     def _Close(self, widget):
@@ -327,18 +316,51 @@ class FigureFrame(wx.Frame):
 def newFigure():
     """ Create a window with a figure widget.
     """
+    # Make sure the app works
+    app._GetUndelyingApp()
+    
+    # Create figure
     frame = FigureFrame(None, -1, "Figure", size=(560, 420))
     figure = Figure(frame)
-    frame.Show() # Show AFTER canvas is added
+    # Show AFTER canvas is added
+    frame.Show() 
+    
+    # Apply a draw, so that OpenGl can initialize before we will really
+    # do some drawing. Otherwis textures end up showing in black.
+    figure.DrawNow()
     return figure
 
 
-class App:
-    """ Application instance of wx app, with a visvis API. """
-    def __init__(self):
-        # try obtaining the existing app if possible, else create new.        
+class App(events.App):
+    """ Application class to wrap the wx.App instance in a simple class
+    with a simple interface.     
+    """
+    
+    def _GetUndelyingApp(self):
         app = wx.GetApp()
-        if app is None:
-            app = wx.PySimpleApp()
+        if not app:
+            # No application instance has been made, so we have to 
+            # make it. 
+            wx.app_instance = app = wx.PySimpleApp()
+        return app
+    
+    def ProcessEvents(self):
+        app = self._GetUndelyingApp()
+        
+        # Keep reference of old eventloop instance
+        old = wx.EventLoop.GetActive()
+        # Create new eventloop and process
+        eventLoop = wx.EventLoop()
+        wx.EventLoop.SetActive(eventLoop)                        
+        while eventLoop.Pending():
+            eventLoop.Dispatch()
+        # Process idle
+        app.ProcessIdle() # otherwise frames do not close
+        # Set back the original
+        wx.EventLoop.SetActive(old)  
+    
     def Run(self):
-        wx.GetApp().MainLoop()
+        app = self._GetUndelyingApp()
+        app.MainLoop()
+
+app = App()
