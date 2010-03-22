@@ -128,11 +128,12 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.figure._GenerateMouseEvent('double', event.x(), event.y(), but)
     
     def mouseMoveEvent(self, event):
-        # update position
-        point = event.pos()
-        self.figure._mousepos = ( point.x(), point.y() )
-        # fire event        
-        self.figure._GenerateMouseEvent('motion', event.x(), event.y())
+        if self.figure:
+            # update position
+            point = event.pos()
+            self.figure._mousepos = ( point.x(), point.y() )
+            # fire event        
+            self.figure._GenerateMouseEvent('motion', event.x(), event.y())
     
     def keyPressEvent(self, event):
         ev = self.figure.eventKeyDown
@@ -160,14 +161,16 @@ class GLWidget(QtOpenGL.QGLWidget):
             return key
     
     def enterEvent(self, event):
-        ev = self.figure.eventEnter
-        ev.Clear()
-        ev.Fire()   
+        if self.figure:
+            ev = self.figure.eventEnter
+            ev.Clear()
+            ev.Fire()   
     
     def leaveEvent(self, event):
-        ev = self.figure.eventLeave
-        ev.Clear()
-        ev.Fire() 
+        if self.figure:
+            ev = self.figure.eventLeave
+            ev.Clear()
+            ev.Fire() 
         
 #     def resizeEvent(self, event):
 #         """ QT event when the widget is resized.
@@ -180,7 +183,8 @@ class GLWidget(QtOpenGL.QGLWidget):
         event.accept()
 
     def focusInEvent (self, event):
-        BaseFigure._currentNr = self.figure.nr
+        if self.figure:
+            BaseFigure._currentNr = self.figure.nr
     
     
     def initializeGL(self):
@@ -279,7 +283,7 @@ def newFigure():
     """ function that produces a new Figure object, the widget
     in a window. """
     # Make sure the app works
-    app._GetUndelyingApp()
+    app._GetUnderlyingApp()
     
     # Create figure
     fig = Figure(None)
@@ -296,7 +300,7 @@ class App(events.App):
     in a simple class with a simple interface.     
     """
     
-    def _GetUndelyingApp(self):
+    def _GetUnderlyingApp(self):
         app = QtGui.QApplication.instance()
         if not app:
             # No application instance has been made, so we have to 
@@ -306,12 +310,12 @@ class App(events.App):
         return app
     
     def ProcessEvents(self):
-        app = self._GetUndelyingApp()
+        app = self._GetUnderlyingApp()
         app.flush()
         app.processEvents()
     
     def Run(self):
-        app = self._GetUndelyingApp()
+        app = self._GetUnderlyingApp()
         app.exec_()
 
 app = App()
