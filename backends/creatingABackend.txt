@@ -145,6 +145,9 @@ method, which does the same thing.
 
 An instance of the App class should wait with creating an application
 instance of the GUI toolkit as late as possible. By making sure it
-exists inside the newFigure() function, all should be well. 
+exists inside the newFigure() function, all should be well. This is to
+enable using "vv.use()" in an embedded application where at the end
+the code will explicitly create an application object of the GUI.
+
 
 ** Implementing GlCanvas **
