@@ -195,7 +195,9 @@ class GLWidget(GLCanvas):
             self.figure.Destroy()             
             parent = self.Parent
             self.Destroy() # Hide and delete window
-            app.ProcessEvents() # Otherwise the frame might stick         
+            # Prevent frame from sticking when there is not wx event loop
+            if isinstance(parent, FigureFrame):
+                parent.Hide()
         event.Skip()
     
     def OnFocus(self, event):
@@ -317,7 +319,7 @@ def newFigure():
     """ Create a window with a figure widget.
     """
     # Make sure the app works
-    app._GetUndelyingApp()
+    app._GetUnderlyingApp()
     
     # Create figure
     frame = FigureFrame(None, -1, "Figure", size=(560, 420))
@@ -336,7 +338,7 @@ class App(events.App):
     with a simple interface.     
     """
     
-    def _GetUndelyingApp(self):
+    def _GetUnderlyingApp(self):
         app = wx.GetApp()
         if not app:
             # No application instance has been made, so we have to 
@@ -345,7 +347,7 @@ class App(events.App):
         return app
     
     def ProcessEvents(self):
-        app = self._GetUndelyingApp()
+        app = self._GetUnderlyingApp()
         
         # Keep reference of old eventloop instance
         old = wx.EventLoop.GetActive()
@@ -360,7 +362,7 @@ class App(events.App):
         wx.EventLoop.SetActive(old)  
     
     def Run(self):
-        app = self._GetUndelyingApp()
+        app = self._GetUnderlyingApp()
         app.MainLoop()
 
 app = App()

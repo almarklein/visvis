@@ -234,7 +234,7 @@ class Figure(BaseFigure):
 def newFigure():
     """ Create a window with a figure widget.
     """
-    app._GetUndelyingApp()
+    app._GetUnderlyingApp()
     
     # Create figure
     figure = Figure(560, 420, "Figure")    
@@ -253,15 +253,15 @@ class App(events.App):
     with a simple interface.     
     """
     
-    def _GetUndelyingApp(self):
+    def _GetUnderlyingApp(self):
         return fltk.Fl
     
     def ProcessEvents(self):
-        app = self._GetUndelyingApp()
+        app = self._GetUnderlyingApp()
         app.wait(0) 
     
     def Run(self):
-        app = self._GetUndelyingApp()
+        app = self._GetUnderlyingApp()
         app.run()
 
 app = App()
