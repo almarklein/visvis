@@ -606,28 +606,21 @@ class BaseFigure(base.Wibject):
         well = not fast
         self._drawWell = self._drawWell or well
         
-#         # If never drawn before, draw now, this is required in WX, otherwise
-#         # a lot of OpenGL functions won't work...
-#         if not hasattr(self._drawTimer, '_drawnonce'):
-#             # call directly
-#             self._drawTimer._drawnonce= True
-#             self.OnDraw()
+        # Restart timer if we need to
         if not self._drawTimer.isRunning:
-            # restart timer
             self._drawTimer.Start(timeout)
     
     
     def _DrawTimerTimeOutHandler(self, event=None):
         self._RedrawGui() # post event
     
-        
+    
     def DrawNow(self, fast=False):
         """ DrawNow(fast=False)
         Draw the figure right now and let the GUI toolkit process its events.
         Call this from time to time if you want to update your figure while 
         running some algorithm, and let the figure stay responsive.         
-        """        
-        
+        """
         self._drawWell = not fast
         self._RedrawGui() # post event
         self._ProcessGuiEvents() # process all events (including our draw)
