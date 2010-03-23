@@ -9,14 +9,14 @@ def getOpenGlInfo():
     this is necessary.
     """
     
-    # Try fast
+    # Open figure first. On Windows we can try obtaining the information,
+    # but I found that on Ubuntu a segfault will happen (but this might
+    # very well have to do with the OpenGl drivers).
+    fig = vv.figure()
     result = vv.misc.getOpenGlInfo()
     
-    # Should we open a figure and try again?
-    if result[0] is None:
-        f = vv.figure() 
-        result = vv.misc.getOpenGlInfo()
-        f.Destroy()
-        f._ProcessGuiEvents() # so it can close
+    # Should we open a figure and try again?    
+    fig.Destroy()
+    fig._ProcessGuiEvents() # so it can close
     
     return result

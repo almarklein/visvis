@@ -14,7 +14,7 @@ class MainWindow(QtGui.QWidget):
         
         # Make a panel with a button
         self.panel = QtGui.QWidget(self)
-        but = QtGui.QPushButton(parent=self.panel)
+        but = QtGui.QPushButton(self.panel)
         but.setText('Push me')
         
         # Make figure using "self" as a parent

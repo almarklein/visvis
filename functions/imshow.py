@@ -38,7 +38,6 @@ def imshow(im, clim=None, axes=None, aa=1, interpolate=False):
     t = vv.Texture2D(axes, im)
     t._trafo_trans.dz = texOffset
     
-    
     # set aa and interpolation
     t.aa = aa
     t.interpolate = interpolate
