@@ -46,6 +46,7 @@ def getOpenGlInfo():
     Note that this function will return 4 Nones if the openGl 
     context is not set. 
     """
+    
     if not _glInfo[0]:
         _glInfo[0] = gl.glGetString(gl.GL_VERSION)
         _glInfo[1] = gl.glGetString(gl.GL_VENDOR)

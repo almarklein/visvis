@@ -243,7 +243,9 @@ def newFigure():
     figure._widget.show() # Show AFTER canvas is added    
     
     # Make OpenGl Initialize and return
+    # Also call draw(), otherwise it will not really draw and crash on Linux
     figure.DrawNow()
+    figure._widget.draw()
     return figure
 
 
