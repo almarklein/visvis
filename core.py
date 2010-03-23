@@ -627,6 +627,7 @@ class BaseFigure(base.Wibject):
         Call this from time to time if you want to update your figure while 
         running some algorithm, and let the figure stay responsive.         
         """        
+        
         self._drawWell = not fast
         self._RedrawGui() # post event
         self._ProcessGuiEvents() # process all events (including our draw)
