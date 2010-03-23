@@ -234,6 +234,7 @@ class Figure(BaseFigure):
 def newFigure():
     """ Create a window with a figure widget.
     """
+    # Make sure the is a GUI application instance
     app._GetUnderlyingApp()
     
     # Create figure
@@ -242,7 +243,7 @@ def newFigure():
     figure._widget.show() # Show AFTER canvas is added    
     
     # Make OpenGl Initialize and return
-    figure.DrawNow() 
+    figure.DrawNow()
     return figure
 
 
