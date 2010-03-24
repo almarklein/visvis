@@ -9,8 +9,8 @@ import visvis as vv
 vv.use('qt4')
 
 class MainWindow(QtGui.QWidget):
-    def __init__(self, *args, **kwargs):
-        QtGui.QWidget.__init__(self, *args, **kwargs)
+    def __init__(self, *args):
+        QtGui.QWidget.__init__(self, *args)
         
         # Make a panel with a button
         self.panel = QtGui.QWidget(self)

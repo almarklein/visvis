@@ -26,7 +26,7 @@ def volshow(vol, clim=None, axes=None, renderStyle='mip'):
     axes.SetLimits()
     
     # set camera
-    axes.cameraType = 'polar'
+    axes.cameraType = '3d'
     
     # done
     axes.Draw()

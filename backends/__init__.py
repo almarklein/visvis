@@ -18,48 +18,53 @@
 
 """ Package visvis.backends
 
-Visvis allows multiple backends. We try to make implementing a 
+Visvis allows multiple backends. I tried to make implementing a 
 backend as easy as possible. Each backend is defined in a single
 module called "backend_xx.py", where xx is the backend name, which 
 we recommend making all lowercase.
 
-This module should:
-1.  Contain a class called "Figure" (inherited from visvis.BaseFigure). 
+This module should ...
+1.  ... contain a class called "Figure" (inherited from visvis.BaseFigure). 
     The Figure class should wrap (not inherit from) a widget native to 
-    the backend. 
-    The Figure class should implement BaseFigure and overload a number
-    of functions. .Draw() should be called on a paint request. When
-    the widget is closed, it should also be destroyed and call ._Destroy(). 
-2.  Contain a function called "newFigure". This function should generate 
+    the backend, in which visvis can draw with OpenGl. The Figure class 
+    should also overload a number of functions (such as _SwapBuffers()).    
+2.  ... contain a function called "newFigure". This function should generate 
     a window with a single Figure widget in it, and return the Figure 
     Object.
-3.  Contain a class called "App" that implements a method "Run" that enters
-    the GUI toolkit's mainloop.
-4.  Call visvis.Timer._TestAllTimers() on a regular basis (every 10 ms or
-    so). To enable timer events.
-5.  Pass through the events enter, leaver, keydown, keyup, resize, close via
-    visvis event system. Pass through events mouseDown, mouseUp, 
+3.  Contain a class called "App" (inherited from visvis.events.App) that
+    implements a method "Run" that enters the GUI toolkit's mainloop, and
+    a method "ProcessEvents" that processes the GUI toolkits events.
+4.  ... call visvis.Timer._TestAllTimers() on a regular basis (every 10 ms
+    or so). To enable timer events.
+5.  ... pass through the events enter, leaver, keydown, keyup, resize, close
+    via visvis' event system. Pass through events mouseDown, mouseUp, 
     mouseDoubleClick, mouseMove via the figure's _GenerateMouseEvent() method,
     that will fire the events of the appropriate wibjects and wobjects.
 
 The BaseFigure class is defined in visvis.core. In the comments it is
 shown what methods need to be overloaded and what events need to be
-transfered. Also look at the already implemented backends!
+transfered. There is a wiki page on implementing a backend, and a text
+file in the source. Also look at the already implemented backends!
 
 The backend is chosen/selected as follows:
-- Just before the first figure is created visvis checks which
-  backends are available. 
-- If one of them is already loaded, that one is used. If not, it 
-  will try loading backends in the order that is defined in the
-  variable "backendOrder" in this file. 
 - A user can call vv.use() to load a specific backend and obtain an 
   App instance.
+- When a figure is created it is checked whether a backend is already
+  selected. If not, one is selected automatically; it tries loading the
+  backends in the order that is defined in the variable "backendOrder" 
+  in this file. 
+
 
 $Author$
 $Date$
 $Rev$
 
 """
+
+# An overview:
+# - testLoaded tests to see whether any of the backends is already loaded
+# - _loadBackend imports the backend and sets newFigure and app
+# - use is the user friendly function that calls _loadBackend
 
 import os, sys
 import visvis
@@ -75,11 +80,6 @@ class BackendDescription:
         self.newFigure = None
         self.app = None
 currentBackend = BackendDescription()
-
-# An overview:
-# - testLoaded tests to see whether any of the backends is already loaded
-# - _loadBackend imports the backend and sets newFigure and app
-# - use is the user friendly function that calls _loadBackend
 
 
 def testLoaded():
