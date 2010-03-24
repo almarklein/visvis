@@ -30,7 +30,7 @@ $Rev$
 
 from base import Wibject, Box
 from textRender import Label
-from core import Axes, BaseFigure, Axis
+from core import Axes, BaseFigure
 from simpleWibjects import PushButton, ToggleButton, RadioButton, DraggableBox
 from cm import Colorbar, ColormapEditor
 

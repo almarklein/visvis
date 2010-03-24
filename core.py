@@ -38,11 +38,12 @@ import numpy as np
 import base
 import simpleWibjects
 import textures
-from cameras import (ortho, depthToZ, TwoDCamera, PolarCamera, FlyCamera)
+from cameras import (ortho, depthToZ, TwoDCamera, ThreeDCamera, FlyCamera)
 from misc import Property, Range, OpenGLError, getColor
 from events import *
 from textRender import FontManager, Text, Label
 from line import MarkerManager, Line, lineStyles
+from axis import BaseAxis, CartesianAxis, PolarAxis2D
 
 # a variable to indicate whether to print FPS, for testing
 printFPS = False
@@ -909,7 +910,7 @@ class AxesContainer(base.Wibject):
     
 
 class Axes(base.Wibject):
-    """ Axes(parent)
+    """ Axes(parent, axisClass=None)
     
     An Axes instance represents the scene with a local coordinate system 
     in which wobjects can be drawn. It has various properties to influence 
@@ -926,7 +927,7 @@ class Axes(base.Wibject):
     equally zoomed (The function imshow() sets this to False).
     """ 
     
-    def __init__(self, parent):
+    def __init__(self, parent, axisClass=None):
         
         # check that the parent is a Figure or AxesContainer
         if isinstance(parent, AxesContainer):
@@ -970,11 +971,10 @@ class Axes(base.Wibject):
         self._axisColor = (0,0,0)
         
         # create cameras and select one
-        self._cameras = {   'twod': TwoDCamera(self), 
-                            'polar': PolarCamera(self),                            
-                            'fly': FlyCamera(self)}        
-        self._cameras['3d'] = self._cameras['polar']        
-        self.camera = self._cameras['2d'] = self._cameras['twod']
+        self._cameras = {   '2d': TwoDCamera(self), 
+                            '3d': ThreeDCamera(self),                            
+                            'fly': FlyCamera(self)}                
+        self.camera = self._cameras['twod'] = self._cameras['2d']
         
         # init the background color of this axes
         self.bgcolor = 1,1,1  # remember that bgcolor is a property
@@ -982,22 +982,25 @@ class Axes(base.Wibject):
         # bind to event (no need to unbind because it's our own)
         self.eventMouseDown.Bind(self._OnMouseDown)
         
-        # create Axis and legend
-        Axis(self) # is a wobject
+        # Store axis class and instantiate it
+        if axisClass is None or not isinstance(axisClass, BaseAxis):
+            axisClass = CartesianAxis
+        self._axisClass = axisClass
+        axisClass(self) # is a wobject
         
         # make current
         figure.currentAxes = self
     
     
     ## Define more methods
-
+    
     
     def SetLimits(self, rangeX=None, rangeY=None, rangeZ=None, margin=0.02):
         """ SetLimits(rangeX=None, rangeY=None, rangeZ=None, margin=0.02)
         
         Set the limits of the scene. These are taken as hints to set 
         the camera view, and determine where the axis is drawn for the
-        polar (3d) camera.
+        3D camera.
         
         Each range can be None, a 2 element iterable, or a visvis.Range 
         object. If a range is None, the range is obtained from the 
@@ -1157,7 +1160,7 @@ class Axes(base.Wibject):
         self._wobjects[:] = []
         # remake axis and legend?
         if not clearForDestruction:
-            Axis(self)
+            self._axisClass(self)
     
     @property
     def wobjects(self):
@@ -1199,12 +1202,42 @@ class Axes(base.Wibject):
         This event is also fired when the mouse is released over any of the
         axes's children. """
         return self._eventMotion
+        
+    
+    @Property
+    def axisType():
+        """ Get/Set the axis type to use. Currently supported are:
+          * 'cartesian' - a normal axis (default)
+          * 'polar' - Curt is working on this.
+        """        
+        def fget(self):
+            D = {PolarAxis2D:'polar', CartesianAxis:'cartesian'}
+            if self._axisClass in D:
+                return D[self._axisClass]
+            else:
+                return ''
+        def fset(self, axisClass):
+            # Handle string argument
+            if not isinstance(axisClass, BaseAxis):
+                D = {'polar':PolarAxis2D, 'cartesian':CartesianAxis}
+                if axisClass not in D:
+                    raise ValueError('Invalid axis class.')
+                axisClass = D[axisClass.lower()]
+            if axisClass is not self._axisClass:
+                # Store class            
+                self._axisClass = axisClass
+                # Remove previous
+                axisList = self.FindObjects(BaseAxis)
+                for axis in axisList:
+                    axis.Destroy()
+                # Add new
+                axisClass(self)
     
     @Property
     def cameraType():
         """ Get/Set the camera type to use. Currently supported are:
           * '2d' - a two dimensional camera that looks down the z-dimension.
-          * '3d' - a three dimensional (polar) camera.
+          * '3d' - a three dimensional camera.
           * 'fly' - a camera like a flight sim. Not recommended.
         """
         def fget(self):
@@ -1543,7 +1576,7 @@ class Axes(base.Wibject):
         # allow wobjects to draw in screen coordinates
         gl.glEnable(gl.GL_DEPTH_TEST)
         for item in self._wobjects:
-            if not isinstance(item, Axis):
+            if not isinstance(item, BaseAxis):
                 item._DrawTree('screen')
         
         # let axis object draw in screen coordinates in the full viewport.
@@ -1558,7 +1591,7 @@ class Axes(base.Wibject):
         else:
             gl.glEnable(gl.GL_DEPTH_TEST)
         for item in self._wobjects:
-            if isinstance(item, Axis):
+            if isinstance(item, BaseAxis):
                 item._DrawTree('screen')                
         
         # prepare for wibject children (draw in full viewport)
@@ -1643,546 +1676,6 @@ class Axes(base.Wibject):
         f = self.GetFigure()
         if f:
             f.currentAxes = self
-        
-
-# A note about tick labels. We format these using '%1.4g', which means
-# they will have 4 significance, and will automatically displayed in
-# exp notation if necessary. This means that the largest string is
-# x.xxxE+yyy -> 10 characters. 
-# In practice, the exp will hardly ever be larger than 2 characters. So we
-# strip the zeros in the exponent and assume the (in practice) max string
-# to be "-0.001e+99". With a fontsize of 9, this needs little less than 70
-# pixels. The correction applied when visualizing axis (and ticks) is 60,
-# because the default offset is 10 pixels for axes.
-
-# create tick units
-_tickUnits = []
-for e in range(-10, 21):
-    for i in [10, 20, 25, 50]:
-        _tickUnits.append( i*10**e)
-
-
-def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
-    """ GetTicks(p0, p1, lim, minTickDist=40, ticks=None)
-    Get the tick values, position and texts.
-    These are calculated from a start end end position and the range
-    of values to map between these two points (which can be 2d or 3d). 
-    if ticks is given, use these values instead.
-    """
-    
-    # Vector from start to end point
-    vec = p1-p0
-    
-    # Calculate all ticks if not given
-    if ticks is None:
-        
-        # Get pixels per unit
-        if lim.range == 0:
-            return [],[],[]
-        pixelsPerUnit = vec.Norm() / lim.range
-        
-        # Try all tickunits, starting from the smallest, until we find 
-        # one which results in a distance between ticks more than
-        # X pixels.
-        try:
-            for tickUnit in _tickUnits:
-                if tickUnit * pixelsPerUnit >= minTickDist:
-                    break
-            # if the numbers are VERY VERY large (which is very unlikely)
-            if tickUnit*pixelsPerUnit < minTickDist:
-                raise ValueError
-        except (ValueError, TypeError):
-            # too small
-            return [],[],[]
-        
-        # Calculate the ticks (the values) themselves
-        ticks = []    
-        firstTick = np.ceil(  lim.min/tickUnit ) * tickUnit
-        lastTick  = np.floor( lim.max/tickUnit ) * tickUnit
-        count = 0
-        ticks = [firstTick]
-        while ticks[-1] < lastTick-tickUnit/2:
-            count += 1
-            ticks.append( firstTick + count*tickUnit )
-    
-    # Calculate tick positions and text
-    ticksPos, ticksText = [], []
-    for tick in ticks:
-        pos = p0 + vec * ( (tick-lim.min) / lim.range )
-        text = '%1.4g' % tick
-        iExp = text.find('e')
-        if iExp>0:
-            front = text[:iExp+2]
-            text = front + text[iExp+2:].lstrip('0')
-        # Store
-        ticksPos.append( pos )
-        ticksText.append( text )
-    
-    # Done
-    return ticks, ticksPos, ticksText
-    
-
-class Axis(base.Wobject):
-    """ Axis(parent)
-    An Axis object represents the lines, ticks and grid that make
-    up an axis. Not to be confused with an Axes, which represents
-    a scene and is a Wibject.
-    
-    This is a helper class used by the Axes class.
-    """
-    
-    def __init__(self, parent):
-        base.Wobject.__init__(self, parent)
-        self._lineWidth = 1 # 0.8
-        self._minTickDist = 40
-        
-        # create tick units
-        self._tickUnits = []
-        for e in range(-10, 21):
-            for i in [10, 20, 25, 50]:
-                self._tickUnits.append( i*10**e)
-        
-        # corners of a cube in relative coordinates
-        self._corners = tmp = Pointset(3)
-        tmp.Append(0,0,0);  tmp.Append(1,0,0);  tmp.Append(0,1,0);  
-        tmp.Append(0,0,1);  tmp.Append(1,1,0);  tmp.Append(1,0,1); 
-        tmp.Append(0,1,1);  tmp.Append(1,1,1); 
-        
-        # Indices of the base corners for each dimension. 
-        # The order is very important, don't mess it up...
-        self._cornerIndicesPerDirection = [ [0,2,6,3], [3,5,1,0], [0,1,4,2] ]
-        
-        # Dicts to be able to optimally reuse text objects; creating new
-        # text objects or changing the text takes a relatively large amount
-        # of time (if done every draw).
-        self._textDicts = [{},{},{}]
-    
-    
-    def OnDraw(self):
-        axes = self.GetAxes()
-        if not axes:
-            return
-        if not axes.showAxis:
-            if self._children:                
-                for child in self.children:
-                    child.Destroy()
-            return
-        
-        try:
-            
-            # determine whether the used camera is a twoD camera
-            cam = axes.camera
-            isTwoDCam = cam is axes._cameras['twod']
-            
-            # get parameters
-            drawGrid = [v for v in axes.showGrid]
-            drawMinorGrid = [v for v in axes.showMinorGrid]
-            ticksPerDim = [axes.xTicks, axes.yTicks, axes.zTicks]
-            
-            # get limits
-            if isTwoDCam:
-                lims = axes.GetLimits()
-                lims = [lims[0], lims[1], cam.zlim]
-                maxd = 2
-            else:
-                lims = [cam.xlim, cam.ylim, cam.zlim]
-                maxd = 3
-            
-            # get labels
-            labels = [axes.xLabel, axes.yLabel, axes.zLabel]
-            
-            # To translate to real coordinates            
-            pmin = Point(lims[0].min, lims[1].min, lims[2].min)
-            pmax = Point(lims[0].max, lims[1].max, lims[2].max)        
-            def relativeToCoord(p):
-                pi = Point(1,1,1) - p
-                return pmin*pi + pmax*p
-            
-            # Get the 8 corners of the cube in real coords and screen pixels
-            proj = glu.gluProject
-            corners8_c = [relativeToCoord(p) for p in self._corners]            
-            corners8_s = [Point(proj(p.x,p.y,p.z)) for p in corners8_c]
-            
-            # the new text object dictionaries
-            newTextDicts = [{},{},{}]
-            
-            # pointsets for drawing lines and gridlines            
-            ppc = Pointset(3) # lines in real coords
-            pps = Pointset(3) # lines in screen pixels
-            ppg = Pointset(3) # dotted lines in real coords
-            
-            # we use this later to determine the order of the corners
-            self._delta = 1 
-            for i in axes.daspect:
-                if i<0: self._delta*=-1   
-            
-            # for each dimension ...
-            for d in range(maxd): # d for dimension/direction
-                lim = lims[d]
-                
-                # get the four corners that are of interest for this dimension
-                tmp = self._cornerIndicesPerDirection[d]
-                corners4_c = [corners8_c[i] for i in tmp]
-                corners4_s = [corners8_s[i] for i in tmp]
-                
-                # if 2D, use only those corners
-                if isTwoDCam:
-                    tmp1, tmp2 = [],[]
-                    for i in [0,1,0,1]:
-                        tmp1.append(corners4_c[i])
-                        tmp2.append(corners4_s[i])
-                    corners4_c, corners4_s = tmp1, tmp2
-                
-                # Get directional vectors in real coords and screen pixels. 
-                # Easily calculated since the first _corner elements are 
-                # 000,100,010,001
-                vector_c = corners8_c[d+1] -corners8_c[0]
-                vector_s = corners8_s[d+1] -corners8_s[0]
-                
-                # Should we correct tick Dist?
-                minTickDist = self._minTickDist
-                if isTwoDCam and d==0:
-                    mm = max(abs(lim.min),abs(lim.max))
-                    if mm >= 10000:
-                        minTickDist = 80 
-                
-                # Calculate tick distance in units
-                minTickDist *= vector_c.Norm() / vector_s.Norm()
-                
-                # Get index of corner to put ticks at
-                i0 = 0; bestVal = 999999999999999999999999
-                for i in range(4):
-                    if d==2: val = corners4_s[i].x
-                    else: val = corners4_s[i].y
-                    if val < bestVal:
-                        i0 = i
-                        bestVal = val
-                
-                # Get indices of next corners in line               
-                i1 = self._NextCornerIndex(i0, d, vector_s)
-                i2 = self._NextCornerIndex(i1, d, vector_s)
-                # get first corner and grid vectors
-                firstCorner = corners4_c[i0]
-                gv1 = corners4_c[i1] - corners4_c[i0]
-                gv2 = corners4_c[i2] - corners4_c[i1]
-                # get tick vector to indicate tick
-                gv1s = corners4_s[i1] - corners4_s[i0]
-                #tv = gv1 * (5 / gv1s.Norm() )
-                npixels = ( gv1s.x**2 + gv1s.y**2 ) ** 0.5 + 0.000001
-                tv = gv1 * (5.0 / npixels )
-                
-                # Always draw these corners
-                pps.Append(corners4_s[i0])
-                pps.Append(corners4_s[i0]+vector_s)
-                # Add line pieces to draw box
-                if axes.showBox:
-                    for i in range(4):
-                        if i is not i0:
-                            corner = corners4_s[i]
-                            pps.Append(corner)
-                            pps.Append(corner+vector_s)
-                
-                # Apply label
-                textDict = self._textDicts[d]
-                p1 = corners4_c[i0] + vector_c * 0.5
-                key = '_label_'
-                if key in textDict and textDict[key] in self._children:
-                    t = textDict.pop(key)
-                    t.text = labels[d]
-                    t.x, t.y, t.z = p1.x, p1.y, p1.z
-                else:
-                    #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                    t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                    t.fontSize=10
-                newTextDicts[d][key] = t                
-                t.halign = 0
-                t.textColor = axes._axisColor
-                # move up front
-                if not t in self._children[-3:]:                    
-                    self._children.remove(t) 
-                    self._children.append(t)
-                # get vec to calc angle
-                vec = Point(vector_s.x, vector_s.y)
-                if vec.x < 0:
-                    vec = vec * -1                
-                t.textAngle = float(vec.Angle() * 180/np.pi)
-                # keep up to date (so label can move itself just beyond ticks)
-                t._textDict = newTextDicts[d] 
-                
-                # Get ticks stuff
-                tickValues = ticksPerDim[d] # can be None
-                p1, p2 = firstCorner.Copy(), firstCorner+vector_c                
-                tmp = GetTicks(p1,p2, lim, minTickDist, tickValues)
-                ticks, ticksPos, ticksText = tmp
-                
-                # Apply Ticks
-                for tick, pos, text in zip(ticks, ticksPos, ticksText):
-                    # get little tail to indicate tick
-                    p1 = pos
-                    p2 = pos - tv
-                    # Add tick lines
-                    if isTwoDCam:
-                        factor = ( tick-firstCorner[d] ) / vector_c[d]
-                        p1s = corners4_s[i0] + vector_s * factor
-                        tmp = Point(0,0,0)
-                        tmp[int(not d)] = 4
-                        pps.Append(p1s)
-                        pps.Append(p1s-tmp)
-                    else:
-                        ppc.Append(p1)
-                        ppc.Append(p2)
-                    # z-axis has valign=0, thus needs extra space
-                    if d==2:
-                        text+='  '
-                    # put textlabel at tick                     
-                    textDict = self._textDicts[d]
-                    if tick in textDict and textDict[tick] in self._children:
-                        t = textDict.pop(tick)
-                        t.x, t.y, t.z = p2.x, p2.y, p2.z
-                    else:
-                        t = Text(self,text, p2.x,p2.y,p2.z, 'sans')
-                    # add to dict 
-                    newTextDicts[d][tick] = t                    
-                    # set other properties right
-                    t.visible = True
-                    if t.fontSize != axes._tickFontSize:
-                        t.fontSize = axes._tickFontSize
-                    t.textColor = axes._axisColor
-                    if d==2:
-                        t.valign = 0
-                        t.halign = 1
-                    else: 
-                        if isTwoDCam:
-                            if d==1:
-                                t.halign = 1
-                                t.valign = 0
-                            else:
-                                t.halign = 0
-                                t.valign = -1
-                        elif vector_s.y*vector_s.x >= 0:
-                            t.halign = -1
-                            t.valign = -1
-                        else:
-                            t.halign = 1
-                            t.valign = -1
-                
-                # We should hide this last tick if it sticks out
-                if isTwoDCam and d==0:
-                    # prepare text object to produce _vertices and _screenx
-                    t._Compile()
-                    t.OnDraw()
-                    # get positions
-                    fig = axes.GetFigure()
-                    if fig:
-                        tmp1 = fig.position.width
-                        tmp2 = t._screenx + t._vertices1[:,0].max() / 2
-                        # apply
-                        if t._vertices1 and tmp1 < tmp2:
-                            t.visible = False
-                
-                # get gridlines
-                if drawGrid[d] or drawMinorGrid[d]:
-                    # get more gridlines if required
-                    if drawMinorGrid[d]:
-                        ticks = self._GetTicks(tickUnit/5, lim)
-                    # get positions
-                    for tick in ticks:
-                        # get tick location
-                        p1 = firstCorner.Copy()
-                        p1[d] = tick
-                        # add gridlines
-                        p3 = p1+gv1
-                        p4 = p3+gv2
-                        ppg.Append(p1);  ppg.Append(p3)
-                        if not isTwoDCam:
-                            ppg.Append(p3);  ppg.Append(p4)
-            
-            # correct gridlines if twodcam so they are all at 0
-            # the grid is always exactly at 0. Images are at -0.1 or less.
-            # lines and poins are at 0.1
-            if isTwoDCam:
-                ppg.data[:,2] = 0.0
-            
-            # clean up the text objects that are left
-            for tmp in self._textDicts:                
-                for t in tmp.values():
-                    t.Destroy()
-            
-            # for next time ...
-            self._textDicts = newTextDicts
-            
-            # store drawing set for screen coordinate
-            self._pps = pps
-            
-            # prepare for drawing lines
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)        
-            gl.glVertexPointerf(ppc.data) 
-            # draw lines
-            clr = axes._axisColor
-            gl.glColor(clr[0], clr[1], clr[2])
-            gl.glLineWidth(self._lineWidth)
-            if len(ppc):
-                gl.glDrawArrays(gl.GL_LINES, 0, len(ppc))
-            # clean up
-            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-            
-            # prepare for drawing grid
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)        
-            gl.glVertexPointerf(ppg.data)        
-            # set stipple pattern
-            if not axes.gridLineStyle in lineStyles:
-                stipple = False
-            else:
-                stipple = lineStyles[axes.gridLineStyle]
-            if stipple:
-                gl.glEnable(gl.GL_LINE_STIPPLE)
-                gl.glLineStipple(1, stipple)
-            # draw gridlines
-            clr = axes._axisColor
-            gl.glColor(clr[0], clr[1], clr[2])
-            gl.glLineWidth(self._lineWidth)            
-            if len(ppg):
-                gl.glDrawArrays(gl.GL_LINES, 0, len(ppg))
-            # clean up
-            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-            gl.glDisable(gl.GL_LINE_STIPPLE)
-            
-        except Exception:
-            self.Destroy() # So the error message does not repeat itself
-            raise
-        
-    
-    
-    def OnDrawScreen(self):
-        # Actually draw the axis
-        
-        axes = self.GetAxes()
-        if not axes:
-            return
-        if not axes._axis:
-            return
-        
-        # get pointset
-        if not hasattr(self, '_pps'):
-            return
-        pps = self._pps
-        pps[:,2] = depthToZ( pps[:,2] )
-        
-        # prepare for drawing lines
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glVertexPointerf(pps.data)
-        if axes.camera is axes._cameras['twod']:
-            gl.glDisable(gl.GL_LINE_SMOOTH)
-        # draw lines
-        clr = axes._axisColor
-        gl.glColor(clr[0], clr[1], clr[2])
-        gl.glLineWidth(self._lineWidth)
-        if len(pps):
-            gl.glDrawArrays(gl.GL_LINES, 0, len(pps))
-        # clean up
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glEnable(gl.GL_LINE_SMOOTH)
-    
-    
-    def _GetTicks(self, tickUnit, lim):
-        firstTick = np.ceil(  lim.min/tickUnit ) * tickUnit
-        lastTick  = np.floor( lim.max/tickUnit ) * tickUnit
-        count = 0
-        ticks = [firstTick]
-        while ticks[-1] < lastTick-tickUnit/2:
-            count += 1
-#             tmp = firstTick + count*tickUnit
-#             if abs(tmp/tickUnit) < 10**-10:
-#                 tmp = 0 # due round-off err, 0 can otherwise be 0.5e-17 or so
-#             ticks.append(tmp)
-            ticks.append( firstTick + count*tickUnit )
-        return ticks
-    
-    def _NextCornerIndex(self, i, d, vector_s):
-        if d<2 and vector_s.x >= 0:
-            i+=self._delta
-        elif d==2 and vector_s.y < 0:
-            i+=self._delta
-        else:
-            i-=self._delta
-        if i>3: i=0
-        if i<0: i=3
-        return i
-
-
-class AxisLabel(Text):
-    """ AxisLabel(parent, text)
-    A special label that moves itself just past the tickmarks. 
-    The _textDict attribute should contain the Text objects of the tickmarks.
-    
-    This is a helper class.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        Text.__init__(self, *args, **kwargs)
-        self._textDict = {}
-        self._move = 0
-    
-    def OnDrawScreen(self):
-        
-        # get current position
-        pos = Point(self._screenx, self._screeny)
-        
-        # get normal vector eminating from that position
-        if int(self.textAngle) == 90:            
-            a = (self.textAngle + 90) * np.pi/180
-            self.valign = 1
-            distance = 8
-        else:
-            a = (self.textAngle - 90) * np.pi/180
-            self.valign = -1
-            distance = 3
-        normal = Point(np.cos(a), np.sin(a)).Normalize()
-        
-        # project the corner points of all text objects to the normal vector.
-        def project(p,normal):
-            p = p-pos
-            phi = abs(normal.Angle(p))
-            return float( p.Norm()*np.cos(phi) )
-        # apply
-        alpha = []          
-        for text in self._textDict.values():
-            if text is self:
-                continue
-            if text._vertices2 is None or not len(text._vertices2):
-                continue            
-            x,y = text._screenx, text._screeny
-            xmin, xmax = text._deltax
-            ymin, ymax = text._deltay
-            alpha.append( project(Point(x+xmin, y+ymin), normal) )
-            alpha.append( project(Point(x+xmin, y+ymax), normal) )
-            alpha.append( project(Point(x+xmax, y+ymin), normal) )
-            alpha.append( project(Point(x+xmax, y+ymax), normal) )
-        
-        # establish the amount of pixels that we should move along the normal.
-        if alpha:
-            self._move = distance+max(alpha)
-        
-        # move in the direction of the normal
-        tmp = pos + normal * self._move
-        self._screenx, self._screeny = int(tmp.x+0.5), int(tmp.y+0.5)
-        
-        # draw and reset position
-        Text.OnDrawScreen(self)
-        self._screenx, self._screeny = pos.x, pos.y
-        
-#         # debug ...
-#         if True:
-#             pp=Pointset(2)
-#             pp.Append(pos)
-#             pp.Append(pos+normal*60)
-#             for a in alpha:            
-#                 pp.Append(pos+normal*a)            
-#             if not hasattr(self, '_tmp'):
-#                 self._tmp =Line(self, pp)
-#             else:
-#                 self._tmp.points = pp
-#             self._tmp.OnDraw()
 
 
 

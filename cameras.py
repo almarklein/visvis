@@ -93,6 +93,9 @@ class BaseCamera(object):
         # store scene to render in
         self.axes = axes
         
+        # flag for axis
+        self.isTwoD = False
+        
         # init limits of what to visualize        
         self.xlim = Range(0,1)
         self.ylim = Range(0,1)
@@ -145,6 +148,9 @@ class TwoDCamera(BaseCamera):
     """
     
     def OnInit(self):
+        
+        # Set flag
+        self.isTwoD = True
         
         # indicate part that we view.
         # view_loc is the coordinate that we center on
@@ -395,10 +401,8 @@ class TwoDCamera(BaseCamera):
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], 0.0)
     
 
-
-
-class PolarCamera(TwoDCamera):
-    """ The polar camera is a camera to visualise 3D data. It uses
+class ThreeDCamera(TwoDCamera):
+    """ The ThreeDCamera camera is a camera to visualise 3D data. It uses
     orthographic projection, so it is like looking at your data from
     outer space. In contrast to the 2D camera, the camera can be 
     rotated around the data to look at it from different angles.
@@ -706,7 +710,7 @@ class PolarCamera(TwoDCamera):
 
 
 # todo: use quaternions to fly it?
-class FlyCamera(PolarCamera):
+class FlyCamera(ThreeDCamera):
     """ The fly camera is a funky camera to visualise 3D data.
     
     Think of the fly camera as a remote controlled vessel with
@@ -765,9 +769,9 @@ class FlyCamera(PolarCamera):
     def Reset(self, event=None):
         """ Position the camera at a suitable position from the scene."""
         
-        # call the Polar camera reset... It calls Draw(), which is thus called
+        # call the 3D camera reset... It calls Draw(), which is thus called
         # unnecesary, but hell, you dont reset that often...
-        PolarCamera.Reset(self)
+        ThreeDCamera.Reset(self)
         
         # get aspect ratio
         ar = self.axes.daspect
@@ -917,7 +921,7 @@ class FlyCamera(PolarCamera):
 
     def SetView(self):
         
-        # Note that this method is almost identical to the polar 
+        # Note that this method is almost identical to the 3D 
         # camera's implementation. The only difference is that
         # this implementation uses gluPerspective rather than
         # glOrtho, and some signs for the angles are changed.    
