@@ -537,8 +537,13 @@ class Point(BasePoints):
         if not isinstance(other, Point) or other.ndim != self.ndim:
             return False
         return (other.data == self.data).sum() == self.ndim
-            
-
+    
+    def __ne__(self, other):
+        """ Test whether two poins are NOT the same. """
+        if not isinstance(other, Point) or other.ndim != self.ndim:
+            return True
+        return (other.data == self.data).sum() != self.ndim
+    
     ## indexing etc
         
     def __setitem__(self,index,value):

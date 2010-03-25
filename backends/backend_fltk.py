@@ -62,6 +62,8 @@ class GLWidget(fltk.Fl_Gl_Window):
     
     def handle(self, event):
         """ All events come in here. """
+        if not self.figure:
+            return 1
         
         # map fltk buttons to visvis buttons
         buttons = [0,1,0,2,0,0,0]
@@ -108,8 +110,9 @@ class GLWidget(fltk.Fl_Gl_Window):
     
     def resize(self, x, y, w, h):
         # Overload resize function to also draw after resizing
-        fltk.Fl_Gl_Window.resize(self, x, y, w, h)
-        self.figure._OnResize()
+        if self.figure:
+            fltk.Fl_Gl_Window.resize(self, x, y, w, h)
+            self.figure._OnResize()
     
     def draw(self):
         # Do the draw commands now

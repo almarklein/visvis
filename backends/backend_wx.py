@@ -177,18 +177,21 @@ class GLWidget(GLCanvas):
                 return key, ''
     
     def OnEnter(self, event):    
-        ev = self.figure.eventEnter
-        ev.Clear()
-        ev.Fire()
+        if self.figure:
+            ev = self.figure.eventEnter
+            ev.Clear()
+            ev.Fire()
     
     def OnLeave(self, event):    
-        ev = self.figure.eventLeave
-        ev.Clear()
-        ev.Fire()
+        if self.figure:
+            ev = self.figure.eventLeave
+            ev.Clear()
+            ev.Fire()
         
-    def OnResize(self, event): 
-        self.figure._OnResize()
-        event.Skip()
+    def OnResize(self, event):
+        if self.figure:
+            self.figure._OnResize()
+            event.Skip()
     
     def OnClose(self, event):        
         if self.figure:
@@ -201,8 +204,9 @@ class GLWidget(GLCanvas):
         event.Skip()
     
     def OnFocus(self, event):
-        BaseFigure._currentNr = self.figure.nr
-        event.Skip()
+        if self.figure:
+            BaseFigure._currentNr = self.figure.nr
+            event.Skip()
 
     def OnPaint(self, event):
         # I read that you should always create a PaintDC when implementing
