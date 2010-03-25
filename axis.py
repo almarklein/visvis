@@ -166,6 +166,8 @@ def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
     ticksPos, ticksText = [], []
     for tick in ticks:
         pos = p0 + vec * ( (tick-lim.min) / lim.range )
+        if tick == -0: # Prevent a minus sign
+            tick = 0
         text = '%1.4g' % tick
         iExp = text.find('e')
         if iExp>0:
