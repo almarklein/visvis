@@ -327,6 +327,8 @@ class Line(Wobject):
     They are displayed by a line between these points and/or markers drawn
     at the point coordinates.
     
+    Line objects can be created with the function vv.plot().
+    
     There are several linestyles that can be used:
       * -  a solid line
       * :   a dotted line

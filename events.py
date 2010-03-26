@@ -73,15 +73,20 @@ class CallableObject:
 
 
 class BaseEvent:
-    """ Base event object
-    Contains information about the event: mouse location, mouse button,
-    key being pressed, text of the key. 
-    One can Bind or Unbind a callable to the event. 
-    When fired, all handlers that are bind to this event are called, 
-    until the event is handled (a handler returns True). The handlers
-    are called with the event object as an argument. The event.owner 
-    provides information of what wobject/wibject sent the event. 
+    """ The BaseEvent is the simplest type of event. 
+    
+    The purpose of the event class is to provide a way to bind/unbind 
+    to events and to fire them. At the same time, it is the place where
+     the properties of the event are stored (such mouse location, key 
+    being pressed, ...).
+    
+    One can Bind or Unbind a callable to the event. When fired, all 
+    handlers that are bind to this event are called, until the event is 
+    handled (a handler returns True). The handlers are called with the 
+    event object as an argument. The event.owner providesa reference of 
+    what wobject/wibject sent the event.     
     """
+    
     def __init__(self, owner):
         # users should not change type, owner or handlers.       
         self._owner = weakref.ref(owner)
@@ -193,7 +198,7 @@ class BaseEvent:
 
 
 class MouseEvent(BaseEvent):
-    """ A MouseEvent is an (abstract) event for things that happen 
+    """ A MouseEvent is an event for things that happen 
     with the mouse.
     """
     
@@ -253,7 +258,7 @@ class MouseEvent(BaseEvent):
                 else:
                     cam = owner._cameras['2d']
                 if owner.parent: # or screen to world cannot be calculated
-                    self._x2d, self._y2d = cam.ScreenToWorld((absx, absy))
+                    self._x2d, self._y2d = cam.ScreenToWorld((self._x, self._y))
     
     
     @property
@@ -301,7 +306,7 @@ class MouseEvent(BaseEvent):
 
 
 class KeyEvent(BaseEvent):
-    """ A KeyEvent event is an (abstract) event for things that happen 
+    """ A KeyEvent event is an event for things that happen 
     with the keyboard.
     """
     
