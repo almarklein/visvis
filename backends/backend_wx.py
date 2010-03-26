@@ -146,17 +146,13 @@ class GLWidget(GLCanvas):
     def OnKeyDown(self, event):
         key, text = self._ProcessKey(event)
         ev = self.figure.eventKeyDown
-        ev.Clear()
-        ev.key = key
-        ev.text = text
+        ev.Set(key, text)
         ev.Fire()
     
     def OnKeyUp(self, event):        
         key, text = self._ProcessKey(event)        
         ev = self.figure.eventKeyUp
-        ev.Clear()
-        ev.key = key
-        ev.text = text
+        ev.Set(key, text)
         ev.Fire()
     
     def _ProcessKey(self,event):
@@ -179,13 +175,13 @@ class GLWidget(GLCanvas):
     def OnEnter(self, event):    
         if self.figure:
             ev = self.figure.eventEnter
-            ev.Clear()
+            ev.Set(0,0,0)
             ev.Fire()
     
     def OnLeave(self, event):    
         if self.figure:
             ev = self.figure.eventLeave
-            ev.Clear()
+            ev.Set(0,0,0)
             ev.Fire()
         
     def OnResize(self, event):

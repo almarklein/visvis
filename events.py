@@ -86,19 +86,16 @@ class BaseEvent:
         # users should not change type, owner or handlers.       
         self._owner = weakref.ref(owner)
         self._handlers = []
-        self.Clear()
     
-    def Clear(self):
-        """ Clear the properties of the event. Do this before setting
-        them and firing the event. """
-        self.x = 0
-        self.y = 0
-        self.x2d = 0
-        self.y2d = 0
-        self.button = 0
-        self.key = 0
-        self.text = ""
-
+    
+    def Set(self):
+        """ Set() 
+        Set the event properties before firing it. In the base event
+        there are not properties to set.
+        """
+        pass
+    
+    
     @property
     def owner(self):
         """ The object that this event belongs to. """
@@ -112,7 +109,8 @@ class BaseEvent:
     
     
     def Bind(self, func):
-        """ Add an eventhandler to the list.             
+        """ Bind(func)
+        Add an eventhandler to the list.             
         func (the callback/handler) must be a callable. It is called
         with one argument: the event instance, which contains the mouse 
         location for the mouse event and the keycode for the key event.
@@ -136,7 +134,8 @@ class BaseEvent:
 
 
     def Unbind(self, func=None):
-        """ Unsubscribe a handler, If func is None, remove all handlers.      
+        """ Unbind(func=None)
+        Unsubscribe a handler, If func is None, remove all handlers.      
         """
         if func is None:
             self._handlers[:] = []
@@ -149,7 +148,8 @@ class BaseEvent:
     
     
     def Fire(self):
-        """ Fire the event, calling all functions that are bound
+        """ Fire()
+        Fire the event, calling all functions that are bound
         to it, untill the event is handled (a handler returns True).
         """
         
@@ -192,57 +192,185 @@ class BaseEvent:
                 print tmp
 
 
-# events for all 
-class EventMouseDown(BaseEvent):
-    """ Fires when the mouse is pressed down while over the 
-    object. Not fired when over a child of the object. """
+class MouseEvent(BaseEvent):
+    """ A MouseEvent is an (abstract) event for things that happen 
+    with the mouse.
+    """
+    
+    def __init__(self, owner):
+        BaseEvent.__init__(self, owner)
+        
+        self._x, self._y = 0, 0
+        self._x2d, self._y2d = 0, 0
+        self._but = 0
+    
+    
+    def Set(self, absx, absy, but):
+        """ Set(absx, absy, but)
+        Set the event properties before firing it. 
+        """
+        
+        # Set properties we can alway set
+        self._absx = absx
+        self._absy = absy
+        self._but = but
+        
+        # Init other properties
+        self._x = absx
+        self._y = absy
+        self._x2d = 0
+        self._y2d = 0
+        
+        # Try getting more information on the owning object
+        owner = self._owner()
+        if owner:
+            
+            # Can we Set the event at all?
+            if owner._destroyed:
+                return
+            
+            # Determine axes (for Wobjects)
+            axes = None
+            if hasattr(owner, 'GetAxes'):
+                axes = owner.GetAxes()
+                if not axes:
+                    return
+            
+            if hasattr(owner, 'position'):
+                # A Wibject: use relative coordinates if not a figure
+                if owner.parent:
+                    self._x -= owner.position.absLeft
+                    self._y -= owner.position.absTop
+            elif axes:
+                # A Wobject: use axes coordinates
+                self._x -= axes.position.absLeft
+                self._y -= axes.position.absTop
+            
+            if axes or hasattr(owner, '_cameras'):
+                # Also give 2D coordinates
+                if axes:
+                    cam = axes._cameras['2d']                    
+                else:
+                    cam = owner._cameras['2d']
+                if owner.parent: # or screen to world cannot be calculated
+                    self._x2d, self._y2d = cam.ScreenToWorld((absx, absy))
+    
+    
+    @property
+    def absx(self):
+        """ The absolute x position in screen coordinates when the event
+        happened. """
+        return self._absx
+    
+    @property
+    def absy(self):
+        """ The absolute y position in screen coordinates when the event
+        happened. """
+        return self._absy
+    
+    @property
+    def x(self):
+        """ The x position in screen coordinates relative to the owning object
+        when the event happened. (For Wobjects, relative to the Axes.) """
+        return self._x
+    
+    @property
+    def y(self):
+        """ The y position in screen coordinates relative to the owning object
+        when the event happened. (For Wobjects, relative to the Axes.) """
+        return self._y
+    
+    @property
+    def x2d(self):
+        """ The x position in 2D world coordinates when the event happened. 
+        This is only valid when the used camera is 2D.
+        """
+        return self._x2d
+    
+    @property
+    def y2d(self):
+        """ The y position in 2D world coordinates when the event happened. 
+        This is only valid when the used camera is 2D.
+        """
+        return self._y2d
+    
+    @property
+    def button(self):
+        """ The The mouse button that was pressed, 0=none, 1=left, 2=right. """
+        return self._but
+
+
+class KeyEvent(BaseEvent):
+    """ A KeyEvent event is an (abstract) event for things that happen 
+    with the keyboard.
+    """
+    
+    def __init__(self, owner):
+        BaseEvent.__init__(self, owner)
+        
+        self._key = 0
+        self._text = ''
+    
+    def Set(self, key, text=''):
+        """ Set(key, text='')
+        Set the event properties before firing it. 
+        """
+        self._key = key
+        self._text = text
+    
+    @property
+    def key(self):
+        """ The integer keycode of the key. """
+        return self._key
+    
+    @property
+    def text(self):
+        """ The text that the key represents (if available). """
+        return self._text
+
+
+## Specific events for all objects
+# Make classes for each specific event that is standard for all object,
+# to help introspection.
+
+class EventMouseDown(MouseEvent):
+    """ Fired when the mouse is pressed down on this object. (Also 
+        fired the first click of a double click.) """
     pass
-class EventMouseUp(BaseEvent):
-    """ Fires when the mouse is released while over the object.  """
+class EventMouseUp(MouseEvent):
+    """ Fired when the mouse is released after having been clicked down
+        on this object (even if the mouse is now not over the object). (Also
+        fired on the first click of a double click.) """
     pass
-class EventDoubleClick(BaseEvent):
-    """ Fires when the mouse is dubble clicked over the object. """
+class EventDoubleClick(MouseEvent):
+    """ Fired when the mouse is double-clicked on this object. """
     pass
-class EventEnter(BaseEvent):
-    """ Fires when the mouse enters the object or one of its children."""
+class EventEnter(MouseEvent):
+    """ Fired when the mouse enters this object or one of its children. """
     pass
-class EventLeave(BaseEvent):
-    """ Fires when the mouse leaves the object. This does not fire when
-    it moves over a child of the object. """
+class EventLeave(MouseEvent):
+    """ Fired when the mouse leaves this object (and is also not over any
+        of it's children). """
     pass
 
-class EventMotion(BaseEvent):
-    """ Fires when the mouse is moved over the object. Not fired when
-    the mouse is over one of its children. """
+class EventMotion(MouseEvent):
+    """ Fired when the mouse is moved anywhere in the figure. """
+    pass
+class EventKeyDown(KeyEvent):
+    """ Fired when a key is pressed down while the figure is active. """
+    pass
+class EventKeyUp(KeyEvent):
+    """ Fired when a key is released while the figure is active. """
     pass
 
-# only for wibjects
+## Only for wibjects
 
 class EventPosition(BaseEvent):
-    """ Fires when the posision of a wibject changes. """
+    """ Fired when the position (or size) of this wibject changes. """ 
     pass
     
-# only available for figures
 
-class EventKeyDown(BaseEvent):
-    """ Fires when a key is pressed down. """
-    pass
-class EventKeyUp(BaseEvent):
-    """ Fires when a key is released. """
-    pass
-class EventResize(BaseEvent):
-    """ Fires when the figure is resied. """
-    pass
-class EventClose(BaseEvent): 
-    """ Fires when the figure is closed. """
-    pass
-class EventAfterDraw(BaseEvent): 
-    """ Fires right after the figure is drawn. """
-    pass
-
-class EventPress(BaseEvent):
-    """ Fired when the mouse released over the button after a mouseDown. 
-    """ 
+## Processing events + timers
 
 # For callLater function
 _callLater_callables = {}

@@ -38,8 +38,9 @@ from textures import Colormap
 from textRender import Label, Text
 from core import BaseFigure, Axes
 from simpleWibjects import RadioButton, DraggableBox
-from points import Point, Pointset
+import axis
 
+from points import Point, Pointset
 import weakref
 
 class ColormapEditor(DraggableBox):
@@ -83,6 +84,7 @@ class ColormapEditor(DraggableBox):
         # Bind events to THIS wibject, and process them in the nodeWidget
         # This is to allow the user to click just outside the wibject also.
         self.eventMouseDown.Bind(self._OnDown)
+        self.eventMouseUp.Bind(self._OnUp)
         self.eventDoubleClick.Bind(self._OnDoubleClick)
         
         # Set mappables
@@ -95,13 +97,21 @@ class ColormapEditor(DraggableBox):
         event2 = self._nodeWidget.eventMouseDown
         pos = self._nodeWidget.position
         # Calc location and limit
-        event2.x = event.x - pos.left
-        event2.y = event.y - pos.top
+#         event2.Set(event.x-pos.left, event.y-pos.top, event.button)
+        event2.Set(event.absx, event.absy, event.button)
         # Fire!
         if event2.x > -10 and event2.x < pos.width + 10:
             if event2.y > -10 and event2.y < pos.height + 10:
                 event2.Fire()
                 return True # Prevent dragging
+    
+    def _OnUp(self, event):
+        """ Pass event on """
+        # Get event of nodwWibject and its position
+        event2 = self._nodeWidget.eventMouseUp
+        event2.Set(event.absx, event.absy, event.button)
+        # Fire!        
+        event2.Fire()
     
     
     def _OnDoubleClick(self, event):
@@ -110,8 +120,8 @@ class ColormapEditor(DraggableBox):
         event2 = self._nodeWidget.eventDoubleClick
         pos = self._nodeWidget.position
         # Calc location and limit
-        event2.x = event.x - pos.left
-        event2.y = event.y - pos.top
+#         event2.Set(event.x-pos.left, event.y-pos.top, event.button)
+        event2.Set(event.absx, event.absy, event.button) 
         # Fire!
         event2.Fire()
     
@@ -263,9 +273,7 @@ class CM_NodeWidget(Box):
         self._line = self._allLines[3] 
         
         # Bind events
-        fig = self.GetFigure()
-        if fig:
-            fig.eventMotion.Bind(self._OnMotion)
+        self.eventMotion.Bind(self._OnMotion)
         self.eventMouseUp.Bind(self._OnUp)
         self.eventMouseDown.Bind(self._OnDown)
         self.eventDoubleClick.Bind(self._OnDoubleClick)
@@ -293,7 +301,6 @@ class CM_NodeWidget(Box):
     
     
     def _OnUp(self, event=None):
-        
         if self._selectedNode is None:
             return
         
@@ -314,7 +321,7 @@ class CM_NodeWidget(Box):
             return
         
         # calculate and limit new position
-        x, y = event.x - self.position.absLeft, event.y - self.position.absTop
+        x, y = event.x, event.y
         pos = Point(x,y) / Point(self.position.size)
         if pos.x<0: pos.x=0
         if pos.y<0: pos.y=0
@@ -551,7 +558,7 @@ class Colorbar(Box):
             
             # Get tickmarks
             import core
-            ticks, ticksPos, ticksText = core.GetTicks(p0, p1, mapable.clim)
+            ticks, ticksPos, ticksText = axis.GetTicks(p0, p1, mapable.clim)
             
             newLabelPool = {}
             linePieces = Pointset(2)

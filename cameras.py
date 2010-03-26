@@ -169,10 +169,10 @@ class TwoDCamera(BaseCamera):
         self.ref_zoomy = 100.0        
         
         # bind events
-        axes, figure = self.axes, self.axes.GetFigure()
+        axes = self.axes
         axes.eventMouseDown.Bind( self.OnMouseDown)        
         axes.eventMouseUp.Bind( self.OnMouseUp)        
-        figure.eventMotion.Bind( self.OnMotion)
+        axes.eventMotion.Bind( self.OnMotion)
         axes.eventDoubleClick.Bind( self.Reset)
     
     
@@ -433,13 +433,13 @@ class ThreeDCamera(TwoDCamera):
         self.controlIsDown = False
         
         # Bind to events
-        axes, figure = self.axes, self.axes.GetFigure()
-        figure.eventKeyDown.Bind(self.OnKeyDown)
-        figure.eventKeyUp.Bind(self.OnKeyUp)        
+        axes = self.axes
+        axes.eventKeyDown.Bind(self.OnKeyDown)
+        axes.eventKeyUp.Bind(self.OnKeyUp)        
         # 
         axes.eventMouseDown.Bind(self.OnMouseDown)
         axes.eventMouseUp.Bind(self.OnMouseUp)        
-        figure.eventMotion.Bind(self.OnMotion)
+        axes.eventMotion.Bind(self.OnMotion)
         axes.eventDoubleClick.Bind(self.Reset)
     
     
@@ -757,12 +757,11 @@ class FlyCamera(ThreeDCamera):
         self._timer.Bind(self.OnTimer)
         
         # Bind to events
-        axes, figure = self.axes, self.axes.GetFigure()
-        figure.eventKeyDown.Bind(self.OnKeyDown)        
+        axes = self.axes
+        axes.eventKeyDown.Bind(self.OnKeyDown)        
         # 
         axes.eventMouseDown.Bind(self.OnMouseDown)
-        axes.eventMouseUp.Bind(self.OnMouseUp)        
-        #self.axes.figure.eventMotion.Bind(self.OnMotion)
+        axes.eventMouseUp.Bind(self.OnMouseUp)
         axes.eventDoubleClick.Bind(self.Reset)
 
 

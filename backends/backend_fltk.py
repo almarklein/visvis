@@ -88,11 +88,11 @@ class GLWidget(fltk.Fl_Gl_Window):
             self.OnMotion(None)
         elif event == fltk.FL_ENTER:
             ev = self.figure.eventEnter
-            ev.Clear()
+            ev.Set(0,0,0)
             ev.Fire()
         elif event == fltk.FL_LEAVE:
             ev = self.figure.eventLeave
-            ev.Clear()
+            ev.Set(0,0,0)
             ev.Fire()
         elif event == fltk.FL_KEYDOWN:
             self.OnKeyDown(None)
@@ -129,17 +129,13 @@ class GLWidget(fltk.Fl_Gl_Window):
     def OnKeyDown(self, event):
         key, text = self._ProcessKey()
         ev = self.figure.eventKeyDown
-        ev.Clear()
-        ev.key = key
-        ev.text = text
+        ev.Set(key, text)
         ev.Fire()
     
     def OnKeyUp(self, event):        
         key, text = self._ProcessKey()        
         ev = self.figure.eventKeyUp
-        ev.Clear()
-        ev.key = key
-        ev.text = text
+        ev.Set(key, text)
         ev.Fire()
     
     def _ProcessKey(self):

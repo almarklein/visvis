@@ -28,7 +28,7 @@ $Rev: 118 $
 
 import OpenGL.GL as gl
 
-from events import BaseEvent, EventPress
+from events import BaseEvent, MouseEvent
 from misc import Property
 from base import Box
 from textRender import Label
@@ -62,7 +62,7 @@ class PushButton(Label):
         self.eventLeave.Bind(self._OnLeave)
         
         # Create new event and bind handlers to implement it
-        self._eventPress = EventPress(self)
+        self._eventPress = MouseEvent(self)
         self.eventMouseUp.Bind(self._OnPressDetectUp)
     
     
@@ -88,8 +88,9 @@ class PushButton(Label):
         """
         return self._eventPress
     
-    def _OnPressDetectUp(self, event):
+    def _OnPressDetectUp(self, evt):
         if self._isOver:
+            self._eventPress.Set(evt.absx, evt.absy, evt.button)
             self._eventPress.Fire()
 
 
@@ -192,8 +193,7 @@ class DraggableBox(Box):
         self.eventPosition.Bind(self._DragCalcDots)
         
         # Bind to figure events
-        f = self.GetFigure()
-        f.eventMotion.Bind(self._DragOnMove)
+        self.eventMotion.Bind(self._DragOnMove)
         
     
     
@@ -223,24 +223,24 @@ class DraggableBox(Box):
         pos = self.position
         # Store position if clicked on draggable arreas
         if event.x < 10 and event.y < 10:
-            self._dragStartPos = f.mousepos[0],f.mousepos[1]
+            self._dragStartPos = event.absx, event.absy
         elif event.x > pos.width-10 and event.y > pos.height-10:
-            self._dragStartPos = f.mousepos[0],f.mousepos[1]
+            self._dragStartPos = event.absx, event.absy
             self._dragResizing = True
     
     
-    def _DragOnMove(self, event):        
+    def _DragOnMove(self, event):
         if not self._dragStartPos:
             return
         elif self._dragResizing:
-            self.position.w += event.x - self._dragStartPos[0]
-            self.position.h += event.y - self._dragStartPos[1]
+            self.position.w += event.absx - self._dragStartPos[0]
+            self.position.h += event.absy - self._dragStartPos[1]
             event.owner.Draw()
         else: # dragging
-            self.position.x += event.x - self._dragStartPos[0]
-            self.position.y += event.y - self._dragStartPos[1]
+            self.position.x += event.absx - self._dragStartPos[0]
+            self.position.y += event.absy - self._dragStartPos[1]
             event.owner.Draw()
-        self._dragStartPos = event.x, event.y
+        self._dragStartPos = event.absx, event.absy
     
     def _DragOnUp(self, event):
         self._dragStartPos = None
