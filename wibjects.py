@@ -39,7 +39,10 @@ class Title(Label):
     A label wibject that places itself at the top of its parent (which
     should be an Axes). The axes' position is corrected so the title
     will fit on screen.
+    
+    A Title can be created with the function vv.title().
     """
+    
     def __init__(self, axes, text):
         Label.__init__(self, axes, text)
         

@@ -449,6 +449,8 @@ class Colorbar(Box):
     It should be attached to an Axes or Figure. The displayed colormap
     is that of the last added (or last added in the last axes) mapable
     object.
+    
+    A Colorbar can be created with the function vv.colorbar().
     """
     
     def __init__(self, parent):        
@@ -509,11 +511,15 @@ class Colorbar(Box):
         else:
             texCords = [1,0,0,1]
         
+        
         # draw plane
         if mapable and isinstance(mapable._colormap, Colormap):
             # Use it's colormap texture
             mapable._colormap.Enable()
+            # Disable alpha channel (by not blending)
+            gl.glDisable(gl.GL_BLEND)
             gl.glColor(1.0, 1.0, 1.0, 1.0)
+            # Draw quads
             gl.glBegin(gl.GL_QUADS)
             gl.glTexCoord1f(texCords[0]); gl.glVertex2f(0,0)
             gl.glTexCoord1f(texCords[1]); gl.glVertex2f(0,h)
@@ -522,6 +528,7 @@ class Colorbar(Box):
             gl.glEnd()
             
             # Clean up
+            gl.glEnable(gl.GL_BLEND)
             gl.glFlush()
             mapable._colormap.Disable()
         

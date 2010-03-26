@@ -219,6 +219,13 @@ class GLWidget(QtOpenGL.QGLWidget):
 
 
 class Figure(BaseFigure):
+    """ This is the Qt4 implementation of the figure class.
+    
+    A Figure represents the OpenGl context and is the root
+    of the visualization tree; a Figure Wibject does not have a parent.
+    
+    A Figure can be created with the function vv.figure() or vv.gcf().
+    """
     
     def __init__(self, parent, *args, **kwargs):
         

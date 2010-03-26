@@ -1186,6 +1186,8 @@ class Texture2D(BaseTexture):
     A data type that represents structured data in
     two dimensions (an image). Supports grayscale, RGB, 
     and RGBA images.
+    
+    Texture2D objects can be created with the function vv.imshow().
     """
     
     def __init__(self, parent, data):
@@ -1374,6 +1376,8 @@ class Texture3D(BaseTexture):
     software mode. This is unfortunately (as far as I know) not possible 
     to detect programatically. It might help if your data is shaped a 
     power of 2. The mip renderer is the 'easiest' for most systems to render.
+    
+    Texture3D objects can be created with the function vv.volshow().
     """
     
     def __init__(self, parent, data, renderStyle='mip'):

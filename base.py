@@ -437,8 +437,7 @@ class BaseObject(object):
         # Init list with result
         result = []
         
-        # todo: use generator expression?
-        # Try all children recursively
+        # Try all children recursively        
         for child in self._children:
             if callback(child):
                 result.append(child)

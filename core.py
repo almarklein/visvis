@@ -189,9 +189,10 @@ class BaseFigure(base.Wibject):
     class and implements the required methods and makes sure all GUI
     events are translated to visvis events.
     
-    Since the figure represents the OpenGl context, it is also the root
-    of the visualization tree; a figure wibject does not have a parent.
+    Since the figure represents the OpenGl context and is the root
+    of the visualization tree; a Figure Wibject does not have a parent.
     
+    A Figure can be created with the function vv.figure() or vv.gcf().
     """
     
     # dictionary of all figures objects: int -> Figure instance
@@ -910,6 +911,8 @@ class Axes(base.Wibject):
     being flipped. (The function imshow() for example flips the 
     y-dimension). If daspectAuto is False, all dimensions are always
     equally zoomed (The function imshow() sets this to False).
+    
+    An Axes can be created with the function vv.subplot() or vv.gca().
     """ 
     
     def __init__(self, parent, axisClass=None):
@@ -1658,6 +1661,9 @@ class Legend(simpleWibjects.DraggableBox):
     A legend is a wibject that should be a child (does not have
     to be the direct child) of an axes. It displays a description for 
     each line in the axes, and is draggable.
+    
+    A Legend can be shown with the function vv.legend(), or using the
+    Axes.legend property.
     """
     
     def __init__(self, parent):
