@@ -41,7 +41,7 @@ import weakref
 from misc import Property, Range, OpenGLError, Transform_Base
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 from misc import getColor
-from events import *
+import events
 
 from points import Pointset, Quaternion
 
@@ -78,35 +78,57 @@ class BaseObject(object):
         self.parent = parent
         
         # create events
-        self._eventEnter = EventEnter(self)
-        self._eventLeave = EventLeave(self)
-        self._eventMouseDown = EventMouseDown(self) 
-        self._eventMouseUp = EventMouseUp(self)       
-        self._eventDoubleClick = EventDoubleClick(self)
+        self._eventMouseDown = events.EventMouseDown(self) 
+        self._eventMouseUp = events.EventMouseUp(self)       
+        self._eventDoubleClick = events.EventDoubleClick(self)
+        self._eventEnter = events.EventEnter(self)
+        self._eventLeave = events.EventLeave(self)        
+        #
+        self._eventMotion = events.EventMotion(self)
+        self._eventKeyDown = events.EventKeyDown(self)
+        self._eventKeyUp = events.EventKeyUp(self)
+    
     
     @property
+    def eventMouseDown(self):
+        """ Fired when the mouse is pressed down on this object. (Also 
+        fired the first click of a double click.) """
+        return self._eventMouseDown
+    @property
+    def eventMouseUp(self):
+        """ Fired when the mouse is released after having been clicked down
+        on this object (even if the mouse is now not over the object). (Also
+        fired on the first click of a double click.) """
+        return self._eventMouseUp
+    @property
+    def eventDoubleClick(self):
+        """ Fired when the mouse is double-clicked on this object. """
+        return self._eventDoubleClick
+    @property
     def eventEnter(self):
-        """ Fired when the mouse enters this object or one of its children."""
+        """ Fired when the mouse enters this object or one of its children. """
         return self._eventEnter
     @property
     def eventLeave(self):
         """ Fired when the mouse leaves this object (and is also not over any
         of it's children). """
         return self._eventLeave
+    
     @property
-    def eventMouseDown(self):
-        """ Fired when the mouse is pressed down on this object (also 
-        the first click of a double click.) """
-        return self._eventMouseDown
+    def eventMotion(self):
+        """ Fires when the mouse is moved over the object. Not fired when
+        the mouse is over one of its children. """
+        return self._eventMotion    
     @property
-    def eventMouseUp(self):
-        """ Fired when the mouse is released. 
-        (Also on the first click of a double click.) """
-        return self._eventMouseUp
+    def eventKeyDown(self):        
+        """ Fires when the mouse is moved over the object. Not fired when
+        the mouse is over one of its children. """
+        return self._eventKeyDown    
     @property
-    def eventDoubleClick(self):
-        """ Fired when the mouse is double-clicked on this object. """
-        return self._eventDoubleClick
+    def eventKeyUp(self):        
+        """ Fires when the mouse is moved over the object. Not fired when
+        the mouse is over one of its children. """
+        return self._eventKeyUp
     
     
     def _DrawTree(self, mode='normal', pickerHelper=None):
@@ -256,7 +278,7 @@ class BaseObject(object):
         Overload this to clean up any resources other than the GL objects. 
         """
         for att in self.__dict__.values():
-            if isinstance(att, BaseEvent):
+            if isinstance(att, events.BaseEvent):
                 att.Unbind()
              
     
@@ -415,6 +437,7 @@ class BaseObject(object):
         # Init list with result
         result = []
         
+        # todo: use generator expression?
         # Try all children recursively
         for child in self._children:
             if callback(child):
@@ -461,7 +484,7 @@ class Wibject(BaseObject):
         self._bgcolor = (0.8,0.8,0.8)
         
         # event for position
-        self._eventPosition = EventPosition(self)
+        self._eventPosition = events.EventPosition(self)
     
     
     @property

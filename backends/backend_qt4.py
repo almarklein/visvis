@@ -136,17 +136,17 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.figure._GenerateMouseEvent('motion', event.x(), event.y())
     
     def keyPressEvent(self, event):
-        ev = self.figure.eventKeyDown
-        ev.Clear()
-        ev.key = self._ProcessKey(event)
-        ev.text = str(event.text())
+        ev = self.figure.eventKeyDown        
+        key = self._ProcessKey(event)
+        text = str(event.text())
+        ev.Set(key, text)
         ev.Fire() 
     
     def keyReleaseEvent(self, event):
         ev = self.figure.eventKeyUp
-        ev.Clear()
-        ev.key = self._ProcessKey(event)
-        ev.text = str(event.text())
+        key = self._ProcessKey(event)
+        text = str(event.text())
+        ev.Set(key, text)
         ev.Fire()
     
     def _ProcessKey(self,event):
@@ -161,17 +161,17 @@ class GLWidget(QtOpenGL.QGLWidget):
             return key
     
     def enterEvent(self, event):
-        if self.figure:
+        if self.figure:            
             ev = self.figure.eventEnter
-            ev.Clear()
-            ev.Fire()   
+            ev.Set(0,0,0)
+            ev.Fire()
     
     def leaveEvent(self, event):
         if self.figure:
             ev = self.figure.eventLeave
-            ev.Clear()
-            ev.Fire() 
-        
+            ev.Set(0,0,0)
+            ev.Fire()
+    
 #     def resizeEvent(self, event):
 #         """ QT event when the widget is resized.
 #         """        

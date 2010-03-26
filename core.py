@@ -40,7 +40,7 @@ import simpleWibjects
 import textures
 from cameras import (ortho, depthToZ, TwoDCamera, ThreeDCamera, FlyCamera)
 from misc import Property, Range, OpenGLError, getColor
-from events import *
+import events
 from textRender import FontManager, Text, Label
 from line import MarkerManager, Line, lineStyles
 from axis import BaseAxis, CartesianAxis, PolarAxis2D
@@ -240,35 +240,21 @@ class BaseFigure(base.Wibject):
         self._currentAxes = None
         
         # Create events that only the figure has
-        self._eventMotion = EventMotion(self)
-        self._eventKeyDown = EventKeyDown(self)
-        self._eventKeyUp = EventKeyUp(self)        
-        self._eventClose = EventClose(self)
-        self._eventAfterDraw = EventAfterDraw(self)
+        self._eventClose = events.BaseEvent(self)
+        self._eventAfterDraw = events.BaseEvent(self)
         
-        # know when the position changes, so we can apply it.
+        # Bind to events
         self.eventPosition.Bind(self._OnPositionChange)
+        self.eventKeyDown.Bind(self._PassOnKeyDownEvent)
+        self.eventKeyUp.Bind(self._PassOnKeyUpEvent)
         
         # create a timer to handle the drawing better
-        self._drawTimer = Timer(self, 10, oneshot=True)
+        self._drawTimer = events.Timer(self, 10, oneshot=True)
         self._drawTimer.Bind(self._DrawTimerTimeOutHandler)        
         self._drawtime = time.time() # to calculate fps
         self._drawWell = False
     
-    @property
-    def eventMotion(self):
-        """ Fired when the mouse is moved. 
-        This event is also fired when the mouse is released over any of the
-        figure's children."""
-        return self._eventMotion
-    @property
-    def eventKeyDown(self):
-        """ Fired when a key is pressed down. """
-        return self._eventKeyDown
-    @property
-    def eventKeyUp(self):
-        """ Fired when a key is released. """
-        return self._eventKeyUp    
+    
     @property
     def eventClose(self):
         """ Fired when the figure is closed. """
@@ -435,7 +421,7 @@ class BaseFigure(base.Wibject):
             
             # update and return
             if curNew:
-                self._currentAxes = weakref.ref( curNew )
+                self._currentAxes = curNew.GetWeakref()
             else:
                 self._currentAxes = None
             return curNew
@@ -444,7 +430,7 @@ class BaseFigure(base.Wibject):
             if value is None:
                 self._currentAxes = None
             elif isinstance(value, Axes):                
-                self._currentAxes = weakref.ref( value )
+                self._currentAxes = value.GetWeakref()
             else:
                 raise ValueError('currentAxes must be an Axes instance (or None).')
     
@@ -549,8 +535,10 @@ class BaseFigure(base.Wibject):
                 event = self.__dict__[fieldName]
                 if hasattr(event,'Unbind'):
                     event.Unbind()
-        # restore some stuf
+        # Restore some event bindings
         self.eventPosition.Bind(self._OnPositionChange)
+        self.eventKeyDown.Bind(self._PassOnKeyDownEvent)
+        self.eventKeyUp.Bind(self._PassOnKeyUpEvent)
     
     ## Implement methods
     
@@ -564,7 +552,6 @@ class BaseFigure(base.Wibject):
             return
         
         # Fire event to notify closing while everything is still intact
-        self.eventClose.Clear()
         self.eventClose.Fire()
         
         # Clean up
@@ -681,8 +668,7 @@ class BaseFigure(base.Wibject):
         # write the output to the screen
         self._SwapBuffers()
         
-        # notify
-        self.eventAfterDraw.Clear()
+        # Notify        
         self.eventAfterDraw.Fire()
         
     
@@ -765,7 +751,31 @@ class BaseFigure(base.Wibject):
                 child._DrawTree(mode, pickerHelper)
 
     
-    def _GenerateMouseEvent(self, eventName, x, y, button=0):
+    def _PassOnKeyDownEvent(self, event):
+        
+        # Get all items that want to fire this event
+        items = self.FindObjects(lambda i:i._eventKeyDown._handlers)
+        
+        # Fire them
+        for item in items:
+            ev = item.eventKeyDown
+            ev.Set(event.key, event.text)
+            ev.Fire()
+    
+    
+    def _PassOnKeyUpEvent(self, event):
+        
+        # Get all items that want to fire this event
+        items = self.FindObjects(lambda i:i._eventKeyUp._handlers)
+        
+        # Fire them
+        for item in items:
+            ev = item.eventKeyUp
+            ev.Set(event.key, event.text)
+            ev.Fire()
+    
+    
+    def _GenerateMouseEvent(self, eventName, absx, absy, button=0):
         """ _GenerateMouseEvent(eventName, x, y, button=0)
         For the backend to generate mouse events. 
         """
@@ -793,25 +803,25 @@ class BaseFigure(base.Wibject):
                 if item not in items1:
                     events.append( (item, item.eventEnter) )
             
-            # always generate motion event from figure
+            # Always generate motion event from figure
             events.append( (self, self.eventMotion) ) 
             
-            # generate motion events for any axes too
-            for item in items2:
-                if isinstance(item, Axes):
-                    events.append( (item, item.eventMotion) ) 
+            # Generate motion events for any objects that have handlers
+            # for the motion event
+            items = self.FindObjects(lambda i:i._eventMotion._handlers)
+            events.extend([(item, item._eventMotion) for item in items])
             
-            # update items under the mouse
+            # Update items under the mouse
             self._underMouse = [item.GetWeakref() for item in items2]        
         
-        elif items1 and eventName.count("up"):
+        elif eventName.count("up"):
             # Find object that was clicked down
-            items = self.FindObjects(lambda x:x._mousePressedDown)
+            items = self.FindObjects(lambda i:i._mousePressedDown)
             for item in items:
                 events.append( (item, item.eventMouseUp) )
                 item._mousePressedDown = False
         
-        elif items1 and eventName.count("down"):            
+        elif items1 and eventName.count("down"):
             item = items1[-1]
             item._mousePressedDown = True
             events.append( ( item, item.eventMouseDown) )        
@@ -822,34 +832,9 @@ class BaseFigure(base.Wibject):
             item = items1[-1]
             events.append( ( item, item.eventDoubleClick) )
         
-        # fire events
+        # Fire events
         for item,ev in events:
-            # can we fire an event at all
-            if item._destroyed:
-                continue
-            # determine axes
-            if isinstance(item, base.Wobject):
-                axes = item.GetAxes()
-                if not axes:
-                    continue
-            ev.Clear()
-            ev.button = button
-            if isinstance(item, base.Wibject):
-                if item.parent: # use relative coordinates if not a figure
-                    ev.x, ev.y = x-item.position.absLeft, y-item.position.absTop
-                else:
-                    ev.x, ev.y = x, y
-            elif isinstance(item, base.Wobject):
-                # use axes coordinates
-                ev.x, ev.y = x-axes.position.absLeft, y-axes.position.absTop
-            if isinstance(item, (base.Wobject, Axes )):
-                # also give 2D coordinates
-                if isinstance(item, Axes):
-                    cam = item._cameras['2d']
-                else:
-                    cam = axes._cameras['2d']
-                if item.parent: # or screen to world cannot be calculated
-                    ev.x2d, ev.y2d = cam.ScreenToWorld((ev.x, ev.y))
+            ev.Set(absx, absy, button)
             ev.Fire()
 
 
@@ -941,9 +926,6 @@ class Axes(base.Wibject):
         
         # call base __init__
         base.Wibject.__init__(self, parent)
-        
-        # motion event
-        self._eventMotion = EventMotion(self)
         
         # objects in the scene. The Axes is the only wibject that
         # can contain wobjects. Basically, the Axes is the root
@@ -1196,13 +1178,6 @@ class Axes(base.Wibject):
     
     ## Define more properties
     
-    @property
-    def eventMotion(self):
-        """ Fired when the mouse is moved. 
-        This event is also fired when the mouse is released over any of the
-        axes's children. """
-        return self._eventMotion
-        
     
     @Property
     def axisType():
@@ -1509,7 +1484,6 @@ class Axes(base.Wibject):
         self._cameras = {}
         # container is destroyed as soon as it notices the axes is gone
         # any wibjects are destoyed automatically by the Destroy command.
-        
     
     
     def OnDraw(self, mode='normal'):
