@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import visvis as vv
 import numpy as np
 app = vv.use()
