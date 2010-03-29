@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import visvis as vv
 from visvis.points import Aarray
 app = vv.use()

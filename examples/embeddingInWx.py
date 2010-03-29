@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ 
 This example illustrate embedding a visvis figure in an application.
 This examples uses wxPython, but the same constructions work for

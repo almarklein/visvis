@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """ This example illustrates picking using the simple event system.
 It also shows the working of the picking in an environment.
 
