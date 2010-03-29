@@ -823,7 +823,7 @@ class Colormap(TextureObject):
         """ SetMap(self, (r,g,b), (r,g,b), (r,g,b)), or
         SetMap(self, [(r,g,b), (r,g,b), (r,g,b)])
         Set the colormap data. 
-        For now, only accepts lists of lists (or tuples).
+        Accepts lists of lists (or tuples), or numpy arrays.
         """
         
         # one argument given?
@@ -1130,9 +1130,9 @@ class BaseTexture(Wobject):
         to create a 256x4 array.
         
         Visvis defines a number of standard colormaps in the global visvis
-        namespace: 'pink', 'gray', 'winter', 'jet', 'copper', 'spring', 
-        'autumn', 'hot', 'summer', 'hsv', 'bone', 'cool'. A dict of name-
-        colormap pairs is also available as vv.cm.colormaps.
+        namespace: CM_AUTUMN, CM_BONE, CM_COOL, CM_COPPER, CM_GRAY, CM_HOT, 
+        CM_HSV, CM_JET, CM_PINK, CM_SPRING, CM_SUMMER, CM_WINTER. 
+        A dict of name-colormap pairs is also available as vv.cm.colormaps.
         """
         def fget(self):
             return self._colormap.GetMap()
@@ -1368,7 +1368,7 @@ class Texture2D(BaseTexture):
     
 
 class Texture3D(BaseTexture):
-    """ Texture3D(parent, data, renderStyle='mip'
+    """ Texture3D(parent, data, renderStyle='mip')
     
     A data type that represents structured data in three dimensions (a volume).
     
