@@ -38,7 +38,7 @@ from textures import Colormap
 from textRender import Label, Text
 from core import BaseFigure, Axes
 from simpleWibjects import RadioButton, DraggableBox
-import axis
+import axises
 
 from points import Point, Pointset
 import weakref
@@ -565,7 +565,7 @@ class Colorbar(Box):
             
             # Get tickmarks
             import core
-            ticks, ticksPos, ticksText = axis.GetTicks(p0, p1, mapable.clim)
+            ticks, ticksPos, ticksText = axises.GetTicks(p0, p1, mapable.clim)
             
             newLabelPool = {}
             linePieces = Pointset(2)

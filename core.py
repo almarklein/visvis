@@ -20,7 +20,7 @@
 
 The core module that defines the BaseFigure and Axes classes.
 Also helper classes for the Figure and Axes (ObjectPickerHelper, 
-Legend, Axis, etc.) are defined here.
+Legend, etc.) are defined here.
 
 $Author$
 $Date$
@@ -43,7 +43,7 @@ from misc import Property, Range, OpenGLError, getColor
 import events
 from textRender import FontManager, Text, Label
 from line import MarkerManager, Line, lineStyles
-from axis import BaseAxis, CartesianAxis, PolarAxis2D
+from axises import BaseAxis, CartesianAxis, PolarAxis2D
 
 # a variable to indicate whether to print FPS, for testing
 printFPS = False

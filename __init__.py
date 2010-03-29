@@ -67,10 +67,13 @@ from events import Timer
 from misc import Range
 from misc import (Transform_Translate, Transform_Scale, Transform_Rotate)
 
+from points import Point, Pointset, Aarray, Quaternion
+
 import cm
 L = locals()
 for key in cm.colormaps:
-  L[key] = cm.colormaps[key]
+  key2 = 'CM_' + key.upper()
+  L[key2] = cm.colormaps[key]
 del L, key
 
 

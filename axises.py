@@ -16,10 +16,13 @@
 #
 #   Copyright (C) 2009 Almar Klein
 
-""" Module axis
+""" Module axises
 
 Defines the Axis wobject class to draw tickmarks and lines for each
 dimension.
+
+I chose to name this module using an awkward plural to avoid a name clash
+with the axis() function.
 
 $Author: almar.klein $
 $Date: 2010-02-24 15:25:05 +0100 (Wed, 24 Feb 2010) $
@@ -166,7 +169,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
     ticksPos, ticksText = [], []
     for tick in ticks:
         pos = p0 + vec * ( (tick-lim.min) / lim.range )
-        if tick == -0: # Prevent a minus sign
+        if tick == -0:
             tick = 0
         text = '%1.4g' % tick
         iExp = text.find('e')

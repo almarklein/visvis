@@ -111,21 +111,27 @@ def checkTheTwo(p1,p2, what='something'):
 
 
 class BasePoints(object):
-    """ Abstract class. Contains all the math stuff. 
+    """ Abstract class for the Point and Pointset classes. It defines
+    addition, substraction, multiplication and devision for points and
+    pointsets, and it implements some mathematical methods.
     """
     
     ## Common stuff (of which most is overloaded)
     
     @property
     def ndim(self):
-        """ Get the number of dimensions. """        
+        """ Get the number of dimensions. """
         return self._data.shape[-1]
     
     @property
     def data(self):
+        """ Get the internal numpy array. """
         raise NotImplemented()
     
     def Copy(self):
+        """ Copy()
+        Make a copy of the point or pointset. 
+        """
         raise NotImplemented()
     
     def __setitem__(self):
@@ -139,7 +145,8 @@ class BasePoints(object):
 
 
     def Norm(self):
-        """ Calculate the norm (length) of the vector.
+        """ Norm()
+        Calculate the norm (length) of the vector.
         This is the same as the distance to point 0,0 or 0,0,0,
         but implemented a bit faster.
         """
@@ -156,7 +163,8 @@ class BasePoints(object):
 
 
     def Normalize(self):
-        """ "Return normalized vector (to unit length). 
+        """ Normalize()
+        Return normalized vector (to unit length). 
         """
         
         # calculate factor array
@@ -175,9 +183,10 @@ class BasePoints(object):
 
 
     def Normal(self):
-        """" Calculate normalized normal of vector, 
-        use (p1-p2).Normal() to calculate the normal of the line p1-p2.
-        Only works on 2D points. For 3D points use Cross()
+        """" Normal()
+        Calculate the normalized normal of a vector.
+        Use (p1-p2).Normal() to calculate the normal of the line p1-p2.
+        Only works on 2D points. For 3D points use Cross().
         """
         # check dims
         if not self.ndim == 2:
@@ -198,7 +207,8 @@ class BasePoints(object):
     
     
     def Distance(self, *p):
-        """ Calculate the distance between two points or pointsets. 
+        """ Distance(p)
+        Calculate the Euclidian distance between two points or pointsets. 
         Use Norm() to calculate the length of a vector.
         """
         
@@ -222,12 +232,13 @@ class BasePoints(object):
 
 
     def Angle(self, *p):
-        """ Calculate the angle (in radians) between two points 
+        """ Angle(p)
+        Calculate the angle (in radians) between two points 
         or pointsets. For 2D and 3D only.
         For 2D uses the arctan2 method so the angle has a sign.
         For 3D the angle is the smallest angles between the two
         vectors.
-        If no point is given, the angle is calculates relative to the
+        If no point is given, the angle is calculated relative to the
         positive x-axis.
         """
         
@@ -276,7 +287,8 @@ class BasePoints(object):
             
     
     def Dot(self, *p):
-        """ Calculate the dot product of the two points or pointsets. 
+        """ Dot(p)
+        Calculate the dot product of the two points or pointsets. 
         The dot producet is the standard inner product of the 
         orthonormal Euclidean space.
         """
@@ -302,9 +314,10 @@ class BasePoints(object):
     
     
     def Cross(self, *p):
-        """ The cross product of two 3D vectors. 
+        """ Cross(p)
+        Calculate the cross product of two 3D vectors. 
         Given two vectors, returns the vector that is orthogonal to
-        both vectors. The right hand rule is applied. This vector is
+        both vectors. The right hand rule is applied; this vector is
         the middle finger, the argument the index finger, the returned
         vector points in the direction of the thumb.
         """
@@ -445,13 +458,15 @@ class BasePoints(object):
 
 
 class Point(BasePoints):
-    """ The Point class - a point or vector
+    """ Point(x,y,[z,[...]])
     
-    The point class provides a way to store a vector and some common 
+    The point class provides a way to store a vector and provised some 
     mathematical operations common for vectors/points. There is no limit
-    to the amount of dimensions for a point to have.
+    to the amount of dimensions for a point to have, but it must be at 
+    least two.
     
     Examples:
+    {{{
     p1 = Point(3.2,4)   # a 2D point
     p2 = p1.Copy()      # make a copy
     p1[0] = 9           # set the first element
@@ -462,6 +477,7 @@ class Point(BasePoints):
     p2 = p1*2           # scale vector
     p2 = p1 * p2        # even for each dimension seperately
     p2 = p2.Normalize() # make unit length
+    }}}
     
     """
     
@@ -501,6 +517,9 @@ class Point(BasePoints):
 
 
     def Copy(self):
+        """ Copy()
+        Get a copy of this point. 
+        """
         return Point(self._data)
     
     
@@ -594,20 +613,25 @@ class Point(BasePoints):
     
 
 class Pointset(BasePoints):
-    """ The Poinset class - a list of points or vectors.
+    """ Pointset(ndim)
     
-    A pointset provides an efficient and fast way to store points.
+    Can also be initialized using: Pointset(<ndim times npoints numpy array>)
+        
+    A pointset provides an efficient way to store points.
     Internally the points are stored in a numpy array that is
-    resized by a factors of two when more space is required. Therefore
-    mathematical operations can be applied on all the points in the set
-    efficiently.
+    resized by a factor of two when more space is required. This makes adding
+    and removing points (from the end) very efficient. Also mathematical 
+    operations can be applied on all the points in the set efficiently.
     
     Slicing:
-    pp[7]       When indexing, the corresponding Point instance is get/set.
-    pp[7:20]    When slicing, a new poinset (subset) is get/set. 
-    pp[4:9,3]   When using two indices or slices, the indices are applied to 
-                the internal data. (In this example returning the z-value for
-                points 4 till 8.)
+      
+        pp[7] When indexing, the corresponding Point instance is get/set.
+        
+        pp[7:20] When slicing, a new poinset (subset) is get/set. 
+       
+        pp[4:9,3] When using two indices or slices, the indices are applied to 
+        the internal data. (In this example returning the z-value for
+        points 4 till 8.)
     
     The same mathematical operations that can be applied to a point 
     instance can also be applied to a pointset instance. The operation
@@ -615,6 +639,7 @@ class Pointset(BasePoints):
     returns an array with the distances of all points in pp to (3,4).
     
     Examples:
+    {{{
     a  = <...>          # an existing 100x2 array
     pp1= Pointset(2)    # pointset with two dimensions
     pp = Pointset(a)    # dito    
@@ -626,6 +651,7 @@ class Pointset(BasePoints):
     pp[1,0]             # returns the value 3.0
     pp[:,1]             # get all y values
     pp.Contains(3,4)    # will return True
+    }}}
     
     """
     
@@ -794,10 +820,11 @@ class Pointset(BasePoints):
     
     
     def Append(self, *p):
-        """Append a point to this pointset.
-        Usage: Append(p)
+        """ Append(*p)
+        Append a point to this pointset. 
         If p is not an instance of the Point class,  the constructor 
-        of Point is called to create one from the given argument.
+        of Point is called to create one from the given argument. This 
+        enables Append(x,y,z)
         """
         try:
             p = self._AsPoint(*p)
@@ -813,7 +840,8 @@ class Pointset(BasePoints):
     
     
     def Extend(self, pp):
-        """ Extend this pointset with another pointset, thus
+        """ Extend(pp)
+        Extend this pointset with another pointset, thus
         combining the two.         
         If pointset is not an instance of the Pointset class, the constructor 
         of Pointset is called to create one from the given argument.
@@ -842,7 +870,8 @@ class Pointset(BasePoints):
 
 
     def Insert(self, index, *p):
-        """ Insert a point at the given index. 
+        """ Insert(index, *p)
+        Insert a point at the given index. 
         """
         # check index
         if index < 0:
@@ -867,7 +896,8 @@ class Pointset(BasePoints):
     
     
     def Remove(self, *p):
-        """ Remove first occurance of the given point from the list. 
+        """ Remove(*p)
+        Remove first occurance of the given point from the list. 
         Produces an error if such a point is not present.
         See also RemoveAll()
         """
@@ -895,7 +925,8 @@ class Pointset(BasePoints):
 
     
     def RemoveAll(self, *p):
-        """ Remove all occurances of the given point. If there
+        """ RemoveAll(*p)
+        Remove all occurances of the given point. If there
         is no occurance, no action is taken. 
         """
         
@@ -920,8 +951,10 @@ class Pointset(BasePoints):
     
     
     def Pop(self, index=-1):
-        """ Returns and removes a point in the pointset. Default
-        removes last.
+        """ Pop(index=-1)
+        Returns and removes a point in the pointset. Default
+        removes last (which is more efficient than popping from 
+        anywhere else).
         """
         # check index
         index2 = index
@@ -946,12 +979,16 @@ class Pointset(BasePoints):
     
     
     def Clear(self):
-        """ Remove all points in the pointset. """
+        """ Clear()
+        Remove all points in the pointset. 
+        """
         self.__init__(self.ndim)
     
     
     def Copy(self):
-        """ Return a copy of this pointset. """
+        """ Copy()
+        Return a copy of this pointset. 
+        """
         return Pointset(self._data[:self._len,:])
     
     
@@ -972,7 +1009,9 @@ class Pointset(BasePoints):
    
     
     def Contains(self, *p):
-        """ Check whether a point is already in this set. """
+        """ Contains(*p)
+        Check whether a point is already in this set. 
+        """
         # make sure p is a point
         try:
             p = self._AsPoint(*p)
@@ -1017,14 +1056,14 @@ class Aarray(np.ndarray):
     each dimension. 
     
     This class implements the following properties and methods:
-        sampling        The distance between samples as a tuple
-        origin          The origin of the data as a tuple
-        getStart()      Get the origin of the data as a Point instance
-        getEnd()        Get the end of the data as a Point instance
-        getSize()       Get the size of the data as a Point instance
-        sample()        Sample the value at the given point
-        pointToIndex()  Given a poin, returns the index in the array
-        indexToPoint()  Given an index, returns the world coordinate
+      * sampling - The distance between samples as a tuple
+      * origin - The origin of the data as a tuple
+      * getStart() - Get the origin of the data as a Point instance
+      * getEnd() - Get the end of the data as a Point instance
+      * getSize() - Get the size of the data as a Point instance
+      * sample() - Sample the value at the given point
+      * pointToIndex() - Given a poin, returns the index in the array
+      * indexToPoint() - Given an index, returns the world coordinate
     
     World coordinates are expressed as Point instances (except for the 
     "origin" property). Indices as well as the "sampling" and "origin" 
@@ -1044,6 +1083,9 @@ class Aarray(np.ndarray):
     the shape of the data, the sampling are set to all zeros and ones
     for the origin and sampling, respectively.
     
+    (Although all classes defined in this module use UpperCamelCase
+    notation for methods, this class uses lowerCamelCase to conform
+    with numpy.)
     """
     
     def __new__(cls, shapeOrArray, sampling=None, origin=None, fill=None, 
@@ -1219,7 +1261,8 @@ class Aarray(np.ndarray):
     
     
     def pointToIndex(self, point, noneOnIndexError=False):
-        """ Given a point returns the sample index (z,y,x,..) closest
+        """ pointToIndex(point, noneOnIndexError=False)
+        Given a point returns the sample index (z,y,x,..) closest
         to the given point.
         Returns a tuple with as many elements as there are dimensions.
         If the point is outside the array an IndexError is raised by default,
@@ -1253,7 +1296,8 @@ class Aarray(np.ndarray):
     
     
     def sample(self, point, default=None):
-        """ Take a sample of the array, given the given point
+        """ sample(point, default=None)
+        Take a sample of the array, given the given point
         in world-coordinates, i.e. transformed using sampling.
         By default raises an IndexError if the point is not inside
         the array, and returns the value of "default" if it is given.
@@ -1269,7 +1313,8 @@ class Aarray(np.ndarray):
 
 
     def indexToPoint(self, *index):
-        """ Given an index, get the corresponding point in world
+        """ indexToPoint(*index)
+        Given a multidimensional index, get the corresponding point in world
         coordinates.
         """
         # check
@@ -1295,8 +1340,10 @@ class Aarray(np.ndarray):
 
 
     def getSize(self):
-        """ Get the size (as a vector) of the array 
-        expressed in world coordinates. """ 
+        """ getSize()
+        Get the size (as a vector) of the array 
+        expressed in world coordinates. 
+        """ 
         pp = []
         for i in range(len(self.shape)):
             pp.append( self._sampling[i] * self.shape[i] )
@@ -1305,17 +1352,21 @@ class Aarray(np.ndarray):
     
     
     def getStart(self):
-        """ Get the origin of the array expressed in world coordinates. 
+        """ getStart()
+        Get the origin of the array expressed in world coordinates. 
         Differs from the property 'origin' in that this method returns
-        a point rather than indices z,y,x. """
+        a point rather than indices z,y,x. 
+        """
         pp = [i for i in self.origin]
         pp.reverse()
         return Point(pp)
     
     
     def getEnd(self):
-        """ Get the end of the array expressed in world coordinates. 
-        Same as the property 'origin'. """ 
+        """ getEnd(()
+        Get the end of the array expressed in world coordinates. 
+        Same as the property 'origin'. 
+        """ 
         pp = []
         for i in range(len(self.shape)):
             pp.append( self._origin[i] + self._sampling[i] * self.shape[i] )

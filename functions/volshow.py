@@ -1,7 +1,7 @@
 import visvis as vv
 
-def volshow(vol, clim=None, axes=None, renderStyle='mip'):
-    """ volshow(vol, clim=None, axes= None)
+def volshow(vol, clim=None, axes=None, renderStyle='mip', cm=None):
+    """ volshow(vol, clim=None, axes=None, renderStyle='mip', cm=CM_GRAY)
     Display a 3D image (a volume). The default renderStyle is MIP.
     Returns the Texture3D object.
     If the volume is an Anisotropic Array (points.Aaray), the appropriate
@@ -20,6 +20,10 @@ def volshow(vol, clim=None, axes=None, renderStyle='mip'):
         clim = tuple(clim)
     if isinstance(clim, tuple):
         t.SetClim(clim)
+    
+    # set colormap
+    if cm is not None:
+        t.colormap = cm
     
     # set axes
     axes.daspectAuto = False

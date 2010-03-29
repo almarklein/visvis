@@ -5,7 +5,7 @@ app = vv.use()
 im = vv.imread('lena.png')[:,:,1]
 
 # Make 4 subplots with different colormaps
-cmaps = [vv.gray, vv.jet, vv.summer, vv.hot]
+cmaps = [vv.CM_GRAY, vv.CM_JET, vv.CM_SUMMER, vv.CM_HOT]
 for i in range(4):
     a = vv.subplot(2,2,i+1)
     t = vv.imshow(im, clim=(0,255))

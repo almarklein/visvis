@@ -1,7 +1,7 @@
 import visvis as vv
 
-def imshow(im, clim=None, axes=None, aa=1, interpolate=False):
-    """ imshow(im, clim, axes, aa, interpolate=False)
+def imshow(im, clim=None, axes=None, aa=1, interpolate=False, cm=None):
+    """ imshow(im, clim, axes, aa, interpolate=False, cm=CM_GRAY)
     
     Display a 2D image and returns the Texture2D object. 
     
@@ -42,11 +42,15 @@ def imshow(im, clim=None, axes=None, aa=1, interpolate=False):
     t.aa = aa
     t.interpolate = interpolate
     
-    # set clim
+    # set clim 
     if isinstance(clim,list):
         clim = tuple(clim)
     if isinstance(clim, tuple):
         t.SetClim(clim)
+    
+    # set colormap
+    if cm is not None:
+        t.colormap = cm
     
     # set axes
     axes.daspectAuto = False    
