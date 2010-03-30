@@ -60,7 +60,7 @@ $Rev$
 
 """
 
-__version__  = '1.2'
+__version__  = '1.2' 
 
 import os, sys, time
 
