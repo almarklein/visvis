@@ -2,10 +2,12 @@ import visvis as vv
 
 def volshow(vol, clim=None, axes=None, renderStyle='mip', cm=None):
     """ volshow(vol, clim=None, axes=None, renderStyle='mip', cm=CM_GRAY)
-    Display a 3D image (a volume). The default renderStyle is MIP.
-    Returns the Texture3D object.
-    If the volume is an Anisotropic Array (points.Aaray), the appropriate
-    scale and translate transformations are applied.
+    
+    Display a 3D image (a volume) and returns the Texture3D object.
+    
+    The default renderStyle is MIP. If the volume is an Anisotropic Array
+    (points.Aaray), the appropriate scale and translate transformations
+    are applied.
     """
     
     # get axes
