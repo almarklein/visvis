@@ -38,8 +38,7 @@ from points import Pointset, Point
 
 import base
 from textRender import Text 
-from line import lineStyles
-from PolarLine import PolarLine
+from line import lineStyles, PolarLine
 from cameras import depthToZ, TwoDCamera
 from misc import Range, Property
 

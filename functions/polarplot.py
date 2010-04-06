@@ -18,7 +18,7 @@
 #   Copyright (C) 2010 Almar Klein
 from visvis.points import Point, Pointset
 import numpy as np
-from visvis.PolarLine import PolarLine
+from visvis.line import PolarLine
 import visvis as vv
 
 def makeArray(data):
@@ -147,5 +147,3 @@ def polarplot(data1, data2=None, data3=None,
     axes.Draw()
     return l
     
-# import visvis as vv;vv.plot([3,4,5],[7,5,4])
-# import visvis as vv;vv.plot([1,3,1,4,1,5,1,6,1,7,6,5,4,3,2,1])
