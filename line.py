@@ -814,4 +814,65 @@ class Line(Wobject):
     def OnDestroy(self):
         # clean up some memory
         self._points.Clear()
+
+# This is a new type of wobject called PolarLine which encapsulates 
+# polar plot data.
+class PolarLine(Line):
+    """ PolarLine(parent, angle(radians), mag)
     
+    The Polarline class represents a set of points (locations) in world coordinates.
+    They are displayed by a line between these points and/or markers drawn
+    at the point coordinates.
+    
+    There are several linestyles that can be used:
+      * -  a solid line
+      * :   a dotted line
+      * --  a dashed line
+      * -.  a dashdot line
+      * .-  dito
+      * +   draws a line between each pair of points (handy for visualizing 
+            for example vectore fields)
+    If None, '' or False is given no line is drawn.
+
+    There are several marker styles that can be used:
+      * `+`  a plus                                        
+      * `x`  a cross 
+      * `s`  a square
+      * `d`  a diamond
+      * `^v<>` an up-, down-, left- or rightpointing triangle        
+      * `*` or `p`  a (pentagram star)
+      * `h`  a hexagram
+      * `o` or `.`  a point/circle
+    If None, '', or False is given, no marker is drawn.
+
+    Performance tip:
+    The s, o (and .) styles can be drawn using standard 
+    OpenGL points if alpha is 1 or if no markeredge is drawn.
+    Otherwise point sprites are used, which can be slower
+    on some cards (like ATI, Nvidia performs quite ok with with
+    sprites)
+    """
+    def __init__(self, parent, angs, mags):
+        self._angs = angs
+        self._mags = mags
+        x = mags*np.cos(angs)
+        y = mags*np.sin(angs)
+        z = np.zeros((np.size(x),1))
+        tmp = x, y, z
+        pp = Pointset( np.concatenate(tmp, 1) )
+        Line.__init__(self, parent, pp)
+        
+    def transformPolar(self, min, max, angRefPos, sense):
+        offsetMags = self._mags - min
+        rangeMags = max - min
+        offsetMags[offsetMags > rangeMags] = rangeMags
+        tmpang = angRefPos + sense*self._angs
+        x = offsetMags*np.cos(tmpang)
+        y = offsetMags*np.sin(tmpang)
+        z = np.zeros((np.size(x),1)) + 0.2
+        x[offsetMags < 0] = 0
+        y[offsetMags < 0] = 0
+        tmp = x, y, z
+        self._points = Pointset( np.concatenate(tmp, 1) )
+        
+                
