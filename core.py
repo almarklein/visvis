@@ -971,7 +971,7 @@ class Axes(base.Wibject):
         if axisClass is None or not isinstance(axisClass, BaseAxis):
             axisClass = CartesianAxis
         self._axisClass = axisClass
-        axisClass(self) # is a wobject
+        self._axis = axisClass(self) # is a wobject
         
         # make current
         figure.currentAxes = self
@@ -1209,7 +1209,14 @@ class Axes(base.Wibject):
                 for axis in axisList:
                     axis.Destroy()
                 # Add new
-                axisClass(self)
+                self._axis = axisClass(self)
+    
+    @Property
+    def axis():
+        """ Get the axis object. 
+        """        
+        def fget(self):
+            return self._axis 
     
     @Property
     def cameraType():

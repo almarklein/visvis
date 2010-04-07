@@ -20,6 +20,7 @@ from visvis.points import Point, Pointset
 import numpy as np
 from visvis.line import PolarLine
 import visvis as vv
+from visvis.misc import Range
 
 def makeArray(data):
     if isinstance(data,np.ndarray):
@@ -144,6 +145,6 @@ def polarplot(data1, data2=None, data3=None,
     ## done...
     if setlimits:
         axes.SetLimits()
-    axes.Draw()
+    axes.axis.Draw()
     return l
     
