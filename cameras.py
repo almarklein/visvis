@@ -691,6 +691,7 @@ class ThreeDCamera(TwoDCamera):
         gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
         gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
         
+        
         # Above is the projection stuff. For the rest, we use the
         # modelview matrix. This way, the rays to render 3D data can
         # be calculated easierst and most natural.
@@ -698,7 +699,17 @@ class ThreeDCamera(TwoDCamera):
         gl.glLoadIdentity()
         
         # Set light
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, [0.0,0.0,0.0,0.0])
+        # todo: In order for this to work correctly, The rotations should be applied
+        # BELOW this call. So either I need to change the 3D rendering shaders,
+        # or I need to correct the light position for the rotation...
+        gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, (0,0,1,0))
+        
+        
+#         # OR HERE???
+#         gl.glRotate(self.view_ro, 0.0, 0.0, 1.0)
+#         gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
+#         gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
+        
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
         daspect = self.axes.daspect        
