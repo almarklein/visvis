@@ -37,18 +37,19 @@ def makeArray(data):
             raise Exception("Cannot plot %s" % data.__class__.__name__)
 
 
-def polarplot(data1, data2=None, data3=None, 
+def polarplot(data1, data2=None,  inRadians = False,
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
             alpha=1, setlimits=True, axes=None, **kwargs):
-    """ plot(data1, data2=None, data3=None, 
+    """ plot(data1, data2=None, inRadians = False, 
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
             alpha=1, setlimits=True, axes=None):
     
-    Plot 1, 2 or 3 dimensional data:
+    Polar Plot 1, 2 or 3 dimensional data:
       * plot([1,4,2]) plots a 1D signal, with the values plotted 
-        along the y-axis
-      * plot([10,11,12],[1,4,2]) also supplies x coordinates
-      * plot([10,11,12],[1,4,2],[8,8,8]) also supplies z coordinates
+        along the theta-axis every degree
+      * plot([10,11,12],[1,4,2]) also supplies theta coordinates in degrees
+        or in radians if inRadians = True
+
       
     The longer names for the line properties can also be used:
       * lineWidth: lw
@@ -62,6 +63,27 @@ def polarplot(data1, data2=None, data3=None,
     
     If setlimits is False, plots the new data without resetting
     the displayed range.
+    
+    polarplot uses PolarAxis2D
+    PolarAxis2D draws a polar grid, and modifies PolarLine objects 
+    to properly plot onto the polar grid.  PolarAxis2D has some 
+    specialized methods unique to it for adjusting the polar plot.
+    Access these via vv.gca().axis.
+    These include:
+        SetLimits(thetaRange, radialRange): 
+        thetaRange, radialRange = GetLimits():
+
+        angularRefPos: Get and Set methods for the relative screen 
+        angle of the 0 degree polar reference.  Default is 0 degs 
+        which corresponds to the positive x-axis (y =0)
+        
+        isCW: Get and Set methods for the sense of rotation CCW or 
+        CW. This method takes/returns a bool (True if the default CW).
+
+        Drag mouse up/down to translate radial axis
+        Drag mouse left/right to rotate angular ref position
+        Drag mouse + shift key up/down to rescale radial axis (min R fixed)
+    
     """
 
     # create a dict from the properties and combine with kwargs
@@ -86,52 +108,37 @@ def polarplot(data1, data2=None, data3=None,
             raise Exception("The first argument cannot be None!")
         data1 = makeArray(data1)
         
-        d3 = data3
-        if data3 is None:
-            data3 = 0.1*np.ones(data1.shape)
-        else:
-            data3 = makeArray(data3)
         
         if data2 is None:
-            if d3 is not None:
-                tmp = "third argument in plot() ignored, as second not given."
-                print "Warning: " + tmp
-            # y data is given, xdata must be a range starting from 1
+            # R data is given, thetadata must be a range starting from 0 degrees
             data2 = data1
-            data1 = np.arange(1,data2.shape[0]+1)
-            data3 = 0.1*np.ones(data2.shape)
+            data1 = np.arange(0,data2.shape[0])
         else:
             data2 = makeArray(data2)
         
         # check dimensions
         L = data1.size
-        if L != data2.size or L != data3.size:
-            raise("Array dimensions do not match! %i vs %i vs %i" % 
-                    (data1.size, data2.size, data3.size))
+        if L != data2.size:
+            raise("Array dimensions do not match! %i vs %i " % 
+                    (data1.size, data2.size))
         
         # build points
         data1 = data1.reshape((data1.size,1))
         data2 = data2.reshape((data2.size,1))
-        data3 = data3.reshape((data3.size,1))
-        
-        tmp = data1, data2, data3
-        pp = Pointset( np.concatenate(tmp, 1) )
-        #pp.points = np.empty((L,3))
-        #pp.points[:,0] = data1.ravel()
-        #pp.points[:,1] = data2.ravel()
-        #pp.points[:,2] = data3.ravel()
         
         
+    if not inRadians:
+        data1 = np.pi*data1/180.0
     
     ## create the line
     if axes is None:
         axes = vv.gca() 
     axes.cameraType = '2d'
-    #axes._CorrectPositionForLabels()
+
     axes.daspectAuto = False
     axes.axisType = 'polar'
 
-    l = PolarLine(axes, np.pi*data1/180.0, data2)
+    l = PolarLine(axes, data1, data2)
     l.lw = kwargs['lineWidth']
     l.lc = kwargs['lineColor']
     l.ls = kwargs['lineStyle']
@@ -144,7 +151,14 @@ def polarplot(data1, data2=None, data3=None,
     
     ## done...
     if setlimits:
-        axes.SetLimits()
+        axes.axis.SetLimits()
+
     axes.axis.Draw()
+    
+    # The following is a trick to get the polar plot to center.
+    # Never found out why it initial draws too high, but this works
+    vv.gcf().position.w = vv.gcf().position.w + 1
+    vv.gcf().position.w = vv.gcf().position.w - 1
+
     return l
     

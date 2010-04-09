@@ -862,9 +862,9 @@ class PolarLine(Line):
         pp = Pointset( np.concatenate(tmp, 1) )
         Line.__init__(self, parent, pp)
         
-    def transformPolar(self, min, max, angRefPos, sense):
-        offsetMags = self._mags - min
-        rangeMags = max - min
+    def transformPolar(self, radialRange, angRefPos, sense):
+        offsetMags = self._mags - radialRange.min
+        rangeMags = radialRange.range
         offsetMags[offsetMags > rangeMags] = rangeMags
         tmpang = angRefPos + sense*self._angs
         x = offsetMags*np.cos(tmpang)
@@ -875,4 +875,13 @@ class PolarLine(Line):
         tmp = x, y, z
         self._points = Pointset( np.concatenate(tmp, 1) )
         
-                
+    def _GetPolarLimits(self):
+        if not self._points:
+            return None
+        else:
+            return Range(self._angs.min(),self._angs.max()), \
+                   Range(self._mags.min(),self._mags.max())
+ 
+
+
+    
