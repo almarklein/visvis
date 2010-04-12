@@ -686,29 +686,30 @@ class ThreeDCamera(TwoDCamera):
         # z-axis. We zoom here.                
         ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         
-        # 3. Set viewing angle (this is the only difference with 2D camera)
-        gl.glRotate(self.view_ro, 0.0, 0.0, 1.0)
-        gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
-        gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
+#         # 3. Set viewing angle (this is the only difference with 2D camera)
+#         gl.glRotate(self.view_ro, 0.0, 0.0, 1.0)
+#         gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
+#         gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
         
         
         # Above is the projection stuff. For the rest, we use the
         # modelview matrix. This way, the rays to render 3D data can
-        # be calculated easierst and most natural.
+        # be calculated easiest and most natural.
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
         # Set light
-        # todo: In order for this to work correctly, The rotations should be applied
-        # BELOW this call. So either I need to change the 3D rendering shaders,
-        # or I need to correct the light position for the rotation...
-        gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, (0,0,1,0))
+        # todo: Make Renderers work with the rotations being applied
+        # in the modelview rather than the projection matrix.
+        for light in self.axes._lights:
+            if light.isCamLight:
+                light._Apply()
         
-        
-#         # OR HERE???
-#         gl.glRotate(self.view_ro, 0.0, 0.0, 1.0)
-#         gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
-#         gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
+
+        # OR HERE???
+        gl.glRotate(self.view_ro, 0.0, 0.0, 1.0)
+        gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
+        gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
         
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
@@ -718,6 +719,18 @@ class ThreeDCamera(TwoDCamera):
         # 1. Translate to view location. Do this first because otherwise
         # the translation is not in world coordinates.
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], -self.view_loc[2])
+        
+        # Set non-cam lights
+        for light in self.axes._lights:
+            if not light.isCamLight:
+                light._Apply()
+        
+        # Set lighting model properties. We do not use the global ambient term
+        gl.glLightModelfv(gl.GL_LIGHT_MODEL_AMBIENT, (0,0,0,1))
+        gl.glLightModelfv(gl.GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0)
+        gl.glLightModelfv(gl.GL_LIGHT_MODEL_TWO_SIDE, 1.0)
+        gl.glLightModelfv(gl.GL_LIGHT_MODEL_COLOR_CONTROL, 
+            gl.GL_SEPARATE_SPECULAR_COLOR)
 
 
 # todo: use quaternions to fly it?
