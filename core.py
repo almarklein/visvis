@@ -44,6 +44,7 @@ import events
 from textRender import FontManager, Text, Label
 from line import MarkerManager, Line, lineStyles
 from axises import BaseAxis, CartesianAxis, PolarAxis2D
+from polygon import Light
 
 # a variable to indicate whether to print FPS, for testing
 printFPS = False
@@ -973,6 +974,13 @@ class Axes(base.Wibject):
         self._axisClass = axisClass
         axisClass(self) # is a wobject
         
+        # Let there be lights
+        self._lights = []
+        for i in range(8):
+            self._lights.append(Light(i))
+        # Init default light
+        self.light0.On()
+        
         # make current
         figure.currentAxes = self
     
@@ -1475,6 +1483,19 @@ class Axes(base.Wibject):
         if not legendWibjects:
             legendWibjects = [Legend(self)] # create legend object
         return legendWibjects[-1]
+    
+    
+    @property
+    def light0(self):
+        """ Get the default light. """
+        return self._lights[0]
+    
+    @property
+    def lights(self):
+        """ Get a list of all available lights. Only lights0 is
+        enabeled by default. 
+        """
+        return [light for light in self._lights]
     
     
     ## Implement methods
