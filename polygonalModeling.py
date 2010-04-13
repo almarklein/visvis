@@ -1,0 +1,728 @@
+#   This file is part of VISVIS.
+#    
+#   VISVIS is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU Lesser General Public License as 
+#   published by the Free Software Foundation, either version 3 of 
+#   the License, or (at your option) any later version.
+# 
+#   VISVIS is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU Lesser General Public License for more details.
+# 
+#   You should have received a copy of the GNU Lesser General Public 
+#   License along with this program.  If not, see 
+#   <http://www.gnu.org/licenses/>.
+#
+#   Copyright (C) 2009 Almar Klein
+
+""" Module polygonalModeling
+
+This module defined the Mesh object that represents a polygonal model.
+It also defines lights and algorithmic for managing polygonal models.
+
+"""
+
+# todo: remove this
+import os
+os.chdir('D:/almar/projects/_p/visvis')
+
+from points import Point, Pointset
+from misc import Property
+from base import Wobject
+from textures import TextureObjectToVisualize, Colormap
+
+import numpy as np
+import OpenGL.GL as gl
+
+
+def _testColor(value):
+    """ _testColor(value)
+    Tests a color whether it is a sequence of 3 or 4 values.
+    It returns a 4 element tuple or raises an error if the suplied
+    data is incorrect.
+    """
+    
+    if not hasattr(value, '__len__'):
+        raise ValueError("A color should be a 3 or 4 element sequence.")
+    elif len(value) == 4:
+        return (value[0], value[1], value[2], value[3])
+    elif len(value) == 3:
+        return (value[0], value[1], value[2], 1.0)
+    else:
+        raise ValueError("A color should be a 3 or 4 element sequence.")
+
+
+# todo: implement spot light and attenuation
+class Light(object):
+    def __init__(self, index):
+        
+        # Store index of the light (OpenGl can handle up to 8 lights)
+        self._index = index
+        self._on = False
+        
+        # The three light properties
+        self._ambient = (0.2, 0.2, 0.2 ,1)
+        self._diffuse = (1,1,1, 1)
+        self._specular = (1,1,1, 1)
+        
+        # Position or direction
+        self._position = (0,0,1,0)
+        self._camLight = True
+    
+    
+    @Property
+    def ambient():
+        """ Get/Set the ambient color of the light. This is the color
+        that is everywhere, coming from all directions, independent of 
+        the light position. 
+        """
+        def fget(self):
+            return self._ambient
+        def fset(self, value):
+            self._ambient = _testColor(value)
+    
+    
+    @Property
+    def diffuse():
+        """ Get/Set the diffuse color of the light. This component is the
+        light that comes from one direction, so it's brighter if it comes
+        squarely down on a surface than if it barely glances off the 
+        surface. It depends on the light position how a material is lit.
+        
+        """
+        def fget(self):
+            return self._diffuse
+        def fset(self, value):
+            self._diffuse = _testColor(value)
+    
+    
+    @Property
+    def specular():
+        """ Get/Set the specular color of the light. This component
+        represents the light that comes from the light source and bounces
+        off a surface in a particular direction. This is what makes 
+        materials appear shiny.
+        """
+        def fget(self):
+            return self._specular
+        def fset(self, value):
+            self._specular = _testColor(value)
+    
+    
+    @Property
+    def position():
+        """ Get/Set the position of the light. Can be represented as a
+        3 or 4 element tuple. If the fourth element is a 1, the light
+        has a position, if it is a 0, it represents a direction (i.o.w. the
+        light is a directional light, like the sun).
+        """
+        def fget(self):
+            return self._position
+        def fset(self, value):
+            if len(value) == 3:
+                self._position = value[0], value[1], value[2], 1
+            elif len(value) == 4:
+                self._position = value[0], value[1], value[2], value[3]
+            else:
+                tmp = "Light position should be a 3 or 4 element sequence."
+                raise ValueError(tmp)
+    
+    
+    @Property
+    def isDirectional():
+        """ Get/Set whether the light is a directional light. A directional
+        light has no real position (it can be thought of as infinitely far
+        away), but shines in a particular direction. The sun is a good
+        example of a directional light.
+        """
+        def fget(self):
+            return self._position[3] == 0
+        def fset(self, value):
+            # Get fourth element
+            if value:
+                fourth = 0
+            else:
+                fourth = 1
+            # Set position
+            tmp = self._position 
+            self._position = tmp[0], tmp[1], tmp[2], fourth
+    
+    
+    @Property
+    def isCamLight():
+        """ Get/Set whether the light is a camera light. A camera light
+        moves along with the camera, like the lamp on a miner's hat.
+        """
+        def fget(self):
+            return self._camLight
+        def fset(self, value):
+            self._camLight = bool(value)
+    
+    
+    def On(self, on=True):
+        """ On(on=True)
+        Turn the light on.
+        """
+        self._on = bool(on)
+    
+    
+    def Off(self):
+        """ Off()
+        Turn the light off.
+        """
+        self._on = False
+    
+    
+    @property
+    def isOn(self):
+        return self._on
+    
+    
+    def _Apply(self):
+        """ _Apply()
+        Apply the light position and other properties.
+        """
+        thisLight = gl.GL_LIGHT0 + self._index
+        if self._on:
+            # Enable and set position            
+            gl.glEnable(thisLight)
+            gl.glLightfv(thisLight, gl.GL_POSITION, self._position)
+            # Set colors
+            gl.glLightfv(thisLight, gl.GL_AMBIENT, self._ambient)
+            gl.glLightfv(thisLight, gl.GL_DIFFUSE, self._diffuse)
+            gl.glLightfv(thisLight, gl.GL_SPECULAR, self._specular)    
+        else:
+            gl.glDisable(thisLight)
+
+
+
+def check3dArray(value):
+    """ Check the shape of vertex/color/texcord data. 
+    Always returns a numpy array. 
+    """
+    if isinstance(value, np.ndarray):
+        if not (value.ndim == 2 and value.shape[1] == 3):
+            raise ValueError()
+        if True:#value.dtype == np.float32:
+            return value
+#         else:
+#             return value.astype(np.float32)
+    elif isinstance(value, Pointset):
+        if not value.ndim==3:
+            raise ValueError()
+        return value.data
+    else:
+        raise ValueError()
+
+
+class Mesh(Wobject):
+    """ Mesh(parent, vertices, normals=None, faces=None, 
+        colors=None, texcords=None, type=gl.GL_TRIANGLES)
+    
+    A mesh is a generic object to visualize a 3D object made up of 
+    polygons. These polygons can be triangles or quads. The mesh
+    is affected by lighting and its material properties can be 
+    changes using properties. Per vertex color can be supplied
+    explicitly by giving a color array, by supplying 1D texcords which
+    are looked up in the colormap, or by supplying a 2D texcords array
+    and setting a 2D texture image.
+    
+    Vertices is a Nx3 numpy array of vertex positions in 3D space.
+    
+    Normals is a Nx3 numpy array of vertex normals. If not given, 
+    it is calcululated from the vertices.
+    
+    Faces (optional) is a numpy array or list of indices to define the faces.
+    If this array is Nx3 or Nx4, the type is inferred from this array. Faces
+    should be of uint8, uint16 or uint32 (if it is not, the data is converted
+    to uint32).
+    
+    Colors is a Nx3 numpy array giving the ambient and diffuse color for
+    each vertex. Note that the colors are not used if texcords is given.
+    
+    Texcords is a 1D (size N) array specifying the color index at each vertex.
+    The color at each vertex is then calculated by looking it up in the
+    colormap. Texcords can also be a Nx2 array with 2D texture coordinates
+    to map an image to the mesh. Use SetTexture() to set the image. 
+    
+    Type can be GL_TRIANGLES (default), GL_QUADS, GL_TRIANGLE_STRIP, 
+    GL_TRIANGLE_FAN, or GL_QUAD_STRIP. 
+    
+    """ 
+    
+    def __init__(self, parent, vertices, normals=None, faces=None, 
+            colors=None, texcords=None, type=None):
+        Wobject.__init__(self, parent)
+        
+        # Set type first (can be reset by faces)
+        self._type = gl.GL_TRIANGLES
+        if type is not None:
+            if type in [gl.GL_TRIANGLES, gl.GL_QUADS, gl.GL_TRIANGLE_STRIP,
+                        gl.GL_TRIANGLE_FAN, gl.GL_QUAD_STRIP]:
+                self._type = type
+            else:
+                raise ValueError('Invalid type.')
+        
+        # Set all things (checks are performed in set methods)
+        self.SetVertices(vertices)
+        self.SetNormals(normals)
+        self.SetFaces(faces)
+        self.SetColors(colors)
+        self.SetTexcords(texcords)
+        
+        # Create colormap and init texture
+        self._colormap = Colormap()
+        self._texture = None
+        
+        # Material properties
+        self._ambient = (0.7, 0.7, 0.7, 1.0)
+        self._diffuse = (0.7, 0.7, 0.7, 1.0)
+        self._specular = (0.3, 0.3, 0.3, 1.0)        
+        self._shininess = 50
+        self._emission = (0.0, 0.0, 0.0, 1.0)
+    
+    
+    @Property
+    def ambient():
+        """ Get/Set the ambient reflection color of the material. Ambient
+        light is the light that is everywhere, coming from all directions, 
+        independent of the light position. 
+        """
+        def fget(self):
+            return self._ambient
+        def fset(self, value):
+            self._ambient = _testColor(value)
+    
+    
+    @Property
+    def diffuse():
+        """ Get/Set the diffuse reflection color of the material. Diffuse
+        light comes from one direction, so it's brighter if it comes
+        squarely down on a surface than if it barely glances off the 
+        surface. It depends on the light position how a material is lit.
+        """
+        def fget(self):
+            return self._diffuse
+        def fset(self, value):
+            self._diffuse = _testColor(value)
+    
+    
+    @Property
+    def ambientAndDiffuse():
+        """ Set the diffuse and ambient component simultaneously. Getting
+        returns the diffuse component.
+        """
+        def fget(self):
+            return self._diffuse
+        def fset(self, value):
+            self._diffuse = self._ambient = _testColor(value)
+    
+    
+    @Property
+    def specular():
+        """ Get/Set the specular reflection color of the material. Specular
+        light represents the light that comes from the light source and bounces
+        off a surface in a particular direction. It is what makes 
+        materials appear shiny.
+        """
+        def fget(self):
+            return self._specular
+        def fset(self, value):
+            self._specular = _testColor(value)
+    
+    
+    @Property
+    def shininess():
+        """ Get/Set the shininess value of the material as a number between
+        0 and 128. The higher the value, the brighter and more focussed the
+        specular spot, thus the shinier the material appears to be.
+        """
+        def fget(self):
+            return self._shininess
+        def fset(self, value):
+            if value < 0: value = 0
+            if value > 128: value = 128
+            self._shininess = value
+    
+    
+    @Property
+    def emission():
+        """ Get/Set the emission color of the material. It is the 
+        "self-lighting" property of the material, and usually only makes
+        sense for objects that represent lamps or candles etc.
+        """
+        def fget(self):
+            return self._emission
+        def fset(self, value):
+            self._emission = _testColor(value)
+    
+    ## Setters
+    
+    
+    def SetVertices(self, vertices):
+        """ SetVertices(vertices)
+        Set the vertex data as a Nx3 numpy array or as a 3D Pointset. 
+        """
+        try:
+            self._vertices = check3dArray(vertices)
+        except ValueError:
+            raise ValueError("Vertices should represent an array of 3D vertices.")
+    
+    
+    def SetNormals(self, normals):
+        """ SetNormals(normals)
+        Set the normal data as a Nx3 numpy array or as a 3D Pointset. 
+        """
+        if normals is not None:
+            try:
+                self._normals = check3dArray(normals)
+            except ValueError:
+                raise ValueError("Normals should represent an array of 3D vertices.")
+        else:
+            self._normals = None
+    
+    
+    def SetColors(self, colors):
+        """ SetColors(colors)
+        Set the color data as a Nx3 numpy array or as a 3D Pointset. 
+        """
+        if colors is not None:
+            try:
+                self._colors = check3dArray(colors)
+            except ValueError:
+                raise ValueError("Colors should represent an array of 3D vertices.")
+        else:
+            self._colors = None
+    
+    
+    def SetTexcords(self, texcords):
+        """ SetTexcords(texcords)
+        Set the texture coordinates as a Nx2 numpy array or as a 2D Pointset. 
+        """
+        if texcords is not None:
+        
+            if isinstance(texcords, np.ndarray):
+                # Test dimensions
+                if texcords.ndim == 2 and texcords.shape[1] == 2:
+                    pass # Texture coordinates
+                elif texcords.ndim == 1:
+                    pass # Colormap entries
+                else:
+                    raise ValueError("Texture coordinates must be 2D or 1D.")
+                # Test data type
+                if texcords.dtype == np.float32:
+                    self._texcords = texcords
+                else:
+                    self._texcords = texcords.astype(np.float32)
+            
+            elif isinstance(texcords, Pointset):
+                if not texcords.ndim==2:
+                    raise ValueError("Texture coordinates must be 2D or 1D.")
+                self._texcords = texcords.data
+            else:
+                raise ValueError("Texture coordinates must be a numpy array or Pointset.")
+        
+        else:
+            self._texcords = None
+    
+    
+    def SetFaces(self, faces):
+        """ SetFaces(faces)
+        Set the faces data. This can be either a list, a 1D numpy array,
+        a Nx3 numpy array, or a Nx4 numpy array. In the latter two cases
+        the type is set to GL_TRIANGLES or GL_QUADS respectively.
+        """
+        
+        # Check and store faces
+        if faces is not None:
+            if isinstance(faces, list):
+                self._faces = np.array(faces, dtype=np.uint32)
+            elif isinstance(faces, np.ndarray):
+                # Check shape
+                if faces.ndim==1:
+                    pass # ok
+                elif faces.ndim==2 and faces.shape[1] in [3,4]:
+                    D = {3:gl.GL_TRIANGLES, 4:gl.GL_QUADS}
+                    self._type = D[faces.shape[1]]
+                else:
+                    tmp = 'Faces should represent a list or, 1D, Nx3 or Nx4'
+                    raise ValueError(tmp + ' numpy array.')
+                # Check data type
+                if faces.dtype in [np.uint8, np.uint16, np.uint32]:
+                    self._faces = faces.reshape((faces.size,))
+                else:                    
+                    self._faces = faces.astype(np.uint32)
+                    self._faces.shape = (faces.size,)
+            else:
+                raise ValueError("Faces should be a list or numpy array.")
+        else:
+            self._faces = None
+    
+    
+    def SetTexture(self, data):
+        if data is not None:
+            # Check dimensions
+            if data.ndim==2:
+                pass # ok: gray image
+            elif data.ndim==3 and data.shape[2]==3:
+                pass # ok: color image
+            else:
+                raise ValueError('Only 2D images can be mapped to a mesh.')
+            # Make texture object and bind
+            self._texture = TextureObjectToVisualize(2, data)
+            self._texture.SetData(data)
+        else:
+            self._texture = None
+    
+    @Property
+    def colormap():
+        """ Get/Set the colormap. The argument must be a tuple/list of 
+        iterables with each element having 3 or 4 values. The argument may
+        also be a Nx3 or Nx4 numpy array. In all cases the data is resampled
+        to create a 256x4 array.
+        
+        Visvis defines a number of standard colormaps in the global visvis
+        namespace: CM_AUTUMN, CM_BONE, CM_COOL, CM_COPPER, CM_GRAY, CM_HOT, 
+        CM_HSV, CM_JET, CM_PINK, CM_SPRING, CM_SUMMER, CM_WINTER. 
+        A dict of name-colormap pairs is also available as vv.cm.colormaps.
+        """
+        def fget(self):
+            return self._colormap.GetMap()
+        def fset(self, value):
+            self._colormap.SetMap(value)
+    
+    
+    ## Method implementations to function as a proper wobject
+    
+    def _GetLimits(self):
+        """ _GetLimits()
+        Get the limits in world coordinates between which the object exists.
+        """
+        
+        vertices = self._vertices
+        
+        # Obtain untransformed coords         
+        x1, x2 = vertices[:,0].min(), vertices[:,0].max()
+        y1, y2 = vertices[:,1].min(), vertices[:,1].max()
+        z1, z2 = vertices[:,2].min(), vertices[:,2].max()
+        
+        # There we are
+        return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
+    
+    
+    def OnDestroyGl(self):
+        # Clean up OpenGl resources.
+        self._colormap.DestroyGl()
+        if self._texture is not None:
+            self._texture.DestroyGl()
+    
+    
+    def OnDestroy(self):
+        # Clean up any resources.
+        self._colormap.Destroy()
+        if self._texture is not None:
+            self._texture.Destroy()
+    
+    
+    def OnDraw(self):
+        gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
+        gl.glPolygonOffset(1.0,1.0)
+        self._DrawFaces()
+        self._DrawLines()
+        gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
+    
+    def _DrawFaces(self):
+        
+        # We need vertices
+        if self._vertices is None:
+            return
+        
+        # We need normals
+        if self._normals is None:
+            self.CalculateNormals()
+        
+        # Prepare for drawing
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glVertexPointerf(self._vertices)
+        #
+        gl.glEnableClientState(gl.GL_NORMAL_ARRAY)
+        gl.glNormalPointerf(self._normals)
+        #
+        if self._texcords is not None:
+            if (self._texcords.ndim == 2) and (self._texture is not None):
+                gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+                gl.glTexCoordPointerf(self._texcords)
+                self._texture.Enable(0)
+            elif self._texcords.ndim == 1:
+                gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+                gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, self._texcords)
+                self._colormap.Enable(0)
+        #
+        elif self._colors is not None:
+            gl.glEnable(gl.GL_COLOR_MATERIAL)
+            gl.glColorMaterial(gl.GL_FRONT_AND_BACK, gl.GL_AMBIENT_AND_DIFFUSE)
+            gl.glEnableClientState(gl.GL_COLOR_ARRAY)
+            gl.glColorPointerf(self._colors)
+        
+        
+        # Prepare material
+        gl.glMaterial(gl.GL_FRONT, gl.GL_AMBIENT, self._ambient)
+        gl.glMaterial(gl.GL_FRONT, gl.GL_DIFFUSE, self._diffuse)
+        gl.glMaterial(gl.GL_FRONT, gl.GL_SPECULAR, self._specular)
+        gl.glMaterial(gl.GL_FRONT, gl.GL_SHININESS, self._shininess)
+        gl.glMaterial(gl.GL_FRONT, gl.GL_EMISSION, self._emission)
+#         gl.glMaterial(gl.GL_BACK, gl.GL_AMBIENT, (0,1,0,1))
+        
+        # Prepare lights
+        gl.glEnable(gl.GL_LIGHTING)
+        gl.glShadeModel(gl.GL_SMOOTH)
+        gl.glEnable(gl.GL_NORMALIZE)  # gl.GL_RESCALE_NORMAL
+        #
+        gl.glFrontFace(gl.GL_CW)
+        gl.glEnable(gl.GL_CULL_FACE)
+        gl.glCullFace(gl.GL_BACK)
+        
+        # Draw
+        if self._faces is None:
+            gl.glDrawArrays(self._type, 0, self._vertices.shape[0])
+        else:
+            # Get data type
+            if self._faces.dtype == np.uint8:
+                face_dtype = gl.GL_UNSIGNED_BYTE
+            elif self._faces.dtype == np.uint16:
+                face_dtype = gl.GL_UNSIGNED_SHORT
+            else:
+                face_dtype = gl.GL_UNSIGNED_INT
+            # Go
+            N = self._faces.size
+            gl.glDrawElements(self._type, N, face_dtype, self._faces)
+        
+        # Clean up
+        gl.glFlush()
+        if self._texcords is not None:
+            self._colormap.Disable()
+            if self._texture:
+                self._texture.Disable()
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glDisableClientState(gl.GL_NORMAL_ARRAY)
+        gl.glDisableClientState(gl.GL_COLOR_ARRAY)
+        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        gl.glDisable(gl.GL_COLOR_MATERIAL)
+        gl.glPolygonMode(gl.GL_FRONT, gl.GL_FILL)
+        gl.glDisable(gl.GL_LIGHTING)
+        gl.glDisable(gl.GL_CULL_FACE)
+    
+    
+    def _DrawLines(self):
+        
+        # We need vertices
+        if self._vertices is None:
+            return
+        
+        # Prepare for drawing
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glVertexPointerf(self._vertices)
+        
+        # Draw lines
+        gl.glColor(0,1,0,1) # todo: set color
+        gl.glPolygonMode(gl.GL_FRONT, gl.GL_LINE)
+        
+        # culling
+        gl.glFrontFace(gl.GL_CW)
+        
+        # Draw
+        if self._faces is None:
+            gl.glDrawArrays(self._type, 0, self._vertices.shape[0])
+        else:
+            # Get data type
+            if self._faces.dtype == np.uint8:
+                face_dtype = gl.GL_UNSIGNED_BYTE
+            elif self._faces.dtype == np.uint16:
+                face_dtype = gl.GL_UNSIGNED_SHORT
+            else:
+                face_dtype = gl.GL_UNSIGNED_INT
+            # Go
+            N = self._faces.size
+            gl.glDrawElements(self._type, N, face_dtype, self._faces)
+        
+        # Clean up
+        gl.glFlush()
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glPolygonMode(gl.GL_FRONT, gl.GL_FILL)
+    
+    
+    # todo: implement shape
+    def OnDrawShape(self, color):        
+        pass
+    
+    
+    ## Mesh processing
+    
+    # todo: works for quads?
+    def CalculateNormals(self):
+        """ CalculateNormals()
+        Calculate the normal data from the vertices.
+        Triangular polygons are assumed.
+        """
+        
+        # Get vertices as np array
+        vertices = self._vertices
+        if vertices is None:
+            return
+        
+        # Get faces as np array
+        faces = self._faces
+        if faces is None:
+            faces = np.arange(0, vertices.shape[0], dtype=np.uint32)
+        if faces.ndim == 1:
+            faces = faces.reshape((faces.shape[0]/3,3))
+        
+        # Init normal array
+        n1 = vertices.shape[0]
+        n2 = faces.shape[0]
+        normals = np.zeros((n1,3), dtype='float32')
+        defaultNormal = np.array([1,0,0], dtype='float32')
+        
+        # For all faces, calculate normals, and add to normals
+        for i in range(n2):            
+            # Get vertices
+            v1 = vertices[faces[i,0],:]
+            v2 = vertices[faces[i,1],:]
+            v3 = vertices[faces[i,2],:]
+            # Calculate normal            
+            tmp = np.cross(v1-v2,v2-v3)
+            if np.isnan(tmp).sum():
+                tmp = defaultNormal
+            # Insert normals
+            normals[faces[i,0],:] += tmp
+            normals[faces[i,1],:] += tmp
+            normals[faces[i,2],:] += tmp
+        
+        # Normalize normals
+        for i in range(n1):
+            tmp = normals[i,:]
+            tmp = tmp / ( (tmp**2).sum()**0.5 )
+            if np.isnan(tmp).sum():
+                tmp = defaultNormal
+            normals[i,:] = -tmp
+        
+        # Store normals
+        self._normals = normals
+    
+    
+if __name__ == '__main__':
+    import visvis as vv
+    a = vv.cla()
+    a.daspectAuto = False
+    a.cameraType = '3d'
+    a.SetLimits((-2,2),(-2,2),(-2,2))
+    
+    #p = vv.polygon.getCube(a)
+    #p = vv.solidSphere(2,50,50)
+    #im = vv.imread('lena.png')
+    #p.SetTexture(im)
+    p = vv.solidTeapot()
+    p.Draw()
+    a.SetLimits()
+    
