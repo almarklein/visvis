@@ -44,7 +44,7 @@ import events
 from textRender import FontManager, Text, Label
 from line import MarkerManager, Line, lineStyles
 from axises import BaseAxis, CartesianAxis, PolarAxis2D
-from polygon import Light
+from polygonalModeling import Light
 
 # a variable to indicate whether to print FPS, for testing
 printFPS = False
