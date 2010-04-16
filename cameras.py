@@ -355,10 +355,6 @@ class TwoDCamera(BaseCamera):
                 # apply average zoom
                 tmp = self.view_zoomx + self.view_zoomy
                 self.view_zoomx = self.view_zoomy = tmp / 2.0
-#         if self.view_zoomx < 2:
-#             self.view_zoomx = 2.0
-#         if self.view_zoomy < 2:
-#             self.view_zoomy = 2.0
         
         # get zoom
         fx, fy = self.view_zoomx, self.view_zoomy
@@ -657,10 +653,6 @@ class ThreeDCamera(TwoDCamera):
                 # apply average zoom
                 tmp = self.view_zoomx + self.view_zoomy
                 self.view_zoomx = self.view_zoomy = tmp / 2.0
-#         if self.view_zoomx < 2:
-#             self.view_zoomx = 2.0
-#         if self.view_zoomy < 2:
-#             self.view_zoomy = 2.0
         
         # get zoom
         fx, fy = self.view_zoomx, self.view_zoomy
@@ -674,8 +666,7 @@ class ThreeDCamera(TwoDCamera):
             else:
                 fy *= h/w
         
-        # Init projection view. It will define the whole camera model,
-        # so the modelview matrix is really for models only.
+        # Init projection view
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         
@@ -686,31 +677,19 @@ class ThreeDCamera(TwoDCamera):
         # z-axis. We zoom here.                
         ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         
-#         # 3. Set viewing angle (this is the only difference with 2D camera)
-#         gl.glRotate(self.view_ro, 0.0, 0.0, 1.0)
-#         gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
-#         gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
-        
-        
-        # Above is the projection stuff. For the rest, we use the
-        # modelview matrix. This way, the rays to render 3D data can
-        # be calculated easiest and most natural.
+        # Prepare for models
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
-        # Set light
-        # todo: Make Renderers work with the rotations being applied
-        # in the modelview rather than the projection matrix.
+        # Set camera lights
         for light in self.axes._lights:
-            if light.isCamLight:
+            if light.isCamLight:                
                 light._Apply()
         
-
-        # OR HERE???
+        # 3. Set viewing angle (this is the only difference with the 2D camera)
         gl.glRotate(self.view_ro, 0.0, 0.0, 1.0)
         gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
         gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
-        
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
         daspect = self.axes.daspect        
@@ -720,12 +699,16 @@ class ThreeDCamera(TwoDCamera):
         # the translation is not in world coordinates.
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], -self.view_loc[2])
         
-        # Set non-cam lights
+        # Set non-camera lights
         for light in self.axes._lights:
             if not light.isCamLight:
                 light._Apply()
         
-        # Set lighting model properties. We do not use the global ambient term
+        # Set lighting model properties. 
+        # - We do not use the global ambient term
+        # - We do not use local viewer mode
+        # - We want to allow people to see also backfaces correctly
+        # - We want to be texture-proof for specular highlights
         gl.glLightModelfv(gl.GL_LIGHT_MODEL_AMBIENT, (0,0,0,1))
         gl.glLightModelfv(gl.GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0)
         gl.glLightModelfv(gl.GL_LIGHT_MODEL_TWO_SIDE, 1.0)
