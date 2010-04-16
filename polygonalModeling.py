@@ -204,10 +204,10 @@ def check3dArray(value):
     if isinstance(value, np.ndarray):
         if not (value.ndim == 2 and value.shape[1] == 3):
             raise ValueError()
-        if True:#value.dtype == np.float32:
+        if value.dtype == np.float32:
             return value
-#         else:
-#             return value.astype(np.float32)
+        else:
+            return value.astype(np.float32)
     elif isinstance(value, Pointset):
         if not value.ndim==3:
             raise ValueError()
@@ -247,7 +247,7 @@ class Mesh(Wobject):
     to map an image to the mesh. Use SetTexture() to set the image. 
     
     Type can be GL_TRIANGLES (default), GL_QUADS, GL_TRIANGLE_STRIP, 
-    GL_TRIANGLE_FAN, or GL_QUAD_STRIP. 
+    GL_TRIANGLE_FAN, GL_QUAD_STRIP or GL_POLYGON. 
     
     """ 
     
@@ -259,7 +259,7 @@ class Mesh(Wobject):
         self._type = gl.GL_TRIANGLES
         if type is not None:
             if type in [gl.GL_TRIANGLES, gl.GL_QUADS, gl.GL_TRIANGLE_STRIP,
-                        gl.GL_TRIANGLE_FAN, gl.GL_QUAD_STRIP]:
+                        gl.GL_TRIANGLE_FAN, gl.GL_QUAD_STRIP, gl.GL_POLYGON]:
                 self._type = type
             else:
                 raise ValueError('Invalid type.')
@@ -274,6 +274,9 @@ class Mesh(Wobject):
         # Create colormap and init texture
         self._colormap = Colormap()
         self._texture = None
+        
+        # What faces to cull
+        self._cullFaces = None #gl.GL_BACK
         
         # Material properties
         self._ambient = (0.7, 0.7, 0.7, 1.0)
@@ -356,6 +359,28 @@ class Mesh(Wobject):
             return self._emission
         def fset(self, value):
             self._emission = _testColor(value)
+    
+    
+    @Property
+    def cullFaces():
+        """ Get/Set the culling of faces. Values can be 'front', 'back'
+        or None (default). If 'back': backfacing faces are not drawn.
+        """
+        def fget(self):
+            D = {gl.GL_FRONT:'front', gl.GL_BACK:'back', None:None}
+            return D[self._cullFaces]
+        def fset(self, value):
+            if isinstance(value, basestring):
+                try:
+                    D = {'front':gl.GL_FRONT, 'back':gl.GL_BACK}
+                    self._cullFaces = D[value.lower()]
+                except KeyError:
+                    raise ValueError('Invalid value for cullFaces')
+            elif not value:
+                self._cullFaces = None
+            else:
+                raise ValueError('Invalid value for cullFaces')
+    
     
     ## Setters
     
@@ -456,6 +481,12 @@ class Mesh(Wobject):
                     self._faces.shape = (faces.size,)
             else:
                 raise ValueError("Faces should be a list or numpy array.")
+            # Check
+            if self._faces.min() < 0:
+                raise ValueError("Face data should be non-negative integers.")
+            if self._vertices is not None:
+                if self._faces.max() >= len(self._vertices):
+                    raise ValueError("Face data references non-existing vertices.")
         else:
             self._faces = None
     
@@ -526,11 +557,11 @@ class Mesh(Wobject):
     
     
     def OnDraw(self):
-        gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
-        gl.glPolygonOffset(1.0,1.0)
+#         gl.glEnable(gl.GL_POLYGON_OFFSET_LINE)
+#         gl.glPolygonOffset(-2.0,-2.0)
         self._DrawFaces()
-        self._DrawLines()
-        gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
+#         self._DrawLines()
+#         gl.glDisable(gl.GL_POLYGON_OFFSET_LINE)
     
     def _DrawFaces(self):
         
@@ -565,23 +596,30 @@ class Mesh(Wobject):
             gl.glEnableClientState(gl.GL_COLOR_ARRAY)
             gl.glColorPointerf(self._colors)
         
-        
         # Prepare material
-        gl.glMaterial(gl.GL_FRONT, gl.GL_AMBIENT, self._ambient)
-        gl.glMaterial(gl.GL_FRONT, gl.GL_DIFFUSE, self._diffuse)
-        gl.glMaterial(gl.GL_FRONT, gl.GL_SPECULAR, self._specular)
-        gl.glMaterial(gl.GL_FRONT, gl.GL_SHININESS, self._shininess)
-        gl.glMaterial(gl.GL_FRONT, gl.GL_EMISSION, self._emission)
-#         gl.glMaterial(gl.GL_BACK, gl.GL_AMBIENT, (0,1,0,1))
+        what = gl.GL_FRONT_AND_BACK
+        gl.glMaterial(what, gl.GL_AMBIENT, self._ambient)
+        gl.glMaterial(what, gl.GL_DIFFUSE, self._diffuse)
+        gl.glMaterial(what, gl.GL_SPECULAR, self._specular)
+        gl.glMaterial(what, gl.GL_SHININESS, self._shininess)
+        gl.glMaterial(what, gl.GL_EMISSION, self._emission)
         
         # Prepare lights
         gl.glEnable(gl.GL_LIGHTING)
         gl.glShadeModel(gl.GL_SMOOTH)
-        gl.glEnable(gl.GL_NORMALIZE)  # gl.GL_RESCALE_NORMAL
-        #
-        gl.glFrontFace(gl.GL_CW)
-        gl.glEnable(gl.GL_CULL_FACE)
-        gl.glCullFace(gl.GL_BACK)
+        gl.glEnable(gl.GL_NORMALIZE)  # GL_NORMALIZE or GL_RESCALE_NORMAL
+        
+        # Set culling (take data aspect into account!)
+        axes = self.GetAxes()
+        tmp = 1
+        if axes:
+            for i in axes.daspect:
+                if i<0:
+                    tmp *= -1
+        gl.glFrontFace({1:gl.GL_CW, -1:gl.GL_CCW}[tmp])
+        if self._cullFaces:
+            gl.glEnable(gl.GL_CULL_FACE)
+            gl.glCullFace(self._cullFaces)
         
         # Draw
         if self._faces is None:
@@ -642,9 +680,11 @@ class Mesh(Wobject):
                 face_dtype = gl.GL_UNSIGNED_SHORT
             else:
                 face_dtype = gl.GL_UNSIGNED_INT
-            # Go
-            N = self._faces.size
-            gl.glDrawElements(self._type, N, face_dtype, self._faces)
+            # Go            
+            faces = self._faces[:-3000]
+            N = faces.size
+            gl.glDrawElements(self._type, N, face_dtype, faces)
+            #gl.glDrawElementsui(self._type, self._faces)
         
         # Clean up
         gl.glFlush()
