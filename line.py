@@ -820,7 +820,8 @@ class Line(Wobject):
 class PolarLine(Line):
     """ PolarLine(parent, angle(radians), mag)
     
-    The Polarline class represents a set of points (locations) in world coordinates.
+    The Polarline class represents a set of points (locations) in world 
+    coordinates.
     They are displayed by a line between these points and/or markers drawn
     at the point coordinates.
     
@@ -862,7 +863,7 @@ class PolarLine(Line):
         pp = Pointset( np.concatenate(tmp, 1) )
         Line.__init__(self, parent, pp)
         
-    def transformPolar(self, radialRange, angRefPos, sense):
+    def TransformPolar(self, radialRange, angRefPos, sense):
         offsetMags = self._mags - radialRange.min
         rangeMags = radialRange.range
         offsetMags[offsetMags > rangeMags] = rangeMags
