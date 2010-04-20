@@ -1209,14 +1209,14 @@ class Axes(base.Wibject):
                 for axis in axisList:
                     axis.Destroy()
                 # Add new
-                self._axis = axisClass(self)
+                axisClass(self)
     
     @Property
     def axis():
         """ Get the axis object. 
         """        
         def fget(self):
-            return self._axis 
+            return self.FindObjects(self._axisClass)[0] 
     
     @Property
     def cameraType():
