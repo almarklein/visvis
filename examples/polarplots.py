@@ -21,9 +21,9 @@ ax.axis.SetLimits( rangeTheta=0, rangeR=vv.Range(-40, 5))
 ax.xLabel = 'degrees'
 ax.yLabel = 'dB'
 
-print('drag mouse right button left-right to rotate plot.')
-print('shift-drag mouse right button up-down to change lower')
-print('radial limit. Drag mouse left button up-down to rescale')
+print('drag mouse left button left-right to rotate plot.')
+print('shift-drag mouse left button up-down to change lower')
+print('radial limit. Drag mouse right button up-down to rescale')
 print('radial axis while keeping lower radial limit fixed')
 
 
