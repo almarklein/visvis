@@ -294,7 +294,6 @@ class BaseAxis(base.Wobject):
         pps = self._pps
         pps[:,2] = depthToZ( pps[:,2] )
 
-
         # Prepare for drawing lines
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(pps.data)
@@ -311,7 +310,6 @@ class BaseAxis(base.Wobject):
         # Clean up
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glEnable(gl.GL_LINE_SMOOTH)
-
 
 
     def _DestroyChildren(self):
@@ -388,7 +386,6 @@ class BaseAxis(base.Wobject):
           * ppg: dotted lines in real coords
         """
         raise NotImplemented('This is the abstract base class.')
-
 
 
 class CartesianAxis2D(BaseAxis):
@@ -939,23 +936,23 @@ class PolarAxis2D(BaseAxis):
     """
 
     def __init__(self, parent):
-        BaseAxis.__init__(self,parent)
+        BaseAxis.__init__(self, parent)
         self.ppb = None
         axes = self.GetAxes()
         axes.daspectAuto = False
         self.bgcolor = axes.bgcolor
-        axes.bgcolor = None #disables the default background
+        axes.bgcolor = None  # disables the default background
         # Size of the boarder where circular tick labels are drawn
         self.labelPix = 5
 
-        self._radialRange = Range(-1,1) #default
-        self._angularRange = Range(-179, 180) # always 360 deg
+        self._radialRange = Range(-1, 1)  # default
+        self._angularRange = Range(-179, 180)  # always 360 deg
         self._angularRefPos = 0
         self._sense = 1.0
 
         # Need to overrride this because the PolarAxis has
         # four sets of radial ticks (with same dict key!)
-        self._textDicts = [{},{},{},{},{}]
+        self._textDicts = [{}, {}, {}, {}, {}]
 
         # indicate part that we view.
         # view_loc is the coordinate that we center on
@@ -963,12 +960,12 @@ class PolarAxis2D(BaseAxis):
         # each direction
         self.view_zoomx = 100
         self.view_zoomy = 100
-        self.view_loc = 0,0,0 # we only use the 2D part
-        self._fx, self._fy = 0,0
+        self.view_loc = 0, 0, 0  # we only use the 2D part
+        self._fx, self._fy = 0, 0
 
         # reference stuff for interaction
-        self.ref_loc = 0,0,0    # view_loc when clicked
-        self.ref_mloc = 0,0     # mouse location when clicked
+        self.ref_loc = 0, 0, 0    # view_loc when clicked
+        self.ref_mloc = 0, 0     # mouse location when clicked
         self.ref_but = 0        # mouse button when clicked
         self.ref_zoomx = 100.0  # zoom factors when clicked
         self.ref_zoomy = 100.0
@@ -1009,7 +1006,6 @@ class PolarAxis2D(BaseAxis):
           * ppg: dotted lines in real coords
         """
 
-
         # Get camera
         # This camera has key bindings which are used to
         # rescale the lower radial limits.  Thus for polar plots the
@@ -1027,22 +1023,19 @@ class PolarAxis2D(BaseAxis):
         lims = axes.GetLimits()
         lims = [lims[0], lims[1], cam.zlim]
 
-
-
         # From current lims calculate the radial axis min and max
 
         # Get labels. These are equivalent to Theta and radial labels
         labels = [axes.xLabel, axes.yLabel]
 
-
         # Init the new text object dictionaries
         # (theta, R(0),R(90),R(180),R(270))
-        newTextDicts = [{},{},{},{},{}]
+        newTextDicts = [{}, {}, {}, {}, {}]
 
         # Init pointsets for drawing lines and gridlines
-        ppc = Pointset(3) # lines in real coords
-        pps = Pointset(3) # lines in screen pixels, not used by PolarAxis
-        ppg = Pointset(3) # dotted lines in real coords (for grids)
+        ppc = Pointset(3)  # lines in real coords
+        pps = Pointset(3)  # lines in screen pixels, not used by PolarAxis
+        ppg = Pointset(3)  # dotted lines in real coords (for grids)
         # circular background poly for polar (  rectangular bkgd is
         # turned off and a circular one drawn instead )
         self.ppb = Pointset(3)
@@ -1058,7 +1051,8 @@ class PolarAxis2D(BaseAxis):
         # We use this later to determine the order of the corners
         self._delta = 1
         for i in axes.daspect:
-            if i<0: self._delta*=-1
+            if i < 0:
+                self._delta *= -1
 
         # Since in polar coordinates screen and data x and y values
         # need to be mapped to theta and R
@@ -1079,16 +1073,16 @@ class PolarAxis2D(BaseAxis):
         # x or y.  We also need to reduce it further so
         # that tick labels can be drawn
         if vector_cx.Norm() < vector_cy.Norm():
-            dimMax_c = (vector_cx.Norm()/2)
-            dimMax_s = (vector_sx.Norm()/2)
+            dimMax_c = (vector_cx.Norm() / 2)
+            dimMax_s = (vector_sx.Norm() / 2)
         else:
-            dimMax_c = (vector_cy.Norm()/2)
-            dimMax_s = (vector_sy.Norm()/2)
+            dimMax_c = (vector_cy.Norm() / 2)
+            dimMax_s = (vector_sy.Norm() / 2)
 
-        pix2c = dimMax_c /dimMax_s  # for screen to world conversion
-        txtSize = self.labelPix*pix2c
-        radiusMax_c = dimMax_c - 3.0*txtSize  # Max radial scale extent
-        center_c = Point(0.0,0.0,0.0)
+        pix2c = dimMax_c / dimMax_s  # for screen to world conversion
+        txtSize = self.labelPix * pix2c
+        radiusMax_c = dimMax_c - 3.0 * txtSize  # Max radial scale extent
+        center_c = Point(0.0, 0.0, 0.0)
         #self._radialRange = radiusMax_c
         radiusMax_c = self._radialRange.range
 
@@ -1099,11 +1093,12 @@ class PolarAxis2D(BaseAxis):
             # Get the four corners that are of interest for this dimension
             # In 2D, the first two are the same as the last two
             tmp = self._cornerIndicesPerDirection[d]
-            tmp = [tmp[i] for i in [0,1,0,1]]
+            tmp = [tmp[i] for i in [0, 1, 0, 1]]
             corners4_c = [corners8_c[i] for i in tmp]
             corners4_s = [corners8_s[i] for i in tmp]
            # Get index of corner to put ticks at
-            i0 = 0; bestVal = 999999999999999999999999
+            i0 = 0
+            bestVal = 999999999999999999999999
             for i in range(4):
                 val = corners4_s[i].y
                 if val < bestVal:
@@ -1113,8 +1108,8 @@ class PolarAxis2D(BaseAxis):
             # Get directional vectors in real coords and screen pixels.
             # Easily calculated since the first _corner elements are
             # 000,100,010,001
-            vector_c = corners8_c[d+1] - corners8_c[0]
-            vector_s = corners8_s[d+1] - corners8_s[0]
+            vector_c = corners8_c[d + 1] - corners8_c[0]
+            vector_s = corners8_s[d + 1] - corners8_s[0]
             textDict = self._textDicts[d]
             p1 = corners4_c[i0] + vector_c * 0.5
             key = '_label_'
@@ -1123,9 +1118,9 @@ class PolarAxis2D(BaseAxis):
                 t.text = labels[d]
                 t.x, t.y, t.z = p1.x, p1.y, p1.z
             else:
-                #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                t.fontSize=10
+                # t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                t = AxisLabel(self, labels[d], p1.x, p1.y, p1.z, 'sans')
+                t.fontSize = 10
             newTextDicts[d][key] = t
             t.halign = 0
             t.textColor = axes._axisColor
@@ -1143,9 +1138,6 @@ class PolarAxis2D(BaseAxis):
             # Keep up to date (so label can move itself just beyond ticks)
             t._textDict = newTextDicts[d]
 
-
-
-
         # To make things easier to program I just pulled out
         # the Polar angular and radial calulations since they
         # are disimilar anyway (i.e. a 'for range(2)' doesn't really help here)
@@ -1155,44 +1147,42 @@ class PolarAxis2D(BaseAxis):
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # theta axis is circle at the outer radius
         # with a line segment every 6 degrees to form circle
-        theta = self._angularRefPos + self._sense*np.linspace(0, 2*np.pi,61)
+        theta = self._angularRefPos + \
+                self._sense * np.linspace(0, 2 * np.pi, 61)
 
-         # x,y for background
-        xb =  radiusMax_c * np.cos(theta)
-        yb =  radiusMax_c * np.sin(theta)
+        # x,y for background
+        xb = radiusMax_c * np.cos(theta)
+        yb = radiusMax_c * np.sin(theta)
 
          #x,y for maximum scale radius
-        xc =  radiusMax_c * np.cos(theta)
-        yc =  radiusMax_c * np.sin(theta)
+        xc = radiusMax_c * np.cos(theta)
+        yc = radiusMax_c * np.sin(theta)
         # ppb is the largest circle that will fit
         # and is used  to draw the  polar background poly
-        for x,y in  np.column_stack((xb, yb)):
-            self.ppb.Append(x,y,-10.0)
+        for x, y in  np.column_stack((xb, yb)):
+            self.ppb.Append(x, y, -10.0)
 
-        for x,y in  np.column_stack((xc, yc)):
-            self.ppr.Append(x,y,-1.0)
-
-
+        for x, y in  np.column_stack((xc, yc)):
+            self.ppr.Append(x, y, -1.0)
 
         # polar ticks
         # Correct the tickdist for the x-axis if the numbers are large
         minTickDist = self._minTickDist
-        minTickDist = 40  #This should be set by the font size
+        minTickDist = 40  # This should be set by the font size
 
         # Calculate tick distance in world units
         minTickDist *= pix2c
-        tickValues = ticksPerDim[0] # can be None
-
+        tickValues = ticksPerDim[0]  # can be None
 
         tmp = GetPolarTicks(center_c, radiusMax_c, self._angularRange, \
-                            self._angularRefPos, self._sense , \
+                            self._angularRefPos, self._sense, \
                             minTickDist, tickValues)
         ticks, ticksPos, ticksText = tmp
-        textRadius = (2.2*txtSize) + radiusMax_c
+        textRadius = (2.2 * txtSize) + radiusMax_c
         for tick, pos, text in zip(ticks, ticksPos, ticksText):
             # Get little tail to indicate tick, current hard coded to 4
             p1 = pos
-            tv = 0.05*radiusMax_c*p1/p1.Norm()
+            tv = 0.05 * radiusMax_c * p1 / p1.Norm()
             # polar ticks are inline with vector to tick position
             p2s = pos - tv
 
@@ -1200,18 +1190,17 @@ class PolarAxis2D(BaseAxis):
             ppc.Append(pos)
             ppc.Append(p2s)
 
-
             # Text is in word coordinates so need to create them based on ticks
-            theta = self._angularRefPos + (self._sense*tick*np.pi/180.0)
-            p2 = Point((textRadius*np.cos(theta))[0], \
-                       (textRadius*np.sin(theta))[0], 0)
+            theta = self._angularRefPos + (self._sense * tick * np.pi / 180.0)
+            p2 = Point((textRadius * np.cos(theta))[0], \
+                       (textRadius * np.sin(theta))[0], 0)
             # Put a textlabel at tick
             textDict = self._textDicts[0]
             if tick in textDict and textDict[tick] in self._children:
                 t = textDict.pop(tick)
                 t.x, t.y, t.z = p2.x, p2.y, p2.z
             else:
-                t = Text(self,text, p2.x,p2.y,p2.z, 'sans')
+                t = Text(self, text, p2.x, p2.y, p2.z, 'sans')
             # Add to dict
             newTextDicts[0][tick] = t
             # Set other properties right
@@ -1226,15 +1215,11 @@ class PolarAxis2D(BaseAxis):
         if drawGrid[0] or drawMinorGrid[0]:
             # Get more gridlines if required
             if drawMinorGrid[0]:
-                ticks = self._GetPolarTicks(tickUnit/5, lim)
+                ticks = self._GetPolarTicks(tickUnit / 5, lim)
             # Get positions
-            for tick,p in zip(ticks,ticksPos):
+            for tick, p in zip(ticks, ticksPos):
                 ppg.Append(center_c)
                 ppg.Append(p)
-
-
-
-
 
         #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         #  radial Axis lines, tick  calculations
@@ -1242,53 +1227,53 @@ class PolarAxis2D(BaseAxis):
 
         # the radial axis is vertical and horizontal lines through the center
         # radial lines every 90 deg
-        theta = self._angularRefPos + self._sense*np.arange(0, 2*np.pi,np.pi/2)
-        xc =  radiusMax_c * np.cos(theta)
-        yc =  radiusMax_c * np.sin(theta)
+        theta = self._angularRefPos + \
+                self._sense * np.arange(0, 2 * np.pi, np.pi / 2)
+        xc = radiusMax_c * np.cos(theta)
+        yc = radiusMax_c * np.sin(theta)
 
-        for x,y in  np.column_stack((xc, yc)):
+        for x, y in  np.column_stack((xc, yc)):
             ppc.Append(0.0, 0.0, 0.0)
-            ppc.Append(x,y,0.0)
+            ppc.Append(x, y, 0.0)
 
         # radial ticks
         # Correct the tickdist for the x-axis if the numbers are large
         minTickDist = self._minTickDist
         # Calculate tick distance in world units
         minTickDist *= pix2c
-        tickValues = ticksPerDim[1] # can be None
+        tickValues = ticksPerDim[1]  # can be None
 
-        ticks, ticksPos, ticksText, quadIndex = [],[],[],[]
-        for index,theta in  enumerate(self._angularRefPos + \
-                            self._sense*np.array([0,np.pi/2,np.pi,np.pi*3/2])):
+        ticks, ticksPos, ticksText, quadIndex = [], [], [], []
+        for index, theta in  enumerate(self._angularRefPos + \
+            self._sense * np.array([0, np.pi / 2, np.pi, np.pi * 3 / 2])):
             xc = radiusMax_c * np.cos(theta)
             yc = radiusMax_c * np.sin(theta)
-            p2 =  Point(xc,yc,0)
-            tmp = GetTicks(center_c, p2, Range(0,radiusMax_c), \
+            p2 = Point(xc, yc, 0)
+            tmp = GetTicks(center_c, p2, Range(0, radiusMax_c), \
                            minTickDist, tickValues)
             if index == 0:
                 ticks = ticks + tmp[0]
-                ticksPos = ticksPos +tmp[1]
-                quadIndex = quadIndex + [index+1]*len(tmp[0])
+                ticksPos = ticksPos + tmp[1]
+                quadIndex = quadIndex + [index + 1] * len(tmp[0])
             else:
                 ticks = ticks + tmp[0][1:]
-                ticksPos = ticksPos +tmp[1][1:]
-                quadIndex = quadIndex + [index+1]*len(tmp[1][1:])
-
-
+                ticksPos = ticksPos + tmp[1][1:]
+                quadIndex = quadIndex + [index + 1] * len(tmp[1][1:])
 
         for tick, pos,  qIndx in zip(ticks, ticksPos, quadIndex):
             # Get little tail to indicate tick
             tickXformed = tick + self._radialRange.min
             text = '%1.4g' % (tickXformed)
             iExp = text.find('e')
-            if iExp>0:
-                front = text[:iExp+2]
-                text = front + text[iExp+2:].lstrip('0')
+            if iExp > 0:
+                front = text[:iExp + 2]
+                text = front + text[iExp + 2:].lstrip('0')
 
             p1 = pos
             if (p1.Norm() != 0):
-                tv = (4*pix2c[0])*p1/p1.Norm()
-                tvTxt = ((4*pix2c[0]) + txtSize[0].view(float))*p1/p1.Norm()
+                tv = (4 * pix2c[0]) * p1 / p1.Norm()
+                tvTxt = ((4 * pix2c[0]) + \
+                         txtSize[0].view(float)) * p1 / p1.Norm()
             else:
                 tv = Point(0, 0, 0)
                 tvTxt = Point(-txtSize[0], 0, 0)
@@ -1299,8 +1284,8 @@ class PolarAxis2D(BaseAxis):
             ptxt = pos - tvTxt
 
             # Add tick lines
-            ppc = ppc+pos
-            ppc = ppc+ptic
+            ppc = ppc + pos
+            ppc = ppc + ptic
 
             textDict = self._textDicts[qIndx]
 
@@ -1327,22 +1312,20 @@ class PolarAxis2D(BaseAxis):
             # Get more gridlines if required
             # line segment every 6 degrees to form circle
             theta = self._angularRefPos + \
-                    self._sense*np.linspace(0, 2*np.pi,61)
+                    self._sense * np.linspace(0, 2 * np.pi, 61)
             if drawMinorGrid[1]:
-                ticks = self._GetTicks(tickUnit/5, lim)
+                ticks = self._GetTicks(tickUnit / 5, lim)
             # Get positions
             for tick in ticks:
-                xc =  tick * np.cos(theta)
-                yc =  tick * np.sin(theta)
+                xc = tick * np.cos(theta)
+                yc = tick * np.sin(theta)
                 xlast = xc[:-1][0]
                 ylast = yc[:-1][0]
-                for x,y in  np.column_stack((xc, yc)):
+                for x, y in  np.column_stack((xc, yc)):
                     ppg.Append(Point(xlast, ylast, 0.0))
                     ppg.Append(Point(x, y, 0.0))
                     xlast = x
                     ylast = y
-
-
 
         # Clean up the text objects that are left
         for tmp in self._textDicts:
@@ -1360,13 +1343,13 @@ class PolarAxis2D(BaseAxis):
         axes = self.GetAxes()
         s = axes.camera.GetViewParams()
         if s.loc[0] != s.loc[1] != 0:
-            s.loc = 0,0,0
+            s.loc = 0, 0, 0
             axes.camera.SetViewParams(s)
         BaseAxis.OnDraw(self)
         self.RescalePolarData()
         # draw background
         if self.ppb and self.ppr:
-            clr = 1,1,1
+            clr = 1, 1, 1
             gl.glColor3f(clr[0], clr[1], clr[2])
 
             # Prepare for drawing lines
@@ -1390,24 +1373,22 @@ class PolarAxis2D(BaseAxis):
                 clr = axes._axisColor
                 gl.glColor(clr[0], clr[1], clr[2])
                 gl.glLineWidth(self._lineWidth)
-                gl.glDrawArrays(gl.GL_LINE_LOOP, 0 , len(self.ppr))
+                gl.glDrawArrays(gl.GL_LINE_LOOP, 0, len(self.ppr))
             gl.glEnable(gl.GL_DEPTH_TEST)
             # Clean up
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
-
-
     def OnKeyDown(self, event):
-        if event.key ==17 and self.ref_but==0:
+        if event.key == 17 and self.ref_but == 0:
             self.shiftIsDown = True
-        elif event.key == 19 and self.ref_but==0:
+        elif event.key == 19 and self.ref_but == 0:
             self.controlIsDown = True
         return True
 
     def OnKeyUp(self, event):
         self.shiftIsDown = False
         self.controlIsDown = False
-        self.ref_but = 0 # in case the mouse was also down
+        self.ref_but = 0  # in case the mouse was also down
         return True
 
     def OnMouseDown(self, event):
@@ -1421,32 +1402,30 @@ class PolarAxis2D(BaseAxis):
         self.ref_but = 0
         self.Draw()
 
-
     def OnMotion(self, event):
         if not self.ref_but:
             return
-            
+
         axes = event.owner
         mloc = axes.mousepos
         range = self._radialRange.range
-        if self.ref_but==1:
+        if self.ref_but == 1:
             # get distance and convert to world coordinates
             refloc = axes.camera.ScreenToWorld(self.ref_mloc)
             loc = axes.camera.ScreenToWorld(mloc)
             # calculate radial and circular ref position translations
             dx = loc[0] - refloc[0]
             dy = loc[1] - refloc[1]
-                
+
             if self.shiftIsDown:
-                minRadius  = self.ref_lowerRadius - dy
-                self.SetLimits(rangeR = Range(minRadius, \
+                minRadius = self.ref_lowerRadius - dy
+                self.SetLimits(rangeR=Range(minRadius, \
                                minRadius + range))
             else:
                 self.angularRefPos = self.ref_angularRefPos - \
-                                 (50*dx/range)
+                                 (50 * dx / range)
 
-
-        elif self.ref_but==2:
+        elif self.ref_but == 2:
             # zoom
 
             # Don't care about x zooming for polar plot
@@ -1461,13 +1440,11 @@ class PolarAxis2D(BaseAxis):
 
             # apply (use only y-factor ).
             range = range * math.exp(-factor_y)
-            self.SetLimits(rangeR = Range(self._radialRange.min, \
+            self.SetLimits(rangeR=Range(self._radialRange.min, \
                            self._radialRange.min + range))
             self.ref_mloc = mloc
         self.Draw()
         return True
-
-
 
     def SetLimits(self, rangeTheta=None, rangeR=None, margin=0.04):
         """ SetLimits(rangeTheta=None, rangeR=None, margin=0.02)
@@ -1486,15 +1463,15 @@ class PolarAxis2D(BaseAxis):
         The margin represents the fraction of the range to add (default 2%).
         """
         if rangeTheta is None or isinstance(rangeTheta, Range):
-            pass # ok
-        elif hasattr(rangeTheta,'__len__') and len(rangeTheta)>=1:
+            pass  # ok
+        elif hasattr(rangeTheta, '__len__') and len(rangeTheta) >= 1:
             rangeTheta = Range(rangeTheta[0], rangeTheta[0] + 359)
         else:
             rangeTheta = Range(float(rangeTheta), float(rangeTheta) + 359)
 
         if rangeR is None or isinstance(rangeR, Range):
-            pass # ok
-        elif hasattr(rangeR,'__len__') and len(rangeR)==2:
+            pass  # ok
+        elif hasattr(rangeR, '__len__') and len(rangeR) == 2:
             rangeR = Range(rangeR[0], rangeR[1])
         else:
             raise ValueError("radial limits should be Range \
@@ -1505,9 +1482,8 @@ class PolarAxis2D(BaseAxis):
 
         rR = rangeR
         rZ = rangeZ = None
-        
-        axes = self.GetAxes()
 
+        axes = self.GetAxes()
 
         # find outmost range
         drawObjs = axes.FindObjects(PolarLine)
@@ -1528,36 +1504,38 @@ class PolarAxis2D(BaseAxis):
             if rangeR:
                 pass
             elif tmpR and rR:
-                rR = Range( min(rR.min, tmpR.min), max(rR.max, tmpR.max) )
+                rR = Range(min(rR.min, tmpR.min), max(rR.max, tmpR.max))
             elif tmpR:
                 rR = tmpR
 
             if rangeZ:
                 pass
             elif tmpZ and rZ:
-                rZ = Range( min(rZ.min, tmpZ.min), max(rZ.max, tmpZ.max) )
+                rZ = Range(min(rZ.min, tmpZ.min), max(rZ.max, tmpZ.max))
             elif tmpX:
                 rZ = tmpZ
 
         # default values
         if rR is None:
-            rR = Range(-1,1)
+            rR = Range(-1, 1)
         if rZ is None:
-            rZ = Range(0,1)
+            rZ = Range(0, 1)
 
         self._radialRange = rR
         # apply margins
         if margin:
             # x
             tmp = rR.range * margin
-            if tmp == 0: tmp = margin
-            adjDim = rR.range+tmp
-            rX = Range( -adjDim, adjDim)
-            rY = Range( -adjDim, adjDim)
+            if tmp == 0:
+                tmp = margin
+            adjDim = rR.range + tmp
+            rX = Range(-adjDim, adjDim)
+            rY = Range(-adjDim, adjDim)
             # z
             tmp = rZ.range * margin
-            if tmp == 0: tmp = margin
-            rZ = Range( rZ.min-tmp, rZ.max+tmp )
+            if tmp == 0:
+                tmp = margin
+            rZ = Range(rZ.min - tmp, rZ.max + tmp)
 
         # apply to each camera
         for cam in axes._cameras.values():
@@ -1569,17 +1547,16 @@ class PolarAxis2D(BaseAxis):
         Returns a tuple of limits for theta and r, respectively."""
         return self._angularRange, self._radialRange
 
-
-
     @Property
     def angularRefPos():
         """ Get/Set the angular reference position in
             degrees wrt +x screen axis"""
         # internal store in radians to avoid constant conversions
         def fget(self):
-            return 180.0*self._angularRefPos/np.pi
+            return 180.0 * self._angularRefPos / np.pi
+
         def fset(self, value):
-            self._angularRefPos = np.pi*int(value)/180
+            self._angularRefPos = np.pi * int(value) / 180
             self.Draw()
 
     @Property
@@ -1588,6 +1565,7 @@ class PolarAxis2D(BaseAxis):
          """
         def fget(self):
             return (self._sense == 1)
+
         def fset(self, value):
             if isinstance(value, bool):
                 if value:
@@ -1598,4 +1576,3 @@ class PolarAxis2D(BaseAxis):
             else:
                 raise Exception("isCW can only be assigned \
                                  by a bool (True or False)")
-
