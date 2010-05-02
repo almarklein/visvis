@@ -5,6 +5,7 @@ from visvis.points import Point, Pointset
 import OpenGL.GL as gl
 
 
+# todo: rename to box, or remove completely as the cylinder can make it too!
 def solidCube(position=None, scale=None, axes=None):
     """ solidCube(position=Point(0,0,0), scale=Point(0,0,0), axes=None)
     
