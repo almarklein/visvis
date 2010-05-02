@@ -65,9 +65,9 @@ def getSphere(ndiv=3, radius=1.0):
     # Done
     return vertices, normals
 
-
-def solidSphere(radius=1.0, position=None, slices=20, stacks=20, axes=None):
-    """ solidSphere(radius=1.0, position=None, slices=20, stacks=20, axes=None)
+# todo: rename to elipsoid?
+def solidSphere(radius=1.0, translation=None, slices=16, stacks=16, axes=None):
+    """ solidSphere(radius=1.0, translation=None, slices=16, stacks=16, axes=None)
     
     Creates a solid sphere with quad faces. Slices is the number of
     subdivisions around the Z axis (similar to lines of longitude). 
@@ -75,57 +75,51 @@ def solidSphere(radius=1.0, position=None, slices=20, stacks=20, axes=None):
     lines of latitude). 
     """
     
+    # Note that the number of vertices around the axis is slices+1. This
+    # would not be necessary per see, but it helps create a nice closed
+    # texture when it is mapped. There are slices number of faces though.
+    # Similarly, to obtain stacks faces along the axis, we need stacks+1
+    # vertices.
+    
     # Check position
-    if isinstance(position, tuple):
-        position = Point(position)
+    if isinstance(translation, tuple):
+        translation = Point(translation)
+    
     
     # Quick access
     pi2 = np.pi*2
     cos = np.cos
     sin = np.sin
-    st = stacks
+    sl = slices+1
     
-    # Obtain vertices
+    # Calculate vertices, normals and texcords
     vertices = Pointset(3)
-    for slice in range(slices+1):
-        a = np.pi * float(slice) / slices 
+    normals = Pointset(3)
+    texcords = Pointset(2)
+    # Cone
+    for stack in range(stacks+1):
+        a = np.pi * float(stack) / stacks
         z = cos(a)
-        
-        for stack in range(stacks):
-            b = pi2 * float(stack) / stacks            
+        v = float(stack)/stacks
+        #
+        for slice in range(slices+1):
+            b = pi2 * float(slice) / slices
+            u = float(slice) / (slices)
             x = cos(b) * sin(a)
             y = sin(b) * sin(a)
             vertices.Append(x,y,z)
-    
-    # Calc normals and scale
-    vertices = vertices.Normalize()
-    normals = vertices.Copy()
-    vertices = vertices * radius
+            normals.Append(x,y,z)
+            texcords.Append(u,v)
     
     # Calculate indices
     indices = []
-    for j in range(slices):
-        for i in range(0,stacks-1):
-            indices.extend([j*st+i, j*st+i+1, (j+1)*st+i+1, (j+1)*st+i])
-        i = stacks-1
-        indices.extend([j*st+i, j*st+0, (j+1)*st+0, (j+1)*st+i])
-    j = slices-1
-    if False: # last row
-        for i in range(0,stacks-1):
-            indices.extend([j*st+i, j*st+i+1, 0*st+i+1, 0*st+i])
-        i = stacks-1
-        indices.extend([j*st+i, j*st+0, 0*st+0, 0*st+i])
+    for j in range(stacks):
+        for i in range(slices):
+            indices.extend([j*sl+i, j*sl+i+1, (j+1)*sl+i+1, (j+1)*sl+i])
     
     # Make indices a numpy array
     indices = np.array(indices, dtype=np.uint32)
     
-    # Create texture coordinates
-    texcords = Pointset(2)
-    for slice in range(slices+1):
-        y = float(slice) / slices 
-        for stack in range(stacks):
-            x = float(stack) / (stacks-1)
-            texcords.Append(x,y)
     
     # Create axes 
     if axes is None:
@@ -136,13 +130,12 @@ def solidSphere(radius=1.0, position=None, slices=20, stacks=20, axes=None):
         texcords=texcords, type=gl.GL_QUADS)
     
     # Scale and translate
-    if position is not None:
-        tt = vv.Transform_Translate(position.x, position.y, position.z)    
+    if translation is not None:
+        tt = vv.Transform_Translate(translation.x, translation.y, translation.z)    
         m.transformations.append(tt)
     
     # Done
     return m
-    return p
 
 
 if __name__ == '__main__':
@@ -158,5 +151,5 @@ if __name__ == '__main__':
     m.SetTexture(im)    
     m.Draw()
     
-    data = np.linspace(0,1,m._vertices.shape[0])
-    m.SetTexcords(data.astype(np.float32))
+#     data = np.linspace(0,1,m._vertices.shape[0])
+#     m.SetTexcords(data.astype(np.float32))

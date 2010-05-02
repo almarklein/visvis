@@ -23,9 +23,6 @@ It also defines lights and algorithmic for managing polygonal models.
 
 """
 
-# todo: remove this
-import os
-os.chdir('D:/almar/projects/_p/visvis')
 
 from points import Point, Pointset
 from misc import Property
