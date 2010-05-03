@@ -23,12 +23,8 @@ It also defines lights and algorithmic for managing polygonal models.
 
 """
 
-# todo: remove this
-import os
-os.chdir('D:/almar/projects/_p/visvis')
-
 from points import Point, Pointset
-from misc import Property
+from misc import Property, getColor
 from base import Wobject
 from textures import TextureObjectToVisualize, Colormap
 
@@ -36,21 +32,45 @@ import numpy as np
 import OpenGL.GL as gl
 
 
-def _testColor(value):
+def _testColor(value, canBeScalar=True):
     """ _testColor(value)
     Tests a color whether it is a sequence of 3 or 4 values.
     It returns a 4 element tuple or raises an error if the suplied
     data is incorrect.
     """
     
-    if not hasattr(value, '__len__'):
-        raise ValueError("A color should be a 3 or 4 element sequence.")
+    # Deal with named colors
+    if isinstance(value, basestring):
+        value = getColor(value)
+    
+    # Value can be a scalar
+    if canBeScalar and isinstance(value, (int, float)):
+        if value <= 0:
+            value = 0.0
+        if value >= 1:
+            value = 1.0
+        return value
+    
+    # Otherwise it must be a sequence of 3 or 4 elements
+    elif not hasattr(value, '__len__'):
+        raise ValueError("Given value can not represent a color.")
     elif len(value) == 4:
         return (value[0], value[1], value[2], value[3])
     elif len(value) == 3:
         return (value[0], value[1], value[2], 1.0)
     else:
-        raise ValueError("A color should be a 3 or 4 element sequence.")
+        raise ValueError("Given value can not represent a color.")
+
+
+def _getColor(color, ref):
+        """ _getColor(color, reference)
+        Get the real color as a 4 element tuple, using the reference
+        color if the given color is a scalar.
+        """
+        if isinstance(color, float):
+            return (color*ref[0], color*ref[1], color*ref[2], ref[3])
+        else:
+            return color
 
 
 # todo: implement spot light and attenuation
@@ -62,13 +82,34 @@ class Light(object):
         self._on = False
         
         # The three light properties
-        self._ambient = (0.2, 0.2, 0.2 ,1)
-        self._diffuse = (1,1,1, 1)
-        self._specular = (1,1,1, 1)
+        self._color = (1, 1, 1, 1)
+        self._ambient = 0.0
+        self._diffuse = 1.0
+        self._specular = 1.0
+        
+        # The main light has an ambien component by default
+        if index == 0:
+            self._ambient = 0.2
         
         # Position or direction
-        self._position = (0,0,1,0)
-        self._camLight = True
+        if index == 0:
+            self._position = (0,0,1,0)
+            self._camLight = True
+        else:
+            self._position = (0,0,0,1)
+            self._camLight = False
+    
+    
+    @Property
+    def color():
+        """ Get/Set the reference color of the light. If the ambient,
+        diffuse or specular properties specify a scalar, that scalar
+        represents the fraction of *this* color. 
+        """
+        def fget(self):
+            return self._color
+        def fset(self, value):
+            self._color = _testColor(value, True)
     
     
     @Property
@@ -76,6 +117,10 @@ class Light(object):
         """ Get/Set the ambient color of the light. This is the color
         that is everywhere, coming from all directions, independent of 
         the light position. 
+        
+        The value can be a 3- or 4-element tuple, a character in 
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        fraction of the reference color.
         """
         def fget(self):
             return self._ambient
@@ -103,6 +148,10 @@ class Light(object):
         represents the light that comes from the light source and bounces
         off a surface in a particular direction. This is what makes 
         materials appear shiny.
+        
+        The value can be a 3- or 4-element tuple, a character in 
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        fraction of the reference color.
         """
         def fget(self):
             return self._specular
@@ -189,9 +238,10 @@ class Light(object):
             gl.glEnable(thisLight)
             gl.glLightfv(thisLight, gl.GL_POSITION, self._position)
             # Set colors
-            gl.glLightfv(thisLight, gl.GL_AMBIENT, self._ambient)
-            gl.glLightfv(thisLight, gl.GL_DIFFUSE, self._diffuse)
-            gl.glLightfv(thisLight, gl.GL_SPECULAR, self._specular)    
+            amb, dif, spe = gl.GL_AMBIENT, gl.GL_DIFFUSE, gl.GL_SPECULAR
+            gl.glLightfv(thisLight, amb, _getColor(self._ambient, self._color))
+            gl.glLightfv(thisLight, dif, _getColor(self._diffuse, self._color))
+            gl.glLightfv(thisLight, spe, _getColor(self._specular, self._color))
         else:
             gl.glDisable(thisLight)
 
@@ -218,7 +268,7 @@ def check3dArray(value):
 
 class Mesh(Wobject):
     """ Mesh(parent, vertices, normals=None, faces=None, 
-        colors=None, texcords=None, type=gl.GL_TRIANGLES)
+        colors=None, texcords=None, verticesPerFace=3)
     
     A mesh is a generic object to visualize a 3D object made up of 
     polygons. These polygons can be triangles or quads. The mesh
@@ -239,30 +289,32 @@ class Mesh(Wobject):
     to uint32).
     
     Colors is a Nx3 numpy array giving the ambient and diffuse color for
-    each vertex. Note that the colors are not used if texcords is given.
+    each vertex. 
     
-    Texcords is a 1D (size N) array specifying the color index at each vertex.
-    The color at each vertex is then calculated by looking it up in the
-    colormap. Texcords can also be a Nx2 array with 2D texture coordinates
-    to map an image to the mesh. Use SetTexture() to set the image. 
+    Texcords is used to map a 2D texture or 1D texture (a colormap) to the
+    mesh. The texture color is multiplied after the ambient and diffuse
+    lighting calculations, but before calculating the specular component.
+    If texcords is a 1D (size N) array specifying the color index at each
+    vertex. The texture-color at each vertex is then calculated by looking
+    it up in the colormap. If texcords is a Nx2 array it represents the 2D
+    texture coordinates to map an image to the mesh. Use SetTexture() to set 
+    the image, and the colormap property to set the colormap.
     
-    Type can be GL_TRIANGLES (default), GL_QUADS, GL_TRIANGLE_STRIP, 
-    GL_TRIANGLE_FAN, GL_QUAD_STRIP or GL_POLYGON. 
-    
+    VerticesPerFace can be 3 or 4. It determines whether the faces are
+    triangles or quads. If faces is specified and is 2D, the number of
+    vertices per face is determined from that array.
     """ 
     
     def __init__(self, parent, vertices, normals=None, faces=None, 
-            colors=None, texcords=None, type=None):
+            colors=None, texcords=None, verticesPerFace=3):
         Wobject.__init__(self, parent)
         
         # Set type first (can be reset by faces)
-        self._type = gl.GL_TRIANGLES
-        if type is not None:
-            if type in [gl.GL_TRIANGLES, gl.GL_QUADS, gl.GL_TRIANGLE_STRIP,
-                        gl.GL_TRIANGLE_FAN, gl.GL_QUAD_STRIP, gl.GL_POLYGON]:
-                self._type = type
-            else:
-                raise ValueError('Invalid type.')
+        verticesPerFace = int(verticesPerFace)
+        if verticesPerFace in [3, 4]:
+            self._verticesPerFace = verticesPerFace
+        else:        
+            raise ValueError('VerticesPerFace should be 3 or 4.')
         
         # Set all things (checks are performed in set methods)
         self.SetVertices(vertices)
@@ -270,6 +322,9 @@ class Mesh(Wobject):
         self.SetFaces(faces)
         self.SetColors(colors)
         self.SetTexcords(texcords)
+        
+        # Init flat normals
+        self._flatNormals = None
         
         # Create colormap and init texture
         self._colormap = Colormap()
@@ -279,11 +334,25 @@ class Mesh(Wobject):
         self._cullFaces = None #gl.GL_BACK
         
         # Material properties
-        self._ambient = (0.7, 0.7, 0.7, 1.0)
-        self._diffuse = (0.7, 0.7, 0.7, 1.0)
-        self._specular = (0.3, 0.3, 0.3, 1.0)        
+        self._color = (1, 1, 1, 1)
+        self._ambient = 0.7
+        self._diffuse = 0.7
+        self._specular = 0.3
         self._shininess = 50
-        self._emission = (0.0, 0.0, 0.0, 1.0)
+        self._emission = 0.0
+    
+    
+    @Property
+    def color():
+        """ Get/Set the reference color of the object. If the ambient,
+        diffuse or emissive properties specify a scalar, that scalar
+        represents the fraction of *this* color. (If the specular
+        property is a scalar, it represents a fraction of (1,1,1).)
+        """
+        def fget(self):
+            return self._color
+        def fset(self, value):
+            self._color = _testColor(value, True)
     
     
     @Property
@@ -291,6 +360,10 @@ class Mesh(Wobject):
         """ Get/Set the ambient reflection color of the material. Ambient
         light is the light that is everywhere, coming from all directions, 
         independent of the light position. 
+        
+        The value can be a 3- or 4-element tuple, a character in 
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        fraction of the reference color.
         """
         def fget(self):
             return self._ambient
@@ -304,6 +377,10 @@ class Mesh(Wobject):
         light comes from one direction, so it's brighter if it comes
         squarely down on a surface than if it barely glances off the 
         surface. It depends on the light position how a material is lit.
+        
+        The value can be a 3- or 4-element tuple, a character in 
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        fraction of the reference color.
         """
         def fget(self):
             return self._diffuse
@@ -313,8 +390,9 @@ class Mesh(Wobject):
     
     @Property
     def ambientAndDiffuse():
-        """ Set the diffuse and ambient component simultaneously. Getting
-        returns the diffuse component.
+        """ Set the diffuse and ambient component simultaneously. Usually,
+        you want to give them the same value. Getting returns the diffuse
+        component.
         """
         def fget(self):
             return self._diffuse
@@ -328,6 +406,10 @@ class Mesh(Wobject):
         light represents the light that comes from the light source and bounces
         off a surface in a particular direction. It is what makes 
         materials appear shiny.
+        
+        The value can be a 3- or 4-element tuple, a character in 
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        fraction of white (1,1,1).
         """
         def fget(self):
             return self._specular
@@ -354,6 +436,10 @@ class Mesh(Wobject):
         """ Get/Set the emission color of the material. It is the 
         "self-lighting" property of the material, and usually only makes
         sense for objects that represent lamps or candles etc.
+        
+        The value can be a 3- or 4-element tuple, a character in 
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        fraction of the reference color.
         """
         def fget(self):
             return self._emission
@@ -423,7 +509,8 @@ class Mesh(Wobject):
     
     def SetTexcords(self, texcords):
         """ SetTexcords(texcords)
-        Set the texture coordinates as a Nx2 numpy array or as a 2D Pointset. 
+        Set the texture coordinates as a Nx2 numpy array or as a 2D Pointset.
+        It can also be None to turn off the texture.
         """
         if texcords is not None:
         
@@ -468,8 +555,7 @@ class Mesh(Wobject):
                 if faces.ndim==1:
                     pass # ok
                 elif faces.ndim==2 and faces.shape[1] in [3,4]:
-                    D = {3:gl.GL_TRIANGLES, 4:gl.GL_QUADS}
-                    self._type = D[faces.shape[1]]
+                    self._verticesPerFace = faces.shape[1]
                 else:
                     tmp = 'Faces should represent a list or, 1D, Nx3 or Nx4'
                     raise ValueError(tmp + ' numpy array.')
@@ -572,13 +658,21 @@ class Mesh(Wobject):
         # We need normals
         if self._normals is None:
             self.CalculateNormals()
+        if self._flatNormals is None:
+            self._CalculateFlatNormals()
         
         # Prepare for drawing
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(self._vertices)
         #
         gl.glEnableClientState(gl.GL_NORMAL_ARRAY)
-        gl.glNormalPointerf(self._normals)
+        gl.glNormalPointerf(self._flatNormals)
+        #
+        if self._colors is not None:
+            gl.glEnable(gl.GL_COLOR_MATERIAL)
+            gl.glColorMaterial(gl.GL_FRONT_AND_BACK, gl.GL_AMBIENT_AND_DIFFUSE)
+            gl.glEnableClientState(gl.GL_COLOR_ARRAY)
+            gl.glColorPointerf(self._colors)
         #
         if self._texcords is not None:
             if (self._texcords.ndim == 2) and (self._texture is not None):
@@ -589,24 +683,20 @@ class Mesh(Wobject):
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, self._texcords)
                 self._colormap.Enable(0)
-        #
-        elif self._colors is not None:
-            gl.glEnable(gl.GL_COLOR_MATERIAL)
-            gl.glColorMaterial(gl.GL_FRONT_AND_BACK, gl.GL_AMBIENT_AND_DIFFUSE)
-            gl.glEnableClientState(gl.GL_COLOR_ARRAY)
-            gl.glColorPointerf(self._colors)
         
-        # Prepare material
+        # Prepare material (ambient and diffuse may be overriden by colors)
         what = gl.GL_FRONT_AND_BACK
-        gl.glMaterial(what, gl.GL_AMBIENT, self._ambient)
-        gl.glMaterial(what, gl.GL_DIFFUSE, self._diffuse)
-        gl.glMaterial(what, gl.GL_SPECULAR, self._specular)
+        gc = _getColor
+        gl.glMaterial(what, gl.GL_AMBIENT, gc(self._ambient, self._color) )
+        gl.glMaterial(what, gl.GL_DIFFUSE, gc(self._diffuse, self._color) )
+        gl.glMaterial(what, gl.GL_SPECULAR, gc(self._specular, (1,1,1,1)) )
         gl.glMaterial(what, gl.GL_SHININESS, self._shininess)
-        gl.glMaterial(what, gl.GL_EMISSION, self._emission)
+        gl.glMaterial(what, gl.GL_EMISSION, gc(self._emission, self._color))
         
         # Prepare lights
         gl.glEnable(gl.GL_LIGHTING)
-        gl.glShadeModel(gl.GL_SMOOTH)
+        #gl.glShadeModel(gl.GL_SMOOTH)
+        gl.glShadeModel(gl.GL_FLAT)
         gl.glEnable(gl.GL_NORMALIZE)  # GL_NORMALIZE or GL_RESCALE_NORMAL
         
         # Set culling (take data aspect into account!)
@@ -622,8 +712,9 @@ class Mesh(Wobject):
             gl.glCullFace(self._cullFaces)
         
         # Draw
+        type = {3:gl.GL_TRIANGLES, 4:gl.GL_QUADS}[self._verticesPerFace]
         if self._faces is None:
-            gl.glDrawArrays(self._type, 0, self._vertices.shape[0])
+            gl.glDrawArrays(type, 0, self._vertices.shape[0])
         else:
             # Get data type
             if self._faces.dtype == np.uint8:
@@ -634,7 +725,7 @@ class Mesh(Wobject):
                 face_dtype = gl.GL_UNSIGNED_INT
             # Go
             N = self._faces.size
-            gl.glDrawElements(self._type, N, face_dtype, self._faces)
+            gl.glDrawElements(type, N, face_dtype, self._faces)
         
         # Clean up
         gl.glFlush()
@@ -670,8 +761,9 @@ class Mesh(Wobject):
         gl.glFrontFace(gl.GL_CW)
         
         # Draw
+        type = {3:gl.GL_TRIANGLES, 4:gl.GL_QUADS}[self._verticesPerFace]
         if self._faces is None:
-            gl.glDrawArrays(self._type, 0, self._vertices.shape[0])
+            gl.glDrawArrays(type, 0, self._vertices.shape[0])
         else:
             # Get data type
             if self._faces.dtype == np.uint8:
@@ -683,8 +775,8 @@ class Mesh(Wobject):
             # Go            
             faces = self._faces[:-3000]
             N = faces.size
-            gl.glDrawElements(self._type, N, face_dtype, faces)
-            #gl.glDrawElementsui(self._type, self._faces)
+            gl.glDrawElements(type, N, face_dtype, faces)
+            #gl.glDrawElementsui(type, self._faces)
         
         # Clean up
         gl.glFlush()
@@ -699,7 +791,95 @@ class Mesh(Wobject):
     
     ## Mesh processing
     
-    # todo: works for quads?
+    
+    def _WithoutFaces(self):
+        """ _WithoutFaces()
+        Unwinds the faces to make new versions of the vertices, normals,
+        color and texCords, which are usually larger. The new arrays 
+        represent the same surface, but is described without a faces
+        array.
+        """
+        
+        # Make new vertices and normals if faces are used
+        if self._faces is not None:
+            
+            # Get references and new size
+            faces = self._faces
+            N = faces.shape[0]
+            
+            # Unwind vertices
+            if self._vertices is not None:
+                # Get ref and allocate new array
+                vertices = self._vertices
+                newVertices = np.zeros((N,3), dtype='float32')
+                # Unwind
+                for i in range(N):
+                    newVertices[i,:] = vertices[faces[i]]
+                # Store
+                self._vertices = newVertices
+            
+            # Unwind normals
+            if self._normals is not None:
+                # Get ref and allocate new array
+                normals = self._normals
+                newNormals = np.zeros((N,3), dtype='float32')
+                for i in range(N):
+                    newNormals[i,:] = normals[faces[i]]
+                # Store
+                self._normals = newNormals
+                self._flatNormals = None
+            
+            # Unwind color
+            if self._colors is not None:
+                # Get ref and allocate new array
+                color = self._color
+                newColor = np.zeros((N,3), dtype='float32')
+                for i in range(N):
+                    newColor[i,:] = color[faces[i]]
+                # Store
+                self._color = newColor
+            
+            # Unwind texcords
+            if self._colors is not None:
+                # Get ref and allocate new array
+                texcords = self._texcords
+                newTexcords = np.zeros((N,3), dtype='float32')
+                for i in range(N):
+                    newTexcords[i,:] = texcords[faces[i]]
+                # Store
+                self._texcords = newTexcords
+            
+            # Remove reference to faces
+            self._faces = None
+    
+    
+    def _IterFaces(self):
+        """ _IterFaces()
+        Iterate over the faces of the mesh. Each iteration
+        yields a tuple of indices in the array of vertices. 
+        The tuples had verticesPerFace elements.
+        """
+        
+        if self._faces is None:
+            
+            if self._verticesPerFace == 3:
+                for i in range(0, self._vertices.shape[0], 3):
+                    yield i, i+1, i+2
+            else:
+                for i in range(0, self._vertices.shape[0], 4):
+                    yield i, i+1, i+2, i+3
+        
+        else:
+            faces = self._faces
+            
+            if self._verticesPerFace == 3:
+                for i in range(0, faces.size, 3):
+                    yield faces[i], faces[i+1], faces[i+2]
+            else:
+                for i in range(0, faces.size, 4):
+                    yield faces[i], faces[i+1], faces[i+2], faces[i+3]
+    
+    
     def CalculateNormals(self):
         """ CalculateNormals()
         Calculate the normal data from the vertices.
@@ -711,36 +891,29 @@ class Mesh(Wobject):
         if vertices is None:
             return
         
-        # Get faces as np array
-        faces = self._faces
-        if faces is None:
-            faces = np.arange(0, vertices.shape[0], dtype=np.uint32)
-        if faces.ndim == 1:
-            faces = faces.reshape((faces.shape[0]/3,3))
-        
         # Init normal array
-        n1 = vertices.shape[0]
-        n2 = faces.shape[0]
-        normals = np.zeros((n1,3), dtype='float32')
+        N = vertices.shape[0]        
+        normals = np.zeros((N,3), dtype='float32')
         defaultNormal = np.array([1,0,0], dtype='float32')
         
         # For all faces, calculate normals, and add to normals
-        for i in range(n2):            
-            # Get vertices
-            v1 = vertices[faces[i,0],:]
-            v2 = vertices[faces[i,1],:]
-            v3 = vertices[faces[i,2],:]
-            # Calculate normal            
+        # If quads, we neglect the 4th vertex, which should be save, as it
+        # should be in the same plane.
+        for ii in self._IterFaces():
+            v1 = vertices[ii[0],:]
+            v2 = vertices[ii[1],:]
+            v3 = vertices[ii[2],:]
+            # Calculate normal
             tmp = np.cross(v1-v2,v2-v3)
             if np.isnan(tmp).sum():
                 tmp = defaultNormal
             # Insert normals
-            normals[faces[i,0],:] += tmp
-            normals[faces[i,1],:] += tmp
-            normals[faces[i,2],:] += tmp
+            normals[ii[0],:] += tmp
+            normals[ii[1],:] += tmp
+            normals[ii[2],:] += tmp
         
         # Normalize normals
-        for i in range(n1):
+        for i in range(N):
             tmp = normals[i,:]
             tmp = tmp / ( (tmp**2).sum()**0.5 )
             if np.isnan(tmp).sum():
@@ -751,6 +924,51 @@ class Mesh(Wobject):
         self._normals = normals
     
     
+    
+    def _CalculateFlatNormals(self):
+        """ Calculate a variant of the normals that is more suited for 
+        flat shading. This is done by setting the first normal for each
+        face (the one used when flat shading is used) to the average
+        of all normals of that face. This can in some cases lead to
+        wrong results if a vertex is the first vertex of more than one
+        face.
+        """
+        
+        # If we want flad shading, we should not use faces
+        self._WithoutFaces()
+        
+        # Get normals
+        normals = self._normals
+        if normals is None:
+            return
+        
+        # Allocate new array
+        N = normals.shape[0]        
+        flatNormals = np.zeros((N,3), dtype='float32')
+        
+        # Sum all normals belonging to one face
+        verticesPerFace = float(self._verticesPerFace)
+        a, b = set(), list()
+        for ii in self._IterFaces():
+            i0 = ii[-1]
+            a.add(i0)
+            b.append(i0)
+            for i in ii:
+                flatNormals[i0,:] += normals[i,:] / verticesPerFace
+        print len(a), len(b)
+#         # Normalize normals
+#         defaultNormal = np.array([1,0,0], dtype='float32')
+#         for i in range(N):
+#             tmp = flatNormals[i,:]
+#             tmp = tmp / ( (tmp**2).sum()**0.5 )
+#             if np.isnan(tmp).sum():
+#                 tmp = defaultNormal
+#             flatNormals[i,:] = tmp
+        
+        # Store
+        self._flatNormals = flatNormals
+
+
 if __name__ == '__main__':
     import visvis as vv
     a = vv.cla()
@@ -758,11 +976,12 @@ if __name__ == '__main__':
     a.cameraType = '3d'
     a.SetLimits((-2,2),(-2,2),(-2,2))
     
+    #p = vv.solidTeapot()
     #p = vv.polygon.getCube(a)
-    #p = vv.solidSphere(2,50,50)
-    #im = vv.imread('lena.png')
-    #p.SetTexture(im)
-    p = vv.solidTeapot()
+    p = vv.solidSphere(2,None, 50,50)
+    im = vv.imread('lena.png')
+    p.SetTexture(im)
+
     p.Draw()
     a.SetLimits()
     

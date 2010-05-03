@@ -183,8 +183,9 @@ class ColormapEditor(DraggableBox):
             cmap = mappables[-1]._colormap
             if cmap:
                 nodeData = cmap.GetMap()
+                
+                # Can we make nodes of it?
                 if isinstance(nodeData, list):
-                    # We can make nodes of it
                     
                     # Obtain position
                     tt = np.linspace(0,1,len(nodeData))
@@ -201,9 +202,31 @@ class ColormapEditor(DraggableBox):
                                 nodes.Append(t,1-node[i])
                             else:
                                 nodes.Append(t,0)
+                
+                elif isinstance(nodeData, dict):
+                    # Allow several color names
+                    for key in nodeData.keys():
+                        if key.lower() in ['r', 'red']:
+                            nodeData['r'] = nodeData[key]
+                        elif key.lower() in ['g', 'green']:
+                            nodeData['g'] = nodeData[key]
+                        if key.lower() in ['b', 'blue']:
+                            nodeData['b'] = nodeData[key]
+                        if key.lower() in ['a', 'alpha']:
+                            nodeData['a'] = nodeData[key]
                     
-                    # Update
-                    self._nodeWidget._UpdateFull()            
+                    # Create nodes
+                    for i in range(4):
+                        key = 'rgba'[i]
+                        if key in nodeData:
+                            nodes = self._nodeWidget._allNodes[i]
+                            nodes.Clear()
+                            for t, val in nodeData[key]:
+                                nodes.Append(t,1-val)
+                
+                # Update
+                self._nodeWidget._UpdateFull()
+                
         
     
     def GetMapables(self):
@@ -359,6 +382,7 @@ class CM_NodeWidget(Box):
             self._nodes.Pop(self._selectedNode)
         # Update
         self._UpdateFull()
+    
     
     def _UpdateFull(self):
         """ Update all lines and draw. """

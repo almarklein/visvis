@@ -55,7 +55,7 @@ def solidCube(position=None, scale=None, axes=None):
         axes = vv.gca()
     
     # Create mesh
-    m = vv.Mesh(axes,vertices, normals, type=gl.GL_QUADS)
+    m = vv.Mesh(axes,vertices, normals, verticesPerFace=4)
     
     # Scale and translate
     if position is not None:

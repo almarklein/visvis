@@ -133,7 +133,7 @@ def solidSphere(radius=1.0, position=None, slices=20, stacks=20, axes=None):
     
     # Create mesh
     m = vv.Mesh(axes, vertices, normals, indices, 
-        texcords=texcords, type=gl.GL_QUADS)
+        texcords=texcords, verticesPerFace=4)
     
     # Scale and translate
     if position is not None:

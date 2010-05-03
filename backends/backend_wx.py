@@ -194,7 +194,7 @@ class GLWidget(GLCanvas):
             self.figure.Destroy()             
             parent = self.Parent
             self.Destroy() # Hide and delete window
-            # Prevent frame from sticking when there is not wx event loop
+            # Prevent frame from sticking when there is no wx event loop
             if isinstance(parent, FigureFrame):
                 parent.Hide()
         event.Skip()
@@ -309,6 +309,7 @@ class Figure(BaseFigure):
             widget = self._widget
         if widget and widget.Parent:
             try:
+                widget.Parent.Hide()
                 widget.Parent.Close()
             except PyAssertionError:
                 # Prevent "wxEVT_MOUSE_CAPTURE_LOST not being processed" error.
