@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 
 import OpenGL.GL as gl
@@ -63,5 +66,3 @@ if __name__ == '__main__':
         a2.Clear()
         vv.imshow(im1,axes=a1, clim=(0,1))
         vv.imshow(im2,axes=a2, clim=(0,1))
-    
-    

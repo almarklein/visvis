@@ -14,15 +14,11 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module simpleWibjects
 
 Implements basic wibjects like buttons, and, maybe later, sliders etc.
-
-$Author: almar.klein $
-$Date: 2010-01-05 18:03:45 +0100 (di, 05 jan 2010) $
-$Rev: 118 $
 
 """
 

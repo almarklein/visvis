@@ -1,5 +1,7 @@
-import visvis as vv
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
 
+import visvis as vv
 
 def title(text, axes=None):
     """ title(text, axes=None)

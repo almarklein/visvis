@@ -15,7 +15,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module images2gif
 
@@ -25,9 +25,6 @@ of PIL images or numpy arrays.
 - based on gifmaker (in the scripts folder of the source distribution of PIL)
 - based on gif file structure as provided by wikipedia
 
-$Author$
-$Date$
-$Rev$
 
 """
 

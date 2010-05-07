@@ -1,4 +1,5 @@
-""" Make (or return) an axes in a figure, laying the axes out on a grid. """
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
 
 import visvis as vv
 from visvis.core import Axes, AxesContainer
@@ -98,7 +99,7 @@ def subplot(*args):
 
 if __name__ == "__main__":
     f = vv.figure()
-    a1=vv.subplot(221)
+    a1=vv.subplot(221); a1.cameraType = '2d'
     a2=vv.subplot(224)    
     a3=vv.subplot(221)
     a3=vv.subplot(333)

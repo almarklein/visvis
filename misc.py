@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module misc
 
@@ -23,9 +23,6 @@ other module. This module is also meant to be imported by many
 other visvis modules, and therefore should not depend on other
 visvis modules.
 
-$Author$
-$Date$
-$Rev$
 
 """
 

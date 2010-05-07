@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 
 from visvis.images2gif import writeGif
@@ -72,4 +75,3 @@ def record(ob):
     
     # create recorder
     return Recorder(ob)    
-    

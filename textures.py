@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module textures
 
@@ -28,9 +28,6 @@ allows using clim, colormap and antialiasing (aa property).
 selected using texture3D.renderStyle = 'ray', where 'ray' can be the
 name of any of the available fragment shaders.
 
-$Author$
-$Date$
-$Rev$
 
 """
 

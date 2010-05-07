@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module line
 
@@ -24,9 +24,6 @@ with markers. It is the object created with the plot() function.
 The lines are drawn simply with OpenGL lines. The markers are drawn
 with OpenGl points if possible, and using sprites otherwise.
 
-$Author$
-$Date$
-$Rev$
 
 """
 

@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 import numpy as np
 
@@ -140,4 +143,3 @@ def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
         return im3
         
     #vv.screenshot('d:/almar/projects/ims/test0.png', vv.gcf())
-    

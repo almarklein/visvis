@@ -15,7 +15,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module images2swf
 
@@ -55,9 +55,6 @@ sources and tools:
   A good program in my opinion. The free version has the limitation
   of a watermark in the upper left corner. 
 
-$Author$
-$Date$
-$Rev$
 
 """
 
