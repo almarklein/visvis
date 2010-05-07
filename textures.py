@@ -943,11 +943,11 @@ class TextureObjectToVisualize(TextureObject):
     Basically, it handles the color limits.
     """
     
-    def __init__(self, ndim, data):
+    def __init__(self, ndim, data, interpolate=False):
         TextureObject.__init__(self, ndim)
         
         # interpolate?
-        self._interpolate = False
+        self._interpolate = interpolate
         
         # the limits
         self._clim = Range(0,1)

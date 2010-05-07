@@ -16,6 +16,7 @@ import zlib, base64
 
 # Code to generate the vertices and indices from the original file:
 if False:
+    
     # Init vertices and faces
     vertices = Pointset(3)
     indices = []

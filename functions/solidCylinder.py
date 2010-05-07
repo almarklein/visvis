@@ -125,7 +125,7 @@ def solidCylinder(translation=None, scale=None, slices=16, stacks=16, axes=None)
     
     # Create mesh
     m = vv.Mesh(axes, vertices, normals, indices, 
-        texcords=texcords, type=gl.GL_QUADS)
+        texcords=texcords, verticesPerFace=4)
     
     # Scale and translate
     if translation is not None:
@@ -149,9 +149,9 @@ if __name__ == '__main__':
     # Create sphere
     m = solidCylinder(slices=6)
     m2 = solidCylinder(translation=(0,0,0.1), scale=(0.5,0.5,2.5))
-    im = vv.imread('lena.png')
+    im = vv.imread('lena.png')[::3,::3,:]
     m2.SetTexture(im)    
-    m.Draw()
+    m2.Draw()
     
 #     data = np.linspace(0,1,m._vertices.shape[0])
 #     m.SetTexcords(data.astype(np.float32))
