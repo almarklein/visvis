@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import numpy as np
 import visvis as vv
 from visvis.points import Point, Pointset
@@ -6,7 +9,7 @@ import OpenGL.GL as gl
 import time
 
 def surf(*args, **kwargs):
-    """ surf(..., axes=None)
+    """ surf(..., axesAdjust=True, axes=None)
     
     Shaded surface plot. Can be called using several ways:
      * surf(z) - create a surface using the given image with z coordinates.
@@ -14,6 +17,14 @@ def surf(*args, **kwargs):
      * surf(x, y, z) - give x, y and z coordinates.
      * surf(x, y, z, c) - also supply a texture image to map.
     
+    if c is a 2D image, it should match the dimensions of z. If it is a 3D
+    image, the image is mapped to the mesh and may be of any size. 
+    
+    If axesAdjust==True, this function will call axes.SetLimits(), and set
+    the camera type to 3D. If daspectAuto has not been set yet, it is set 
+    to False.
+    
+    Also see grid()    
     """
     
     def checkZ(z):
@@ -47,6 +58,9 @@ def surf(*args, **kwargs):
     axes = None
     if 'axes' in kwargs:
         axes = kwargs['axes']
+    axesAdjust = True
+    if 'axesAdjust' in kwargs:
+        axesAdjust = kwargs['axesAdjust']
     
     
     # Init vertices
@@ -84,6 +98,8 @@ def surf(*args, **kwargs):
         
         if c is None:
             texcords = z.reshape((z.shape[0]*z.shape[1],))
+        elif c.size != z.size:
+            raise ValueError('The 2D color data for surf must match z.')
         else:
             texcords = c.reshape((c.shape[0]*c.shape[1],))
         
@@ -116,6 +132,8 @@ def surf(*args, **kwargs):
             faces.extend([j + w*i, j+1+w*i, j+1+w*(i+1), j+w*(i+1)])
     
     
+    ## Visualize
+    
     # Get axes
     if axes is None:
         axes = vv.gca()
@@ -124,9 +142,19 @@ def surf(*args, **kwargs):
     m = vv.Mesh(axes, vertices, faces=faces, texcords=texcords, 
         verticesPerFace=4)
     
-    if c is not None and c.ndim==2:
+    # Should we apply a texture?
+    if c is not None and c.ndim==3:
         m.SetTexture(c)
-        
+    
+    # Adjust axes
+    if axesAdjust:
+        if axes.daspectAuto is None:
+            axes.daspectAuto = False
+        axes.cameraType = '3d'
+        axes.SetLimits()
+    
+    # Return
+    axes.Draw()
     return m
 
 
@@ -141,9 +169,7 @@ if __name__ == "__main__":
     im /= 9.0
     
     # show
-    a = vv.cla()
-    m = surf(im[:,:,0]/10, im[:,:,0])    
-    a.daspectAuto = False
-    a.cameraType = '3d'
-    a.SetLimits()
+    vv.figure()
+    m = surf(im[:,:,0]/10, im)
+#     m = surf(im[:,:,0]/10)
     

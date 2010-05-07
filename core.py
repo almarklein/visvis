@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module core
 
@@ -22,9 +22,6 @@ The core module that defines the BaseFigure and Axes classes.
 Also helper classes for the Figure and Axes (ObjectPickerHelper, 
 Legend, etc.) are defined here.
 
-$Author$
-$Date$
-$Rev$
 
 """
 
@@ -939,7 +936,7 @@ class Axes(base.Wibject):
         # data aspect ratio. If daspectAuto is True, the values
         # of daspect are ignored (only the sign is taken into account)
         self._daspect = (1.0,1.0,1.0)
-        self._daspectAuto = True
+        self._daspectAuto = None # None is like False, but means not being set
         
         # make clickable
         self.hitTest = True
@@ -959,8 +956,10 @@ class Axes(base.Wibject):
         # create cameras and select one
         self._cameras = {   '2d': TwoDCamera(self), 
                             '3d': ThreeDCamera(self),                            
-                            'fly': FlyCamera(self)}                
-        self.camera = self._cameras['twod'] = self._cameras['2d']
+                            'fly': FlyCamera(self)}
+        self._cameras['twod'] = self._cameras['2d']
+        self._cameras['threed'] = self._cameras['3d']
+        self.camera = self._cameras['3d']
         
         # init the background color of this axes
         self.bgcolor = 1,1,1  # remember that bgcolor is a property

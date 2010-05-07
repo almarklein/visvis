@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 import numpy as np
 from visvis.points import Point, Pointset
@@ -65,20 +68,22 @@ def getSphere(ndiv=3, radius=1.0):
     # Done
     return vertices, normals
 
-# todo: rename to elipsoid?
-def solidSphere(radius=1.0, translation=None, slices=16, stacks=16, axes=None):
-    """ solidSphere(radius=1.0, translation=None, slices=16, stacks=16, axes=None)
+
+def solidSphere(radius=1.0, translation=None, N=16, M=16, 
+                axesAdjust=True, axes=None):
+    """ solidSphere(radius=1.0, translation=None, N=16, M=16,
+                    axesAdjust=True, axes=None)
     
-    Creates a solid sphere with quad faces. Slices is the number of
+    Creates a solid sphere with quad faces. N is the number of
     subdivisions around the Z axis (similar to lines of longitude). 
-    Stacks is the number of subdivisions along the Z axis (similar to 
+    M is the number of subdivisions along the Z axis (similar to 
     lines of latitude). 
     """
     
-    # Note that the number of vertices around the axis is slices+1. This
+    # Note that the number of vertices around the axis is N+1. This
     # would not be necessary per see, but it helps create a nice closed
-    # texture when it is mapped. There are slices number of faces though.
-    # Similarly, to obtain stacks faces along the axis, we need stacks+1
+    # texture when it is mapped. There are N number of faces though.
+    # Similarly, to obtain M faces along the axis, we need M+1
     # vertices.
     
     # Check position
@@ -90,21 +95,21 @@ def solidSphere(radius=1.0, translation=None, slices=16, stacks=16, axes=None):
     pi2 = np.pi*2
     cos = np.cos
     sin = np.sin
-    sl = slices+1
+    sl = N+1
     
     # Calculate vertices, normals and texcords
     vertices = Pointset(3)
     normals = Pointset(3)
     texcords = Pointset(2)
     # Cone
-    for stack in range(stacks+1):
-        a = np.pi * float(stack) / stacks
+    for m in range(M+1):
+        a = np.pi * float(m) / M
         z = cos(a)
-        v = float(stack)/stacks
+        v = float(m)/M
         #
-        for slice in range(slices+1):
-            b = pi2 * float(slice) / slices
-            u = float(slice) / (slices)
+        for n in range(N+1):
+            b = pi2 * float(n) / N
+            u = float(n) / (N)
             x = cos(b) * sin(a)
             y = sin(b) * sin(a)
             vertices.Append(x,y,z)
@@ -113,13 +118,15 @@ def solidSphere(radius=1.0, translation=None, slices=16, stacks=16, axes=None):
     
     # Calculate indices
     indices = []
-    for j in range(stacks):
-        for i in range(slices):
+    for j in range(M):
+        for i in range(N):
             indices.extend([j*sl+i, j*sl+i+1, (j+1)*sl+i+1, (j+1)*sl+i])
     
     # Make indices a numpy array
     indices = np.array(indices, dtype=np.uint32)
     
+    
+    ## Visualize
     
     # Create axes 
     if axes is None:
@@ -134,22 +141,20 @@ def solidSphere(radius=1.0, translation=None, slices=16, stacks=16, axes=None):
         tt = vv.Transform_Translate(translation.x, translation.y, translation.z)    
         m.transformations.append(tt)
     
+    # Adjust axes
+    if axesAdjust:
+        if axes.daspectAuto is None:
+            axes.daspectAuto = False
+        axes.cameraType = '3d'
+        axes.SetLimits()
+    
     # Done
+    axes.Draw()
     return m
 
 
 if __name__ == '__main__':
-    import visvis as vv
-    a = vv.cla()
-    a.daspectAuto = False
-    a.cameraType = '3d'
-    a.SetLimits((-2,2),(-2,2),(-2,2))
-    
-    # Create sphere
+    vv.figure()
     m = solidSphere(3,(1,1,1))
     im = vv.imread('lena.png')
     m.SetTexture(im)    
-    m.Draw()
-    
-#     data = np.linspace(0,1,m._vertices.shape[0])
-#     m.SetTexcords(data.astype(np.float32))

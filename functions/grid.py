@@ -1,7 +1,10 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 
 def grid(*args, **kwargs):
-    """ grid(..., axes=None)
+    """ grid(..., axesAdjust=True, axes=None)
     
     Create a wireframe parametric surfaces. 
     
@@ -14,7 +17,11 @@ def grid(*args, **kwargs):
     Note: this function is know in Matlab as mesh(), but to avoid confusion
     with the vv.Mesh class, it is called grid() in visvis.
     
-    See also surf.
+    If axesAdjust==True, this function will call axes.SetLimits(), and set
+    the camera type to 3D. If daspectAuto has not been set yet, it is set 
+    to False.
+    
+    Also see surf()
     """
     
     m = vv.surf(*args, **kwargs)
@@ -25,11 +32,5 @@ def grid(*args, **kwargs):
 
 if __name__ == '__main__':
     vv.figure()
-    a = vv.cla()
     m = grid(vv.peaks())
-    m.colormap = vv.CM_HOT
-    
-    # show 
-    a.daspectAuto = False
-    a.cameraType = '3d'
-    a.SetLimits()
+    m.colormap = vv.CM_HOT    

@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 from visvis.points import Point, Pointset
 import numpy as np
@@ -44,8 +47,8 @@ if False:
     print text
     
 
-def solidTeapot(height=1.0, axes=None):
-    """ solidTeapot(height=1.0, axes=None)
+def solidTeapot(height=1.0, axesAdjust=True, axes=None):
+    """ solidTeapot(height=1.0, axes=None, axesAdjust=True, axes=None)
     Create a model of a teapot (a teapotahedron) with the specified height.
     """
     
@@ -64,15 +67,24 @@ def solidTeapot(height=1.0, axes=None):
     data = zlib.decompress(data)
     faces = np.frombuffer(data, dtype=np.uint32 )
     
-#     # Dummy normals
-#     normals = vertices.Normalize()
-    
     # Use current axes?
     if axes is None:
         axes = vv.gca()
     
-    # Create Mesh object and return
-    return vv.Mesh(axes, vertices, faces=faces)
+    # Create Mesh object
+    m = vv.Mesh(axes, vertices, faces=faces)
+    
+    # Adjust axes
+    if axesAdjust:
+        if axes.daspectAuto is None:
+            axes.daspectAuto = False
+        axes.cameraType = '3d'
+        axes.SetLimits()
+    
+    # Done
+    axes.Draw()
+    return m
+
 
 
 vertexData = """
@@ -717,8 +729,5 @@ vwV8d42WMXa5DVpaQK6OllV2uce0nAW5A1oSIHeFlp/scs9ouQRyc7Q8BbmP9GVA7j95nJMY
 
 
 if __name__ == '__main__':
-    a = vv.gca()
-    a.daspectAuto = 0
-    a.cameraType = '3d'
+    vv.figure()
     m = solidTeapot()
-    a.SetLimits()

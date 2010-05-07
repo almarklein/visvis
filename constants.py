@@ -1,12 +1,6 @@
 """
 Module constants
 
-Some constants.
-
-$Author$
-$Date$
-$Rev$
-
 """
 
 KEY_SHIFT = 17

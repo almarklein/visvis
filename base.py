@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module base
 
@@ -24,9 +24,6 @@ Defines the Wibject and Wobject classes, and some other
 More complex datatypes (like Line and Texture)
 are defined in seperate modules.
 
-$Author$
-$Date$
-$Rev$
 
 """
 

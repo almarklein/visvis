@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module textRender
 
@@ -63,9 +63,6 @@ rho         varsigma    sigma       tau
 upsilon     phi         chi         psi
 omega
 
-$Author$
-$Date$
-$Rev$
     
 """
 

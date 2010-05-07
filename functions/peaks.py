@@ -1,7 +1,12 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import numpy as np
 import visvis as vv
 
 import zlib, base64
+
+# todo: parameterize; allow custum Gaussian blobs at specified positions.
 
 if False:
     # Get data (exported from Matlab)
@@ -197,9 +202,4 @@ SbBf9Ta9Pm47vatJi3Y7X0ktU9lEATEJauXfM4JLdtMF3eEF/Ofj1vzVtrd4a7UteP8DD6jBLg==
 
 if __name__ == "__main__":
     vv.figure()
-    a = vv.cla()
     m = vv.surf(peaks())
-    
-    a.cameraType = '3d'
-    a.SetLimits()
-    a.daspectAuto = False

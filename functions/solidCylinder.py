@@ -1,27 +1,32 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 import numpy as np
 from visvis.points import Point, Pointset
 
 import OpenGL.GL as gl
 
-def solidCylinder(translation=None, scale=None, slices=16, stacks=16, axes=None):
-    """ solidCylinder(translation=None, scale=None, slices=16, stacks=16, axes=None)
+def solidCylinder(translation=None, scale=None, N=16, M=16,
+                    axesAdjust=True, axes=None):
+    """ solidCylinder(translation=None, scale=None, N=16, M=16,
+                        axesAdjust=True, axes=None)
     
     Creates a cylinder object. Position is a 3-element tuple or a Point instance.
     Scale is a scalar, 3-element tuple or Point instance.
     
-    Slices is the number of subdivisions around its axis. Stacks is the
-    number of subdivisions along its axis.
+    N is the number of subdivisions around its axis. M is the number of
+    subdivisions along its axis.
     
-    If slices <= 8, the edges are modeled as genuine edges. So with faces=4,
-    a box can be obtained. If slices>8, the normals vary smoothly
+    If N or M is smaller than 8, the edges are modeled as genuine edges. 
+    So with N=4, a box can be obtained. Otherwise, the normals vary smoothly
     over the faces which makes the object look rounder.
     """
     
-    # Note that the number of vertices around the axis is slices+1. This
+    # Note that the number of vertices around the axis is N+1. This
     # would not be necessary per see, but it helps create a nice closed
-    # texture when it is mapped. There are slices number of faces though.
-    # Similarly, to obtain stacks faces along the axis, we need stacks+1
+    # texture when it is mapped. There are N number of faces though.
+    # Similarly, to obtain M faces along the axis, we need M+1
     # vertices.
     
     # Check position
@@ -38,42 +43,42 @@ def solidCylinder(translation=None, scale=None, slices=16, stacks=16, axes=None)
     pi2 = np.pi*2
     cos = np.cos
     sin = np.sin
-    sl = slices+1
+    sl = N+1
     
     # Calculate vertices, normals and texcords
     vertices = Pointset(3)
     normals = Pointset(3)
     texcords = Pointset(2)
     # Round part
-    for stack in range(stacks+1):
-        z = 1.0 - float(stack)/stacks # between 0 and 1
-        v = float(stack)/stacks
+    for m in range(M+1):
+        z = 1.0 - float(m)/M # between 0 and 1
+        v = float(m)/M
         #
-        for slice in range(slices+1):
-            b = pi2 * float(slice) / slices
-            u = float(slice) / (slices)
+        for n in range(N+1):
+            b = pi2 * float(n) / N
+            u = float(n) / (N)
             x = cos(b)
             y = sin(b)
             vertices.Append(x,y,z)
             normals.Append(x,y,0)
             texcords.Append(u,v)
     # Top
-    for stack in range(2):
-        for slice in range(slices+1):
-            b = pi2 * float(slice) / slices
-            u = float(slice) / (slices)
-            x = cos(b) * stack # todo: check welke frontfacing!
-            y = sin(b) * stack
+    for m in range(2):
+        for n in range(N+1):
+            b = pi2 * float(n) / N
+            u = float(n) / (N)
+            x = cos(b) * m # todo: check welke frontfacing!
+            y = sin(b) * m
             vertices.Append(x,y,1)
             normals.Append(0,0,1)
             texcords.Append(u,0)
     # Bottom
-    for stack in range(2):
-        for slice in range(slices+1):
-            b = pi2 * float(slice) / slices
-            u = float(slice) / (slices)
-            x = cos(b) * (1-stack)
-            y = sin(b) * (1-stack)
+    for m in range(2):
+        for n in range(N+1):
+            b = pi2 * float(n) / N
+            u = float(n) / (N)
+            x = cos(b) * (1-m)
+            y = sin(b) * (1-m)
             vertices.Append(x,y,0)
             normals.Append(0,0,-1)
             texcords.Append(u,1)
@@ -83,21 +88,22 @@ def solidCylinder(translation=None, scale=None, slices=16, stacks=16, axes=None)
     
     # Calculate indices
     indices = []
-    for j in range(stacks):
-        for i in range(slices):
+    for j in range(M):
+        for i in range(N):
             indices.extend([j*sl+i, j*sl+i+1, (j+1)*sl+i+1, (j+1)*sl+i])
-    j = stacks+1
-    for i in range(slices):
+    j = M+1
+    for i in range(N):
         indices.extend([j*sl+i, j*sl+i+1, (j+1)*sl+i+1, (j+1)*sl+i])
-    j = stacks+3
-    for i in range(slices):
+    j = M+3
+    for i in range(N):
         indices.extend([j*sl+i, j*sl+i+1, (j+1)*sl+i+1, (j+1)*sl+i])
     
     # Make indices a numpy array
     indices = np.array(indices, dtype=np.uint32)
     
+    # todo: use Mesh flatness
     # Make edges appear as edges, for pyramids for example
-    if slices <= 8:
+    if N <= 8:
         newVertices = Pointset(3)
         newNormals = Pointset(3)
         newTexcords = Pointset(2)
@@ -119,6 +125,9 @@ def solidCylinder(translation=None, scale=None, slices=16, stacks=16, axes=None)
         texcords = newTexcords
         indices = None
     
+    
+    ## Visualization
+    
     # Create axes 
     if axes is None:
         axes = vv.gca()
@@ -135,23 +144,21 @@ def solidCylinder(translation=None, scale=None, slices=16, stacks=16, axes=None)
         ts = vv.Transform_Scale(scale.x, scale.y, scale.z)
         m.transformations.append(ts)
     
+    # Adjust axes
+    if axesAdjust:
+        if axes.daspectAuto is None:
+            axes.daspectAuto = False
+        axes.cameraType = '3d'
+        axes.SetLimits()
+    
     # Done
+    axes.Draw()
     return m
 
 
 if __name__ == '__main__':
-    import visvis as vv
-    a = vv.cla()
-    a.daspectAuto = False
-    a.cameraType = '3d'
-    a.SetLimits((-2,2),(-2,2),(-2,2))
-    
-    # Create sphere
-    m = solidCylinder(slices=6)
+    vv.figure()
+    m1 = solidCylinder(N=6)
     m2 = solidCylinder(translation=(0,0,0.1), scale=(0.5,0.5,2.5))
     im = vv.imread('lena.png')[::3,::3,:]
     m2.SetTexture(im)    
-    m2.Draw()
-    
-#     data = np.linspace(0,1,m._vertices.shape[0])
-#     m.SetTexcords(data.astype(np.float32))

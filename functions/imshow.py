@@ -1,12 +1,17 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 
-def imshow(im, clim=None, axes=None, aa=1, interpolate=False, cm=None):
-    """ imshow(im, clim, axes, aa, interpolate=False, cm=CM_GRAY)
+def imshow(im, clim=None, aa=1, interpolate=False, cm=None,
+            axesAdjust=True, axes=None):
+    """ imshow(im, clim=None, aa=1, interpolate=False, cm=CM_GRAY,
+                axesAdjust=True, axes=None)
     
     Display a 2D image and returns the Texture2D object. 
     
-    If the image is an anisotropic array (vv.points.Aaray), the appropriate         scale and translate transformations are applied. The daspect of the axes
-    is changed such that the y axes is negative.
+    If the image is an anisotropic array (vv.points.Aaray), the appropriate
+    scale and translate transformations are applied. 
     
     The aa and interpolate parameters can be used to specify anti aliasing
     and (linear) interpolation, respectively.
@@ -19,6 +24,10 @@ def imshow(im, clim=None, axes=None, aa=1, interpolate=False, cm=None):
     
     Visvis does not use the "hold on / hold off" system. So if updating 
     an image, better use Texture2D.Refresh() or do Axes.Clear() first.
+    
+    If axesAdjust==True, this function will call axes.SetLimits(), set
+    the camera type to 2D, and make axes.daspect[1] negative (i.e. flip 
+    the y-axis). If daspectAuto has not been set yet, it is set to False.
     """
     
     # get axes
@@ -53,15 +62,19 @@ def imshow(im, clim=None, axes=None, aa=1, interpolate=False, cm=None):
         t.colormap = cm
     
     # set axes
-    axes.daspectAuto = False    
-    axes.SetLimits()
-    da = axes.daspect
-    axes.daspect = da[0], -abs(da[1]), da[2]
+    if axesAdjust:
+        if axes.daspectAuto is None:
+            axes.daspectAuto = False
+        axes.cameraType = '2d'
+        da = axes.daspect
+        axes.daspect = da[0], -abs(da[1]), da[2]
+        axes.SetLimits()
     
     # return
     axes.Draw()
     return t
-    
+
+
 if __name__ == "__main__":
     import numpy as np
     from visvis.points import Aarray

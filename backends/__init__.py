@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Package visvis.backends
 
@@ -55,9 +55,6 @@ The backend is chosen/selected as follows:
   in this file. 
 
 
-$Author$
-$Date$
-$Rev$
 
 """
 

@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 import numpy as np
 from visvis.points import Point, Pointset
@@ -5,18 +8,20 @@ from visvis.points import Point, Pointset
 import OpenGL.GL as gl
 
 
-def solidRing(translation=None, scale=None, thickness=0.4, N=16, M=16, axes=None):
-    """ solidRing(translation=None, scale=None, thickness=0.1, N=16, M=16, axes=None)
+def solidRing(translation=None, scale=None, thickness=0.4, N=16, M=16, 
+                axesAdjust=True, axes=None):
+    """ solidRing(translation=None, scale=None, thickness=0.1, N=16, M=16, 
+                    axesAdjust=True, axes=None)
     
     Creates a solid ring with quad faces. N is the number of faces along
     the ring, M is the number of faces around the tube that makes up the
     ring.
     """
     
-    # Note that the number of vertices around the axis is slices+1. This
+    # Note that the number of vertices around the axis is N+1. This
     # would not be necessary per see, but it helps create a nice closed
-    # texture when it is mapped. There are slices number of faces though.
-    # Similarly, to obtain stacks faces along the axis, we need stacks+1
+    # texture when it is mapped. There are N number of faces though.
+    # Similarly, to obtain M faces along the axis, we need M+1
     # vertices.
     
     # Check position
@@ -69,6 +74,8 @@ def solidRing(translation=None, scale=None, thickness=0.4, N=16, M=16, axes=None
     indices = np.array(indices, dtype=np.uint32)
     
     
+    ## Visualize
+    
     # Create axes 
     if axes is None:
         axes = vv.gca()
@@ -80,29 +87,30 @@ def solidRing(translation=None, scale=None, thickness=0.4, N=16, M=16, axes=None
 #     # If necessary, use flat shading
 #     if N<=8 or M<=8:
 #         pass # todo: set flat shading
-
+    
     # Scale and translate
     if translation is not None:
         tt = vv.Transform_Translate(translation.x, translation.y, translation.z)    
         m.transformations.append(tt)
     
+    # Adjust axes
+    if axesAdjust:
+        if axes.daspectAuto is None:
+            axes.daspectAuto = False
+        axes.cameraType = '3d'
+        axes.SetLimits()
+    
     # Done
+    axes.Draw()
     return m
 
 
 if __name__ == '__main__':
     import visvis as vv
-    app = vv.use('qt4')
-    a = vv.cla()
-    a.daspectAuto = False
-    a.cameraType = '3d'    
+    vv.figure()  
     
     # Create ring
     m = solidRing((1,1,1), thickness=0.4, M=4)
     im = vv.imread('lena.png')
     m.SetTexture(im)
-    a.SetLimits()#((-2,2),(-2,2),(-2,2))
-    m.Draw()
     
-#     data = np.linspace(0,1,m._vertices.shape[0])
-#     m.SetTexcords(data.astype(np.float32))

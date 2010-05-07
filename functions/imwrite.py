@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import numpy as np
 
 try:
@@ -39,5 +42,3 @@ def imwrite(filename, image):
     # write image
     pim = PIL.Image.fromarray(image)
     pim.save(filename)
-    
-    
