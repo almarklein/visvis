@@ -273,10 +273,9 @@ class Mesh(Wobject):
     A mesh is a generic object to visualize a 3D object made up of 
     polygons. These polygons can be triangles or quads. The mesh
     is affected by lighting and its material properties can be 
-    changes using properties. Per vertex color can be supplied
-    explicitly by giving a color array, by supplying 1D texcords which
-    are looked up in the colormap, or by supplying a 2D texcords array
-    and setting a 2D texture image.
+    changed using properties. The reference color and shading can
+    be set individually for the faces and edges (using the faceColor,
+    edgeColor, faceShading and edgeShading properties). 
     
     Vertices is a Nx3 numpy array of vertex positions in 3D space.
     
@@ -284,32 +283,63 @@ class Mesh(Wobject):
     it is calcululated from the vertices.
     
     Faces (optional) is a numpy array or list of indices to define the faces.
-    If this array is Nx3 or Nx4, the type is inferred from this array. Faces
-    should be of uint8, uint16 or uint32 (if it is not, the data is converted
-    to uint32).
+    If this array is Nx3 or Nx4, verticesPerFace is inferred from this array.
+    Faces should be of uint8, uint16 or uint32 (if it is not, the data is
+    converted to uint32).
     
-    Colors is a Nx3 numpy array giving the ambient and diffuse color for
-    each vertex. 
+    Per vertex color can be supplied in three ways:
+      * explicitly by giving an Nx3 or Nx4 colors array
+      * by supplying 1D texcords which  are looked up in the colormap
+      * by supplying a 2D texcords array and setting a 2D texture image
+    
+    Colors is a Nx3 or Nx4 numpy array giving the ambient and diffuse color
+    for each vertex. 
     
     Texcords is used to map a 2D texture or 1D texture (a colormap) to the
     mesh. The texture color is multiplied after the ambient and diffuse
     lighting calculations, but before calculating the specular component.
-    If texcords is a 1D (size N) array specifying the color index at each
-    vertex. The texture-color at each vertex is then calculated by looking
-    it up in the colormap. If texcords is a Nx2 array it represents the 2D
-    texture coordinates to map an image to the mesh. Use SetTexture() to set 
+    If texcords is a 1D (size N) array it specifies the color index at each
+    vertex. If texcords is a Nx2 array it represents the 2D texture 
+    coordinates to map an image to the mesh. Use SetTexture() to set 
     the image, and the colormap property to set the colormap.
     
     VerticesPerFace can be 3 or 4. It determines whether the faces are
     triangles or quads. If faces is specified and is 2D, the number of
     vertices per face is determined from that array.
+    
     """ 
     
     def __init__(self, parent, vertices, normals=None, faces=None, 
             colors=None, texcords=None, verticesPerFace=3):
         Wobject.__init__(self, parent)
         
-        # Set type first (can be reset by faces)
+        # Init flat normals
+        self._flatNormals = None
+        
+        # Create colormap and init texture
+        self._colormap = Colormap()
+        self._texture = None
+        
+        # Material properties
+        self._ambient = 0.7
+        self._diffuse = 0.7
+        self._specular = 0.3
+        self._shininess = 50
+        self._emission = 0.0
+        
+        # Reference colors
+        self._faceColor = (1, 1, 1, 1)
+        self._edgeColor = (0,0,0,1)
+        
+        # Shading
+        self._faceShading = 'smooth'
+        self._edgeShading = None
+        
+        # What faces to cull
+        self._cullFaces = None # gl.GL_BACK (for surf(), None makes most sense)
+        
+        
+        # Set verticesPerFace first (can be reset by faces)
         verticesPerFace = int(verticesPerFace)
         if verticesPerFace in [3, 4]:
             self._verticesPerFace = verticesPerFace
@@ -322,38 +352,9 @@ class Mesh(Wobject):
         self.SetFaces(faces)
         self.SetColors(colors)
         self.SetTexcords(texcords)
-        
-        # Init flat normals
-        self._flatNormals = None
-        
-        # Create colormap and init texture
-        self._colormap = Colormap()
-        self._texture = None
-        
-        # What faces to cull
-        self._cullFaces = None #gl.GL_BACK
-        
-        # Material properties
-        self._color = (1, 1, 1, 1)
-        self._ambient = 0.7
-        self._diffuse = 0.7
-        self._specular = 0.3
-        self._shininess = 50
-        self._emission = 0.0
     
     
-    @Property
-    def color():
-        """ Get/Set the reference color of the object. If the ambient,
-        diffuse or emissive properties specify a scalar, that scalar
-        represents the fraction of *this* color. (If the specular
-        property is a scalar, it represents a fraction of (1,1,1).)
-        """
-        def fget(self):
-            return self._color
-        def fset(self, value):
-            self._color = _testColor(value, True)
-    
+    ## Material properties: how the object is lit
     
     @Property
     def ambient():
@@ -447,10 +448,80 @@ class Mesh(Wobject):
             self._emission = _testColor(value)
     
     
+    ## Face and edge shading properties, and culling
+    
+    @Property
+    def faceColor():
+        """ Get/Set the face reference color of the object. If the
+        ambient, diffuse or emissive properties specify a scalar, that
+        scalar represents the fraction of *this* color for the faces. 
+        """
+        def fget(self):
+            return self._faceColor
+        def fset(self, value):
+            self._faceColor = _testColor(value, True)
+    
+    
+    @Property
+    def edgeColor():
+        """ Get/Set the edge reference color of the object. If the
+        ambient, diffuse or emissive properties specify a scalar, that
+        scalar represents the fraction of *this* color for the edges. 
+        """
+        def fget(self):
+            return self._edgeColor
+        def fset(self, value):
+            self._edgeColor = _testColor(value, True)
+    
+    
+    @Property    
+    def faceShading():
+        """ Get/Set the type of shading to apply for the faces. 
+          * None - Do not show the faces
+          * 'plain' - Display the faces without lighting
+          * 'flat' - Lighted shading uniform for each face
+          * 'smooth' - Lighted smooth shading
+        """
+        def fget(self):
+            return self._faceShading
+        def fset(self, value):
+            if value is None:
+                self._faceShading = None
+            elif isinstance(value, basestring) and (value.lower() in 
+                    ['plain', 'flat', 'smooth']):                
+                self._faceShading = value.lower()
+            else:
+                tmp = "Shading must be None, 'plain', 'flat' or 'smooth'."
+                raise ValueError(tmp)
+    
+    
+    @Property    
+    def edgeShading():
+        """ Get/Set the type of shading to apply for the edges. 
+          * None - Do not show the edges
+          * 'plain' - Display the edges without lighting
+          * 'flat' - Lighted shading uniform for each edge
+          * 'smooth' - Lighted smooth shading
+        """
+        def fget(self):
+            return self._edgeShading
+        def fset(self, value):
+            if value is None:
+                self._edgeShading = None
+            elif isinstance(value, basestring) and (value.lower() in 
+                    ['plain', 'flat', 'smooth']):                
+                self._edgeShading = value.lower()
+            else:
+                tmp = "Shading must be None, 'plain', 'flat' or 'smooth'."
+                raise ValueError(tmp)
+    
+    
     @Property
     def cullFaces():
-        """ Get/Set the culling of faces. Values can be 'front', 'back'
-        or None (default). If 'back': backfacing faces are not drawn.
+        """ Get/Set the culling of faces. 
+        Values can be 'front', 'back', or None (default). If 'back', 
+        backfacing faces are not drawn. If 'front', frontfacing faces
+        are not drawn. 
         """
         def fget(self):
             D = {gl.GL_FRONT:'front', gl.GL_BACK:'back', None:None}
@@ -462,10 +533,8 @@ class Mesh(Wobject):
                     self._cullFaces = D[value.lower()]
                 except KeyError:
                     raise ValueError('Invalid value for cullFaces')
-            elif not value:
+            elif value is None:
                 self._cullFaces = None
-            else:
-                raise ValueError('Invalid value for cullFaces')
     
     
     ## Setters
@@ -497,8 +566,18 @@ class Mesh(Wobject):
     def SetColors(self, colors):
         """ SetColors(colors)
         Set the color data as a Nx3 numpy array or as a 3D Pointset. 
+        Use None as an argument to remove the color data.
         """
         if colors is not None:
+            # Scale
+            if colors.dtype in [np.float32, np.float64] and colors.max()<1.1:
+                pass
+            elif colors.dtype == np.uint8:
+                colors = colors.astype(np.float32) / 256.0
+            else:
+                mi, ma = colors.min(), colors.max()
+                colors = (colors.astype(np.float32) - mi) / (ma-mi)
+            # Check shape
             try:
                 self._colors = check3dArray(colors)
             except ValueError:
@@ -510,7 +589,7 @@ class Mesh(Wobject):
     def SetTexcords(self, texcords):
         """ SetTexcords(texcords)
         Set the texture coordinates as a Nx2 numpy array or as a 2D Pointset.
-        It can also be None to turn off the texture.
+        Use None as an argument to turn off the texture.
         """
         if texcords is not None:
         
@@ -578,6 +657,10 @@ class Mesh(Wobject):
     
     
     def SetTexture(self, data):
+        """ SetTexture(data)
+        Set the texture image to map to the mesh.
+        Use None as an argument to remove the texture.
+        """
         if data is not None:
             # Check dimensions
             if data.ndim==2:
@@ -587,10 +670,11 @@ class Mesh(Wobject):
             else:
                 raise ValueError('Only 2D images can be mapped to a mesh.')
             # Make texture object and bind
-            self._texture = TextureObjectToVisualize(2, data)
+            self._texture = TextureObjectToVisualize(2, data, interpolate=True)
             self._texture.SetData(data)
         else:
             self._texture = None
+    
     
     @Property
     def colormap():
@@ -643,37 +727,63 @@ class Mesh(Wobject):
     
     
     def OnDraw(self):
-#         gl.glEnable(gl.GL_POLYGON_OFFSET_LINE)
-#         gl.glPolygonOffset(-2.0,-2.0)
-        self._DrawFaces()
-#         self._DrawLines()
-#         gl.glDisable(gl.GL_POLYGON_OFFSET_LINE)
-    
-    def _DrawFaces(self):
         
-        # We need vertices
+        # Draw faces
+        if self._faceShading:
+            self._Draw(self._faceShading, self._faceColor)
+        
+        # Draw edges
+        if self._edgeShading:
+            gl.glDepthFunc(gl.GL_LEQUAL)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+            #
+            self._Draw(self._edgeShading, self._edgeColor)
+            #
+            gl.glDepthFunc(gl.GL_LESS)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+    
+    
+    def OnDrawShape(self, color):        
+        self._Draw('plain', color)
+    
+    
+    def _Draw(self, shading, refColor):
+        """ The actual drawing. Used for drawing faces, lines, and shape.
+        """
+        
+        # Prepare vertices
         if self._vertices is None:
             return
-        
-        # We need normals
-        if self._normals is None:
-            self.CalculateNormals()
-        if self._flatNormals is None:
-            self._CalculateFlatNormals()
-        
-        # Prepare for drawing
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(self._vertices)
-        #
-        gl.glEnableClientState(gl.GL_NORMAL_ARRAY)
-        gl.glNormalPointerf(self._flatNormals)
-        #
+        
+        
+        # Prepare normals
+        if shading != 'plain':            
+            # Need normals
+            if self._normals is None:
+                self.CalculateNormals()
+            # Do we need flat normals?
+            if shading == 'flat':
+                if self._flatNormals is None:
+                    self._CalculateFlatNormals()
+                normals = self._flatNormals 
+            else:
+                normals = self._normals
+            #
+            gl.glEnableClientState(gl.GL_NORMAL_ARRAY)
+            gl.glNormalPointerf(normals)
+        
+        
+        # Prepare colors (if available)
         if self._colors is not None:
             gl.glEnable(gl.GL_COLOR_MATERIAL)
             gl.glColorMaterial(gl.GL_FRONT_AND_BACK, gl.GL_AMBIENT_AND_DIFFUSE)
             gl.glEnableClientState(gl.GL_COLOR_ARRAY)
             gl.glColorPointerf(self._colors)
-        #
+        
+        
+        # Prepate texture coordinates (if available)
         if self._texcords is not None:
             if (self._texcords.ndim == 2) and (self._texture is not None):
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
@@ -684,20 +794,29 @@ class Mesh(Wobject):
                 gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, self._texcords)
                 self._colormap.Enable(0)
         
+        
         # Prepare material (ambient and diffuse may be overriden by colors)
-        what = gl.GL_FRONT_AND_BACK
-        gc = _getColor
-        gl.glMaterial(what, gl.GL_AMBIENT, gc(self._ambient, self._color) )
-        gl.glMaterial(what, gl.GL_DIFFUSE, gc(self._diffuse, self._color) )
-        gl.glMaterial(what, gl.GL_SPECULAR, gc(self._specular, (1,1,1,1)) )
-        gl.glMaterial(what, gl.GL_SHININESS, self._shininess)
-        gl.glMaterial(what, gl.GL_EMISSION, gc(self._emission, self._color))
+        if shading == 'plain':
+            gl.glColor(refColor)
+        else:
+            what = gl.GL_FRONT_AND_BACK
+            gc = _getColor
+            gl.glMaterial(what, gl.GL_AMBIENT, gc(self._ambient, refColor))
+            gl.glMaterial(what, gl.GL_DIFFUSE, gc(self._diffuse, refColor))
+            gl.glMaterial(what, gl.GL_SPECULAR, gc(self._specular, (1,1,1,1)))
+            gl.glMaterial(what, gl.GL_SHININESS, self._shininess)
+            gl.glMaterial(what, gl.GL_EMISSION, gc(self._emission, refColor))
+        
         
         # Prepare lights
-        gl.glEnable(gl.GL_LIGHTING)
-        #gl.glShadeModel(gl.GL_SMOOTH)
-        gl.glShadeModel(gl.GL_FLAT)
-        gl.glEnable(gl.GL_NORMALIZE)  # GL_NORMALIZE or GL_RESCALE_NORMAL
+        if shading != 'plain':
+            gl.glEnable(gl.GL_LIGHTING)
+            gl.glEnable(gl.GL_NORMALIZE)  # GL_NORMALIZE or GL_RESCALE_NORMAL
+            if shading == 'smooth':
+                gl.glShadeModel(gl.GL_SMOOTH)
+            else:
+                gl.glShadeModel(gl.GL_FLAT)
+        
         
         # Set culling (take data aspect into account!)
         axes = self.GetAxes()
@@ -710,6 +829,7 @@ class Mesh(Wobject):
         if self._cullFaces:
             gl.glEnable(gl.GL_CULL_FACE)
             gl.glCullFace(self._cullFaces)
+        
         
         # Draw
         type = {3:gl.GL_TRIANGLES, 4:gl.GL_QUADS}[self._verticesPerFace]
@@ -738,55 +858,8 @@ class Mesh(Wobject):
         gl.glDisableClientState(gl.GL_COLOR_ARRAY)
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
         gl.glDisable(gl.GL_COLOR_MATERIAL)
-        gl.glPolygonMode(gl.GL_FRONT, gl.GL_FILL)
         gl.glDisable(gl.GL_LIGHTING)
         gl.glDisable(gl.GL_CULL_FACE)
-    
-    
-    def _DrawLines(self):
-        
-        # We need vertices
-        if self._vertices is None:
-            return
-        
-        # Prepare for drawing
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glVertexPointerf(self._vertices)
-        
-        # Draw lines
-        gl.glColor(0,1,0,1) # todo: set color
-        gl.glPolygonMode(gl.GL_FRONT, gl.GL_LINE)
-        
-        # culling
-        gl.glFrontFace(gl.GL_CW)
-        
-        # Draw
-        type = {3:gl.GL_TRIANGLES, 4:gl.GL_QUADS}[self._verticesPerFace]
-        if self._faces is None:
-            gl.glDrawArrays(type, 0, self._vertices.shape[0])
-        else:
-            # Get data type
-            if self._faces.dtype == np.uint8:
-                face_dtype = gl.GL_UNSIGNED_BYTE
-            elif self._faces.dtype == np.uint16:
-                face_dtype = gl.GL_UNSIGNED_SHORT
-            else:
-                face_dtype = gl.GL_UNSIGNED_INT
-            # Go            
-            faces = self._faces[:-3000]
-            N = faces.size
-            gl.glDrawElements(type, N, face_dtype, faces)
-            #gl.glDrawElementsui(type, self._faces)
-        
-        # Clean up
-        gl.glFlush()
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glPolygonMode(gl.GL_FRONT, gl.GL_FILL)
-    
-    
-    # todo: implement shape
-    def OnDrawShape(self, color):        
-        pass
     
     
     ## Mesh processing
@@ -832,20 +905,26 @@ class Mesh(Wobject):
             # Unwind color
             if self._colors is not None:
                 # Get ref and allocate new array
-                color = self._color
-                newColor = np.zeros((N,3), dtype='float32')
+                colors = self._colors
+                newColors = np.zeros((N,3), dtype='float32')
                 for i in range(N):
-                    newColor[i,:] = color[faces[i]]
+                    newColors[i,:] = colors[faces[i]]
                 # Store
-                self._color = newColor
+                self._colors = newColors
             
             # Unwind texcords
-            if self._colors is not None:
+            if self._texcords is not None:
                 # Get ref and allocate new array
                 texcords = self._texcords
-                newTexcords = np.zeros((N,3), dtype='float32')
-                for i in range(N):
-                    newTexcords[i,:] = texcords[faces[i]]
+                if self._texcords.ndim==1:
+                    newTexcords = np.zeros((N,), dtype='float32')
+                    for i in range(N):
+                        newTexcords[i] = texcords[faces[i]]
+                else:                    
+                    verticesPerFace = self._texcords.shape[1]
+                    newTexcords = np.zeros((N,verticesPerFace), dtype='float32')
+                    for i in range(N):
+                        newTexcords[i,:] = texcords[faces[i]]
                 # Store
                 self._texcords = newTexcords
             
