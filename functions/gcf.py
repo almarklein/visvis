@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 from visvis.core import BaseFigure
 import visvis as vv
 
@@ -17,4 +20,3 @@ def gcf():
         BaseFigure._currentNr = nr
     
     return BaseFigure._figures[nr]
-    

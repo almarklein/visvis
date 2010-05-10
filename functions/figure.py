@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis.backends as backends
 from visvis.core import BaseFigure
 
@@ -38,4 +41,3 @@ def figure(nr=None):
         fig = newFigure()
         fig.title = '' #_SetTitle("Figure " + str(fig.nr))
         return fig
-        

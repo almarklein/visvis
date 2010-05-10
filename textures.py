@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module textures
 
@@ -28,9 +28,6 @@ allows using clim, colormap and antialiasing (aa property).
 selected using texture3D.renderStyle = 'ray', where 'ray' can be the
 name of any of the available fragment shaders.
 
-$Author$
-$Date$
-$Rev$
 
 """
 
@@ -820,10 +817,19 @@ class Colormap(TextureObject):
     
     
     def SetMap(self, *args):
-        """ SetMap(self, (r,g,b), (r,g,b), (r,g,b)), or
-        SetMap(self, [(r,g,b), (r,g,b), (r,g,b)])
+        """ SetMap(self, *args))
         Set the colormap data. 
-        Accepts lists of lists (or tuples), or numpy arrays.
+        
+        The method accepts several arguments:
+        
+        A list/tuple of tuples where each tuple represents a RGB or RGBA color.
+        
+        A dict with keys 'red', 'green', 'blue', 'alpha' (or only the first
+        letter). Each dict should contain a list of 2-element tuples that
+        specify index and color value. Indices should be between 0 and 1.
+        
+        A numpy array specifying the RGB or RGBA tuples.
+        
         """
         
         # one argument given?
@@ -837,7 +843,52 @@ class Colormap(TextureObject):
         data = None
         
         # parse input
-        if isinstance(args, (tuple, list)):
+        
+        if isinstance(args, dict):
+            # DICT
+            
+            # Allow several color names
+            for key in args.keys():
+                if key.lower() in ['r', 'red']:
+                    args['r'] = args[key]
+                elif key.lower() in ['g', 'green']:
+                    args['g'] = args[key]
+                if key.lower() in ['b', 'blue']:
+                    args['b'] = args[key]
+                if key.lower() in ['a', 'alpha']:
+                    args['a'] = args[key]
+            # Init data, alpha 1
+            data2 = np.zeros((256,4),np.float32)
+            data2[:,3] = 1.0
+            # For each channel ...
+            for i in range(4):
+                channel = 'rgba'[i]
+                if not channel in args:
+                    continue
+                # Get value list and check
+                values = args[channel]
+                if not hasattr(values,'__len__'):
+                    raise ValueError('Invalid colormap.')
+                # Init interpolation
+                data = np.zeros((len(values),), dtype=np.float32)
+                x = np.linspace(0.0, 1.0, 256)
+                xp = np.zeros((len(values),), dtype=np.float32)
+                # Insert values
+                count = -1
+                for el in values:
+                    count += 1                    
+                    if not hasattr(el,'__len__') or len(el) != 2:
+                        raise ValueError('Colormap dict entries must have 2 elements.')
+                    xp[count] = el[0]
+                    data[count] = el[1]
+                # Interpolate
+                data2[:,i] = np.interp(x, xp, data)
+            # Set
+            data = data2
+        
+        elif isinstance(args, (tuple, list)):
+            # LIST
+            
             data = np.zeros((len(args),4), dtype=np.float32)
             data[:,3] = 1.0 # init alpha to be all ones
             count = -1
@@ -846,15 +897,13 @@ class Colormap(TextureObject):
                 if not hasattr(el,'__len__') or len(el) not in [3,4]:
                     raise ValueError('Colormap entries must have 3 or 4 elements.')
                 elif len(el)==3:
-                    data[count,0] = el[0]
-                    data[count,1] = el[1]
-                    data[count,2] = el[2]
+                    data[count,:] = el[0], el[1], el[2], 1.0
                 elif len(el)==4:
-                    data[count,0] = el[0]
-                    data[count,1] = el[1]
-                    data[count,2] = el[2]
-                    data[count,3] = el[3]
+                    data[count,:] = el[0], el[1], el[2], el[3]
+        
         elif isinstance(args, np.ndarray):
+            # ARRAY
+            
             if args.ndim != 2 or args.shape[1] not in [3,4]:
                 raise ValueError('Colormap entries must have 3 or 4 elements.')
             elif args.shape[1]==3:
@@ -867,7 +916,7 @@ class Colormap(TextureObject):
             else:
                 raise ValueError("Invalid argument to set colormap.")
         
-        # apply
+        # Apply interpolation (if required)
         if data is not None:   
             if data.shape[0] == 256 and data.dtype == np.float32:
                 data2 = data
@@ -891,11 +940,11 @@ class TextureObjectToVisualize(TextureObject):
     Basically, it handles the color limits.
     """
     
-    def __init__(self, ndim, data):
+    def __init__(self, ndim, data, interpolate=False):
         TextureObject.__init__(self, ndim)
         
         # interpolate?
-        self._interpolate = False
+        self._interpolate = interpolate
         
         # the limits
         self._clim = Range(0,1)
@@ -1127,7 +1176,9 @@ class BaseTexture(Wobject):
         """ Get/Set the colormap. The argument must be a tuple/list of 
         iterables with each element having 3 or 4 values. The argument may
         also be a Nx3 or Nx4 numpy array. In all cases the data is resampled
-        to create a 256x4 array.
+        to create a 256x4 array. To specify a mapping for each color 
+        seperately, supply a dict with names R,G,B,A, where each value
+        is a list with 2-element tuples.
         
         Visvis defines a number of standard colormaps in the global visvis
         namespace: CM_AUTUMN, CM_BONE, CM_COOL, CM_COPPER, CM_GRAY, CM_HOT, 
@@ -1438,6 +1489,14 @@ class Texture3D(BaseTexture):
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glCullFace(gl.GL_BACK)
         
+        # Use texture matrix to supply a modelview matrix without scaling
+#         gl.glPushMatrix()
+#         axes = self.GetAxes()
+#         if axes:
+#             cam=axes._cameras['3d']
+#             daspect = axes.daspect
+#             gl.glScale( 1.0/daspect[0], 1.0/daspect[1] , 1.0/daspect[2] )
+            
         # fragment shader on
         if self._program1.IsUsable():
             self._program1.Enable()
@@ -1463,6 +1522,9 @@ class Texture3D(BaseTexture):
         
         # do the actual drawing
         self._DrawQuads()
+        
+        
+#         gl.glPopMatrix()
         
         # clean up
         gl.glFlush()        

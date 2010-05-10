@@ -1,4 +1,5 @@
-""" Plot 1, 2 or 3 dimensional data. """
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
 
 from visvis.points import Point, Pointset
 import numpy as np
@@ -22,10 +23,10 @@ def makeArray(data):
 
 def plot(data1, data2=None, data3=None, 
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
-            alpha=1, setlimits=True, axes=None, **kwargs):
+            alpha=1, axesAdjust=True, axes=None, **kwargs):
     """ plot(data1, data2=None, data3=None, 
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
-            alpha=1, setlimits=True, axes=None):
+            alpha=1, axesAdjust=True, axes=None):
     
     Plot 1, 2 or 3 dimensional data and return the Line object:
       * plot([1,4,2]) plots a 1D signal, with the values plotted along the y-axis
@@ -42,8 +43,9 @@ def plot(data1, data2=None, data3=None,
       * markerEdgeWidth: mew
       * markerEdgeColor: mec
     
-    If setlimits is False, plots the new data without resetting
-    the displayed range.
+    If axesAdjust==True, this function will call axes.SetLimits(), set
+    the camera type to 2D when plotting 2D data and to 3D when plotting
+    3D data. If daspectAuto has not been set yet, it is set to True.
     """
     
     # create a dict from the properties and combine with kwargs
@@ -54,6 +56,9 @@ def plot(data1, data2=None, data3=None,
         if not i in kwargs:
             kwargs[i] = tmp[i]
     
+    
+    # init dimension variable
+    camDim = 0
     
     ##  create the data
     
@@ -71,7 +76,9 @@ def plot(data1, data2=None, data3=None,
         d3 = data3
         if data3 is None:
             data3 = 0.1*np.ones(data1.shape)
+            camDim = 2
         else:
+            camDim = 3
             data3 = makeArray(data3)
         
         if data2 is None:
@@ -102,7 +109,10 @@ def plot(data1, data2=None, data3=None,
         #pp.points[:,0] = data1.ravel()
         #pp.points[:,1] = data2.ravel()
         #pp.points[:,2] = data3.ravel()
-        
+    
+    # Process camdim for given points or pointsets
+    if not camDim:
+        camDim = pp.ndim
         
     
     ## create the line
@@ -120,10 +130,21 @@ def plot(data1, data2=None, data3=None,
     l.alpha = alpha
     
     ## done...
-    if setlimits:
+    if axesAdjust:
+        if axes.daspectAuto is None:
+            axes.daspectAuto = True
+        axes.cameraType = str(camDim)+'d'
         axes.SetLimits()
+    
     axes.Draw()
     return l
-    
-# import visvis as vv;vv.plot([3,4,5],[7,5,4])
-# import visvis as vv;vv.plot([1,3,1,4,1,5,1,6,1,7,6,5,4,3,2,1])
+
+
+if __name__ == '__main__':
+    vv.figure()
+    vv.subplot(311)
+    vv.plot([3,4,5],[7,5,4])
+    vv.subplot(312)
+    vv.plot([1,3,1,4,1,5,1,6,1,7,6,5,4,3,2,1])
+    vv.subplot(313)
+    vv.plot([3,4,5],[7,5,4], [1,2,3])

@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 
 def gca():
@@ -9,7 +12,6 @@ def gca():
     if not a:
         # create axes
         a = vv.Axes(f)
-        a.cameraType = 'twod'
         #a.position = 2, 2, -4, -4
         a.position = 10, 10, -20, -20
     return a

@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 
 def use(backendName=None):
@@ -17,4 +20,3 @@ def use(backendName=None):
     another backend, but this is not recommended.
     """
     return vv.backends.use(backendName)
-    
