@@ -13,6 +13,8 @@ uniform float stepRatio;
 
 // varyings to pass to fragment shader
 varying vec3 ray;
+varying vec3 L;
+varying vec3 V;
 
 void main()
 {    
@@ -24,18 +26,41 @@ void main()
     // Store texture coordinate (also a default thing).
     gl_TexCoord[0].xyz = gl_MultiTexCoord0.xyz;
     
-    // Get projection matrix for the texture. It is the projection matrix,
-    // but with the modelview stuff undone. This makes that it automatically
-    // deals with anisotropic data and changes in Axes.daspect.
-    mat4 M = gl_ProjectionMatrix * gl_ModelViewMatrixInverse;
+    // Calculate light direction
+    L = (gl_LightSource[0].position * gl_ModelViewMatrix).xyz;
+    if (gl_LightSource[0].position[3]==1.0)
+        L -= gl_Vertex.xyz;
+    L = normalize(L);
     
-    // Calculate ray direction, eventually, the ray will point in the view
-    // direction expressed in texture coordinates.
-    vec4 p1 = vec4(0.0, 0.0, 0.0, 1.0) * M;
-    vec4 p2 = vec4(0.0, 0.0, 1.0, 1.0) * M;
-    vec3 p11 = vec3(p1[0], p1[1], p1[2]) / p1[3];
-    vec3 p22 = vec3(p2[0], p2[1], p2[2]) / p2[3];
-    ray = p22-p11;
+    // Calculate view direction
+    V = (vec4(0.0, 0.0, 1.0, 1.0) * gl_ModelViewMatrix).xyz;
+    V = normalize(V);
+    
+    // Calculate the scaling of the modelview matrix so we can correct
+    // for axes.daspect and scale transforms of the wobject (in case
+    // of anisotropic data).
+    // We go from world coordinates to eye coordinates.
+    vec4 p0 = gl_ModelViewMatrix * vec4(0.0,0.0,0.0,1.0);
+    vec4 px = gl_ModelViewMatrix * vec4(1.0,0.0,0.0,1.0);
+    vec4 py = gl_ModelViewMatrix * vec4(0.0,1.0,0.0,1.0);
+    vec4 pz = gl_ModelViewMatrix * vec4(0.0,0.0,1.0,1.0);
+    float sx = length(p0.xyz - px.xyz);
+    float sy = length(p0.xyz - py.xyz);
+    float sz = length(p0.xyz - pz.xyz);
+    
+    // Create a (diagonal) matrix to correct for the scaling
+    mat4 Ms = mat4(0.0);
+    Ms[0][0] = 1.0/(sx*sx);
+    Ms[1][1] = 1.0/(sy*sy);
+    Ms[2][2] = 1.0/(sz*sz);
+    Ms[3][3] = 1.0;
+    
+    // Calculate ray direction. By correcting for the scaling, the ray is
+    // expressed in textute coordinates.
+    // We go from eye coordinates to world/texture coordinates.
+    vec4 p1 = vec4(0.0, 0.0, 0.0, 1.0) * gl_ModelViewProjectionMatrix * Ms;
+    vec4 p2 = vec4(0.0, 0.0, 1.0, 1.0) * gl_ModelViewProjectionMatrix * Ms;
+    ray = (p2.xyz/p2[3]) - (p1.xyz/p1[3]);
     
     // Normalize ray to unit length.    
     ray = normalize(ray);

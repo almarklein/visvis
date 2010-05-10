@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Package visvis
 
@@ -54,9 +54,6 @@ For more help, see the docs, the examples in the examples dir, or
 the examples at the bottom of the function modules (in the functions
 dir).
 
-$Author$
-$Date$
-$Rev$
 
 """
 

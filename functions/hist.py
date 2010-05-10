@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 import numpy as np
 
@@ -23,4 +26,3 @@ def hist(data, bins=10, range=None, normed=False, weights=None, **kwargs):
 if __name__ == '__main__':
     data = np.random.normal(7,2,size=(100,100))
     hist(data)
-    

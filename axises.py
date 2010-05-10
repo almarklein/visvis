@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module axises
 
@@ -24,9 +24,6 @@ dimension.
 I chose to name this module using an awkward plural to avoid a name clash
 with the axis() function.
 
-$Author: almar.klein $
-$Date: 2010-02-24 15:25:05 +0100 (Wed, 24 Feb 2010) $
-$Rev: 252 $
 
 """
 

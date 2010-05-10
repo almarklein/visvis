@@ -1,3 +1,6 @@
+# This file is part of VISVIS. 
+# Copyright (C) 2010 Almar Klein
+
 import visvis as vv
 
 def axis(command, axes=None):
@@ -39,4 +42,3 @@ def axis(command, axes=None):
         axes.daspect = da[0], abs(da[1]), da[2]
     else:
         raise ValueError('Unknown command in vv.axis().')
-    

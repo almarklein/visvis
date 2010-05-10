@@ -13,14 +13,17 @@
 
 // idea: use the upper or lower value of clim as the threshold?
 
-// the 3D texture
+// the 3D texture and 1D colormap
 uniform sampler3D texture;
+uniform sampler1D colormap;
 
 // the dimensions of the data, to determine stepsize
 uniform vec3 shape;
 
 // varying calculated by vertex shader
 varying vec3 ray;
+varying vec3 L; // light direction
+varying vec3 V; // view direction
 
 // threshold
 uniform float th;
@@ -86,77 +89,66 @@ void main()
     
     // calculate step
     vec3 step = 1.0 / shape;
-    // calculate light direction
-    //vec3 L = vec3(1.0,2.0,1.0);
-    vec3 L = gl_LightSource[0].position.xyz - gl_FragCoord.xyz;
-    L = normalize(L);
-    // no ideas what this is...
-    vec3 V = vec3(0.0,2.0,-1.0);
-    V = normalize(V);
-    
     
     
     // loop!
-    for (int i=0; i<n; i++)
+    int i=0;
+    while (i<n)
     {
-        // calculate location        
-        vec3 loc = edgeLoc + float(i) * ray2;
-        
-        // sample value (avoid if statements)
-        float val = texture3D( texture, loc )[0];        
-        
-        if (val > th)
+        for (i=i; i<n; i++)
         {
-            // calculate normal vector from gradient
-            vec4 color1; 
-            vec4 color2;
-            vec3 N; // normal
-            color1 = texture3D( texture, loc+vec3(-step[0],0.0,0.0) );
-            color2 = texture3D( texture, loc+vec3(step[0],0.0,0.0) );
-            N[0] = color1[1] - color2[1];
-            color1 = texture3D( texture, loc+vec3(0.0,-step[1],0.0) );
-            color2 = texture3D( texture, loc+vec3(0.0,step[1],0.0) );
-            N[1] = color1[1] - color2[1];
-            color1 = texture3D( texture, loc+vec3(0.0,0.0,-step[2]) );
-            color2 = texture3D( texture, loc+vec3(0.0,0.0,step[2]) );
-            N[2] = color1[1] - color2[1];            
-            N = normalize(N);
             
+            // calculate location        
+            vec3 loc = edgeLoc + float(i) * ray2;
             
-            // calculate lambertian
-            float lambert = dot(N,L);
+            // sample value (avoid if statements)
+            float val = texture3D( texture, loc )[0];        
             
-            // default color
-            gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-            
-            if (lambert > 0.0)
+            if (val > th)
             {
-                // self-shadow
-                gl_FragColor += gl_LightSource[0].diffuse * 
-                    gl_FrontMaterial.diffuse * lambert;
-                /*
-                // specular does not really work yet
-                vec3 E = normalize(ray2);
-                vec3 R = reflect(-L, N);
-                float specular = pow( max(dot(R, E), 0.0), 
-                    gl_FrontMaterial.shininess );
-                gl_FragColor += 0.01*gl_LightSource[0].specular * 
-                    gl_FrontMaterial.specular *  specular;   
-                */
+                // calculate normal vector from gradient
+                vec4 color1; 
+                vec4 color2;
+                float betterVal;
+                vec3 N; // normal
+                color1 = texture3D( texture, loc+vec3(-step[0],0.0,0.0) );
+                color2 = texture3D( texture, loc+vec3(step[0],0.0,0.0) );
+                N[0] = color1[1] - color2[1];
+                betterVal = max(color1.r, color2.r);
+                color1 = texture3D( texture, loc+vec3(0.0,-step[1],0.0) );
+                color2 = texture3D( texture, loc+vec3(0.0,step[1],0.0) );
+                N[1] = color1[1] - color2[1];
+                betterVal = max(max(color1.r, color2.r),betterVal);
+                color1 = texture3D( texture, loc+vec3(0.0,0.0,-step[2]) );
+                color2 = texture3D( texture, loc+vec3(0.0,0.0,step[2]) );
+                N[2] = color1[1] - color2[1]; 
+                betterVal = max(max(color1.r, color2.r),betterVal);
+                N = normalize(N);
+                
+                // Init reflectanve colors. Maybe make them properties later.
+                vec4 ambientRefl = vec4(0.7,0.7,0.7,1.0);
+                vec4 diffuseRefl = vec4(0.7,0.7,0.7,1.0);
+                vec4 specularRefl = vec4(0.3,0.3,0.3,1.0);
+                float shininess = 50.0;
+                
+                // Init strengt variable
+                float str;
+                
+                // Apply ambient and diffuse light
+                gl_FragColor = ambientRefl * gl_LightSource[0].ambient;
+                str = clamp(dot(L,N),0.0,1.0);
+                gl_FragColor += str * diffuseRefl * gl_LightSource[0].diffuse;
+                
+                // Apply colormap
+                gl_FragColor *= texture1D( colormap, betterVal);
+                
+                // Apply specular color
+                vec3 H = normalize(L+V);
+                str = pow( max(dot(H,N),0.0), shininess);
+                gl_FragColor += str * specularRefl * gl_LightSource[0].specular;
+                
+                return;
             }
-            return;
-            
-            /*
-            // DJ solution
-            float Id = dot(N,L);
-            vec3 R = 2.0 * dot(N, L) * N - L;
-            float Is = max(pow(dot(R,V),3.0),0.0);
-            
-            gl_FragColor[0] = min(0.7+Id+Is,1.0);
-            gl_FragColor[1] = min(Is,1.0);
-            gl_FragColor[2] = min(Is,1.0);
-            return;
-            */
         
         }
     }

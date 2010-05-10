@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Package visvis.functions
 
@@ -30,9 +30,6 @@ There are three things to take into account when making a new function:
   the function's signature. The docstring is also used to produce the
   on-line documentation.
 
-$Author$
-$Date$
-$Rev$
 
 """
 

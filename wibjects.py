@@ -14,7 +14,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2009 Almar Klein
+#   Copyright (C) 2010 Almar Klein
 
 """ Module wibjects
 
@@ -22,9 +22,6 @@ All wibjects are inserted in this namespace, thereby providing
 the user with a list of all wibjects. All wibjects are also
 inserted in the root visvis namespace.
 
-$Author$
-$Date$
-$Rev$
 
 """
 
