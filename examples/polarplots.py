@@ -28,3 +28,5 @@ print('radial axis while keeping lower radial limit fixed')
 
 
 
+app = vv.use()
+app.Run()

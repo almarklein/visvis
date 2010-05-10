@@ -282,7 +282,7 @@ class BaseAxis(base.Wobject):
         axes = self.GetAxes()
         if not axes:
             return
-        if not axes._axis: # == showAxis
+        if not axes._showAxis:
             return
 
         # get pointset
@@ -413,24 +413,24 @@ class CartesianAxis2D(BaseAxis):
         drawGrid = [v for v in axes.showGrid]
         drawMinorGrid = [v for v in axes.showMinorGrid]
         ticksPerDim = [axes.xTicks, axes.yTicks]
-
+        
         # Get limits
         lims = axes.GetLimits()
         lims = [lims[0], lims[1], cam.zlim]
-
+        
         # Get labels
         labels = [axes.xLabel, axes.yLabel]
-
-
+        
+        
         # Init the new text object dictionaries
         newTextDicts = [{},{},{}]
-
+        
         # Init pointsets for drawing lines and gridlines
         ppc = Pointset(3) # lines in real coords
         pps = Pointset(3) # lines in screen pixels
         ppg = Pointset(3) # dotted lines in real coords
-
-
+        
+        
         # Calculate cornerpositions of the cube
         corners8_c, corners8_s = self._CalculateCornerPositions(*lims)
 
@@ -498,7 +498,7 @@ class CartesianAxis2D(BaseAxis):
                         corner = corners4_s[i]
                         pps.Append(corner)
                         pps.Append(corner+vector_s)
-
+            
             # Apply label
             textDict = self._textDicts[d]
             p1 = corners4_c[i0] + vector_c * 0.5
@@ -525,20 +525,20 @@ class CartesianAxis2D(BaseAxis):
             t.textAngle = float(vec.Angle() * 180/np.pi)
             # Keep up to date (so label can move itself just beyond ticks)
             t._textDict = newTextDicts[d]
-
+            
             # Get ticks stuff
             tickValues = ticksPerDim[d] # can be None
             p1, p2 = firstCorner.Copy(), firstCorner+vector_c
             tmp = GetTicks(p1,p2, lim, minTickDist, tickValues)
             ticks, ticksPos, ticksText = tmp
-
+            
             # Apply Ticks
             for tick, pos, text in zip(ticks, ticksPos, ticksText):
-
+                
                 # Get little tail to indicate tick
                 p1 = pos
                 p2 = pos - tv
-
+                
                 # Add tick lines
                 factor = ( tick-firstCorner[d] ) / vector_c[d]
                 p1s = corners4_s[i0] + vector_s * factor
@@ -546,7 +546,7 @@ class CartesianAxis2D(BaseAxis):
                 tmp[int(not d)] = 4
                 pps.Append(p1s)
                 pps.Append(p1s-tmp)
-
+                
                 # Put a textlabel at tick
                 textDict = self._textDicts[d]
                 if tick in textDict and textDict[tick] in self._children:
@@ -567,7 +567,7 @@ class CartesianAxis2D(BaseAxis):
                 else:
                     t.halign = 0
                     t.valign = -1
-
+            
             # We should hide this last tick if it sticks out
             if d==0:
                 # Prepare text object to produce _vertices and _screenx
@@ -581,7 +581,7 @@ class CartesianAxis2D(BaseAxis):
                     # Apply
                     if t._vertices1 and tmp1 < tmp2:
                         t.visible = False
-
+            
             # Get gridlines
             if drawGrid[d] or drawMinorGrid[d]:
                 # Get more gridlines if required
@@ -596,12 +596,12 @@ class CartesianAxis2D(BaseAxis):
                     p3 = p1+gv1
                     p4 = p3+gv2
                     ppg.Append(p1);  ppg.Append(p3)
-
+        
         # Correct gridlines so they are all at z=0.
         # The grid is always exactly at 0. Images are at -0.1 or less.
         # lines and poins are at +0.1
         ppg.data[:,2] = 0.0
-
+        
         # Clean up the text objects that are left
         for tmp in self._textDicts:
             for t in tmp.values():
@@ -1445,18 +1445,18 @@ class PolarAxis2D(BaseAxis):
 
     def SetLimits(self, rangeTheta=None, rangeR=None, margin=0.04):
         """ SetLimits(rangeTheta=None, rangeR=None, margin=0.02)
-
+        
         Set the Polar limits of the scene. These are taken as hints to set
         the camera view, and determine where the axis is drawn for the
         3D camera.
-
+        
         Either range can be None, rangeTheta can be a scalar since only the
         starting position is used.  RangeTheta is always 360 degrees
         Both rangeTheta dn rangeR can be a 2 element iterable, or a
         visvis.Range object. If a range is None, the range is obtained from
         the wobjects currently in the scene. To set the range that will fit
         all wobjects, simply use "SetLimits()"
-
+        
         The margin represents the fraction of the range to add (default 2%).
         """
         if rangeTheta is None or isinstance(rangeTheta, Range):
@@ -1465,7 +1465,7 @@ class PolarAxis2D(BaseAxis):
             rangeTheta = Range(rangeTheta[0], rangeTheta[0] + 359)
         else:
             rangeTheta = Range(float(rangeTheta), float(rangeTheta) + 359)
-
+        
         if rangeR is None or isinstance(rangeR, Range):
             pass  # ok
         elif hasattr(rangeR, '__len__') and len(rangeR) == 2:
@@ -1473,20 +1473,20 @@ class PolarAxis2D(BaseAxis):
         else:
             raise ValueError("radial limits should be Range \
                                or two-element iterables.")
-
+        
         if rangeTheta != None:
             self._angularRange = rangeTheta
-
+        
         rR = rangeR
         rZ = rangeZ = None
-
+        
         axes = self.GetAxes()
-
+        
         # find outmost range
         drawObjs = axes.FindObjects(PolarLine)
         # Now set the transform for the PolarLine data
         for ob in drawObjs:
-
+            
             # Ask object what it's polar limits are
             tmp = ob._GetPolarLimits()
             if not tmp:
@@ -1496,7 +1496,7 @@ class PolarAxis2D(BaseAxis):
                 continue
             tmp = ob._GetLimits()
             tmpX, tmpY, tmpZ = tmp
-
+            
             # update min/max
             if rangeR:
                 pass
