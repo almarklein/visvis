@@ -266,7 +266,7 @@ def check3dArray(value):
         raise ValueError()
 
 
-class Mesh(Wobject):
+class Mesh1(Wobject):
     """ Mesh(parent, vertices, normals=None, faces=None, 
         colors=None, texcords=None, verticesPerFace=3)
     
@@ -701,7 +701,12 @@ class Mesh(Wobject):
         Get the limits in world coordinates between which the object exists.
         """
         
+        # Get vertices and remove nans
         vertices = self._vertices
+        I = np.isnan(vertices[:,2]); vertices[I,0] = np.nan
+        I = np.isnan(vertices[:,1]); vertices[I,0] = np.nan
+        I = (1-np.isnan(vertices[:,0])).astype(np.bool)
+        vertices = vertices[I,:]
         
         # Obtain untransformed coords         
         x1, x2 = vertices[:,0].min(), vertices[:,0].max()
@@ -1048,6 +1053,124 @@ class Mesh(Wobject):
         self._flatNormals = flatNormals
 
 
+# todo: make these properties for each wobject?
+# todo: return as tuple or point?
+from misc import Transform_Translate, Transform_Scale, Transform_Rotate
+class Mesh(Mesh1):
+    """ Defines properties with which the wobject can be translated, 
+    scaled and rotated, to obtain full control over its position and
+    orientation in 3D space.
+    """
+    
+    def __init__(self, *args, **kwargs):
+        Mesh1.__init__(self, *args, **kwargs)
+        
+        # Create transformations
+        self._scaleTransform = Transform_Scale()
+        self._translateTransform = Transform_Translate()
+        self._rotateTransform = Transform_Rotate()
+        self._directionTransform = Transform_Rotate()
+        self._direction = Point(0,0,1)
+        
+        # Append transformations
+        self.transformations.append(self._translateTransform)
+        self.transformations.append(self._directionTransform)
+        self.transformations.append(self._rotateTransform)
+        self.transformations.append(self._scaleTransform)
+    
+    
+    @Property
+    def scaling():
+        def fget(self):
+            s = self._scaleTransform
+            return s.sx, s.sy, s.sz
+        def fset(self, value):
+            if isinstance(value, (list, tuple)) and len(value) == 3:                
+                self._scaleTransform.sx = value[0]
+                self._scaleTransform.sy = value[1]
+                self._scaleTransform.sz = value[2]
+            elif isinstance(value, Point) and value.ndim == 3:
+                self._scaleTransform.sx = value.x
+                self._scaleTransform.sy = value.y
+                self._scaleTransform.sz = value.z
+            else:
+                raise ValueError('Scaling should be a 3D Point or 3-element tuple.')
+    
+    
+    @Property
+    def translation():
+        def fget(self):
+            d = self._translateTransform
+            return d.dx, d.dy, d.dz
+        def fset(self, value):
+            if isinstance(value, (list, tuple)) and len(value) == 3:                
+                self._translateTransform.dx = value[0]
+                self._translateTransform.dy = value[1]
+                self._translateTransform.dz = value[2]
+            elif isinstance(value, Point) and value.ndim == 3:
+                self._translateTransform.dx = value.x
+                self._translateTransform.dy = value.y
+                self._translateTransform.dz = value.z
+            else:
+                raise ValueError('Translation should be a 3D Point or 3-element tuple.')
+    
+    
+    @Property
+    def direction():
+        def fget(self):
+            return self._direction
+        def fset(self, value):
+            # Store direction
+            if isinstance(value, (list, tuple)) and len(value) == 3:
+                self._direction = Point(*tuple(value))
+            elif isinstance(value, Point) and value.ndim == 3:
+                self._direction = value
+            else:
+                raise ValueError('Direction should be a 3D Point or 3-element tuple.')
+            
+            # Normalize
+            if self._direction.Norm()==0:
+                raise ValueError('Direction vector must have a non-zero length.')            
+            self._direction = self._direction.Normalize()
+            
+            # Create ref point
+            refPoint = Point(0,0,1)
+            
+            # Convert to rotation. The cross product of two vectors results
+            # in a vector normal to both vectors. This is the axis of rotation
+            # over which the minimal rotation is achieved.
+            axis = self._direction.Cross(refPoint)
+            if axis.Norm() < 0.1:
+                if self._direction.z > 0:
+                    # No rotation
+                    self._directionTransform.ax = 0.0
+                    self._directionTransform.ay = 0.0
+                    self._directionTransform.az = 1.0
+                    self._directionTransform.angle = 0.0
+                else:
+                    # Flipped
+                    self._directionTransform.ax = 1.0
+                    self._directionTransform.ay = 0.0
+                    self._directionTransform.az = 0.0
+                    self._directionTransform.angle = np.pi
+            else:
+                axis = axis.Normalize()
+                angle = -refPoint.Angle(self._direction)
+                self._directionTransform.ax = axis.x
+                self._directionTransform.ay = axis.y
+                self._directionTransform.az = axis.z
+                self._directionTransform.angle = angle * 180 / np.pi
+    
+    
+    @Property
+    def rotation():
+        """ Rotation in degrees. """
+        def fget(self):
+            return self._rotateTransform.angle
+        def fset(self, value):
+            self._rotateTransform.angle = float(value)
+    
+    
 if __name__ == '__main__':
     import visvis as vv
     a = vv.cla()
