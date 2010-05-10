@@ -4,16 +4,16 @@
 #   it under the terms of the GNU Lesser General Public License as 
 #   published by the Free Software Foundation, either version 3 of 
 #   the License, or (at your option) any later version.
-# 
+#   
 #   VISVIS is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU Lesser General Public License for more details.
-# 
+#   
 #   You should have received a copy of the GNU Lesser General Public 
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
-#
+#   
 #   Copyright (C) 2010 Almar Klein
 
 """ Module core
@@ -85,7 +85,7 @@ class ObjectPickerHelper(object):
         #idr, idg, idb = int(r), int(g), int(b)
         id =  (idr*fg + idg)*fb + idb
         return int(id)
-
+    
     
     def CaptureScreen(self, figure):
         """ Capture the screen as a numpy array to use it later to determine
@@ -129,7 +129,7 @@ class ObjectPickerHelper(object):
         # return result
         return items
     
-       
+    
     def AssignIds(self, figure):
         self.curid = 0
         self._walkTreeAssign(figure._children)
@@ -949,8 +949,8 @@ class Axes(base.Wibject):
         self._xticks, self._yticks, self._zticks = None, None, None
         self._xgrid, self._ygrid, self._zgrid = False, False, False
         self._xminorgrid, self._yminorgrid, self._zminorgrid =False,False,False
-        self._box =  True
-        self._axis = True
+        self._showBox =  True
+        self._showAxis = True
         self._axisColor = (0,0,0)
         
         # create cameras and select one
@@ -1189,6 +1189,20 @@ class Axes(base.Wibject):
     ## Define more properties
     
     
+    @property
+    def axis(self):
+        """ Get the axis object. A new instance is created if it
+        does not yet exist.
+        """
+        tmp = self.FindObjects(self._axisClass)
+        if tmp:
+            # Return existing
+            return tmp[0]
+        else:
+            # Create new and return
+            return self._axisClass(self)
+    
+    
     @Property
     def axisType():
         """ Get/Set the axis type to use. Currently supported are:
@@ -1419,18 +1433,18 @@ class Axes(base.Wibject):
         """ Get/Set whether to show the the axis. If False will also
         hide the grid, minorgrid and box. """
         def fget(self):
-            return self._axis
+            return self._showAxis
         def fset(self, value):
-            self._axis = bool(value)
+            self._showAxis = bool(value)
     
     
     @Property
     def showBox():
         """ Get/Set whether to show the box of the axis. """
         def fget(self):
-            return self._box
+            return self._showBox
         def fset(self, value):
-            self._box = bool(value)
+            self._showBox = bool(value)
     
     @Property
     def tickFontSize():
