@@ -1170,7 +1170,9 @@ class Axes(base.Wibject):
         
         # correction should be applied for 2D camera and a valid label
         if self.camera is self._cameras['2d']:
-            if self.showAxis:
+            if self._axisClass is PolarAxis2D:
+                pass
+            elif self.showAxis:
                 yCorr += 20
                 xCorr += 60 # there's already a margin of 10 by default
                 if self.xLabel:

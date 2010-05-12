@@ -1402,7 +1402,7 @@ class PolarAxis2D(BaseAxis):
     def OnMotion(self, event):
         if not self.ref_but:
             return
-
+        
         axes = event.owner
         mloc = axes.mousepos
         range = self._radialRange.range
@@ -1421,20 +1421,20 @@ class PolarAxis2D(BaseAxis):
             else:
                 self.angularRefPos = self.ref_angularRefPos - \
                                  (50 * dx / range)
-
+        
         elif self.ref_but == 2:
             # zoom
-
+            
             # Don't care about x zooming for polar plot
             # get movement in x (in pixels) and normalize
             #factor_x = float(self.ref_mloc[0] - mloc[0])
             #factor_x /= axes.position.width
-
+            
             # get movement in y (in pixels) and normalize
             factor_y = float(self.ref_mloc[1] - mloc[1])
             # normalize by axes height
             factor_y /= axes.position.height
-
+            
             # apply (use only y-factor ).
             range = range * math.exp(-factor_y)
             self.SetLimits(rangeR=Range(self._radialRange.min, \
@@ -1459,6 +1459,7 @@ class PolarAxis2D(BaseAxis):
         
         The margin represents the fraction of the range to add (default 2%).
         """
+        
         if rangeTheta is None or isinstance(rangeTheta, Range):
             pass  # ok
         elif hasattr(rangeTheta, '__len__') and len(rangeTheta) >= 1:
