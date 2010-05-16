@@ -1,12 +1,13 @@
 # This file is part of VISVIS. 
 # Copyright (C) 2010 Almar Klein
 #
-# The polar plot functionality was coded by 
+# The polar plot functionality was implemented by Keith Smith.
+
+import numpy as np
+import visvis as vv
 
 from visvis.points import Point, Pointset
-import numpy as np
 from visvis.line import PolarLine
-import visvis as vv
 from visvis.misc import Range
 
 
@@ -25,6 +26,17 @@ def makeArray(data):
             raise Exception("Cannot plot %s" % data.__class__.__name__)
 
 
+def _SetLimitsAfterDraw(event):
+    """ To be able to set the limits after the first draw. """
+    # Set limits
+    fig = event.owner 
+    for axis in fig.FindObjects(vv.axises.PolarAxis2D):
+        axis.SetLimits()
+    # Unsubscribe and redraw
+    fig.eventAfterDraw.Unbind(_SetLimitsAfterDraw)
+    fig.Draw()
+
+    
 def polarplot(data1, data2=None,  inRadians=False,
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k',
             alpha=1, axesAdjust=True, axes=None, **kwargs):
@@ -53,9 +65,6 @@ def polarplot(data1, data2=None,  inRadians=False,
     If axesAdjust==True, this function will call axes.SetLimits() and set
     the camera type to 2D. If daspectAuto has not been set yet, it is set
     to True.
-
-    
-
     """
 
     # create a dict from the properties and combine with kwargs
@@ -103,6 +112,7 @@ def polarplot(data1, data2=None,  inRadians=False,
     if axes is None:
         axes = vv.gca()
     axes.axisType = 'polar'
+    fig = axes.GetFigure()
     
     l = PolarLine(axes, data1, data2)
     l.lw = kwargs['lineWidth']
@@ -118,10 +128,7 @@ def polarplot(data1, data2=None,  inRadians=False,
     ## almost done...
     
     # Init axis
-    axes.axis.SetLimits( rangeTheta=0, rangeR=vv.Range(-40, 5))
-    ra = axes.axis._radialRange
-    axes.axis.SetLimits(rangeR=(ra.min, ra.min + ra.range*1.01))
-    axes.axis.Draw()
+#     axes.axis.SetLimits()
     
     if axesAdjust:
         if axes.daspectAuto is None:
@@ -129,10 +136,10 @@ def polarplot(data1, data2=None,  inRadians=False,
         axes.cameraType = '2d'
         axes.SetLimits()
     
-    # The following is a trick to get the polar plot to center.
-    # Never found out why it initial draws too high, but this works
-#     vv.gcf().position.w = vv.gcf().position.w + 1
-#     vv.gcf().position.w = vv.gcf().position.w - 1
+    # Subsribe after-draw event handler 
+    # (unsubscribe first in case we do multiple plots)
+    fig.eventAfterDraw.Unbind(_SetLimitsAfterDraw) 
+    fig.eventAfterDraw.Bind(_SetLimitsAfterDraw)
     
     # Return
     axes.Draw()

@@ -812,7 +812,7 @@ class Line(Wobject):
         # clean up some memory
         self._points.Clear()
 
-        
+
 # This is a new type of wobject called PolarLine which encapsulates
 # polar plot data.
 class PolarLine(Line):
