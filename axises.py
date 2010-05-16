@@ -15,6 +15,13 @@
 #   <http://www.gnu.org/licenses/>.
 #
 #   Copyright (C) 2010 Almar Klein
+#
+#   Many thanks to Keith Smith for implementing the polar plot axis.
+#   Not only is it a great thing that Visvis can be used for polar 
+#   plotting, Keiths requirements and idead have led to quite a few
+#   changes in the Axis and Axes classes. For example, the Axes and
+#   Axis classes are now clearly separeted with the properties defined
+#   at the right place.
 
 """ Module axises
 
@@ -38,7 +45,7 @@ import base
 from textRender import Text
 from line import lineStyles, PolarLine
 from cameras import depthToZ, TwoDCamera
-from misc import Range, Property
+from misc import Range, Property, getColor
 
 # A note about tick labels. We format these using '%1.4g', which means
 # they will have 4 significance, and will automatically displayed in
@@ -71,10 +78,10 @@ class AxisLabel(Text):
         self._move = 0
 
     def OnDrawScreen(self):
-
+        
         # get current position
         pos = Point(self._screenx, self._screeny)
-
+        
         # get normal vector eminating from that position
         if int(self.textAngle) == 90:
             a = (self.textAngle + 90) * np.pi/180
@@ -85,7 +92,7 @@ class AxisLabel(Text):
             self.valign = -1
             distance = 3
         normal = Point(np.cos(a), np.sin(a)).Normalize()
-
+        
         # project the corner points of all text objects to the normal vector.
         def project(p,normal):
             p = p-pos
@@ -105,15 +112,15 @@ class AxisLabel(Text):
             alpha.append( project(Point(x+xmin, y+ymax), normal) )
             alpha.append( project(Point(x+xmax, y+ymin), normal) )
             alpha.append( project(Point(x+xmax, y+ymax), normal) )
-
+        
         # establish the amount of pixels that we should move along the normal.
         if alpha:
             self._move = distance+max(alpha)
-
+        
         # move in the direction of the normal
         tmp = pos + normal * self._move
         self._screenx, self._screeny = int(tmp.x+0.5), int(tmp.y+0.5)
-
+        
         # draw and reset position
         Text.OnDrawScreen(self)
         self._screenx, self._screeny = pos.x, pos.y
@@ -127,18 +134,18 @@ def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
     of values to map on a straight line between these two points
     (which can be 2d or 3d). If ticks is given, use these values instead.
     """
-
+    
     # Vector from start to end point
     vec = p1-p0
-
+    
     # Calculate all ticks if not given
     if ticks is None:
-
+        
         # Get pixels per unit
         if lim.range == 0:
             return [],[],[]
         pixelsPerUnit = vec.Norm() / lim.range
-
+        
         # Try all tickunits, starting from the smallest, until we find
         # one which results in a distance between ticks more than
         # X pixels.
@@ -152,7 +159,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
         except (ValueError, TypeError):
             # too small
             return [],[],[]
-
+        
         # Calculate the ticks (the values) themselves
         ticks = []
         firstTick = np.ceil(  lim.min/tickUnit ) * tickUnit
@@ -162,7 +169,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
         while ticks[-1] < lastTick-tickUnit/2:
             count += 1
             ticks.append( firstTick + count*tickUnit )
-
+    
     # Calculate tick positions and text
     ticksPos, ticksText = [], []
     for tick in ticks:
@@ -177,7 +184,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
         # Store
         ticksPos.append( pos )
         ticksText.append( text )
-
+    
     # Done
     return ticks, ticksPos, ticksText
 
@@ -191,28 +198,184 @@ class BaseAxis(base.Wobject):
     up an axis. Not to be confused with an Axes, which represents
     a scene and is a Wibject.
     """
+    
     def __init__(self, parent):
         base.Wobject.__init__(self, parent)
-
+        
+        # Should we make the axis the first wobject of the axes?
+        # Mmm, if not necessary, I don't see why ...
+        
+        # Init property variables
+        self._showBox =  True
+        self._axisColor = (0,0,0)
+        self._tickFontSize = 9
+        self._gridLineStyle = ':'
+        self._xgrid, self._ygrid, self._zgrid = False, False, False
+        self._xminorgrid, self._yminorgrid, self._zminorgrid =False,False,False
+        self._xticks, self._yticks, self._zticks = None, None, None
+        
         # Define parameters
         self._lineWidth = 1 # 0.8
         self._minTickDist = 40
-
-         # Corners of a cube in relative coordinates
+        
+        # Corners of a cube in relative coordinates
         self._corners = tmp = Pointset(3)
         tmp.Append(0,0,0);  tmp.Append(1,0,0);  tmp.Append(0,1,0);
         tmp.Append(0,0,1);  tmp.Append(1,1,0);  tmp.Append(1,0,1);
         tmp.Append(0,1,1);  tmp.Append(1,1,1);
-
+        
         # Indices of the base corners for each dimension.
         # The order is very important, don't mess it up...
         self._cornerIndicesPerDirection = [ [0,2,6,3], [3,5,1,0], [0,1,4,2] ]
-
+        
         # Dicts to be able to optimally reuse text objects; creating new
         # text objects or changing the text takes a relatively large amount
         # of time (if done every draw).
         self._textDicts = [{},{},{}]
-
+    
+    
+    ## Properties
+    
+    
+    @Property
+    def showBox():
+        """ Get/Set whether to show the box of the axis. """
+        def fget(self):
+            return self._showBox
+        def fset(self, value):
+            self._showBox = bool(value)
+    
+    @Property
+    def axisColor():
+        """ Get/Set the color of the box, ticklines and tick marks. """
+        def fget(self):
+            return self._axisColor
+        def fset(self, value):
+            self._axisColor = getColor(value, 'setting axis color')
+    
+    @Property
+    def tickFontSize():
+        """ Get/Set the font size of the tick marks. """
+        def fget(self):
+            return self._tickFontSize
+        def fset(self, value):
+            self._tickFontSize = value
+    
+    @Property
+    def gridLineStyle():
+        """ Get/Set the style of the gridlines as a single char similar
+        to the lineStyle (ls) property of the line wobject (or in plot). """
+        def fget(self):
+            return self._gridLineStyle
+        def fset(self, value):
+            if value not in lineStyles:
+                raise ValueError("Invalid lineStyle for grid lines")
+            self._gridLineStyle = value
+    
+    
+    @Property
+    def showGridX():
+        """ Get/Set whether to show a grid for the x dimension. """
+        def fget(self):
+            return self._xgrid
+        def fset(self, value):
+            self._xgrid = bool(value)
+    
+    @Property
+    def showGridY():
+        """ Get/Set whether to show a grid for the y dimension. """
+        def fget(self):
+            return self._ygrid
+        def fset(self, value):
+            self._ygrid = bool(value)
+    
+    @Property
+    def showGridZ():
+        """ Get/Set whether to show a grid for the z dimension. """
+        def fget(self):
+            return self._zgrid
+        def fset(self, value):
+            self._zgrid = bool(value)
+    
+    @Property
+    def showGrid():
+        """ Show/hide the grid for the x,y and z dimension. """
+        def fget(self):
+            return self._xgrid, self._ygrid, self._zgrid
+        def fset(self, value):
+            if isinstance(value, tuple):
+                value = tuple([bool(v) for v in value])
+                self._xgrid, self._ygrid, self._zgrid = value
+            else:
+                self._xgrid = self._ygrid = self._zgrid = bool(value)
+    
+    @Property
+    def showMinorGridX():
+        """ Get/Set whether to show a minor grid for the x dimension. """
+        def fget(self):
+            return self._xminorgrid
+        def fset(self, value):
+            self._xminorgrid = bool(value)
+    
+    @Property
+    def showMinorGridY():
+        """ Get/Set whether to show a minor grid for the y dimension. """
+        def fget(self):
+            return self._yminorgrid
+        def fset(self, value):
+            self._yminorgrid = bool(value)
+    
+    @Property
+    def showMinorGridZ():
+        """ Get/Set whether to show a minor grid for the z dimension. """
+        def fget(self):
+            return self._zminorgrid
+        def fset(self, value):
+            self._zminorgrid = bool(value)
+    
+    @Property
+    def showMinorGrid():
+        """ Show/hide the minor grid for the x, y and z dimension. """
+        def fget(self):
+            return self._xminorgrid, self._yminorgrid, self._zminorgrid
+        def fset(self, value):
+            if isinstance(value, tuple):
+                tmp = tuple([bool(v) for v in value])
+                self._xminorgrid, self._yminorgrid, self._zminorgridd = tmp
+            else:
+                tmp = bool(value)
+                self._xminorgrid = self._yminorgrid = self._zminorgrid = tmp
+    
+    
+    @Property
+    def xTicks():
+        """ Get/Set the ticks for the x dimension. 
+        If None, they are determined automatically. """
+        def fget(self):
+            return self._xticks
+        def fset(self, value):
+            self._xticks = value
+    
+    @Property
+    def yTicks():
+        """ Get/Set the ticks for the y dimension. 
+        If None, they are determined automatically. """
+        def fget(self):
+            return self._yticks
+        def fset(self, value):
+            self._yticks = value
+    
+    @Property
+    def zTicks():
+        """ Get/Set the ticks for the z dimension. 
+        If None, they are determined automatically. """
+        def fget(self):
+            return self._zticks
+        def fset(self, value):
+            self._zticks = value
+    
+    
+    ## Methods for drawing
 
     def OnDraw(self):
 
@@ -241,7 +404,7 @@ class BaseAxis(base.Wobject):
         gl.glVertexPointerf(ppc.data)
 
         # Draw lines
-        clr = axes._axisColor
+        clr = self._axisColor
         gl.glColor(clr[0], clr[1], clr[2])
         gl.glLineWidth(self._lineWidth)
         if len(ppc):
@@ -256,16 +419,16 @@ class BaseAxis(base.Wobject):
         gl.glVertexPointerf(ppg.data)
 
         # Set stipple pattern
-        if not axes.gridLineStyle in lineStyles:
+        if not self.gridLineStyle in lineStyles:
             stipple = False
         else:
-            stipple = lineStyles[axes.gridLineStyle]
+            stipple = lineStyles[self.gridLineStyle]
         if stipple:
             gl.glEnable(gl.GL_LINE_STIPPLE)
             gl.glLineStipple(1, stipple)
 
         # Draw gridlines
-        clr = axes._axisColor
+        clr = self._axisColor
         gl.glColor(clr[0], clr[1], clr[2])
         gl.glLineWidth(self._lineWidth)
         if len(ppg):
@@ -298,7 +461,7 @@ class BaseAxis(base.Wobject):
             gl.glDisable(gl.GL_LINE_SMOOTH)
 
         # Draw lines
-        clr = axes._axisColor
+        clr = self._axisColor
         gl.glColor(clr[0], clr[1], clr[2])
         gl.glLineWidth(self._lineWidth)
         if len(pps):
@@ -309,31 +472,33 @@ class BaseAxis(base.Wobject):
         gl.glEnable(gl.GL_LINE_SMOOTH)
 
 
+    ## Help methods
+    
     def _DestroyChildren(self):
         """ Method to clean up the children (text objects). """
         if self._children:
             for child in self.children:
                 child.Destroy()
-
-
+    
+    
     def _CalculateCornerPositions(self, xlim, ylim, zlim):
         """ Calculate the corner positions in world coorinates
         and screen coordinates, given the limits for each dimension.
         """
-
+        
         # To translate to real coordinates
         pmin = Point(xlim.min, ylim.min, zlim.min)
         pmax = Point(xlim.max, ylim.max, zlim.max)
         def relativeToCoord(p):
             pi = Point(1,1,1) - p
             return pmin*pi + pmax*p
-
+        
         # Get the 8 corners of the cube in real coords and screen pixels
         proj = glu.gluProject
-
+        
         corners8_c = [relativeToCoord(p) for p in self._corners]
         corners8_s = [Point(proj(p.x,p.y,p.z)) for p in corners8_c]
-
+        
         # Return
         return corners8_c, corners8_s
 
@@ -343,7 +508,7 @@ class BaseAxis(base.Wobject):
         Given tickUnit (the distance in world units between the ticks)
         and the range to cover (lim), calculate the actual tick values.
         """
-
+        
         firstTick = np.ceil(  lim.min/tickUnit ) * tickUnit
         lastTick  = np.floor( lim.max/tickUnit ) * tickUnit
         count = 0
@@ -360,7 +525,7 @@ class BaseAxis(base.Wobject):
 
     def _NextCornerIndex(self, i, d, vector_s):
         """ Calculate the next corner index. """
-
+        
         if d<2 and vector_s.x >= 0:
             i+=self._delta
         elif d==2 and vector_s.y < 0:
@@ -370,12 +535,12 @@ class BaseAxis(base.Wobject):
         if i>3: i=0
         if i<0: i=3
         return i
-
-
+    
+    # todo: make private method
     def CreateLinesAndLabels(self, axes):
         """ This is the method that calculates where lines should be
         drawn and where labels should be placed.
-
+        
         It returns three point sets in which the pairs of points
         represent the lines to be drawn (using GL_LINES):
           * ppc: lines in real coords
@@ -410,9 +575,9 @@ class CartesianAxis2D(BaseAxis):
         cam = axes.camera
 
         # Get parameters
-        drawGrid = [v for v in axes.showGrid]
-        drawMinorGrid = [v for v in axes.showMinorGrid]
-        ticksPerDim = [axes.xTicks, axes.yTicks]
+        drawGrid = [v for v in self.showGrid]
+        drawMinorGrid = [v for v in self.showMinorGrid]
+        ticksPerDim = [self.xTicks, self.yTicks]
         
         # Get limits
         lims = axes.GetLimits()
@@ -492,7 +657,7 @@ class CartesianAxis2D(BaseAxis):
             pps.Append(corners4_s[i0]+vector_s)
 
             # Add line pieces to draw box
-            if axes.showBox:
+            if self._showBox:
                 for i in range(2):
                     if i != i0:
                         corner = corners4_s[i]
@@ -513,7 +678,7 @@ class CartesianAxis2D(BaseAxis):
                 t.fontSize=10
             newTextDicts[d][key] = t
             t.halign = 0
-            t.textColor = axes._axisColor
+            t.textColor = self._axisColor
             # Move up front
             if not t in self._children[-3:]:
                 self._children.remove(t)
@@ -558,9 +723,9 @@ class CartesianAxis2D(BaseAxis):
                 newTextDicts[d][tick] = t
                 # Set other properties right
                 t.visible = True
-                if t.fontSize != axes._tickFontSize:
-                    t.fontSize = axes._tickFontSize
-                t.textColor = axes._axisColor
+                if t.fontSize != self._tickFontSize:
+                    t.fontSize = self._tickFontSize
+                t.textColor = self._axisColor
                 if d==1:
                     t.halign = 1
                     t.valign = 0
@@ -640,9 +805,9 @@ class CartesianAxis3D(BaseAxis):
         cam = axes.camera
 
         # Get parameters
-        drawGrid = [v for v in axes.showGrid]
-        drawMinorGrid = [v for v in axes.showMinorGrid]
-        ticksPerDim = [axes.xTicks, axes.yTicks, axes.zTicks]
+        drawGrid = [v for v in self.showGrid]
+        drawMinorGrid = [v for v in self.showMinorGrid]
+        ticksPerDim = [self.xTicks, self.yTicks, self.zTicks]
 
         # Get limits
         lims = [cam.xlim, cam.ylim, cam.zlim]
@@ -714,7 +879,7 @@ class CartesianAxis3D(BaseAxis):
             pps.Append(corners4_s[i0])
             pps.Append(corners4_s[i0]+vector_s)
             # Add line pieces to draw box
-            if axes.showBox:
+            if self._showBox:
                 for i in range(4):
                     if i != i0:
                         corner = corners4_s[i]
@@ -735,7 +900,7 @@ class CartesianAxis3D(BaseAxis):
                 t.fontSize=10
             newTextDicts[d][key] = t
             t.halign = 0
-            t.textColor = axes._axisColor
+            t.textColor = self._axisColor
             # Move up front
             if not t in self._children[-3:]:
                 self._children.remove(t)
@@ -747,28 +912,28 @@ class CartesianAxis3D(BaseAxis):
             t.textAngle = float(vec.Angle() * 180/np.pi)
             # Keep up to date (so label can move itself just beyond ticks)
             t._textDict = newTextDicts[d]
-
+            
             # Get ticks stuff
             tickValues = ticksPerDim[d] # can be None
             p1, p2 = firstCorner.Copy(), firstCorner+vector_c
             tmp = GetTicks(p1,p2, lim, minTickDist, tickValues)
             ticks, ticksPos, ticksText = tmp
-
+            
             # Apply Ticks
             for tick, pos, text in zip(ticks, ticksPos, ticksText):
-
+            
                 # Get little tail to indicate tick
                 p1 = pos
                 p2 = pos - tv
-
+                
                 # Add tick lines
                 ppc.Append(p1)
                 ppc.Append(p2)
-
+                
                 # z-axis has valign=0, thus needs extra space
                 if d==2:
                     text+='  '
-
+                
                 # Put textlabel at tick
                 textDict = self._textDicts[d]
                 if tick in textDict and textDict[tick] in self._children:
@@ -780,9 +945,9 @@ class CartesianAxis3D(BaseAxis):
                 newTextDicts[d][tick] = t
                 # Set other properties right
                 t.visible = True
-                if t.fontSize != axes._tickFontSize:
-                    t.fontSize = axes._tickFontSize
-                t.textColor = axes._axisColor
+                if t.fontSize != self._tickFontSize:
+                    t.fontSize = self._tickFontSize
+                t.textColor = self._axisColor
                 if d==2:
                     t.valign = 0
                     t.halign = 1
@@ -844,6 +1009,8 @@ class CartesianAxis(CartesianAxis2D, CartesianAxis3D):
         else:
             return CartesianAxis3D.CreateLinesAndLabels(self,axes)
 
+
+
 def GetPolarTicks(p0, radius, lim, angularRefPos, sense , minTickDist=100, \
                   ticks=None):
     """ GetPolarTicks(p0, radius, lim, angularRefPos, sense , minTickDist=100,
@@ -894,6 +1061,8 @@ def GetPolarTicks(p0, radius, lim, angularRefPos, sense , minTickDist=100, \
         x = radius*np.cos(theta)
         y = radius*np.sin(theta)
         pos = p0 + Point(x,y,0)
+        if tick == -0:
+            tick = 0
         text = '%1.4g' % tick
         iExp = text.find('e')
         if iExp>0:
@@ -919,7 +1088,7 @@ class PolarAxis2D(BaseAxis):
     These include:
         SetLimits(thetaRange, radialRange):
         thetaRange, radialRange = GetLimits():
-
+        
         angularRefPos: Get and Set methods for the relative screen
         angle of the 0 degree polar reference.  Default is 0 degs
         which corresponds to the positive x-axis (y =0)
@@ -1011,10 +1180,10 @@ class PolarAxis2D(BaseAxis):
         cam = axes.camera
 
         # Get axis grid and tick parameters
-        drawGrid = [v for v in axes.showGrid]
-        drawMinorGrid = [v for v in axes.showMinorGrid]
+        drawGrid = [v for v in self.showGrid]
+        drawMinorGrid = [v for v in self.showMinorGrid]
         # these are equivalent to axes.thetaTicks and axes.RadialTicks
-        ticksPerDim = [axes.xTicks, axes.yTicks]
+        ticksPerDim = [self.xTicks, self.yTicks]
 
         # Get x-y limits  in world coordinates
         lims = axes.GetLimits()
@@ -1120,7 +1289,7 @@ class PolarAxis2D(BaseAxis):
                 t.fontSize = 10
             newTextDicts[d][key] = t
             t.halign = 0
-            t.textColor = axes._axisColor
+            t.textColor = self._axisColor
             # Move up front
             if not t in self._children[-3:]:
                 self._children.remove(t)
@@ -1202,9 +1371,9 @@ class PolarAxis2D(BaseAxis):
             newTextDicts[0][tick] = t
             # Set other properties right
             t.visible = True
-            if t.fontSize != axes._tickFontSize:
-                t.fontSize = axes._tickFontSize
-            t.textColor = axes._axisColor
+            if t.fontSize != self._tickFontSize:
+                t.fontSize = self._tickFontSize
+            t.textColor = self._axisColor
             t.halign = 0
             t.valign = 0
         #===================================================================
@@ -1297,9 +1466,9 @@ class PolarAxis2D(BaseAxis):
             newTextDicts[qIndx][tickXformed] = t
            # Set other properties right
             t.visible = True
-            if t.fontSize != axes._tickFontSize:
-                t.fontSize = axes._tickFontSize
-            t.textColor = axes._axisColor
+            if t.fontSize != self._tickFontSize:
+                t.fontSize = self._tickFontSize
+            t.textColor = self._axisColor
             t.halign = 1
             t.valign = 0
 
@@ -1367,7 +1536,7 @@ class PolarAxis2D(BaseAxis):
             # Draw lines and polygon background
             if len(self.ppb):
                 axes = self.GetAxes()
-                clr = axes._axisColor
+                clr = self._axisColor
                 gl.glColor(clr[0], clr[1], clr[2])
                 gl.glLineWidth(self._lineWidth)
                 gl.glDrawArrays(gl.GL_LINE_LOOP, 0, len(self.ppr))
