@@ -6,7 +6,8 @@ import visvis as vv
 def grid(*args, **kwargs):
     """ grid(..., axesAdjust=True, axes=None)
     
-    Create a wireframe parametric surfaces. 
+    Create a wireframe parametric surfaces. (For the axis grid, see the
+    Axis.showGrid property.)
     
     Can be called using several ways:
      * grid(z) - create a grid mesh the given image with z coordinates.

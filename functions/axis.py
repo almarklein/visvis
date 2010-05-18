@@ -10,8 +10,8 @@ def axis(command, axes=None):
     can also be applied via the properties of the Axes object.
     
     Possible string commands:      
-      * off: hide the axis (Axes.showAxis = False)
-      * on: show the axis (Axes.showAxis = True)
+      * off: hide the axis (Axes.axis.visible = False)
+      * on: show the axis (Axes.axis.visible = True)
       * equal: make a circle be displayed circular (Axes.daspectAuto = False)
       * auto: change the range for each dimension indepdently (Axes.daspectAuto = True)
       * tight: show all data (Axes.SetLimits())
@@ -25,9 +25,9 @@ def axis(command, axes=None):
         axes = vv.gca()
     
     if command == 'off':
-        axes.showAxis = 0 
+        axes.axis.visible = 0 
     elif command == 'on':
-        axes.showAxis = 1
+        axes.axis.visible = 1
     elif command == 'equal':
         axes.daspectAuto = 0
     elif command == 'auto':

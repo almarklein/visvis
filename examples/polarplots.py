@@ -10,16 +10,14 @@ vv.polarplot(angs+20, mag, lc='r', lw=2)
 ax = vv.gca()
 #ax.SetLimits(rangeX=[-90,90], rangeY=[-40,0])
 
-ax.showGrid = 1
-
 ax.axis.angularRefPos = 90  # 0 deg points up
 
 ax.axis.isCW = False  # changes angular sense (azimuth instead of phi)
 
 ax.axis.SetLimits( rangeTheta=0, rangeR=vv.Range(-40, 5))
 
-ax.xLabel = 'degrees'
-ax.yLabel = 'dB'
+ax.axis.xLabel = 'degrees'
+ax.axis.yLabel = 'dB'
 
 print('drag mouse left button left-right to rotate plot.')
 print('shift-drag mouse left button up-down to change lower')
