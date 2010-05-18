@@ -1381,8 +1381,8 @@ class Quaternion(object):
     """
     
     def __init__(self, w=1, x=0, y=0, z=0, normalize=True):
-        self.w = w
-        self.x, self.y, self.z = x, y, z
+        self.w = float(w)
+        self.x, self.y, self.z = float(x), float(y), float(z)
         if normalize:
             self._Normalize()
     

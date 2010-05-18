@@ -225,7 +225,7 @@ def createVertices4(pp, radius, vertex_num):
 
 
 def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):
-    """ solidLine(pp, radius=1.0, axesAdjust=True, axes=None)
+    """ solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None)
     
     Creates a solid line in 3D space. pp can be a Pointset or a 
     list of Pointset instances. Radius can also specify the radius for

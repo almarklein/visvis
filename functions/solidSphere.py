@@ -69,15 +69,17 @@ def getSphere(ndiv=3, radius=1.0):
     return vertices, normals
 
 
-def solidSphere(radius=1.0, translation=None, N=16, M=16, 
-                axesAdjust=True, axes=None):
-    """ solidSphere(radius=1.0, translation=None, N=16, M=16,
-                    axesAdjust=True, axes=None)
+def solidSphere(translation=None, scaling=None, direction=None, rotation=None,
+                N=16, M=16, axesAdjust=True, axes=None):
+    """ solidSphere(translation=None, scaling=None, direction=None, rotation=None,
+                    N=16, M=16, axesAdjust=True, axes=None)
     
-    Creates a solid sphere with quad faces. N is the number of
-    subdivisions around the Z axis (similar to lines of longitude). 
-    M is the number of subdivisions along the Z axis (similar to 
-    lines of latitude). 
+    Creates a solid sphere with quad faces and centered at the origin. 
+    Returns an OrientableMesh instance.
+    
+    N is the number of subdivisions around the Z axis (similar to lines
+    of longitude). M is the number of subdivisions along the Z axis 
+    (similar to lines of latitude).
     """
     
     # Note that the number of vertices around the axis is N+1. This
@@ -85,11 +87,6 @@ def solidSphere(radius=1.0, translation=None, N=16, M=16,
     # texture when it is mapped. There are N number of faces though.
     # Similarly, to obtain M faces along the axis, we need M+1
     # vertices.
-    
-    # Check position
-    if isinstance(translation, tuple):
-        translation = Point(translation)
-    
     
     # Quick access
     pi2 = np.pi*2
@@ -133,13 +130,17 @@ def solidSphere(radius=1.0, translation=None, N=16, M=16,
         axes = vv.gca()
     
     # Create mesh
-    m = vv.Mesh(axes, vertices, normals, indices, 
+    m = vv.OrientableMesh(axes, vertices, normals, indices, 
         texcords=texcords, verticesPerFace=4)
-    
-    # Scale and translate
+    #
     if translation is not None:
-        tt = vv.Transform_Translate(translation.x, translation.y, translation.z)    
-        m.transformations.append(tt)
+        m.translation = translation
+    if scaling is not None:
+        m.scaling = scaling
+    if direction is not None:
+        m.direction = direction
+    if rotation is not None:
+        m.rotation = rotation
     
     # Adjust axes
     if axesAdjust:
@@ -155,6 +156,6 @@ def solidSphere(radius=1.0, translation=None, N=16, M=16,
 
 if __name__ == '__main__':
     vv.figure()
-    m = solidSphere(3,(1,1,1))
+    m = solidSphere(scaling=(1,1,1.5), direction=(1,1,3))
     im = vv.imread('lena.png')
     m.SetTexture(im)    

@@ -8,21 +8,14 @@ from visvis.points import Point, Pointset
 import OpenGL.GL as gl
 
 
-def solidBox(position=None, scale=None, 
+def solidBox(translation=None, scaling=None, direction=None, rotation=None,
                 axesAdjust=True, axes=None):
-    """ solidBox(position=Point(0,0,0), scale=Point(0,0,0), 
+    """ solidBox(translation=None, scaling=None, direction=None, rotation=None,
                     axesAdjust=True, axes=None)
     
-    Creates a solid cube (or box if you scale it). The position and scale
-    may also be 3-element tuples. The position defines the center position
-    of the cube.
+    Creates a solid cube (or box if you scale it) centered at the 
+    origin. Returns an OrientableMesh.
     """
-    
-    # Check position and scale
-    if isinstance(position, tuple):
-        position = Point(position)
-    if isinstance(scale, tuple):
-        scale = Point(scale)
     
     # Create vertices of a cube
     pp = Pointset(3)
@@ -62,18 +55,19 @@ def solidBox(position=None, scale=None,
     if axes is None:
         axes = vv.gca()
     
-    # Create mesh
-    m = vv.Mesh(axes,vertices, normals, verticesPerFace=4)
+    # Create mesh and set orientation
+    m = vv.OrientableMesh(axes,vertices, normals, verticesPerFace=4)
+    #
+    if translation is not None:
+        m.translation = translation
+    if scaling is not None:
+        m.scaling = scaling
+    if direction is not None:
+        m.direction = direction
+    if rotation is not None:
+        m.rotation = rotation
     
-    # Scale and translate
-    if position is not None:
-        tt = vv.Transform_Translate(position.x, position.y, position.z)    
-        m.transformations.append(tt)
-    if scale is not None:
-        ts = vv.Transform_Scale(scale.x, scale.y, scale.z)
-        m.transformations.append(ts)
-    
-     # Adjust axes
+    # Adjust axes
     if axesAdjust:
         if axes.daspectAuto is None:
             axes.daspectAuto = False
@@ -87,6 +81,6 @@ def solidBox(position=None, scale=None,
 
 if __name__ == '__main__':
     vv.figure()
-    m1 = solidBox((1,2,1) )
-    m2 = solidBox((3,1,1), (2,2,1))
-    
+    a = vv.gca()
+    m1 = solidBox((3,1,1), (2,2,1), rotation=-20)
+    m2 = solidBox((1,1,0), (1,1,1.5), direction=(1,0.4,0.2))

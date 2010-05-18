@@ -47,9 +47,14 @@ if False:
     print text
     
 
-def solidTeapot(height=1.0, axesAdjust=True, axes=None):
-    """ solidTeapot(height=1.0, axes=None, axesAdjust=True, axes=None)
-    Create a model of a teapot (a teapotahedron) with the specified height.
+def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
+                    axesAdjust=True, axes=None):
+    """ solidTeapot(
+            translation=None, scaling=None, direction=None, rotation=None,
+            axesAdjust=True, axes=None)
+    
+    Create a model of a teapot (a teapotahedron) with its bottom at the
+    origin. Returns an OrientableMesh instance.
     """
     
     # Decode vertex data
@@ -59,7 +64,8 @@ def solidTeapot(height=1.0, axesAdjust=True, axes=None):
     vertices.shape = len(vertices)/3, 3
     vertices = Pointset(vertices)
     
-    # Scalex
+    # Scale to make it height 1
+    height = 1.0
     vertices = vertices * (height/3.15)
     
     # Decode face data
@@ -72,7 +78,16 @@ def solidTeapot(height=1.0, axesAdjust=True, axes=None):
         axes = vv.gca()
     
     # Create Mesh object
-    m = vv.Mesh(axes, vertices, faces=faces)
+    m = vv.OrientableMesh(axes, vertices, faces=faces)
+    #
+    if translation is not None:
+        m.translation = translation
+    if scaling is not None:
+        m.scaling = scaling
+    if direction is not None:
+        m.direction = direction
+    if rotation is not None:
+        m.rotation = rotation
     
     # Adjust axes
     if axesAdjust:
@@ -730,4 +745,4 @@ vwV8d42WMXa5DVpaQK6OllV2uce0nAW5A1oSIHeFlp/scs9ouQRyc7Q8BbmP9GVA7j95nJMY
 
 if __name__ == '__main__':
     vv.figure()
-    m = solidTeapot()
+    m = solidTeapot(direction=(0.1, 0.2, 1))

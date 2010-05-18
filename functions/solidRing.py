@@ -8,14 +8,18 @@ from visvis.points import Point, Pointset
 import OpenGL.GL as gl
 
 
-def solidRing(translation=None, scale=None, thickness=0.4, N=16, M=16, 
-                axesAdjust=True, axes=None):
-    """ solidRing(translation=None, scale=None, thickness=0.1, N=16, M=16, 
-                    axesAdjust=True, axes=None)
+def solidRing(translation=None, scaling=None, direction=None, rotation=None,
+                thickness=0.25, N=16, M=16, axesAdjust=True, axes=None):
+    """ solidRing(translation=None, scaling=None, direction=None, rotation=None,
+                thickness=0.25, N=16, M=16, axesAdjust=True, axes=None)
     
-    Creates a solid ring with quad faces. N is the number of faces along
-    the ring, M is the number of faces around the tube that makes up the
-    ring.
+    Creates a solid ring with quad faces oriented at the origin. 
+    Returns an OrientableMesh instance.
+    
+    The tickness is represented as a fraction of the radius. N is the 
+    number of faces along the ring, M is the number of faces around the 
+    tube that makes up the ring. If N or M is smaller than 8, flat shading
+    is used instead of smooth shading. 
     """
     
     # Note that the number of vertices around the axis is N+1. This
@@ -23,10 +27,6 @@ def solidRing(translation=None, scale=None, thickness=0.4, N=16, M=16,
     # texture when it is mapped. There are N number of faces though.
     # Similarly, to obtain M faces along the axis, we need M+1
     # vertices.
-    
-    # Check position
-    if isinstance(translation, tuple):
-        translation = Point(translation)
     
     # Quick access
     pi = np.pi
@@ -81,17 +81,21 @@ def solidRing(translation=None, scale=None, thickness=0.4, N=16, M=16,
         axes = vv.gca()
     
     # Create mesh
-    m = vv.Mesh(axes, vertices, normals, indices, 
-        texcords=texcords, verticesPerFace=4)
-    
-#     # If necessary, use flat shading
-#     if N<=8 or M<=8:
-#         pass # todo: set flat shading
-    
-    # Scale and translate
+    m = vv.OrientableMesh(axes, vertices, normals, indices, 
+        texcords=texcords, verticesPerFace=4)    
+    #
     if translation is not None:
-        tt = vv.Transform_Translate(translation.x, translation.y, translation.z)    
-        m.transformations.append(tt)
+        m.translation = translation
+    if scaling is not None:
+        m.scaling = scaling
+    if direction is not None:
+        m.direction = direction
+    if rotation is not None:
+        m.rotation = rotation
+    
+    # If necessary, use flat shading
+    if N<8 or M<8:
+       m.faceShading = 'flat'
     
     # Adjust axes
     if axesAdjust:
@@ -107,10 +111,9 @@ def solidRing(translation=None, scale=None, thickness=0.4, N=16, M=16,
 
 if __name__ == '__main__':
     import visvis as vv
-    vv.figure()  
-    
-    # Create ring
-    m = solidRing((1,1,1), thickness=0.4, M=4)
+    vv.figure()
+    # Create rings
+    m1 = solidRing((0,0,1), M=4)
+    m2 = solidRing((0,0,2))
     im = vv.imread('lena.png')
-    m.SetTexture(im)
-    
+    m1.SetTexture(im)
