@@ -7,20 +7,18 @@ from visvis.points import Point, Pointset
 
 import OpenGL.GL as gl
 
-def solidCone(translation=None, scale=None, N=32, M=32,
-                axesAdjust=True, axes=None):
-    """ solidCone(translation=None, scale=None, N=20, M=20,
-                    axesAdjust=True, axes=None)
+def solidCone(translation=None, scaling=None, direction=None, rotation=None,
+                N=16, M=16, axesAdjust=True, axes=None):
+    """ solidCone(translation=None, scaling=None, direction=None, rotation=None,
+                    N=20, M=20, axesAdjust=True, axes=None)
     
-    Creates a solid cone. Position is a 3-element tuple or a Point instance.
-    Scale is a scalar, 3-element tuple or Point instance.
+    Creates a solid cone with quad faces and its base at the origin.
+    Returns an OrientableMesh instance.
     
     N is the number of subdivisions around its axis. M is the
-    number of subdivisions along its axis.
-    
-    If N <= 8, the edges are modeled as genuine edges. So with faces=4,
-    a pyramid can be obtained. If N>8, the normals vary smoothly
-    over the faces which makes the object look rounder.
+    number of subdivisions along its axis. If N or M is smaller than 8, 
+    flat shading is used instead of smooth shading. With N=4, a pyramid
+    is obtained.
     """
     
     # Note that the number of vertices around the axis is N+1. This
@@ -28,16 +26,6 @@ def solidCone(translation=None, scale=None, N=32, M=32,
     # texture when it is mapped. There are N number of faces though.
     # Similarly, to obtain M faces along the axis, we need M+1
     # vertices.
-    
-    # Check position
-    if isinstance(translation, tuple):
-        translation = Point(translation)
-    
-    # Check scale
-    if isinstance(scale, tuple):
-        scale = Point(scale)
-    elif isinstance(scale, (float, int)):
-        scale = Point(scale, scale, scale)
     
     # Quick access
     pi2 = np.pi*2
@@ -88,29 +76,6 @@ def solidCone(translation=None, scale=None, N=32, M=32,
     # Make indices a numpy array
     indices = np.array(indices, dtype=np.uint32)
     
-    # Make edges appear as edges, for pyramids for example
-    if N <= 8:
-        newVertices = Pointset(3)
-        newNormals = Pointset(3)
-        newTexcords = Pointset(2)
-        for i in range(0,len(indices),4):
-            ii = indices[i:i+4]
-            # Obtain average normal
-            tmp = Point(0,0,0)
-            for j in range(4):
-                tmp += normals[ii[j]]
-            tmp = tmp.Normalize()
-            # Unroll vertices and texcords, set new normals
-            for j in range(4):
-                newVertices.Append( vertices[ii[j]] )
-                newNormals.Append( tmp )
-                newTexcords.Append( texcords[ii[j]] )
-        # Apply
-        vertices = newVertices
-        normals = newNormals
-        texcords = newTexcords
-        indices = None
-    
     
     ## Visualization
     
@@ -119,16 +84,21 @@ def solidCone(translation=None, scale=None, N=32, M=32,
         axes = vv.gca()
     
     # Create mesh
-    m = vv.Mesh(axes, vertices, normals, faces=indices, 
+    m = vv.OrientableMesh(axes, vertices, normals, faces=indices, 
         texcords=texcords, verticesPerFace=4)
-    
-    # Scale and translate
+    #
     if translation is not None:
-        tt = vv.Transform_Translate(translation.x, translation.y, translation.z)    
-        m.transformations.append(tt)
-    if scale is not None:
-        ts = vv.Transform_Scale(scale.x, scale.y, scale.z)
-        m.transformations.append(ts)
+        m.translation = translation
+    if scaling is not None:
+        m.scaling = scaling
+    if direction is not None:
+        m.direction = direction
+    if rotation is not None:
+        m.rotation = rotation
+    
+    # Set flat shading?
+    if N<8 or M<8:
+        m.faceShading = 'flat'
     
     # Adjust axes
     if axesAdjust:
@@ -144,6 +114,6 @@ def solidCone(translation=None, scale=None, N=32, M=32,
 
 if __name__ == '__main__':
     vv.figure()
-    m = solidCone(N=4)
+    m = solidCone(N=8)
     im = vv.imread('lena.png')
     m.SetTexture(im)    

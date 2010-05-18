@@ -25,7 +25,7 @@ It also defines lights and algorithmic for managing polygonal models.
 
 from points import Point, Pointset
 from misc import Property, getColor
-from base import Wobject
+from base import Wobject, OrientationForWobjects_mixClass
 from textures import TextureObjectToVisualize, Colormap
 
 import numpy as np
@@ -266,7 +266,7 @@ def check3dArray(value):
         raise ValueError()
 
 
-class Mesh1(Wobject):
+class Mesh(Wobject):
     """ Mesh(parent, vertices, normals=None, faces=None, 
         colors=None, texcords=None, verticesPerFace=3)
     
@@ -963,7 +963,7 @@ class Mesh1(Wobject):
                 for i in range(0, faces.size, 4):
                     yield faces[i], faces[i+1], faces[i+2], faces[i+3]
     
-    
+    # todo: can this be made faster (in pure Python)?
     def CalculateNormals(self):
         """ CalculateNormals()
         Calculate the normal data from the vertices.
@@ -1053,137 +1053,20 @@ class Mesh1(Wobject):
         self._flatNormals = flatNormals
 
 
-# todo: make these properties for each wobject?
-# todo: return as tuple or point?
-from misc import Transform_Translate, Transform_Scale, Transform_Rotate
-class Mesh(Mesh1):
-    """ Defines properties with which the wobject can be translated, 
-    scaled and rotated, to obtain full control over its position and
-    orientation in 3D space.
+class OrientableMesh(Mesh, OrientationForWobjects_mixClass):
+    """ OrientableMesh(parent, vertices, normals=None, faces=None, 
+        colors=None, texcords=None, verticesPerFace=3)
+    
+    An OrientableMesh is a generic object to visualize a 3D object made
+    up of polygons. OrientableMesh differs from the Mesh class in that 
+    it provides additional properties to easily orient the mesh in 3D
+    space: scaling, translation, direction, rotation.
+    
+    See the Mesh class for more information.
     """
     
     def __init__(self, *args, **kwargs):
-        Mesh1.__init__(self, *args, **kwargs)
-        
-        # Create transformations
-        self._scaleTransform = Transform_Scale()
-        self._translateTransform = Transform_Translate()
-        self._rotateTransform = Transform_Rotate()
-        self._directionTransform = Transform_Rotate()
-        self._direction = Point(0,0,1)
-        
-        # Append transformations
-        self.transformations.append(self._translateTransform)
-        self.transformations.append(self._directionTransform)
-        self.transformations.append(self._rotateTransform)
-        self.transformations.append(self._scaleTransform)
-    
-    
-    @Property
-    def scaling():
-        def fget(self):
-            s = self._scaleTransform
-            return s.sx, s.sy, s.sz
-        def fset(self, value):
-            if isinstance(value, (list, tuple)) and len(value) == 3:                
-                self._scaleTransform.sx = value[0]
-                self._scaleTransform.sy = value[1]
-                self._scaleTransform.sz = value[2]
-            elif isinstance(value, Point) and value.ndim == 3:
-                self._scaleTransform.sx = value.x
-                self._scaleTransform.sy = value.y
-                self._scaleTransform.sz = value.z
-            else:
-                raise ValueError('Scaling should be a 3D Point or 3-element tuple.')
-    
-    
-    @Property
-    def translation():
-        def fget(self):
-            d = self._translateTransform
-            return d.dx, d.dy, d.dz
-        def fset(self, value):
-            if isinstance(value, (list, tuple)) and len(value) == 3:                
-                self._translateTransform.dx = value[0]
-                self._translateTransform.dy = value[1]
-                self._translateTransform.dz = value[2]
-            elif isinstance(value, Point) and value.ndim == 3:
-                self._translateTransform.dx = value.x
-                self._translateTransform.dy = value.y
-                self._translateTransform.dz = value.z
-            else:
-                raise ValueError('Translation should be a 3D Point or 3-element tuple.')
-    
-    
-    @Property
-    def direction():
-        def fget(self):
-            return self._direction
-        def fset(self, value):
-            # Store direction
-            if isinstance(value, (list, tuple)) and len(value) == 3:
-                self._direction = Point(*tuple(value))
-            elif isinstance(value, Point) and value.ndim == 3:
-                self._direction = value
-            else:
-                raise ValueError('Direction should be a 3D Point or 3-element tuple.')
-            
-            # Normalize
-            if self._direction.Norm()==0:
-                raise ValueError('Direction vector must have a non-zero length.')            
-            self._direction = self._direction.Normalize()
-            
-            # Create ref point
-            refPoint = Point(0,0,1)
-            
-            # Convert to rotation. The cross product of two vectors results
-            # in a vector normal to both vectors. This is the axis of rotation
-            # over which the minimal rotation is achieved.
-            axis = self._direction.Cross(refPoint)
-            if axis.Norm() < 0.1:
-                if self._direction.z > 0:
-                    # No rotation
-                    self._directionTransform.ax = 0.0
-                    self._directionTransform.ay = 0.0
-                    self._directionTransform.az = 1.0
-                    self._directionTransform.angle = 0.0
-                else:
-                    # Flipped
-                    self._directionTransform.ax = 1.0
-                    self._directionTransform.ay = 0.0
-                    self._directionTransform.az = 0.0
-                    self._directionTransform.angle = np.pi
-            else:
-                axis = axis.Normalize()
-                angle = -refPoint.Angle(self._direction)
-                self._directionTransform.ax = axis.x
-                self._directionTransform.ay = axis.y
-                self._directionTransform.az = axis.z
-                self._directionTransform.angle = angle * 180 / np.pi
-    
-    
-    @Property
-    def rotation():
-        """ Rotation in degrees. """
-        def fget(self):
-            return self._rotateTransform.angle
-        def fset(self, value):
-            self._rotateTransform.angle = float(value)
-    
-    
-if __name__ == '__main__':
-    import visvis as vv
-    a = vv.cla()
-    a.daspectAuto = False
-    a.cameraType = '3d'
-    a.SetLimits((-2,2),(-2,2),(-2,2))
-    
-    #p = vv.solidTeapot()
-    #p = vv.polygon.getCube(a)
-    p = vv.solidSphere(2,None, 50,50)
-    im = vv.imread('lena.png')
-    p.SetTexture(im)
+        Mesh.__init__(self, *args, **kwargs)
+        OrientationForWobjects_mixClass.__init__(self)
 
-    p.Draw()
-    a.SetLimits()
     
