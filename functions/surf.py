@@ -24,7 +24,7 @@ def surf(*args, **kwargs):
     the camera type to 3D. If daspectAuto has not been set yet, it is set 
     to False.
     
-    Also see grid()    
+    Also see grid()
     """
     
     def checkZ(z):
@@ -160,16 +160,14 @@ def surf(*args, **kwargs):
 
 if __name__ == "__main__":
     
-    # Load part of lena image and smooth
-    im = np.zeros((256,256,3), dtype=np.float32)
-    lena = vv.imread('lena.png')
-    for y in [-2,-1,0,1,2]:
-        for x in [-2,-1,0,1,2]:
-            im += lena[100+y:356+y, 100+x:356+x,:]
-    im /= 9.0
+    # Read image and smooth a bit
+    lena = vv.imread('lena.png').astype(np.float32)
+    im[1:,:,:] = lena[:-1,:,:]
+    im[:-1,:,:] += lena[1:,:,:]
+    im[:,:-1,:] += lena[:,1:,:]
+    im[:,1:,:] += lena[:,:-1,:]
+    im /= 4
     
-    # show
-    vv.figure()
-    m = surf(im[:,:,0]/10, im)
-#     m = surf(im[:,:,0]/10)
+    # Surf
+    m = surf(im[:,:,0], im)
     

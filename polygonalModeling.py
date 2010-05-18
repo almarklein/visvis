@@ -27,6 +27,7 @@ from points import Point, Pointset
 from misc import Property, getColor
 from base import Wobject, OrientationForWobjects_mixClass
 from textures import TextureObjectToVisualize, Colormap
+import processing
 
 import numpy as np
 import OpenGL.GL as gl
@@ -264,7 +265,7 @@ def check3dArray(value):
         return value.data
     else:
         raise ValueError()
-
+   
 
 class Mesh(Wobject):
     """ Mesh(parent, vertices, normals=None, faces=None, 
@@ -756,22 +757,19 @@ class Mesh(Wobject):
         """ The actual drawing. Used for drawing faces, lines, and shape.
         """
         
-        # Prepare vertices
+        # Need vertices
         if self._vertices is None:
             return
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glVertexPointerf(self._vertices)
-        
         
         # Prepare normals
         if shading != 'plain':            
             # Need normals
             if self._normals is None:
-                self.CalculateNormals()
+                processing.calculateNormals(self)
             # Do we need flat normals?
             if shading == 'flat':
                 if self._flatNormals is None:
-                    self._CalculateFlatNormals()
+                    processing.calculateFlatNormals(self)
                 normals = self._flatNormals 
             else:
                 normals = self._normals
@@ -779,6 +777,9 @@ class Mesh(Wobject):
             gl.glEnableClientState(gl.GL_NORMAL_ARRAY)
             gl.glNormalPointerf(normals)
         
+        # Prepare vertices (in the code above the vertex array can be updated)
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glVertexPointerf(self._vertices)
         
         # Prepare colors (if available)
         if self._colors is not None:
@@ -867,190 +868,21 @@ class Mesh(Wobject):
         gl.glDisable(gl.GL_CULL_FACE)
     
     
-    ## Mesh processing
-    
-    
-    def _WithoutFaces(self):
-        """ _WithoutFaces()
-        Unwinds the faces to make new versions of the vertices, normals,
-        color and texCords, which are usually larger. The new arrays 
-        represent the same surface, but is described without a faces
-        array.
-        """
-        
-        # Make new vertices and normals if faces are used
-        if self._faces is not None:
-            
-            # Get references and new size
-            faces = self._faces
-            N = faces.shape[0]
-            
-            # Unwind vertices
-            if self._vertices is not None:
-                # Get ref and allocate new array
-                vertices = self._vertices
-                newVertices = np.zeros((N,3), dtype='float32')
-                # Unwind
-                for i in range(N):
-                    newVertices[i,:] = vertices[faces[i]]
-                # Store
-                self._vertices = newVertices
-            
-            # Unwind normals
-            if self._normals is not None:
-                # Get ref and allocate new array
-                normals = self._normals
-                newNormals = np.zeros((N,3), dtype='float32')
-                for i in range(N):
-                    newNormals[i,:] = normals[faces[i]]
-                # Store
-                self._normals = newNormals
-                self._flatNormals = None
-            
-            # Unwind color
-            if self._colors is not None:
-                # Get ref and allocate new array
-                colors = self._colors
-                newColors = np.zeros((N,3), dtype='float32')
-                for i in range(N):
-                    newColors[i,:] = colors[faces[i]]
-                # Store
-                self._colors = newColors
-            
-            # Unwind texcords
-            if self._texcords is not None:
-                # Get ref and allocate new array
-                texcords = self._texcords
-                if self._texcords.ndim==1:
-                    newTexcords = np.zeros((N,), dtype='float32')
-                    for i in range(N):
-                        newTexcords[i] = texcords[faces[i]]
-                else:                    
-                    verticesPerFace = self._texcords.shape[1]
-                    newTexcords = np.zeros((N,verticesPerFace), dtype='float32')
-                    for i in range(N):
-                        newTexcords[i,:] = texcords[faces[i]]
-                # Store
-                self._texcords = newTexcords
-            
-            # Remove reference to faces
-            self._faces = None
-    
-    
-    def _IterFaces(self):
-        """ _IterFaces()
-        Iterate over the faces of the mesh. Each iteration
-        yields a tuple of indices in the array of vertices. 
-        The tuples had verticesPerFace elements.
-        """
-        
+    def _GetFaces(self):
+        """ _GetFaces()
+        Get 2D array with face data (even if the mesh has no faces array).
+        To be used for mesh processing. On the 0th axis we have the different
+        faces. Along the 1st axis we have the different vertex indices that
+        make up that face. 
+        """   
         if self._faces is None:
-            
-            if self._verticesPerFace == 3:
-                for i in range(0, self._vertices.shape[0], 3):
-                    yield i, i+1, i+2
-            else:
-                for i in range(0, self._vertices.shape[0], 4):
-                    yield i, i+1, i+2, i+3
-        
+            faces = np.arange(len(self._vertices))
         else:
             faces = self._faces
-            
-            if self._verticesPerFace == 3:
-                for i in range(0, faces.size, 3):
-                    yield faces[i], faces[i+1], faces[i+2]
-            else:
-                for i in range(0, faces.size, 4):
-                    yield faces[i], faces[i+1], faces[i+2], faces[i+3]
-    
-    # todo: can this be made faster (in pure Python)?
-    def CalculateNormals(self):
-        """ CalculateNormals()
-        Calculate the normal data from the vertices.
-        Triangular polygons are assumed.
-        """
-        
-        # Get vertices as np array
-        vertices = self._vertices
-        if vertices is None:
-            return
-        
-        # Init normal array
-        N = vertices.shape[0]        
-        normals = np.zeros((N,3), dtype='float32')
-        defaultNormal = np.array([1,0,0], dtype='float32')
-        
-        # For all faces, calculate normals, and add to normals
-        # If quads, we neglect the 4th vertex, which should be save, as it
-        # should be in the same plane.
-        for ii in self._IterFaces():
-            v1 = vertices[ii[0],:]
-            v2 = vertices[ii[1],:]
-            v3 = vertices[ii[2],:]
-            # Calculate normal
-            tmp = np.cross(v1-v2,v2-v3)
-            if np.isnan(tmp).sum():
-                tmp = defaultNormal
-            # Insert normals
-            normals[ii[0],:] += tmp
-            normals[ii[1],:] += tmp
-            normals[ii[2],:] += tmp
-        
-        # Normalize normals
-        for i in range(N):
-            tmp = normals[i,:]
-            tmp = tmp / ( (tmp**2).sum()**0.5 )
-            if np.isnan(tmp).sum():
-                tmp = defaultNormal
-            normals[i,:] = -tmp
-        
-        # Store normals
-        self._normals = normals
-    
-    
-    
-    def _CalculateFlatNormals(self):
-        """ Calculate a variant of the normals that is more suited for 
-        flat shading. This is done by setting the first normal for each
-        face (the one used when flat shading is used) to the average
-        of all normals of that face. This can in some cases lead to
-        wrong results if a vertex is the first vertex of more than one
-        face.
-        """
-        
-        # If we want flad shading, we should not use faces
-        self._WithoutFaces()
-        
-        # Get normals
-        normals = self._normals
-        if normals is None:
-            return
-        
-        # Allocate new array
-        N = normals.shape[0]        
-        flatNormals = np.zeros((N,3), dtype='float32')
-        
-        # Sum all normals belonging to one face
-        verticesPerFace = float(self._verticesPerFace)
-        a, b = set(), list()
-        for ii in self._IterFaces():
-            i0 = ii[-1]
-            a.add(i0)
-            b.append(i0)
-            for i in ii:
-                flatNormals[i0,:] += normals[i,:] / verticesPerFace
-        print len(a), len(b)
-#         # Normalize normals
-#         defaultNormal = np.array([1,0,0], dtype='float32')
-#         for i in range(N):
-#             tmp = flatNormals[i,:]
-#             tmp = tmp / ( (tmp**2).sum()**0.5 )
-#             if np.isnan(tmp).sum():
-#                 tmp = defaultNormal
-#             flatNormals[i,:] = tmp
-        
-        # Store
-        self._flatNormals = flatNormals
+        # Reshape
+        vpf = self._verticesPerFace
+        Nfaces = faces.size / vpf
+        return faces.reshape((Nfaces, vpf))
 
 
 class OrientableMesh(Mesh, OrientationForWobjects_mixClass):
