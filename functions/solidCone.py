@@ -10,7 +10,7 @@ import OpenGL.GL as gl
 def solidCone(translation=None, scaling=None, direction=None, rotation=None,
                 N=16, M=16, axesAdjust=True, axes=None):
     """ solidCone(translation=None, scaling=None, direction=None, rotation=None,
-                    N=20, M=20, axesAdjust=True, axes=None)
+                    N=16, M=16, axesAdjust=True, axes=None)
     
     Creates a solid cone with quad faces and its base at the origin.
     Returns an OrientableMesh instance.
@@ -117,3 +117,5 @@ if __name__ == '__main__':
     m = solidCone(N=8)
     im = vv.imread('lena.png')
     m.SetTexture(im)    
+    m._normals = None
+    m.Draw()
