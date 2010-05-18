@@ -18,9 +18,9 @@
 #
 #   Many thanks to Keith Smith for implementing the polar plot axis.
 #   Not only is it a great thing that Visvis can be used for polar 
-#   plotting, Keiths requirements and idead have led to quite a few
+#   plotting, Keiths requirements and ideas have led to quite a few
 #   changes in the Axis and Axes classes. For example, the Axes and
-#   Axis classes are now clearly separeted with the properties defined
+#   Axis classes are now clearly separated with the properties defined
 #   at the right place.
 
 """ Module axises
@@ -55,7 +55,7 @@ from misc import Range, Property, getColor
 # strip the zeros in the exponent and assume the (in practice) max string
 # to be "-0.001e+99". With a fontsize of 9, this needs little less than 70
 # pixels. The correction applied when visualizing axis (and ticks) is 60,
-# because the default offset is 10 pixels for axes.
+# because the default offset is 10 pixels for the axes.
 
 # create tick units
 _tickUnits = []
@@ -76,6 +76,9 @@ class AxisLabel(Text):
         Text.__init__(self, *args, **kwargs)
         self._textDict = {}
         self._move = 0
+        
+        # upon creation, one typically needs a second draw; only after all
+        # ticks are drawn can this label be positioned properly.
 
     def OnDrawScreen(self):
         
@@ -104,7 +107,7 @@ class AxisLabel(Text):
             if text is self:
                 continue
             if text._vertices2 is None or not len(text._vertices2):
-                continue
+                continue # Only consider drawn text objects
             x,y = text._screenx, text._screeny
             xmin, xmax = text._deltax
             ymin, ymax = text._deltay
@@ -202,8 +205,11 @@ class BaseAxis(base.Wobject):
     def __init__(self, parent):
         base.Wobject.__init__(self, parent)
         
-        # Should we make the axis the first wobject of the axes?
-        # Mmm, if not necessary, I don't see why ...
+        # Make the axis the first wobject in the list. This somehow seems
+        # right and makes the Axes.axis property faster.
+        if hasattr(parent, '_wobjects') and self in parent._wobjects:            
+            parent._wobjects.remove(self)
+            parent._wobjects.insert(0, self)
         
         # Init property variables
         self._showBox =  True
@@ -213,6 +219,7 @@ class BaseAxis(base.Wobject):
         self._xgrid, self._ygrid, self._zgrid = False, False, False
         self._xminorgrid, self._yminorgrid, self._zminorgrid =False,False,False
         self._xticks, self._yticks, self._zticks = None, None, None
+        self._xlabel, self._ylabel, self._zlabel = '','',''
         
         # Define parameters
         self._lineWidth = 1 # 0.8
@@ -375,49 +382,71 @@ class BaseAxis(base.Wobject):
             self._zticks = value
     
     
+    @Property
+    def xLabel():
+        """ Get/Set the label for the x dimension. """
+        def fget(self):
+            return self._xlabel
+        def fset(self, value):
+            self._xlabel = value
+    
+    @Property
+    def yLabel():
+        """ Get/Set the label for the y dimension. """
+        def fget(self):
+            return self._ylabel
+        def fset(self, value):
+            self._ylabel = value
+    
+    @Property
+    def zLabel():
+        """ Get/Set the label for the z dimension. """
+        def fget(self):
+            return self._zlabel
+        def fset(self, value):
+            self._zlabel = value
+    
+    
     ## Methods for drawing
 
     def OnDraw(self):
-
+        
         # Get axes and return if there is none,
         # or if it doesn't want to show an axis.
         axes = self.GetAxes()
         if not axes:
             return
-        if not axes.showAxis:
-            self._DestroyChildren()
-            return
-
+        
         # Calculate lines and labels
         try:
-            ppc, pps, ppg = self.CreateLinesAndLabels(axes)
+            ppc, pps, ppg = self._CreateLinesAndLabels(axes)
         except Exception:
             self.Destroy() # So the error message does not repeat itself
             raise
-
+        
         # Store lines to be drawn in screen coordinates
         self._pps = pps
-
-
+        
+        
         # Prepare for drawing lines
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(ppc.data)
-
+        
         # Draw lines
         clr = self._axisColor
         gl.glColor(clr[0], clr[1], clr[2])
         gl.glLineWidth(self._lineWidth)
         if len(ppc):
             gl.glDrawArrays(gl.GL_LINES, 0, len(ppc))
-
+        
         # Clean up
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-
-
+        
+        
         # Prepare for drawing grid
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(ppg.data)
-
+        
         # Set stipple pattern
         if not self.gridLineStyle in lineStyles:
             stipple = False
@@ -426,14 +455,14 @@ class BaseAxis(base.Wobject):
         if stipple:
             gl.glEnable(gl.GL_LINE_STIPPLE)
             gl.glLineStipple(1, stipple)
-
+        
         # Draw gridlines
         clr = self._axisColor
         gl.glColor(clr[0], clr[1], clr[2])
         gl.glLineWidth(self._lineWidth)
         if len(ppg):
             gl.glDrawArrays(gl.GL_LINES, 0, len(ppg))
-
+        
         # Clean up
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glDisable(gl.GL_LINE_STIPPLE)
@@ -441,32 +470,30 @@ class BaseAxis(base.Wobject):
 
     def OnDrawScreen(self):
         # Actually draw the axis
-
+        
         axes = self.GetAxes()
         if not axes:
             return
-        if not axes._showAxis:
-            return
-
+        
         # get pointset
         if not hasattr(self, '_pps') or not self._pps:
             return
         pps = self._pps
         pps[:,2] = depthToZ( pps[:,2] )
-
+        
         # Prepare for drawing lines
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(pps.data)
         if axes.camera is axes._cameras['twod']:
             gl.glDisable(gl.GL_LINE_SMOOTH)
-
+        
         # Draw lines
         clr = self._axisColor
         gl.glColor(clr[0], clr[1], clr[2])
         gl.glLineWidth(self._lineWidth)
         if len(pps):
             gl.glDrawArrays(gl.GL_LINES, 0, len(pps))
-
+        
         # Clean up
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glEnable(gl.GL_LINE_SMOOTH)
@@ -536,8 +563,8 @@ class BaseAxis(base.Wobject):
         if i<0: i=3
         return i
     
-    # todo: make private method
-    def CreateLinesAndLabels(self, axes):
+    
+    def _CreateLinesAndLabels(self, axes):
         """ This is the method that calculates where lines should be
         drawn and where labels should be placed.
         
@@ -560,7 +587,7 @@ class CartesianAxis2D(BaseAxis):
     lines for cartesian coordinates in 2D.
     """
 
-    def CreateLinesAndLabels(self, axes):
+    def _CreateLinesAndLabels(self, axes):
         """ This is the method that calculates where lines should be
         drawn and where labels should be placed.
 
@@ -584,7 +611,7 @@ class CartesianAxis2D(BaseAxis):
         lims = [lims[0], lims[1], cam.zlim]
         
         # Get labels
-        labels = [axes.xLabel, axes.yLabel]
+        labels = [self.xLabel, self.yLabel]
         
         
         # Init the new text object dictionaries
@@ -664,33 +691,6 @@ class CartesianAxis2D(BaseAxis):
                         pps.Append(corner)
                         pps.Append(corner+vector_s)
             
-            # Apply label
-            textDict = self._textDicts[d]
-            p1 = corners4_c[i0] + vector_c * 0.5
-            key = '_label_'
-            if key in textDict and textDict[key] in self._children:
-                t = textDict.pop(key)
-                t.text = labels[d]
-                t.x, t.y, t.z = p1.x, p1.y, p1.z
-            else:
-                #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                t.fontSize=10
-            newTextDicts[d][key] = t
-            t.halign = 0
-            t.textColor = self._axisColor
-            # Move up front
-            if not t in self._children[-3:]:
-                self._children.remove(t)
-                self._children.append(t)
-            # Get vec to calc angle
-            vec = Point(vector_s.x, vector_s.y)
-            if vec.x < 0:
-                vec = vec * -1
-            t.textAngle = float(vec.Angle() * 180/np.pi)
-            # Keep up to date (so label can move itself just beyond ticks)
-            t._textDict = newTextDicts[d]
-            
             # Get ticks stuff
             tickValues = ticksPerDim[d] # can be None
             p1, p2 = firstCorner.Copy(), firstCorner+vector_c
@@ -761,6 +761,33 @@ class CartesianAxis2D(BaseAxis):
                     p3 = p1+gv1
                     p4 = p3+gv2
                     ppg.Append(p1);  ppg.Append(p3)
+            
+            # Apply label
+            textDict = self._textDicts[d]
+            p1 = corners4_c[i0] + vector_c * 0.5
+            key = '_label_'
+            if key in textDict and textDict[key] in self._children:
+                t = textDict.pop(key)
+                t.text = labels[d]
+                t.x, t.y, t.z = p1.x, p1.y, p1.z
+            else:
+                #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                t.fontSize=10
+            newTextDicts[d][key] = t
+            t.halign = 0
+            t.textColor = self._axisColor
+            # Move label to back, so the repositioning works right
+            if not t in self._children[-3:]:
+                self._children.remove(t)
+                self._children.append(t)
+            # Get vec to calc angle
+            vec = Point(vector_s.x, vector_s.y)
+            if vec.x < 0:
+                vec = vec * -1
+            t.textAngle = float(vec.Angle() * 180/np.pi)
+            # Keep up to date (so label can move itself just beyond ticks)
+            t._textDict = newTextDicts[d]
         
         # Correct gridlines so they are all at z=0.
         # The grid is always exactly at 0. Images are at -0.1 or less.
@@ -790,7 +817,7 @@ class CartesianAxis3D(BaseAxis):
 
     """
 
-    def CreateLinesAndLabels(self, axes):
+    def _CreateLinesAndLabels(self, axes):
         """ This is the method that calculates where lines should be
         drawn and where labels should be placed.
 
@@ -813,7 +840,7 @@ class CartesianAxis3D(BaseAxis):
         lims = [cam.xlim, cam.ylim, cam.zlim]
 
         # Get labels
-        labels = [axes.xLabel, axes.yLabel, axes.zLabel]
+        labels = [self.xLabel, self.yLabel, self.zLabel]
 
 
         # Init the new text object dictionaries
@@ -885,33 +912,6 @@ class CartesianAxis3D(BaseAxis):
                         corner = corners4_s[i]
                         pps.Append(corner)
                         pps.Append(corner+vector_s)
-
-            # Apply label
-            textDict = self._textDicts[d]
-            p1 = corners4_c[i0] + vector_c * 0.5
-            key = '_label_'
-            if key in textDict and textDict[key] in self._children:
-                t = textDict.pop(key)
-                t.text = labels[d]
-                t.x, t.y, t.z = p1.x, p1.y, p1.z
-            else:
-                #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                t.fontSize=10
-            newTextDicts[d][key] = t
-            t.halign = 0
-            t.textColor = self._axisColor
-            # Move up front
-            if not t in self._children[-3:]:
-                self._children.remove(t)
-                self._children.append(t)
-            # Get vec to calc angle
-            vec = Point(vector_s.x, vector_s.y)
-            if vec.x < 0:
-                vec = vec * -1
-            t.textAngle = float(vec.Angle() * 180/np.pi)
-            # Keep up to date (so label can move itself just beyond ticks)
-            t._textDict = newTextDicts[d]
             
             # Get ticks stuff
             tickValues = ticksPerDim[d] # can be None
@@ -974,8 +974,35 @@ class CartesianAxis3D(BaseAxis):
                     p4 = p3+gv2
                     ppg.Append(p1);  ppg.Append(p3)
                     ppg.Append(p3);  ppg.Append(p4)
-
-
+            
+            # Apply label
+            textDict = self._textDicts[d]
+            p1 = corners4_c[i0] + vector_c * 0.5
+            key = '_label_'
+            if key in textDict and textDict[key] in self._children:
+                t = textDict.pop(key)
+                t.text = labels[d]
+                t.x, t.y, t.z = p1.x, p1.y, p1.z
+            else:
+                #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                t.fontSize=10
+            newTextDicts[d][key] = t
+            t.halign = 0
+            t.textColor = self._axisColor
+            # Move to back such that they can position themselves right
+            if not t in self._children[-3:]:
+                self._children.remove(t)
+                self._children.append(t)
+            # Get vec to calc angle
+            vec = Point(vector_s.x, vector_s.y)
+            if vec.x < 0:
+                vec = vec * -1
+            t.textAngle = float(vec.Angle() * 180/np.pi)
+            # Keep up to date (so label can move itself just beyond ticks)
+            t._textDict = newTextDicts[d]
+        
+        
         # Clean up the text objects that are left
         for tmp in self._textDicts:
             for t in tmp.values():
@@ -1001,13 +1028,13 @@ class CartesianAxis(CartesianAxis2D, CartesianAxis3D):
     # A bit ugly inheritance going on here, but otherwise the code below
     # would not work ...
 
-    def CreateLinesAndLabels(self, axes):
+    def _CreateLinesAndLabels(self, axes):
         """ Choose depending on what camera is used. """
 
         if axes.camera.isTwoD:
-            return CartesianAxis2D.CreateLinesAndLabels(self,axes)
+            return CartesianAxis2D._CreateLinesAndLabels(self,axes)
         else:
-            return CartesianAxis3D.CreateLinesAndLabels(self,axes)
+            return CartesianAxis3D._CreateLinesAndLabels(self,axes)
 
 
 
@@ -1092,15 +1119,15 @@ class PolarAxis2D(BaseAxis):
         angularRefPos: Get and Set methods for the relative screen
         angle of the 0 degree polar reference.  Default is 0 degs
         which corresponds to the positive x-axis (y =0)
-
+        
         isCW: Get and Set methods for the sense of rotation CCW or
         CW. This method takes/returns a bool (True if the default CW).
-
+        
         Drag mouse up/down to translate radial axis
         Drag mouse left/right to rotate angular ref position
         Drag mouse + shift key up/down to rescale radial axis (min R fixed)
     """
-
+    
     def __init__(self, parent):
         BaseAxis.__init__(self, parent)
         self.ppb = None
@@ -1110,16 +1137,16 @@ class PolarAxis2D(BaseAxis):
         axes.bgcolor = None  # disables the default background
         # Size of the boarder where circular tick labels are drawn
         self.labelPix = 5
-
+        
         self._radialRange = Range(-1, 1)  # default
         self._angularRange = Range(-179, 180)  # always 360 deg
         self._angularRefPos = 0
         self._sense = 1.0
-
+        
         # Need to overrride this because the PolarAxis has
         # four sets of radial ticks (with same dict key!)
         self._textDicts = [{}, {}, {}, {}, {}]
-
+        
         # indicate part that we view.
         # view_loc is the coordinate that we center on
         # view_zoomx and view_zoomx is the range of data visualized in
@@ -1128,40 +1155,42 @@ class PolarAxis2D(BaseAxis):
         self.view_zoomy = 100
         self.view_loc = 0, 0, 0  # we only use the 2D part
         self._fx, self._fy = 0, 0
-
+        
         # reference stuff for interaction
         self.ref_loc = 0, 0, 0    # view_loc when clicked
         self.ref_mloc = 0, 0     # mouse location when clicked
         self.ref_but = 0        # mouse button when clicked
         self.ref_zoomx = 100.0  # zoom factors when clicked
         self.ref_zoomy = 100.0
-
+        
         self.controlIsDown = False
         self.shiftIsDown = False
-
+        
         # bind special event for translating lower radial limit
         axes.eventKeyDown.Bind(self.OnKeyDown)
         axes.eventKeyUp.Bind(self.OnKeyUp)
-
+        
         # Mouse events
         axes.eventMouseDown.Bind(self.OnMouseDown)
         axes.eventMouseUp.Bind(self.OnMouseUp)
         axes.eventMotion.Bind(self.OnMotion)
-
+    
+    
     def RescalePolarData(self):
         """ This method finds and transforms all polar line data
         by the current polar radial axis limits so that data below
         the center of the polar plot is set to 0,0,0 and data beyond
         the maximum (outter radius) is clipped """
-
+        
         axes = self.GetAxes()
         drawObjs = axes.FindObjects(PolarLine)
         # Now set the transform for the PolarLine data
         for anObj in drawObjs:
             anObj.TransformPolar(self._radialRange, \
             self._angularRefPos, self._sense)
-
-    def CreateLinesAndLabels(self, axes):
+    
+    
+    def _CreateLinesAndLabels(self, axes):
         """ This is the method that calculates where polar axis lines
         should be drawn and where labels should be placed.
 
@@ -1192,7 +1221,7 @@ class PolarAxis2D(BaseAxis):
         # From current lims calculate the radial axis min and max
 
         # Get labels. These are equivalent to Theta and radial labels
-        labels = [axes.xLabel, axes.yLabel]
+        labels = [self.xLabel, self.yLabel]
 
         # Init the new text object dictionaries
         # (theta, R(0),R(90),R(180),R(270))
@@ -1262,7 +1291,7 @@ class PolarAxis2D(BaseAxis):
             tmp = [tmp[i] for i in [0, 1, 0, 1]]
             corners4_c = [corners8_c[i] for i in tmp]
             corners4_s = [corners8_s[i] for i in tmp]
-           # Get index of corner to put ticks at
+            # Get index of corner to put ticks at
             i0 = 0
             bestVal = 999999999999999999999999
             for i in range(4):
@@ -1284,13 +1313,13 @@ class PolarAxis2D(BaseAxis):
                 t.text = labels[d]
                 t.x, t.y, t.z = p1.x, p1.y, p1.z
             else:
-                # t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
                 t = AxisLabel(self, labels[d], p1.x, p1.y, p1.z, 'sans')
                 t.fontSize = 10
             newTextDicts[d][key] = t
             t.halign = 0
             t.textColor = self._axisColor
-            # Move up front
+            # Move to back
             if not t in self._children[-3:]:
                 self._children.remove(t)
                 self._children.append(t)
@@ -1504,7 +1533,8 @@ class PolarAxis2D(BaseAxis):
         # Return points (note: Special PolarAxis points are set as class
         # variables since this method was overrridden)
         return ppc, pps, ppg
-
+    
+    
     def OnDraw(self):
         axes = self.GetAxes()
         s = axes.camera.GetViewParams()
@@ -1543,31 +1573,36 @@ class PolarAxis2D(BaseAxis):
             gl.glEnable(gl.GL_DEPTH_TEST)
             # Clean up
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-
+    
+    
     def OnKeyDown(self, event):
         if event.key == 17 and self.ref_but == 0:
             self.shiftIsDown = True
         elif event.key == 19 and self.ref_but == 0:
             self.controlIsDown = True
         return True
-
+    
+    
     def OnKeyUp(self, event):
         self.shiftIsDown = False
         self.controlIsDown = False
         self.ref_but = 0  # in case the mouse was also down
         return True
-
+    
+    
     def OnMouseDown(self, event):
         # store mouse position and button
         self.ref_mloc = event.x, event.y
         self.ref_but = event.button
         self.ref_lowerRadius = self._radialRange.min
         self.ref_angularRefPos = self.angularRefPos
-
+    
+    
     def OnMouseUp(self, event):
         self.ref_but = 0
         self.Draw()
-
+    
+    
     def OnMotion(self, event):
         if not self.ref_but:
             return
@@ -1611,7 +1646,8 @@ class PolarAxis2D(BaseAxis):
             self.ref_mloc = mloc
         self.Draw()
         return True
-
+    
+    
     def SetLimits(self, rangeTheta=None, rangeR=None, margin=0.04):
         """ SetLimits(rangeTheta=None, rangeR=None, margin=0.02)
         
@@ -1707,13 +1743,15 @@ class PolarAxis2D(BaseAxis):
         # apply to each camera
         for cam in axes._cameras.values():
             cam.SetLimits(rX, rY, rZ)
-
+    
+    
     def GetLimits(self):
         """ GetLimits()
         Get the limits of the polar axis as displayed now.
         Returns a tuple of limits for theta and r, respectively."""
         return self._angularRange, self._radialRange
-
+    
+    
     @Property
     def angularRefPos():
         """ Get/Set the angular reference position in
@@ -1721,11 +1759,12 @@ class PolarAxis2D(BaseAxis):
         # internal store in radians to avoid constant conversions
         def fget(self):
             return 180.0 * self._angularRefPos / np.pi
-
+        
         def fset(self, value):
             self._angularRefPos = np.pi * int(value) / 180
             self.Draw()
-
+    
+    
     @Property
     def isCW():
         """ Get/Set the sense of rotation.

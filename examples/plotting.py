@@ -15,10 +15,10 @@ vv.plot([35,14,40,31], lc='k', ls='-.', mc='g', mw=12, lw=3, ms='*')
 
 a = vv.gca()
 a.legend = 'line 1', 'line 2', 'line 3'
-a.showGrid = 1
+a.axis.showGrid = 1
 
-a.xlabel = 'measurement number'
-a.ylabel = 'some quantity [unit]'
+a.axis.xlabel = 'measurement number'
+a.axis.ylabel = 'some quantity [unit]'
 vv.title('An example of \b{plotting}')
 
 app.Run()

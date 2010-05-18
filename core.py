@@ -941,8 +941,7 @@ class Axes(base.Wibject):
         # make clickable
         self.hitTest = True
         
-        # axis properties                
-        self._xlabel, self._ylabel, self._zlabel = '','',''
+        # varialble to keep track of the position correction to fit labels
         self._xCorr, self._yCorr = 0, 0
         
         # create cameras and select one
@@ -975,6 +974,141 @@ class Axes(base.Wibject):
         # make current
         figure.currentAxes = self
     
+    
+    ## Deprecated axis Properties
+    # todo: remove these in the next version
+    @Property
+    def showAxis():
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def showBox():
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def axisColor():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def tickFontSize():
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def gridLineStyle():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        
+    @Property
+    def showGridX():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def showGridY():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def showGridZ():
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def showGrid():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def showMinorGridX():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def showMinorGridY():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def showMinorGridZ():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def showMinorGrid():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        
+    @Property
+    def xTicks():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def yTicks():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def zTicks():
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def xLabel():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def yLabel():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+    
+    @Property
+    def zLabel():        
+        def fget(self):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
+        def fset(self, value):
+            raise DeprecationWarning('This property has moved to Axes.axis.')
     
     ## Define more methods
     
@@ -1162,15 +1296,18 @@ class Axes(base.Wibject):
         
         # correction should be applied for 2D camera and a valid label
         if self.camera is self._cameras['2d']:
-            if self._axisClass is PolarAxis2D:
-                pass
-            elif self.showAxis:
-                yCorr += 20
-                xCorr += 60 # there's already a margin of 10 by default
-                if self.xLabel:
+            axis = self.axis
+            if isinstance(axis, PolarAxis2D):
+                if axis.visible and axis.xLabel:
+                    yCorr += 25
+            else:
+                if axis.visible:
                     yCorr += 20
-                if self.yLabel:
-                    xCorr += 20
+                    xCorr += 60 # there's already a margin of 10 by default
+                    if axis.xLabel:
+                        yCorr += 20
+                    if axis.yLabel:
+                        xCorr += 20
         
         # check the difference
         if xCorr != self._xCorr or yCorr != self._yCorr:
@@ -1188,10 +1325,11 @@ class Axes(base.Wibject):
         """ Get the axis object. A new instance is created if it
         does not yet exist.
         """
-        tmp = self.FindObjects(self._axisClass)
-        if tmp:
-            # Return existing
-            return tmp[0]
+        axis = None
+        # Find object in root
+        for object in self._wobjects:
+            if isinstance(object, BaseAxis):
+                return object
         else:
             # Create new and return
             return self._axisClass(self)
@@ -1298,30 +1436,6 @@ class Axes(base.Wibject):
             return self._daspectAuto
         def fset(self, value):
             self._daspectAuto = bool(value)
-    
-    @Property
-    def xLabel():
-        """ Get/Set the label for the x dimension. """
-        def fget(self):
-            return self._xlabel
-        def fset(self, value):
-            self._xlabel = value
-    
-    @Property
-    def yLabel():
-        """ Get/Set the label for the y dimension. """
-        def fget(self):
-            return self._ylabel
-        def fset(self, value):
-            self._ylabel = value
-    
-    @Property
-    def zLabel():
-        """ Get/Set the label for the z dimension. """
-        def fget(self):
-            return self._zlabel
-        def fset(self, value):
-            self._zlabel = value
     
     @Property
     def legend():

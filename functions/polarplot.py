@@ -1,7 +1,7 @@
 # This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# Copyright (C) 2010 Keith Smith
 #
-# The polar plot functionality was implemented by Keith Smith.
+# Thanks to Keith Smith for implementing the polar plot functionality.
 
 import numpy as np
 import visvis as vv
