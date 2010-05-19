@@ -22,6 +22,13 @@ Each module in this directory contains a function with the same
 name as the module it's in. These functions are automatically loaded 
 in Visvis, thus making it easy to expand Visvis' functionality.
 
+In the future, I may make it possible to supply a cython implementation
+of a function (along side a pure Python one implementation), so that
+after running a compile script, the function will run much faster.
+As for now, I'm ok with processing whole arrays at once using numpy.
+(I'm not sure, for example, whether calculateNormals can be made faster
+in Cython.)
+
 There are three things to take into account when making a new function:
 - The function to add should be the same name as the module in which 
   it is defined. Other helper functions or classes can be defined, but

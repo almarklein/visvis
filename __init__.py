@@ -66,6 +66,7 @@ from events import Timer
 from misc import Range
 from misc import (Transform_Translate, Transform_Scale, Transform_Rotate)
 
+from polygonalModeling import BaseMesh
 from points import Point, Pointset, Aarray, Quaternion
 
 import cm
@@ -74,7 +75,6 @@ for key in cm.colormaps:
   key2 = 'CM_' + key.upper()
   L[key2] = cm.colormaps[key]
 del L, key
-
 
 from wibjects import *
 from wobjects import *
