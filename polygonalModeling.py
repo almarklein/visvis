@@ -428,16 +428,7 @@ class BaseMesh:
         vpf = self._verticesPerFace
         Nfaces = faces.size / vpf
         return faces.reshape((Nfaces, vpf))
-    
-    # todo: enable combining
-#     # Combine
-#     faces = np.concatenate(f_)
-#     vertices = Pointset(3)
-#     for val in v_:
-#         vertices.Extend(val)
-#     normals = Pointset(3)
-#     for val in n_:
-#         normals.Extend(val)
+
 
 # Import here, because they may require BaseMesh
 import processing
@@ -772,13 +763,16 @@ class Mesh(Wobject, BaseMesh):
         I = (1-np.isnan(vertices[:,0])).astype(np.bool)
         vertices = vertices[I,:]
         
-        # Obtain untransformed coords         
-        x1, x2 = vertices[:,0].min(), vertices[:,0].max()
-        y1, y2 = vertices[:,1].min(), vertices[:,1].max()
-        z1, z2 = vertices[:,2].min(), vertices[:,2].max()
-        
-        # There we are
-        return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
+        try:
+            # Obtain untransformed coords         
+            x1, x2 = vertices[:,0].min(), vertices[:,0].max()
+            y1, y2 = vertices[:,1].min(), vertices[:,1].max()
+            z1, z2 = vertices[:,2].min(), vertices[:,2].max()
+            
+            # There we are
+            return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
+        except Exception:
+            return None
     
     
     def OnDestroyGl(self):

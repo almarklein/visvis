@@ -18,6 +18,7 @@ def getSpanVectors(normal, c, d):
     # Thus a (random) vector is needed which is not orthogonal with 
     # the normal vector.
     randomv = Point(0.57745, 0.5774, 0.57735)
+    randomv2 = Point(0,0,1)
     
     # Calculate a from previous b
     a1 = d.Cross(normal)
@@ -27,6 +28,12 @@ def getSpanVectors(normal, c, d):
         a2 = -1 * a1
         if c.Distance(a1) > c.Distance(a2):
             a1 = a2
+    
+    # Make sure the vector is not Nan or Inf
+    if a1.x*0!=0:
+        a1 = randomv.Cross(normal)
+    if a1.x*0!=0:
+        a1 = randomv2.Cross(normal)
     
     # Calculate b
     b = a1.Cross(normal)
