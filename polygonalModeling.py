@@ -27,7 +27,6 @@ from points import Point, Pointset
 from misc import Property, getColor
 from base import Wobject, OrientationForWobjects_mixClass
 from textures import TextureObjectToVisualize, Colormap
-import processing
 
 import numpy as np
 import OpenGL.GL as gl
@@ -265,9 +264,185 @@ def check3dArray(value):
         return value.data
     else:
         raise ValueError()
-   
 
-class Mesh(Wobject):
+
+class BaseMesh:
+    """ BaseMesh(vertices, normals=None, faces=None,
+            colors=None, texcords=None, verticesPerFace=3)
+        
+        The BaseMesh class represents a mesh in its pure mathematical
+        form (without any visualization properties). Essentially, it
+        serves as a container for the vertices, normals, faces, colors,
+        and texcords.
+        
+        See the Mesh and OrientableMesh classes for representations that
+        include visualization properties.
+        """
+    
+    def __init__(self, vertices, normals=None, faces=None,
+            colors=None, texcords=None, verticesPerFace=3):
+        
+        # Set verticesPerFace first (can be reset by faces)
+        verticesPerFace = int(verticesPerFace)
+        if verticesPerFace in [3, 4]:
+            self._verticesPerFace = verticesPerFace
+        else:        
+            raise ValueError('VerticesPerFace should be 3 or 4.')
+        
+        # Set all things (checks are performed in set methods)
+        self.SetVertices(vertices)
+        self.SetNormals(normals)
+        self.SetFaces(faces)
+        self.SetColors(colors)
+        self.SetTexcords(texcords)
+    
+    
+    def SetVertices(self, vertices):
+        """ SetVertices(vertices)
+        Set the vertex data as a Nx3 numpy array or as a 3D Pointset. 
+        """
+        try:
+            self._vertices = check3dArray(vertices)
+        except ValueError:
+            raise ValueError("Vertices should represent an array of 3D vertices.")
+    
+    
+    def SetNormals(self, normals):
+        """ SetNormals(normals)
+        Set the normal data as a Nx3 numpy array or as a 3D Pointset. 
+        """
+        if normals is not None:
+            try:
+                self._normals = check3dArray(normals)
+            except ValueError:
+                raise ValueError("Normals should represent an array of 3D vertices.")
+        else:
+            self._normals = None
+    
+    
+    def SetColors(self, colors):
+        """ SetColors(colors)
+        Set the color data as a Nx3 numpy array or as a 3D Pointset. 
+        Use None as an argument to remove the color data.
+        """
+        if colors is not None:
+            # Scale
+            if colors.dtype in [np.float32, np.float64] and colors.max()<1.1:
+                pass
+            elif colors.dtype == np.uint8:
+                colors = colors.astype(np.float32) / 256.0
+            else:
+                mi, ma = colors.min(), colors.max()
+                colors = (colors.astype(np.float32) - mi) / (ma-mi)
+            # Check shape
+            try:
+                self._colors = check3dArray(colors)
+            except ValueError:
+                raise ValueError("Colors should represent an array of 3D vertices.")
+        else:
+            self._colors = None
+    
+    
+    def SetTexcords(self, texcords):
+        """ SetTexcords(texcords)
+        Set the texture coordinates as a Nx2 numpy array or as a 2D Pointset.
+        Use None as an argument to turn off the texture.
+        """
+        if texcords is not None:
+        
+            if isinstance(texcords, np.ndarray):
+                # Test dimensions
+                if texcords.ndim == 2 and texcords.shape[1] == 2:
+                    pass # Texture coordinates
+                elif texcords.ndim == 1:
+                    pass # Colormap entries
+                else:
+                    raise ValueError("Texture coordinates must be 2D or 1D.")
+                # Test data type
+                if texcords.dtype == np.float32:
+                    self._texcords = texcords
+                else:
+                    self._texcords = texcords.astype(np.float32)
+            
+            elif isinstance(texcords, Pointset):
+                if not texcords.ndim==2:
+                    raise ValueError("Texture coordinates must be 2D or 1D.")
+                self._texcords = texcords.data
+            else:
+                raise ValueError("Texture coordinates must be a numpy array or Pointset.")
+        
+        else:
+            self._texcords = None
+    
+    
+    def SetFaces(self, faces):
+        """ SetFaces(faces)
+        Set the faces data. This can be either a list, a 1D numpy array,
+        a Nx3 numpy array, or a Nx4 numpy array. In the latter two cases
+        the type is set to GL_TRIANGLES or GL_QUADS respectively.
+        """
+        
+        # Check and store faces
+        if faces is not None:
+            if isinstance(faces, list):
+                self._faces = np.array(faces, dtype=np.uint32)
+            elif isinstance(faces, np.ndarray):
+                # Check shape
+                if faces.ndim==1:
+                    pass # ok
+                elif faces.ndim==2 and faces.shape[1] in [3,4]:
+                    self._verticesPerFace = faces.shape[1]
+                else:
+                    tmp = 'Faces should represent a list or, 1D, Nx3 or Nx4'
+                    raise ValueError(tmp + ' numpy array.')
+                # Check data type
+                if faces.dtype in [np.uint8, np.uint16, np.uint32]:
+                    self._faces = faces.reshape((faces.size,))
+                else:                    
+                    self._faces = faces.astype(np.uint32)
+                    self._faces.shape = (faces.size,)
+            else:
+                raise ValueError("Faces should be a list or numpy array.")
+            # Check
+            if self._faces.min() < 0:
+                raise ValueError("Face data should be non-negative integers.")
+            if self._vertices is not None:
+                if self._faces.max() >= len(self._vertices):
+                    raise ValueError("Face data references non-existing vertices.")
+        else:
+            self._faces = None
+    
+    
+    def _GetFaces(self):
+        """ _GetFaces()
+        Get 2D array with face indices (even if the mesh has no faces array).
+        To be used for mesh processing. On the 0th axis are the different
+        faces. Along the 1st axis are the different vertex indices that
+        make up that face. 
+        """   
+        if self._faces is None:
+            faces = np.arange(len(self._vertices))
+        else:
+            faces = self._faces
+        # Reshape
+        vpf = self._verticesPerFace
+        Nfaces = faces.size / vpf
+        return faces.reshape((Nfaces, vpf))
+    
+    # todo: enable combining
+#     # Combine
+#     faces = np.concatenate(f_)
+#     vertices = Pointset(3)
+#     for val in v_:
+#         vertices.Extend(val)
+#     normals = Pointset(3)
+#     for val in n_:
+#         normals.Extend(val)
+
+# Import here, because they may require BaseMesh
+import processing
+
+class Mesh(Wobject, BaseMesh):
     """ Mesh(parent, vertices, normals=None, faces=None, 
         colors=None, texcords=None, verticesPerFace=3)
     
@@ -278,12 +453,14 @@ class Mesh(Wobject):
     be set individually for the faces and edges (using the faceColor,
     edgeColor, faceShading and edgeShading properties). 
     
-    Vertices is a Nx3 numpy array of vertex positions in 3D space.
+    A mesh can also be created from another mesh using Mesh(parent, otherMesh).
     
-    Normals is a Nx3 numpy array of vertex normals. If not given, 
+    *Vertices* is a Nx3 numpy array of vertex positions in 3D space.
+    
+    *Normals* is a Nx3 numpy array of vertex normals. If not given, 
     it is calcululated from the vertices.
     
-    Faces (optional) is a numpy array or list of indices to define the faces.
+    *Faces* (optional) is a numpy array or list of indices to define the faces.
     If this array is Nx3 or Nx4, verticesPerFace is inferred from this array.
     Faces should be of uint8, uint16 or uint32 (if it is not, the data is
     converted to uint32).
@@ -293,10 +470,10 @@ class Mesh(Wobject):
       * by supplying 1D texcords which  are looked up in the colormap
       * by supplying a 2D texcords array and setting a 2D texture image
     
-    Colors is a Nx3 or Nx4 numpy array giving the ambient and diffuse color
+    *Colors* is a Nx3 or Nx4 numpy array giving the ambient and diffuse color
     for each vertex. 
     
-    Texcords is used to map a 2D texture or 1D texture (a colormap) to the
+    *Texcords* is used to map a 2D texture or 1D texture (a colormap) to the
     mesh. The texture color is multiplied after the ambient and diffuse
     lighting calculations, but before calculating the specular component.
     If texcords is a 1D (size N) array it specifies the color index at each
@@ -304,7 +481,7 @@ class Mesh(Wobject):
     coordinates to map an image to the mesh. Use SetTexture() to set 
     the image, and the colormap property to set the colormap.
     
-    VerticesPerFace can be 3 or 4. It determines whether the faces are
+    *VerticesPerFace* can be 3 or 4. It determines whether the faces are
     triangles or quads. If faces is specified and is 2D, the number of
     vertices per face is determined from that array.
     
@@ -339,20 +516,19 @@ class Mesh(Wobject):
         # What faces to cull
         self._cullFaces = None # gl.GL_BACK (for surf(), None makes most sense)
         
+        # Obtain data from other mesh?
+        if isinstance(vertices, BaseMesh):
+            other = vertices
+            vertices = other._vertices
+            normals = other._normals
+            faces = other._faces
+            colors = other._colors
+            texcords = other._texcords
+            verticesPerFace = other._verticesPerFace
         
-        # Set verticesPerFace first (can be reset by faces)
-        verticesPerFace = int(verticesPerFace)
-        if verticesPerFace in [3, 4]:
-            self._verticesPerFace = verticesPerFace
-        else:        
-            raise ValueError('VerticesPerFace should be 3 or 4.')
-        
-        # Set all things (checks are performed in set methods)
-        self.SetVertices(vertices)
-        self.SetNormals(normals)
-        self.SetFaces(faces)
-        self.SetColors(colors)
-        self.SetTexcords(texcords)
+        # Save data
+        BaseMesh.__init__(self, vertices, normals, faces,
+                            colors, texcords, verticesPerFace)
     
     
     ## Material properties: how the object is lit
@@ -541,120 +717,7 @@ class Mesh(Wobject):
     ## Setters
     
     
-    def SetVertices(self, vertices):
-        """ SetVertices(vertices)
-        Set the vertex data as a Nx3 numpy array or as a 3D Pointset. 
-        """
-        try:
-            self._vertices = check3dArray(vertices)
-        except ValueError:
-            raise ValueError("Vertices should represent an array of 3D vertices.")
     
-    
-    def SetNormals(self, normals):
-        """ SetNormals(normals)
-        Set the normal data as a Nx3 numpy array or as a 3D Pointset. 
-        """
-        if normals is not None:
-            try:
-                self._normals = check3dArray(normals)
-            except ValueError:
-                raise ValueError("Normals should represent an array of 3D vertices.")
-        else:
-            self._normals = None
-    
-    
-    def SetColors(self, colors):
-        """ SetColors(colors)
-        Set the color data as a Nx3 numpy array or as a 3D Pointset. 
-        Use None as an argument to remove the color data.
-        """
-        if colors is not None:
-            # Scale
-            if colors.dtype in [np.float32, np.float64] and colors.max()<1.1:
-                pass
-            elif colors.dtype == np.uint8:
-                colors = colors.astype(np.float32) / 256.0
-            else:
-                mi, ma = colors.min(), colors.max()
-                colors = (colors.astype(np.float32) - mi) / (ma-mi)
-            # Check shape
-            try:
-                self._colors = check3dArray(colors)
-            except ValueError:
-                raise ValueError("Colors should represent an array of 3D vertices.")
-        else:
-            self._colors = None
-    
-    
-    def SetTexcords(self, texcords):
-        """ SetTexcords(texcords)
-        Set the texture coordinates as a Nx2 numpy array or as a 2D Pointset.
-        Use None as an argument to turn off the texture.
-        """
-        if texcords is not None:
-        
-            if isinstance(texcords, np.ndarray):
-                # Test dimensions
-                if texcords.ndim == 2 and texcords.shape[1] == 2:
-                    pass # Texture coordinates
-                elif texcords.ndim == 1:
-                    pass # Colormap entries
-                else:
-                    raise ValueError("Texture coordinates must be 2D or 1D.")
-                # Test data type
-                if texcords.dtype == np.float32:
-                    self._texcords = texcords
-                else:
-                    self._texcords = texcords.astype(np.float32)
-            
-            elif isinstance(texcords, Pointset):
-                if not texcords.ndim==2:
-                    raise ValueError("Texture coordinates must be 2D or 1D.")
-                self._texcords = texcords.data
-            else:
-                raise ValueError("Texture coordinates must be a numpy array or Pointset.")
-        
-        else:
-            self._texcords = None
-    
-    
-    def SetFaces(self, faces):
-        """ SetFaces(faces)
-        Set the faces data. This can be either a list, a 1D numpy array,
-        a Nx3 numpy array, or a Nx4 numpy array. In the latter two cases
-        the type is set to GL_TRIANGLES or GL_QUADS respectively.
-        """
-        
-        # Check and store faces
-        if faces is not None:
-            if isinstance(faces, list):
-                self._faces = np.array(faces, dtype=np.uint32)
-            elif isinstance(faces, np.ndarray):
-                # Check shape
-                if faces.ndim==1:
-                    pass # ok
-                elif faces.ndim==2 and faces.shape[1] in [3,4]:
-                    self._verticesPerFace = faces.shape[1]
-                else:
-                    tmp = 'Faces should represent a list or, 1D, Nx3 or Nx4'
-                    raise ValueError(tmp + ' numpy array.')
-                # Check data type
-                if faces.dtype in [np.uint8, np.uint16, np.uint32]:
-                    self._faces = faces.reshape((faces.size,))
-                else:                    
-                    self._faces = faces.astype(np.uint32)
-                    self._faces.shape = (faces.size,)
-            else:
-                raise ValueError("Faces should be a list or numpy array.")
-            # Check
-            if self._faces.min() < 0:
-                raise ValueError("Face data should be non-negative integers.")
-            if self._vertices is not None:
-                if self._faces.max() >= len(self._vertices):
-                    raise ValueError("Face data references non-existing vertices.")
-        else:
-            self._faces = None
     
     
     def SetTexture(self, data):
@@ -866,23 +929,6 @@ class Mesh(Wobject):
         gl.glDisable(gl.GL_COLOR_MATERIAL)
         gl.glDisable(gl.GL_LIGHTING)
         gl.glDisable(gl.GL_CULL_FACE)
-    
-    
-    def _GetFaces(self):
-        """ _GetFaces()
-        Get 2D array with face data (even if the mesh has no faces array).
-        To be used for mesh processing. On the 0th axis we have the different
-        faces. Along the 1st axis we have the different vertex indices that
-        make up that face. 
-        """   
-        if self._faces is None:
-            faces = np.arange(len(self._vertices))
-        else:
-            faces = self._faces
-        # Reshape
-        vpf = self._verticesPerFace
-        Nfaces = faces.size / vpf
-        return faces.reshape((Nfaces, vpf))
 
 
 class OrientableMesh(Mesh, OrientationForWobjects_mixClass):
