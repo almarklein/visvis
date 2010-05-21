@@ -285,17 +285,23 @@ def save(path, struct_object, appName='ssdf.py', newline='\n'):
     """
     path = os.path.abspath(path)
     
-    # get text and convert to bytes
+    # get header
     header =  '# This Simple Structured Data Format (SSDF) file was '
     header += 'created from Python by %s.' % appName
-    text = saves(struct_object)
-    text = header + newline + text.replace('\n',newline) + newline
-    byts = text.encode('UTF-8')
     
-    # store...
+    # get text in lines
+    base = _toString('', struct_object, -2)  # negative indent
+    lines = _pack(base)
+    
+    # write to file. B
+    # Better write line by line instead of getting one large string; the
+    # latter can cause memory errors.
     fid = open(path,'wb')
-    try:
-        fid.write( byts )
+    try:        
+        fid.write( header + '\n')
+        for line in lines:
+            line += newline
+            fid.write( line.encode('UTF-8') )
     except Exception:
         raise
     finally:
@@ -310,17 +316,17 @@ def load(path):
         raise IOError("The specified file does not exist.")
     
     # open file and read data
-    f = open(path,'rb')
+    fid = open(path,'rb')
     try:
-        byts = f.read()
+        lines = fid.readlines()
     except Exception:
         raise
     finally:        
-        f.close()
+        fid.close()
     
     # parse!
-    text = byts.decode('UTF-8')
-    return loads(text)
+    lines = [line.decode('UTF-8') for line in lines]    
+    return _loadLines(lines)
 
 
 def update(path, struct_object, appName='ssdf.py', newline='\n'):
@@ -388,17 +394,27 @@ def _pack(lineObject):
 def loads(text):    
     """ Load Struct object from a string.  """
     
+    # split
+    text = text.replace('\r\n','\n').replace('\r','\n')
+    lines = text.split("\n")
+    
+    # go
+    return _loadLines(lines)
+
+
+def _loadLines(lines):
+    """ Load using the lines. """
+    
+    # init root
     base = _LineObject(-2, "", "dict:", -1)
     tree = [base]
     
-    # pre process
-    text = text.replace('\t','  ')
-    text = text.replace('\r\n','\n').replace('\r','\n')
-    
     # setup structure
-    lines = text.split("\n")
     for linenr in range(len(lines)):
         line = lines[linenr]
+        
+        # convert tabs and obtain unindented version
+        line = line.replace('\t','  ')
         line2 = line.lstrip()
         
         # skip comments and empty lines        

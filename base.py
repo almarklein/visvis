@@ -602,24 +602,45 @@ class Wobject(BaseObject):
     
     
     def _GetLimits(self, *args):
-        """ _GetLimits()
+        """ _GetLimits(self, x1, x2, y1, y2, z1, z2)
+        
         Get the limits in world coordinates between which the object 
         exists. This is used by the Axes class to set the camera correctly.
         If None is returned, the limits are undefined. 
+        
         Inheriting Wobject classes should overload this method. But they can
         use this method to take all transformations into account by giving
-        the cornerpoints of the untransformed object:
-        xlim, ylim, zlim = Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
+        the cornerpoints of the untransformed object. 
+        
+        Returns a 3 element tuple of vv.Range instances: xlim, ylim, zlim.
         """
         
         # Examine args
         if not args:
-            return None
-        elif len(args) != 6:
+            minx, maxx, miny, maxy, minz, maxz = [], [], [], [], [], []            
+        elif len(args) == 6:
+            minx, maxx, miny, maxy, minz, maxz = tuple([[arg] for arg in args])
+        else:
             raise ValueError("_Getlimits expects 0 or 6 arguments.")
         
+        # Get limits of children
+        for ob in self.children:
+            tmp = ob._GetLimits()
+            if tmp is not None:
+                limx, limy, limz = tmp
+                minx.append(limx.min); maxx.append(limx.max)
+                miny.append(limy.min); maxy.append(limy.max)
+                minz.append(limz.min); maxz.append(limz.max)
+        
+        # Do we have limits?
+        if not (minx and maxx and miny and maxy and minz and maxz):
+            return None
+        
+        # Take min and max
+        x1, y1, z1 = tuple([min(val) for val in [minx, miny, minz]])
+        x2, y2, z2 = tuple([max(val) for val in [maxx, maxy, maxz]])
+        
         # Make pointset of eight cornerpoints
-        x1, x2, y1, y2, z1, z2 = args
         pp = Pointset(3)
         for x in [x1, x2]:
             for y in [y1, y2]:
@@ -645,7 +666,7 @@ class Wobject(BaseObject):
             # Update
             pp[i] = p
         
-        # Return limits (say nothing about z)
+        # Return limits
         xlim = Range( pp[:,0].min(), pp[:,0].max() )
         ylim = Range( pp[:,1].min(), pp[:,1].max() )
         zlim = Range( pp[:,2].min(), pp[:,2].max() )
