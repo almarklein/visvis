@@ -700,18 +700,7 @@ class ThreeDCamera(TwoDCamera):
         for light in self.axes._lights:
             if not light.isCamLight:
                 light._Apply()
-        
-        # Set lighting model properties. 
-        # - We do not use the global ambient term
-        # - We do not use local viewer mode
-        # - We want to allow people to see also backfaces correctly
-        # - We want to be texture-proof for specular highlights
-        gl.glLightModelfv(gl.GL_LIGHT_MODEL_AMBIENT, (0,0,0,1))
-        gl.glLightModelfv(gl.GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0)
-        gl.glLightModelfv(gl.GL_LIGHT_MODEL_TWO_SIDE, 1.0)
-        gl.glLightModelfv(gl.GL_LIGHT_MODEL_COLOR_CONTROL, 
-            gl.GL_SEPARATE_SPECULAR_COLOR)
-
+    
 
 # todo: use quaternions to fly it?
 class FlyCamera(ThreeDCamera):
