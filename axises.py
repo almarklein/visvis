@@ -130,7 +130,22 @@ class AxisLabel(Text):
 
 
 
-def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
+def GetTickText(tick):
+    """ GetTickText(tick)
+    Obtain text from a tick. Convert to exponential notation 
+    if necessary. 
+    """
+    if tick == -0:
+        tick = 0
+    text = '%1.4g' % tick
+    iExp = text.find('e')
+    if iExp>0:
+        front = text[:iExp+2]
+        text = front + text[iExp+2:].lstrip('0')
+    return text
+
+
+def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
     """ GetTicks(p0, p1, lim, minTickDist=40, ticks=None)
     Get the tick values, position and texts.
     These are calculated from a start end end position and the range
@@ -141,8 +156,26 @@ def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
     # Vector from start to end point
     vec = p1-p0
     
-    # Calculate all ticks if not given
-    if ticks is None:
+    # todo: check tick values in property setters    
+    if givenTicks is not None:
+        # Use given ticks
+        
+        # Init ticks and text
+        ticks = []
+        ticksText = []
+        
+        # Apply
+        for i in range(len(givenTicks)):
+            t = givenTicks[i]
+            if isinstance(t, basestring):
+                ticks.append(i)
+                ticksText.append(t)
+            else:
+                ticks.append(float(t))
+                ticksText.append( GetTickText(t) )
+    
+    else:
+        # Calculate all ticks if not given
         
         # Get pixels per unit
         if lim.range == 0:
@@ -164,29 +197,22 @@ def GetTicks(p0, p1, lim, minTickDist=40, ticks=None):
             return [],[],[]
         
         # Calculate the ticks (the values) themselves
-        ticks = []
         firstTick = np.ceil(  lim.min/tickUnit ) * tickUnit
         lastTick  = np.floor( lim.max/tickUnit ) * tickUnit
         count = 0
         ticks = [firstTick]
+        ticksText = [GetTickText(firstTick)]
         while ticks[-1] < lastTick-tickUnit/2:
             count += 1
-            ticks.append( firstTick + count*tickUnit )
+            t = firstTick + count*tickUnit
+            ticks.append(t)
+            ticksText.append(GetTickText(t))
     
-    # Calculate tick positions and text
-    ticksPos, ticksText = [], []
+    # Calculate tick positions
+    ticksPos = []
     for tick in ticks:
         pos = p0 + vec * ( (tick-lim.min) / lim.range )
-        if tick == -0:
-            tick = 0
-        text = '%1.4g' % tick
-        iExp = text.find('e')
-        if iExp>0:
-            front = text[:iExp+2]
-            text = front + text[iExp+2:].lstrip('0')
-        # Store
         ticksPos.append( pos )
-        ticksText.append( text )
     
     # Done
     return ticks, ticksPos, ticksText
@@ -361,7 +387,19 @@ class BaseAxis(base.Wobject):
         def fget(self):
             return self._xticks
         def fset(self, value):
-            self._xticks = value
+            m = 'Ticks must be a list/tuple/numpy array of numbers or strings.'
+            if not isinstance(value, (list, tuple, np.ndarray)):
+                raise ValueError(m)
+            try:
+                ticks = []
+                for val in value:
+                    if isinstance(val, basestring):
+                        ticks.append(val)
+                    else:
+                        ticks.append(float(val))
+                self._xticks = ticks
+            except Exception:
+                raise ValueError(m)
     
     @Property
     def yTicks():
@@ -370,7 +408,19 @@ class BaseAxis(base.Wobject):
         def fget(self):
             return self._yticks
         def fset(self, value):
-            self._yticks = value
+            m = 'Ticks must be a list/tuple/numpy array of numbers or strings.'
+            if not isinstance(value, (list, tuple, np.ndarray)):
+                raise ValueError(m)
+            try:
+                ticks = []
+                for val in value:
+                    if isinstance(val, basestring):
+                        ticks.append(val)
+                    else:
+                        ticks.append(float(val))
+                self._yticks = ticks
+            except Exception:
+                raise ValueError(m)
     
     @Property
     def zTicks():
@@ -379,7 +429,19 @@ class BaseAxis(base.Wobject):
         def fget(self):
             return self._zticks
         def fset(self, value):
-            self._zticks = value
+            m = 'Ticks must be a list/tuple/numpy array of numbers or strings.'
+            if not isinstance(value, (list, tuple, np.ndarray)):
+                raise ValueError(m)
+            try:
+                ticks = []
+                for val in value:
+                    if isinstance(val, basestring):
+                        ticks.append(val)
+                    else:
+                        ticks.append(float(val))
+                self._zticks = ticks
+            except Exception:
+                raise ValueError(m)
     
     
     @Property

@@ -12,10 +12,10 @@ def surf(*args, **kwargs):
     """ surf(..., axesAdjust=True, axes=None)
     
     Shaded surface plot. Can be called using several ways:
-     * surf(z) - create a surface using the given image with z coordinates.
-     * surf(z, c) - also supply a texture image to map.
-     * surf(x, y, z) - give x, y and z coordinates.
-     * surf(x, y, z, c) - also supply a texture image to map.
+     * surf(Z) - create a surface using the given image with z coordinates.
+     * surf(Z, C) - also supply a texture image to map.
+     * surf(X, Y, Z) - give x, y and z coordinates.
+     * surf(X, Y, Z, C) - also supply a texture image to map.
     
     if c is a 2D image, it should match the dimensions of z. If it is a 3D
     image, the image is mapped to the mesh and may be of any size. 
@@ -162,6 +162,7 @@ if __name__ == "__main__":
     
     # Read image and smooth a bit
     lena = vv.imread('lena.png').astype(np.float32)
+    im = lena.copy()
     im[1:,:,:] = lena[:-1,:,:]
     im[:-1,:,:] += lena[1:,:,:]
     im[:,:-1,:] += lena[:,1:,:]

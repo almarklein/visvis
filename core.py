@@ -690,7 +690,7 @@ class BaseFigure(base.Wibject):
             gl.glClearColor(0.0 ,0.0 ,0.0, 0.0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
             
-            # do not blend
+            # do not blend not light
             gl.glDisable(gl.GL_BLEND)
             
             # nor smooth
@@ -705,7 +705,19 @@ class BaseFigure(base.Wibject):
             clr = self.bgcolor
             gl.glClearColor(clr[0], clr[1], clr[2], 0.0)    
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-        
+            
+            # Set lighting model properties. 
+            # - We do not use the global ambient term
+            # - We do not use local viewer mode
+            # - We want to allow people to see also backfaces correctly
+            # - We want to be texture-proof for specular highlights        
+            # Note: Individual lights are set in the camera class.
+            gl.glLightModelfv(gl.GL_LIGHT_MODEL_AMBIENT, (0,0,0,1))        
+            gl.glLightModelf(gl.GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0)
+            gl.glLightModelf(gl.GL_LIGHT_MODEL_TWO_SIDE, 1.0)            
+            gl.glLightModelf(gl.GL_LIGHT_MODEL_COLOR_CONTROL, 
+                gl.GL_SEPARATE_SPECULAR_COLOR)
+            
             # enable blending, so lines and points can be antialiased
             gl.glEnable(gl.GL_BLEND)
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
