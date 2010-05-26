@@ -70,6 +70,22 @@ from visvis.misc import isFrozen
 # The order in which to try loading a backend
 backendOrder = ['wx', 'qt4', 'fltk'] # I'd love to put tk in this list
 
+
+# Establish preference based on loaded backends modules
+# In this way, in an interactive interpreter the right backend is picked
+backendMap = {'qt4':'PyQt4'}
+for be in [be for be in reversed(backendOrder)]:
+    # Determine backend module name
+    if be in backendMap:
+        modName = backendMap[be]
+    else:
+        modName = be
+    # If loaded, move up front
+    if modName in sys.modules:
+        backendOrder.remove(be)
+        backendOrder.insert(0,be)
+
+
 # Placeholder
 class BackendDescription:
     def __init__(self):
