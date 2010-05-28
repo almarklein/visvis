@@ -1128,16 +1128,19 @@ class Axes(base.Wibject):
     def SetLimits(self, rangeX=None, rangeY=None, rangeZ=None, margin=0.02):
         """ SetLimits(rangeX=None, rangeY=None, rangeZ=None, margin=0.02)
         
-        Set the limits of the scene. These are taken as hints to set 
-        the camera view, and determine where the axis is drawn for the
-        3D camera.
+        Set the limits of the scene. For the 2D camera, these are taken 
+        as hints to set the camera view. For the 3D camear, they determine
+        where the axis is drawn.
         
         Each range can be None, a 2 element iterable, or a visvis.Range 
-        object. If a range is None, the range is obtained from the 
-        wobjects currently in the scene. To set the range that will fit
-        all wobjects, simply use "SetLimits()"
+        object. If a range is None, the range is automatically obtained
+        from the wobjects currently in the scene. To set the range that
+        will fit all wobjects, simply use "SetLimits()"
         
-        The margin represents the fraction of the range to add (default 2%).
+        The margin represents the fraction of the range to add for the
+        ranges that are automatically obtained (default 2%).
+        
+        Returns a 3-element tuple of visvis.Range objects.
         """
         
         # Check margin
@@ -1208,27 +1211,30 @@ class Axes(base.Wibject):
         
         # apply margins
         if margin:
-            # x
-            tmp = rX.range * margin
-            if tmp == 0: tmp = margin
-            rX = Range( rX.min-tmp, rX.max+tmp )
-            # y
-            tmp = rY.range * margin
-            if tmp == 0: tmp = margin
-            rY = Range( rY.min-tmp, rY.max+tmp )
-            # z
-            tmp = rZ.range * margin
-            if tmp == 0: tmp = margin
-            rZ = Range( rZ.min-tmp, rZ.max+tmp )
+            if rangeX is None:
+                tmp = rX.range * margin
+                if tmp == 0: tmp = margin
+                rX = Range( rX.min-tmp, rX.max+tmp )            
+            if rangeY is None:
+                tmp = rY.range * margin
+                if tmp == 0: tmp = margin
+                rY = Range( rY.min-tmp, rY.max+tmp )
+            if rangeZ is None:
+                tmp = rZ.range * margin
+                if tmp == 0: tmp = margin
+                rZ = Range( rZ.min-tmp, rZ.max+tmp )
         
         # apply to each camera
         for cam in self._cameras.values():
             cam.SetLimits(rX, rY, rZ)
+        
+        # return
+        return rX, rY, rZ 
     
     
     def GetLimits(self):
         """ GetLimits()
-        Get the limits of the axes as displayed now. This can differ
+        Get the limits of the 2D axes as currently displayed. This can differ
         from what was set by SetLimits if the daspectAuto is False. 
         Returns a tuple of limits for x and y, respectively.
         
@@ -1692,20 +1698,21 @@ class Legend(simpleWibjects.DraggableBox):
         self._wobjects = []
     
     
-    def _AddLineAndLabel(self):
+    def _AddLineAndLabel(self, twoPoints=True):
         """ Add a line and label to our pool. """
         # get y position
         index = len(self._wobjects)
         y = self._yoffset + self._yspacing * (index)        
         # create label
         label = Label(self)
-        label.bgcolor=''
-        label.position = self._xoffset*2 + self._linelen, y        
+        label.bgcolor = ''        
+        label.position = self._xoffset*2 + twoPoints*self._linelen, y        
         y2 = label.position.h / 2
         # create 2-element pointset
-        pp = Pointset(2)
+        pp = Pointset(2)        
         pp.Append(self._xoffset, y + y2)
-        pp.Append(self._xoffset + self._linelen, y + y2)
+        if twoPoints:
+            pp.Append(self._xoffset + self._linelen, y + y2)
         # create line
         line = Line(self, pp) # line has no parent        
         # return
@@ -1740,19 +1747,28 @@ class Legend(simpleWibjects.DraggableBox):
         if not axes:
             return
         
-        # create new lines and labels
-        maxWidth = 0
+        # collect line objects
+        lines = []
+        twoPoints = False
         for ob in axes._wobjects:
             if len(self._wobjects) >= len(stringList):
                 break
-            if not isinstance(ob, Line):
-                continue
-            # get new line and label
-            line, label = self._AddLineAndLabel() # adds to lists
+            if isinstance(ob, Line):
+                # Add line props
+                tmp = ob.ls, ob.lc, ob.lw, ob.ms, ob.mc, ob.mw, ob.mec, ob.mew
+                lines.append(tmp)
+                # Set whether to use two points
+                twoPoints = twoPoints or bool(ob.ls and ob.lc and ob.lw)
+        
+        # create new lines and labels
+        maxWidth = 0
+        for lineProps in lines:
+            # get new line and label                
+            line, label = self._AddLineAndLabel(twoPoints)
             # apply line properties
-            line.ls, line.lc, line.lw = ob.ls, ob.lc, ob.lw
-            line.ms, line.mc, line.mw = ob.ms, ob.mc, ob.mw
-            line.mec, line.mew = ob.mec, ob.mew
+            line.ls, line.lc, line.lw = lineProps[0:3]
+            line.ms, line.mc, line.mw = lineProps[3:6]
+            line.mec, line.mew = lineProps[6:8]
             # apply text to label
             nr = len(self._wobjects)-1
             label.text = stringList[nr]

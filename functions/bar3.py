@@ -20,7 +20,7 @@ class Bars3D(vv.Wobject):
         or None if there are no bars.
         """
         def fget(self):
-            if self._children:                
+            if self._children:
                 return self._children[0].ambient
             else:
                 return None
@@ -78,7 +78,8 @@ class Bars3D(vv.Wobject):
         should match the number of bars. """
         def fget(self):
             if self._children:                
-                return [child.faceColor for child in self.children]
+                return [child.faceColor for child in self.children 
+                                    if hasattr(child, 'faceColor')]
             else:
                 return None
         def fset(self, value):
