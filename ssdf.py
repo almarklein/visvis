@@ -299,7 +299,7 @@ def save(path, struct_object, appName='ssdf.py', newline='\n'):
     fid = open(path,'wb')
     try:        
         fid.write( header + '\n')
-        for line in lines:
+        for line in lines[1:]:
             line += newline
             fid.write( line.encode('UTF-8') )
     except Exception:
