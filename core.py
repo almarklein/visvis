@@ -1181,6 +1181,14 @@ class Axes(base.Wibject):
                     continue                
                 tmpX, tmpY, tmpZ = tmp
                 
+                # Check for NaNs
+                if tmpX.min*0 != 0 or tmpX.max*0 != 0:
+                    tmpX = None
+                if tmpY.min*0 != 0 or tmpY.max*0 != 0:
+                    tmpY = None
+                if tmpZ.min*0 != 0 or tmpZ.max*0 != 0:
+                    tmpZ = None
+                
                 # update min/max
                 if rangeX:
                     pass
@@ -1762,7 +1770,7 @@ class Legend(simpleWibjects.DraggableBox):
         
         # create new lines and labels
         maxWidth = 0
-        for lineProps in lines:
+        for lineProps in lines:            
             # get new line and label                
             line, label = self._AddLineAndLabel(twoPoints)
             # apply line properties
@@ -1771,6 +1779,8 @@ class Legend(simpleWibjects.DraggableBox):
             line.mec, line.mew = lineProps[6:8]
             # apply text to label
             nr = len(self._wobjects)-1
+            if nr <= len(stringList):
+                break
             label.text = stringList[nr]
             label._Compile()
             label._PositionText()
