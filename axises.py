@@ -963,17 +963,14 @@ class CartesianAxis3D(BaseAxis):
             #tv = gv1 * (5 / gv1s.Norm() )
             npixels = ( gv1s.x**2 + gv1s.y**2 ) ** 0.5 + 0.000001
             tv = gv1 * (5.0 / npixels )
-
-            # Always draw these corners
-            pps.Append(corners4_s[i0])
-            pps.Append(corners4_s[i0]+vector_s)
-            # Add line pieces to draw box
-            if self._showBox:
-                for i in range(4):
-                    if i != i0:
-                        corner = corners4_s[i]
-                        pps.Append(corner)
-                        pps.Append(corner+vector_s)
+            
+            # Draw edge lines (optionally to create a full box)
+            for i in range(4):
+                if self._showBox or i in [i0, i1, i2]:
+                #if self._showBox or i ==i0: # for a real minimalistic axis
+                    corner = corners4_s[i]
+                    pps.Append(corner)
+                    pps.Append(corner+vector_s)
             
             # Get ticks stuff
             tickValues = ticksPerDim[d] # can be None
@@ -1031,11 +1028,12 @@ class CartesianAxis3D(BaseAxis):
                     # get tick location
                     p1 = firstCorner.Copy()
                     p1[d] = tick
-                    # add gridlines (back and front)
-                    p3 = p1+gv1
-                    p4 = p3+gv2
-                    ppg.Append(p1);  ppg.Append(p3)
-                    ppg.Append(p3);  ppg.Append(p4)
+                    if tick not in [lim.min, lim.max]: # not ON the box
+                        # add gridlines (back and front)
+                        p3 = p1+gv1
+                        p4 = p3+gv2
+                        ppg.Append(p1);  ppg.Append(p3)
+                        ppg.Append(p3);  ppg.Append(p4)
             
             # Apply label
             textDict = self._textDicts[d]
