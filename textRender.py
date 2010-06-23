@@ -563,10 +563,16 @@ class BaseText(object):
            (and is called when the first is None)
         """
         
+        # get figure
+        fig = self.GetFigure()
+        
         # get vertices
         if self._vertices1 is None:
             return
         vertices = self._vertices1.Copy()
+        
+        # scale text according to global text size property
+        vertices *= fig._relativeFontSize
         
         # obtain dimensions
         if len(vertices):

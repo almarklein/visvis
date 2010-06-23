@@ -38,7 +38,7 @@ import textures
 from cameras import (ortho, depthToZ, TwoDCamera, ThreeDCamera, FlyCamera)
 from misc import Property, Range, OpenGLError, getColor
 import events
-from textRender import FontManager, Text, Label
+from textRender import FontManager, BaseText, Text, Label
 from line import MarkerManager, Line, lineStyles
 from axises import BaseAxis, CartesianAxis, PolarAxis2D
 from polygonalModeling import Light
@@ -231,6 +231,7 @@ class BaseFigure(base.Wibject):
         
         # To store the fonts used in this figure.
         self._fontManager = FontManager()
+        self._relativeFontSize = 1.0
         
         # To store the markers used in this figure
         self._markerManager = MarkerManager()
@@ -515,6 +516,26 @@ class BaseFigure(base.Wibject):
         self.position._Changed()
         # Draw, but not too soon.
         self.Draw(timeout=200)
+    
+    
+    @Property
+    def relativeFontSize():
+        """ The (global) relative font size; all texts in this figure
+        are scaled by this amount.
+        """
+        def fget(self):
+            return self._relativeFontSize
+        def fset(self, value):
+            # Set value
+            self._relativeFontSize = float(value)
+            # Update all text objects            
+            for ob in self.FindObjects(BaseText):
+                ob._vertices2 = None
+            # Update all legend objects
+            for ob in self.FindObjects(Legend):
+                ob.SetStrings(ob._stringList)
+            # Redraw
+            self.Draw()
     
     
     ## Extra methods
@@ -1706,16 +1727,19 @@ class Legend(simpleWibjects.DraggableBox):
         self._wobjects = []
     
     
-    def _AddLineAndLabel(self, twoPoints=True):
+    def _AddLineAndLabel(self, text, yspacing=1.0, twoPoints=True):
         """ Add a line and label to our pool. """
         # get y position
         index = len(self._wobjects)
-        y = self._yoffset + self._yspacing * (index)        
+        y = self._yoffset + yspacing * (index)        
         # create label
-        label = Label(self)
+        label = Label(self, text)
         label.bgcolor = ''        
-        label.position = self._xoffset*2 + twoPoints*self._linelen, y        
-        y2 = label.position.h / 2
+        label.position = self._xoffset*2 + twoPoints*self._linelen, y
+        label._Compile()
+        label._PositionText()
+        #y2 = label.position.h / 2
+        y2 = (label._deltay[1] - label._deltay[0]) / 2 
         # create 2-element pointset
         pp = Pointset(2)        
         pp.Append(self._xoffset, y + y2)
@@ -1748,12 +1772,13 @@ class Legend(simpleWibjects.DraggableBox):
         for label in self.children:
             label.Destroy()
         
-        # find axes
+        # find axes and figure
         axes = self.parent
         while axes and not isinstance(axes, Axes):
             axes = axes.parent
         if not axes:
             return
+        fig = axes.GetFigure()
         
         # collect line objects
         lines = []
@@ -1770,20 +1795,20 @@ class Legend(simpleWibjects.DraggableBox):
         
         # create new lines and labels
         maxWidth = 0
+        nr = -1
         for lineProps in lines:            
+            nr += 1
+            if nr >= len(stringList):
+                break
             # get new line and label                
-            line, label = self._AddLineAndLabel(twoPoints)
+            text = stringList[nr]
+            yspacing = self._yspacing * fig._relativeFontSize
+            line, label = self._AddLineAndLabel(text, yspacing, twoPoints)
             # apply line properties
             line.ls, line.lc, line.lw = lineProps[0:3]
             line.ms, line.mc, line.mw = lineProps[3:6]
             line.mec, line.mew = lineProps[6:8]
-            # apply text to label
-            nr = len(self._wobjects)-1
-            if nr <= len(stringList):
-                break
-            label.text = stringList[nr]
-            label._Compile()
-            label._PositionText()
+            # correct label size and store max
             label.position.w = (label._deltax[1]-label._deltax[0])+2
             maxWidth = max([maxWidth, label.position.w ])
         
@@ -1791,7 +1816,9 @@ class Legend(simpleWibjects.DraggableBox):
         if self._wobjects:
             pos = label.position
             self.position.w = maxWidth + pos.x + self._xoffset
-            self.position.h = pos.bottom + self._yoffset
+            #self.position.h = pos.bottom + self._yoffset
+            labelHeight = label._deltay[1] - label._deltay[0]
+            self.position.h = pos.top + labelHeight + self._yoffset
             self.visible = True
         else:
             self.visible = False
