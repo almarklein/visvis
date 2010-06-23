@@ -30,7 +30,7 @@ u00c0 - u037f  latin
 u0380 - u03ff  greek
 u2000 - u23ff  symbols
 
-Text can be formatted using the following constructs:
+Text can be formatted using the following constructs (which can be mixed):
 hello^2 or hello^{there}, makes one or more charactes superscript.
 hello_2 or hello_{there}, makes one or more charactes subscript.
 hell\io or hell\i{ohoo}, makes one or more charactes italic.
@@ -62,7 +62,6 @@ nu          xi          omicron     pi
 rho         varsigma    sigma       tau
 upsilon     phi         chi         psi
 omega
-
     
 """
 
@@ -195,7 +194,14 @@ class Glyph(object):
     # - an array of origin 's
     # - an array of size's
     # - fontsize of the font in the data array
-    def __init__(self, font, char, size=12, type=0):
+    def __init__(self, font, char, size=12, styles=None):
+        
+        # unwind the style for this glyph
+        self.style = MiniStyle()
+        if styles:
+            for style in styles:
+                self.style += style
+        style = self.style
         
         # store font
         self.font = font
@@ -217,11 +223,16 @@ class Glyph(object):
         # default
         infoSize, infoOrigin, infoWidth = info.size, info.origin, info.width
         # should and can we display in italic or bold?
-        if type == 3 and ac in info.charcodes_i:
-            # italic text            
-            infoSize, infoOrigin, infoWidth = (
-                info.size_i, info.origin_i, info.width_i)
-        elif type == 4 and ac in info.charcodes_b:
+        # Note: italic is now realized by printing it skewed rather using the
+        # italic glyphs. The reason is that when using the texture one would
+        # see artifacts from neighbouring characters. Additionally, it's now
+        # possible to mix bold and italic text, and one can make any supported 
+        # unicode character italic.
+        #         if style.italic and ac in info.charcodes_i:
+#             # italic text            
+#             infoSize, infoOrigin, infoWidth = (
+#                 info.size_i, info.origin_i, info.width_i)
+        if style.bold and ac in info.charcodes_b:
             # bold text
             infoSize, infoOrigin, infoWidth = (
                 info.size_b, info.origin_b, info.width_b)
@@ -236,6 +247,11 @@ class Glyph(object):
         tmp = float(info.data.shape[0])
         self.t1, self.t2 = (y1) / tmp, (y2-1) / tmp
         
+        # Define skew factor to handle italics correctly
+        self.skewFactor = 0.0
+        if style.italic:
+            self.skewFactor = 0.5
+        
         # calculate width on screen, given the size
         factor = size / float(info.fontsize)
         self.sizex = infoSize[ac,0] * factor
@@ -244,14 +260,44 @@ class Glyph(object):
         
         smaller = 0.6
         self.dy = 0.0 # normal script        
-        if type == 2:
+        if style.script == 1:
             # sub script            
             self.dy = (1-smaller) * self.sizey        
-        if type == 1 or type == 2:
-            # super or subscript            
+        if style.script:
+            # super or subscript
+            self.skewFactor *= smaller
             self.sizex = self.sizex * smaller
             self.sizey = self.sizey * smaller
             self.width = self.width * smaller#- self.sizex * (1.0-smaller)
+
+
+class MiniStyle:
+    """ Class that represents the style of characters (sub/super script,
+    bold, and italic. Used when compiling the text.
+    """
+    def __init__(self, script=0, bold=False, italic=False):
+        self.script = script
+        self.bold = bold
+        self.italic = italic
+    
+    def __add__(self, other):
+        # allow None
+        if other is None:
+            return self
+        # set script
+        script = other.script
+        if script == 0:
+            script = self.script
+        # done
+        return MiniStyle(   script, 
+                            self.bold or other.bold, 
+                            self.italic or other.italic )
+    
+    def __repr__(self):
+        tmp = self.script, self.bold, self.italic
+        return '<MiniStyle script:%i, bold:%i, italic:%i>' % tmp
+
+
 
 class BaseText(object):
     """ Base object for the Text wobject and Label wibject.
@@ -444,37 +490,38 @@ class BaseText(object):
         
         # build list of glyphs, take sub/super scripting into account.        
         escape = False
-        type = 0
-        region = False
+        styles = []
+        style = None # Style to set
         for i in range(len(tt)):
             c = tt[i]            
             if escape:                
-                g = Glyph(font, c, self._size, type)
+                g = Glyph(font, c, self._size, styles)
                 glyphs.append( g )
-                escape = False               
-            elif region:
-                if c=='}':
-                    type = 0
-                    region = False
-                else:
-                    g = Glyph(font, c, self._size, type)
-                    glyphs.append( g )
+                escape = False
             elif c=='{':
-                region = True
+                # Append style to the list
+                if style:
+                    styles.append(style)
+                    style = None
+            elif c=='}':
+                # Remove style
+                if styles:
+                    styles.pop()                    
             elif c=='^':
-                type = 1
+                style = MiniStyle(2)
             elif c=='_':
-                type = 2
+                style = MiniStyle(2)
             elif c=='\x06':
-                type = 3
+                style = MiniStyle(0,False,True)
             elif c=='\x07':
-                type = 4
+                style = MiniStyle(0,True,False)
             elif c=='\\' and i+1<len(tt) and tt[i+1] in ['_^\x06\x07']:
                 escape = True
             else:
-                g = Glyph(font, c, self._size, type)
+                # create glyph (with new style (or not))
+                g = Glyph(font, c, self._size, styles+[style])
                 glyphs.append( g )
-                type = 0
+                style = None
         
         # build arrays with vertices and coordinates        
         x1, y1, z = 0, 0, 0
@@ -492,9 +539,12 @@ class BaseText(object):
             texCords.Append(g.s2, g.t2)
             texCords.Append(g.s1, g.t2)
             
+            # set skewing for position
+            skew = self._size * g.skewFactor
+            
             # append vertices
-            vertices.Append(x1, y1+dy, z)
-            vertices.Append(x2, y1+dy, z)
+            vertices.Append(x1+skew, y1+dy, z)
+            vertices.Append(x2+skew, y1+dy, z)
             vertices.Append(x2, y2+dy, z)
             vertices.Append(x1, y2+dy, z)
             
