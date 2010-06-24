@@ -274,6 +274,7 @@ class Glyph(object):
 class MiniStyle:
     """ Class that represents the style of characters (sub/super script,
     bold, and italic. Used when compiling the text.
+    script = {0:'normal', 1:'sub', 2:'super'}
     """
     def __init__(self, script=0, bold=False, italic=False):
         self.script = script
@@ -510,7 +511,7 @@ class BaseText(object):
             elif c=='^':
                 style = MiniStyle(2)
             elif c=='_':
-                style = MiniStyle(2)
+                style = MiniStyle(1)
             elif c=='\x06':
                 style = MiniStyle(0,False,True)
             elif c=='\x07':

@@ -521,7 +521,8 @@ class BaseFigure(base.Wibject):
     @Property
     def relativeFontSize():
         """ The (global) relative font size; all texts in this figure
-        are scaled by this amount.
+        are scaled by this amount. This is intended to (slighly) increase
+        or descrease font size in the figure for publication purposes.
         """
         def fget(self):
             return self._relativeFontSize
@@ -1532,7 +1533,8 @@ class Axes(base.Wibject):
         # Draw the background of the axes and the wobjects in it.
         
         # size of figure ...
-        w,h = self.GetFigure().position.size
+        fig = self.GetFigure()
+        w,h = fig.position.size
         
         # correct size for labels
         self._CorrectPositionForLabels()

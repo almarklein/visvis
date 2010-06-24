@@ -797,14 +797,16 @@ class CartesianAxis2D(BaseAxis):
             
             # We should hide this last tick if it sticks out
             if d==0:
-                # Prepare text object to produce _vertices and _screenx
+                # Prepare text object to produce _vertices2 and _screenx
                 t._Compile()
+                t._PositionText()
                 t.OnDraw()
                 # Get positions
                 fig = axes.GetFigure()
                 if fig:
                     tmp1 = fig.position.width
-                    tmp2 = t._screenx + t._vertices1[:,0].max() / 2
+                    tmp2 = t._screenx + t._vertices2[:,0].max()
+#                     tmp2 = t._vertices2[:,0].max() / 2
                     # Apply
                     if t._vertices1 and tmp1 < tmp2:
                         t.visible = False
