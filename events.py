@@ -393,7 +393,7 @@ def processVisvisEvents():
 
 
 class Timer(BaseEvent):
-    """ Timer(interval=1000, oneshot=True) 
+    """ Timer(owner, interval=1000, oneshot=True) 
     
     Time class. You can bind callbacks to the timer. The timer is 
     fired when it runs out of time. You can do one-shot runs and 
