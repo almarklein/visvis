@@ -25,7 +25,6 @@ moon.transformations.insert(0,moonRot)
 
 # Set appearance
 earth.faceColor = 'b'
-earth.edgeShading = 'plain'
 moon.faceColor = 'y'
 sun.faceColor = 'r'
 
