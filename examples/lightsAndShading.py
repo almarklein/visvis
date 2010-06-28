@@ -4,6 +4,7 @@ the diffuse reflection of the objects is varied.
 """
 
 import visvis as vv
+vv.figure()
 
 # Define shadings to apply, and numbef of steps for diffuse reflection
 shading = [ ('plain', None), ('flat', None), ('smooth', None), 

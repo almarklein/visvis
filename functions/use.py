@@ -11,6 +11,9 @@ def use(backendName=None):
     
     If no backend is given returns the previously selected backend. If no
     backend was yet selected, a suitable backend is selected automatically.
+	This is done by detecting whether any of the backend toolkits is
+	already loaded. If not, visvis tries to load a backend in the order:
+	wx, qt4, fltk.
     
     This function is only required to explicitly choose a specific backend, 
     or to obtain the application object; when this function is not used,

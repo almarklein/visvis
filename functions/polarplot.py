@@ -47,20 +47,24 @@ def polarplot(data1, data2=None,  inRadians=False,
     Plot 2D polar data. polarplot uses a polar axis to draw a polar grid, 
     and has some specialized methods for adjusting the polar plot.
     Access these via vv.gca().axis.
-    These include:
-        * SetLimits(thetaRange, radialRange):
-        * thetaRange, radialRange = GetLimits():
+    
+    These include:    
         
-        * angularRefPos: Get and Set methods for the relative screen
-          angle of the 0 degree polar reference.  Default is 0 degs
-          which corresponds to the positive x-axis (y =0)
+        SetLimits(thetaRange, radialRange)
         
-        * isCW: Get and Set methods for the sense of rotation CCW or
-          CW. This method takes/returns a bool (True if the default CW).
-
-    Drag mouse up/down to translate radial axis.    
-    Drag mouse left/right to rotate angular ref position.    
-    Drag mouse + shift key up/down to rescale radial axis (min R fixed).
+        thetaRange, radialRange = GetLimits()
+        
+        angularRefPos: Get and Set methods for the relative screen
+        angle of the 0 degree polar reference.  Default is 0 degs
+        which corresponds to the positive x-axis (y =0)
+        
+        isCW: Get and Set methods for the sense of rotation CCW or
+        CW. This method takes/returns a bool (True if the default CW).
+    
+    Usage:
+      * Drag mouse up/down to translate radial axis.    
+      * Drag mouse left/right to rotate angular ref position.    
+      * Drag mouse + shift key up/down to rescale radial axis (min R fixed).
     
     If axesAdjust==True, this function will call axes.SetLimits() and set
     the camera type to 2D. If daspectAuto has not been set yet, it is set

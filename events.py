@@ -445,7 +445,7 @@ class Timer(BaseEvent):
     
     
     def Destroy(self):
-        """ Destroy the timer, preventing it from ever getting called.
+        """ Destroy the timer, preventing it from ever fyring again.
         """
         self.Stop()
         tmp = weakref.ref(self)
