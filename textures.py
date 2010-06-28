@@ -1560,17 +1560,9 @@ class Texture3D(BaseTexture):
         # prepare texture coordinates
         t0, t1 = 0, 1
         
-        # if any axis are flipped, make sure the correct polygons are front
-        # facing
-        tmp = 1
-        for i in axes.daspect:
-            if i<0:
-                tmp*=-1        
-        if tmp==1:
-            t0, t1 = t1, t0
-            x0, x1 = x1, x0
-            y0, y1 = y1, y0
-            z0, z1 = z1, z0
+        # I previously swapped coordinates to make sure the right faces
+        # were frontfacing. Now I apply culling to achieve the same 
+        # result in a better way.
         
         # using glTexCoord* is the same as glMultiTexCoord*(GL_TEXTURE0)
         # Therefore we need to bind the base texture to 0.
@@ -1619,6 +1611,15 @@ class Texture3D(BaseTexture):
         # get data
         tex_coord, ver_coord, ind = self._quads
         
+        # Set culling (take data aspect into account!)        
+        tmp = 1        
+        for i in axes.daspect:
+            if i<0:
+                tmp *= -1
+        gl.glFrontFace({1:gl.GL_CW, -1:gl.GL_CCW}[tmp])        
+        gl.glEnable(gl.GL_CULL_FACE)
+        gl.glCullFace(gl.GL_BACK)
+        
         # init vertex and texture array
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
@@ -1631,6 +1632,8 @@ class Texture3D(BaseTexture):
         # disable vertex array        
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        #
+        gl.glDisable(gl.GL_CULL_FACE)
     
     
     def _GetLimits(self):

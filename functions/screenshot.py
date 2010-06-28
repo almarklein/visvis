@@ -37,8 +37,8 @@ def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
     
     Rationale:
     We'd prefer storing screenshots of plots as vector (eps) images, but 
-    the nature of OpenGl prevents this. By applying high quality inter-
-    polation (using a cardinal spline), the resolution can be increased, 
+    the nature of OpenGl prevents this. By applying high quality 
+	interpolation (using a cardinal spline), the resolution can be increased, 
     thereby significantly improving the visibility/smoothness for lines 
     and fonts. Use this to produce publication quality snapshots of your
     plots.

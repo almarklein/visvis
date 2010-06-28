@@ -75,6 +75,20 @@ def _getColor(color, ref):
 
 # todo: implement spot light and attenuation
 class Light(object):
+    """ A Light object represents a light source in the scene. It 
+    determines how lit objects (such as Mesh objects) are visualized.
+    
+    Each axes has 8 light sources, of which only the 0th is turned on
+    by default. De 0th light source provides the ambient light in the
+    scene (the ambient component is 0 by default for the other light
+    sources). Obtain the lights using the axes.light0 and axes.lights
+    properties.
+    
+    The 0th light source is a directional camera light by default; it
+    shines in the direction in which you look. The other lights are 
+    oriented at the origin by default.
+    """
+    
     def __init__(self, index):
         
         # Store index of the light (OpenGl can handle up to 8 lights)
@@ -266,7 +280,7 @@ def check3dArray(value):
         raise ValueError()
 
 
-class BaseMesh:
+class BaseMesh(object):
     """ BaseMesh(vertices, normals=None, faces=None,
             colors=None, texcords=None, verticesPerFace=3)
         
@@ -920,8 +934,12 @@ class Mesh(Wobject, BaseMesh):
         gl.glDisableClientState(gl.GL_NORMAL_ARRAY)
         gl.glDisableClientState(gl.GL_COLOR_ARRAY)
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        #
         gl.glDisable(gl.GL_COLOR_MATERIAL)
+        gl.glShadeModel(gl.GL_FLAT)
+        #
         gl.glDisable(gl.GL_LIGHTING)
+        gl.glDisable(gl.GL_NORMALIZE)
         gl.glDisable(gl.GL_CULL_FACE)
 
 

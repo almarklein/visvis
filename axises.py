@@ -220,9 +220,9 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
 
 class BaseAxis(base.Wobject):
     """ BaseAxis(parent)
-    This is the (abstract) base class for the axis classes defined
-    in this module.
-
+    This is the (abstract) base class for all axis classes, such
+    as the CartesianAxis and PolarAxis.
+    
     An Axis object represents the lines, ticks and grid that make
     up an axis. Not to be confused with an Axes, which represents
     a scene and is a Wibject.
