@@ -15,7 +15,7 @@
 #   License along with this program.  If not, see 
 #   <http://www.gnu.org/licenses/>.
 #
-#   Copyright (C) 2010 Almar Klein
+#   Copyright (C) 2009 Almar Klein
 
 """ Module images2gif
 
@@ -25,6 +25,9 @@ of PIL images or numpy arrays.
 - based on gifmaker (in the scripts folder of the source distribution of PIL)
 - based on gif file structure as provided by wikipedia
 
+$Author$
+$Date$
+$Rev$
 
 """
 
@@ -65,17 +68,22 @@ def getheaderAnim(im):
     return bb
 
 
-def getAppExt(loops=0):
-    """ Application extention. Part that secifies amount of loops. 
-    if loops is 0, if goes on infinitely.
+def getAppExt(loops=float('inf')):
+    """ Application extention. Part that specifies amount of loops. 
+    If loops is inf, it goes on infinitely.
     """
-    bb = "\x21\xFF\x0B"  # application extension
-    bb += "NETSCAPE2.0"
-    bb += "\x03\x01"
     if loops == 0:
-        loops = 2**16-1
-    bb += intToBin(loops)
-    bb += '\x00'  # end
+        bb = "" # application extension should not be used
+                # (the extension interprets zero loops
+                # to mean an infinite number of loops)
+    else:
+        bb = "\x21\xFF\x0B"  # application extension
+        bb += "NETSCAPE2.0"
+        bb += "\x03\x01"
+        if loops == float('inf'):
+            loops = 2**16-1
+        bb += intToBin(loops)
+        bb += '\x00'  # end
     return bb
 
 
