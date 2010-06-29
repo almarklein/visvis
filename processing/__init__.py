@@ -53,7 +53,7 @@ def _insertFunctions():
         import zipfile
         z = zipfile.ZipFile(path)
         files = [os.path.split(i)[1] for i in z.namelist() 
-                    if i.startswith('visvis') and i.count('functions')]
+                    if i.startswith('visvis') and i.count('processing')]
     else:
         # get list of files from file system
         files = os.listdir(path)

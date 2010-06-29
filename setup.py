@@ -1,18 +1,12 @@
 description = 'An object oriented approach to visualization of 1D to 4D data.'
 long_description = """
-Visvis is a pure Python library for visualization of 1D to 4D data in an
-object oriented way. It can visualize plots (lines with markers), show
-images, and render 3D volumes. These data can also be moved in time.
-Visvis is cross-platform, lightweight, and is designed to be 
-easily extendable.
+Visvis is a pure Python library for visualization of 1D to 4D
+data in an object oriented way. Essentially, visvis is an object
+oriented layer of Python on top of OpenGl, thereby combining the
+power of OpenGl with the usability of Python. A Matlab-like
+interface in the form of a set of functions allows easy creation 
+of objects (e.g. plot(), imshow(), volshow(), surf()). 
 
-Essentially, visvis is an object oriented layer of Python on top of
-OpenGl, thereby combining the power of OpenGl with the usability of 
-Python. A Matlab-like interface in the form of a set of functions allows
-easy creation of objects (e.g. plot(), imshow(), volshow()).
-
-Visvis can be used in Python scripts, interactive Python shells (as with
-IPython) and can be embedded in GUI applications. 
 """
 
 from distutils.core import setup

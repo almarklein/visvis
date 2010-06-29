@@ -23,7 +23,7 @@ Helps freezing apps made using visvis.
 
 """
 import visvis as vv
-import os, shutil
+import os, shutil, sys
 
 def copyResources(destPath):   
     """ Copy the visvis resource dir to the specified folder. 
@@ -47,22 +47,41 @@ def getIncludes(backendName):
       not included by default.
     - opengl stuff
     """
+    # init
     includes = []
+    
     # backend
     backendModule = 'visvis.backends.backend_'+ backendName
     includes.append(backendModule)
     if backendName == 'qt4':
         includes.extend(["sip", "PyQt4.QtCore", "PyQt4.QtGui"])
+    
     # functions
     for funcName in vv.functions._functionNames:
         includes.append('visvis.functions.'+funcName)
+    
+    # processing functions
+    for funcName in vv.processing._functionNames:
+        includes.append('visvis.processing.'+funcName)
+    
     # opengl stuff
-    tmp = ["nones", "strings","lists","numbers","ctypesarrays",
-        "ctypesparameters", "ctypespointers", "numpymodule"]
-    for i in tmp:
-        includes.append("OpenGL.arrays."+i)
-    includes.append("OpenGL.platform.win32")
+    arrayModules = ["nones", "strings","lists","numbers","ctypesarrays",
+        "ctypesparameters", "ctypespointers", "numpymodule", 
+        "formathandler"]
+    GLUModules = ["glustruct"]
+    for name in arrayModules:
+        name = 'OpenGL.arrays.'+name
+        if name in sys.modules:        
+            includes.append(name)
+    for name in GLUModules:
+        name = 'OpenGL.GLU.'+name
+        if name in sys.modules:        
+            includes.append(name)
+    if os.name == 'nt':
+        includes.append("OpenGL.platform.win32")
+    
     # done
     return includes
+    
     
     

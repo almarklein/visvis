@@ -36,7 +36,7 @@ import base
 import simpleWibjects
 import textures
 from cameras import (ortho, depthToZ, TwoDCamera, ThreeDCamera, FlyCamera)
-from misc import Property, Range, OpenGLError, getColor
+from misc import Property, Range, OpenGLError, getColor, getOpenGlInfo
 import events
 from textRender import FontManager, BaseText, Text, Label
 from line import MarkerManager, Line, lineStyles
@@ -734,11 +734,13 @@ class BaseFigure(base.Wibject):
             # - We want to allow people to see also backfaces correctly
             # - We want to be texture-proof for specular highlights        
             # Note: Individual lights are set in the camera class.
+            glVersion = getOpenGlInfo()[0]
             gl.glLightModelfv(gl.GL_LIGHT_MODEL_AMBIENT, (0,0,0,1))        
             gl.glLightModelf(gl.GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0)
-            gl.glLightModelf(gl.GL_LIGHT_MODEL_TWO_SIDE, 1.0)            
-            gl.glLightModelf(gl.GL_LIGHT_MODEL_COLOR_CONTROL, 
-                gl.GL_SEPARATE_SPECULAR_COLOR)
+            gl.glLightModelf(gl.GL_LIGHT_MODEL_TWO_SIDE, 1.0)
+            if glVersion >= '1.2':
+                gl.glLightModelf(gl.GL_LIGHT_MODEL_COLOR_CONTROL, 
+                    gl.GL_SEPARATE_SPECULAR_COLOR)
             
             # enable blending, so lines and points can be antialiased
             gl.glEnable(gl.GL_BLEND)
