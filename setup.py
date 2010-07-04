@@ -34,7 +34,7 @@ setup(
     provides = ['visvis'],
     requires = ['numpy', 'pyOpenGl'],
     
-    packages = ['visvis', 'visvis.functions', 'visvis.backends', 'visvis.points'],
+    packages = ['visvis', 'visvis.functions', 'visvis.backends', 'visvis.processing', 'visvis.points'],
     package_dir = {'visvis': '.'},
     package_data = {'visvis': [ 'examples/*.py', 'visvisResources/*']},
     zip_safe = False, # I want examples to work
