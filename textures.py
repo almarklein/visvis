@@ -46,6 +46,8 @@ from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 
 import points
 
+# Variable for debugging / developing to display shader info logs always.
+alwaysShowShaderInfoLog = False
 
 dtypes = {  'uint8':gl.GL_UNSIGNED_BYTE,    'int8':gl.GL_BYTE,
             'uint16':gl.GL_UNSIGNED_SHORT,  'int16':gl.GL_SHORT, 
@@ -294,11 +296,15 @@ class GlslProgram:
             if not ok:
                 self._PrintInfoLog(glObject, "Error compiling shading code:")
                 return True
+            elif alwaysShowShaderInfoLog:
+                self._PrintInfoLog(glObject, "Compile info log:")
         if checkLink:
             ok = gl.glGetProgramiv(glObject, gl.GL_LINK_STATUS)
             if not ok:
                 self._PrintInfoLog(glObject, "Error linking shading code:")
                 return True
+            elif alwaysShowShaderInfoLog:
+                self._PrintInfoLog(glObject, "Link info log:")
     
     
     def _PrintInfoLog(self, glObject, preamble=""):
