@@ -138,7 +138,6 @@ class GlslProgram:
         
         if self._IsCompiled():
             gla.glUseProgramObjectARB(self._programId)
-            self._checkForOpenglError('Use')
         else:
             gla.glUseProgramObjectARB(0)
     
@@ -200,7 +199,6 @@ class GlslProgram:
         try:
             # create program object
             self._programId = gla.glCreateProgramObjectARB()
-            self._checkForOpenglError('CreateProgram')
             
             # the two shaders
             codes = [self._fragmentCode, self._vertexCode]
@@ -211,26 +209,23 @@ class GlslProgram:
                     continue
                 
                 # create shader object            
-                myshader = gla.glCreateShaderObjectARB(type)            
-                self._checkForOpenglError('CreateShader')
+                myshader = gla.glCreateShaderObjectARB(type)
                 self._shaderIds.append(myshader)
                 
                 # set its source            
                 gla.glShaderSourceARB(myshader, [code])
-                self._checkForOpenglError('ShaderSource')
                 
                 # compile shading code
                 gla.glCompileShaderARB(myshader)
-                self._checkForOpenglError('CompileShader')
                 
-                # errors?
-                if not self._ProcessErrors(myshader):
+                # If it went well, attach!
+                if not self._CheckForErrors(myshader, True, False):
                     gla.glAttachObjectARB(self._programId, myshader)
-                    self._checkForOpenglError('AttachShader')
             
-            # link shader
+            # link shader and check for errors
             gla.glLinkProgramARB(self._programId)
-            self._checkForOpenglError('Link')
+            if self._CheckForErrors(self._programId, False, True):
+                self._programId = -1
         
         except Exception, why:
             self._programId = -1
@@ -289,19 +284,28 @@ class GlslProgram:
             gl.glUniform4iARB(loc, values[0], values[1], values[2], values[3])
     
     
-    def _checkForOpenglError(self, s):        
-        e = gl.glGetError()
-        if (e != gl.GL_NO_ERROR):
-            raise OpenGLError('GLERROR: ' + str(s) + ' ' + glu.gluErrorString(e))
+    def _CheckForErrors(self, glObject, checkCompile=True, checkLink=True):
+        """ Check for errors in compiling and linking the given shader.
+        Prints the info log if there's an error.
+        Returns True if an error was found.
+        """         
+        if checkCompile:
+            ok = gl.glGetShaderiv(glObject, gl.GL_COMPILE_STATUS)
+            if not ok:
+                self._PrintInfoLog(glObject, "Error compiling shading code:")
+                return True
+        if checkLink:
+            ok = gl.glGetProgramiv(glObject, gl.GL_LINK_STATUS)
+            if not ok:
+                self._PrintInfoLog(glObject, "Error linking shading code:")
+                return True
     
     
-    def _ProcessErrors(self, glObject):
+    def _PrintInfoLog(self, glObject, preamble=""):
+        """ Print the info log. """
         log = gla.glGetInfoLogARB(glObject)
         if log:
-            print "Warning in shading code:", log
-            return True
-        else:
-            return False
+            print preamble, log            
     
     
     def DestroyGl(self):
