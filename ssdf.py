@@ -1,3 +1,31 @@
+#   Copyright (c) 2010, Almar Klein
+#   All rights reserved.
+#
+#   This code is subject to the (new) BSD license:
+#
+#   Redistribution and use in source and binary forms, with or without
+#   modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the <organization> nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY 
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
 """ MODULE Simple Structured Data Format.
 
 SSDF is a format for storing structured (scientific) data.
@@ -35,36 +63,6 @@ s = ssdf.Struct(some_dict) to create a structure from a dict
 ssdf.save(path,s) to save structured data to a file
 (use ssdf.saves(s) and ssdf.loads(text) to save/load a string)
 
-
-Copyright (c) 2010, Almar Klein
-All rights reserved.
-"""
-
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-#    * Redistributions of source code must retain the above copyright notice, 
-#      this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the 
-#      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the University of Twente nor the names of its 
-#      contributors may be used to endorse or promote products derived from
-#      this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
-"""
 Example
 =======
 
@@ -87,6 +85,9 @@ numbers = array 3x2 float64 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
 files = dict:
   basedir = 'c:/temp'
   filenames = ['one.txt', 'two.txt', 'three.txt']
+
+This file and the ssdf standard are free for all to use.
+Copyright (C) 2010 Almar Klein 
 """
 
 import os, sys
@@ -106,15 +107,17 @@ if np:
     intTypes = (int, np.int8,  np.int16,  np.int32,  np.int64, 
                     np.uint8, np.uint16, np.uint32, np.uint64)
 else:
-    floatTypes = (float)
-    intTypes = (int)
+    floatTypes = (float,)
+    intTypes = (int,)
 
 # if version 2...
 if sys.version_info[0] <= 2:
-    # Prevent circular assignment when doing reload(ssdf)
-    simplestr = __builtins__['str']
-    bytes = __builtins__['str']
-    str = __builtins__['unicode']
+#     try:
+#         assert simplestr        
+#     except NameError:
+        simplestr = str
+        bytes = str
+        str = unicode
 else:
     basestring = str
     simplestr = str
@@ -285,23 +288,17 @@ def save(path, struct_object, appName='ssdf.py', newline='\n'):
     """
     path = os.path.abspath(path)
     
-    # get header
+    # get text and convert to bytes
     header =  '# This Simple Structured Data Format (SSDF) file was '
     header += 'created from Python by %s.' % appName
+    text = saves(struct_object)
+    text = header + newline + text.replace('\n',newline) + newline
+    byts = text.encode('UTF-8')
     
-    # get text in lines
-    base = _toString('', struct_object, -2)  # negative indent
-    lines = _pack(base)
-    
-    # write to file. B
-    # Better write line by line instead of getting one large string; the
-    # latter can cause memory errors.
+    # store...
     fid = open(path,'wb')
-    try:        
-        fid.write( header + '\n')
-        for line in lines[1:]:
-            line += newline
-            fid.write( line.encode('UTF-8') )
+    try:
+        fid.write( byts )
     except Exception:
         raise
     finally:
@@ -313,20 +310,20 @@ def load(path):
     """        
     path = os.path.abspath(path)        
     if not os.path.isfile(path):
-        raise IOError("The specified file does not exist.")
+        raise IOError("The specified file does not exist: "+path)
     
     # open file and read data
-    fid = open(path,'rb')
+    f = open(path,'rb')
     try:
-        lines = fid.readlines()
+        byts = f.read()
     except Exception:
         raise
     finally:        
-        fid.close()
+        f.close()
     
     # parse!
-    lines = [line.decode('UTF-8') for line in lines]    
-    return _loadLines(lines)
+    text = byts.decode('UTF-8')
+    return loads(text)
 
 
 def update(path, struct_object, appName='ssdf.py', newline='\n'):
@@ -378,9 +375,8 @@ def _pack(lineObject):
         childList = _pack(child)
         listOfLists.append( childList )
     
-    # Before, I sorted by length here. This was a grave error, as this
-    # will destroy the order of lists! So I moved the ordering to where
-    # the dict is processed in _toString.
+    # sort by length
+    listOfLists.sort(key=len)
     
     # produce flat list
     flatList = [lineObject.line]
@@ -394,27 +390,17 @@ def _pack(lineObject):
 def loads(text):    
     """ Load Struct object from a string.  """
     
-    # split
-    text = text.replace('\r\n','\n').replace('\r','\n')
-    lines = text.split("\n")
-    
-    # go
-    return _loadLines(lines)
-
-
-def _loadLines(lines):
-    """ Load using the lines. """
-    
-    # init root
     base = _LineObject(-2, "", "dict:", -1)
     tree = [base]
     
+    # pre process
+    text = text.replace('\t','  ')
+    text = text.replace('\r\n','\n').replace('\r','\n')
+    
     # setup structure
+    lines = text.split("\n")
     for linenr in range(len(lines)):
         line = lines[linenr]
-        
-        # convert tabs and obtain unindented version
-        line = line.replace('\t','  ')
         line2 = line.lstrip()
         
         # skip comments and empty lines        
@@ -463,18 +449,6 @@ class _LineObject:
         self.children = []
     
 
-def _countLines(lineObject):
-    """ Recursively count the number of lineObjects of the
-    given lineObject and its children, and childrens children ...
-    This is used to sort the elements in a dictionary.
-    """
-    count = 0
-    for child in lineObject.children:
-        count += _countLines(child)
-    count += 1 # for self
-    return count
-
-
 def _toString(name, value, indent):
     """ Make a Line object from the name and value.
     Name can be ''. """
@@ -508,21 +482,13 @@ def _toString(name, value, indent):
             # add!
             tmp = _toString(key, val, indent+2)
             lineObject.children.append(tmp)
-        
-        # Sort children by the amount of lines
-        lineObject.children.sort(key=_countLines)
     
     # lists
     elif isinstance(value, (list, tuple)):
         # Check whether this is a "small list"
         isSmallList = False
         for element in value:
-            if isinstance(element, intTypes+floatTypes):
-                continue
-            elif isinstance(element, basestring):
-                if element.count(','):
-                    break # no commas!
-            else:
+            if not isinstance(element, intTypes+floatTypes+(basestring,)):
                 break
         else:
             isSmallList = True
@@ -612,169 +578,170 @@ def _fromString(lineObject):
     # note that there can still be a comment on the line!
     
     # parse value
-    try:
-        
-        if line == '':
-            # an empty line
-            return name, None
-        
-        elif line.startswith('Null'):
-            return name, None
-        
-        elif line.startswith('dict:'):
-            value = Struct()
-            for child in lineObject.children:
-                key, val = _fromString(child)
-                if key:
-                    value[key] = val
-                else:
-                    tmp = child.linenr
-                    print("SSDF Warning: unnamed element in dict on line %i."%tmp)
-            return name, value
-        
-        elif line.startswith('list:'):
-            value = []
-            for child in lineObject.children:
-                key, val = _fromString(child)
-                if key:
-                    tmp = child.linenr
-                    print("SSDF Warning: named element in list on line %i."%tmp)
-                else:
-                    value.append(val)
-            return name, value
-        
-        elif line[0] == '[':
-            # Find other bracket
-            i = line.rfind(']')
-            if i<0:
-                print("SSDF Warning: List not ended correctly on line %i."%linenr)
-            # Split in parts and parse each part
-            value = []
-            for part in line[1:i].split(','):
-                child = _LineObject(value=part.strip(), linenr=linenr)
-                key, val = _fromString(child)
+    
+    if line == '':
+        # an empty line
+        return name, None
+    
+    elif line.startswith('Null'):
+        return name, None
+    
+    elif line.startswith('dict:'):
+        value = Struct()
+        for child in lineObject.children:
+            key, val = _fromString(child)
+            if key:
+                value[key] = val
+            else:
+                tmp = child.linenr
+                print("SSDF Warning: unnamed element in dict on line %i."%tmp)
+        return name, value
+    
+    elif line.startswith('list:'):
+        value = []
+        for child in lineObject.children:
+            key, val = _fromString(child)
+            if key:
+                tmp = child.linenr
+                print("SSDF Warning: named element in list on line %i."%tmp)
+            else:
                 value.append(val)
+        return name, value
+    
+    elif line[0] == '[':
+        # Get rid of comment
+        i = line.find('#')
+        if i>0:
+            line = line[:i]
+        # Don't parse anything with brackets (security!!)
+        # todo: this means strings with brackets will cause not being read!
+        if line.count('('):
+            print("SSDF Warning: Invalid one-line list.")
+            value = []
+        else:
+            try:
+                value = eval(line)
+            except Exception:
+                print("SSDF Warning: Could not parse one-line list.")
+                value = []
+        return name, value
+    
+    elif line[0] == "$":
+        # old string syntax
+        line = line[1:].replace('\\\\','0x07') # temp
+        line = line.replace('\\n','\n')
+        line = line.replace('0x07','\\')
+        return name, line
+    
+    elif line[0] == "'":
+        # string
+        
+        # encode double slasges
+        line = line.replace('\\\\','0x07') # temp
+        
+        # find string using a regular expression
+        m = re.search("'.*?[^.\\\\]'|''", line)
+        if not m:
+            print("SSDF Warning: string not ended correctly on line %i."%linenr)
+            return name, None
+        else:
+            line = m.group(0)[1:-1]
+        
+        # decode stuff
+        line = line.replace('\\n','\n')
+        line = line.replace("\\'","'")
+        line = line.replace('0x07','\\')
+        return name, line
+    
+    elif line.startswith('array'):
+        
+        # split
+        tmp = line.split(' ',3)
+        if len(tmp) < 4:
+            print("SSDF Warning: invalid array definition on line %i."%linenr)
+            return name, None
+        # word1 = tmp[0] # says "array"
+        word2 = tmp[1]
+        word3 = tmp[2]
+        word4 = tmp[3]
+        
+        # determine shape            
+        try:
+            shape = [int(i) for i in word2.split('x') if i]
+        except Exception:
+            print("SSDF Warning: invalid array shape on line %i."%linenr)
+            return name, None
+        
+        # determine datatype 
+        # must use 1byte/char string in Py2.x, or numpy wont understand )
+        dtypestr = simplestr(word3)
+        if dtypestr not in ['uint8', 'int8', 'uint16', 'int16', 
+                            'uint32', 'int32', 'float32', 'float64']:
+            print("SSDF Warning: invalid array data type on line %i."%linenr)
+            return name, None
+        
+        # non-numpy user? (cannot load this)
+        if np is None:
+            return name, UnloadedArray(tuple(shape), dtypestr)
+        
+        # get data           
+        tmp = word4.split(",")
+        
+        if np.prod(shape)==0:
+            # empty array
+            value = np.zeros(shape, dtype=dtypestr)
             return name, value
         
-        elif line[0] == "$":
-            # old string syntax
-            line = line[1:].replace('\\\\','0x07') # temp
-            line = line.replace('\\n','\n')
-            line = line.replace('0x07','\\')
-            return name, line
-        
-        elif line[0] == "'":
-            # string
-            
-            # encode double slasges
-            line = line.replace('\\\\','0x07') # temp
-            
-            # find string using a regular expression
-            m = re.search("'.*?[^.\\\\]'|''", line)
-            if not m:
-                print("SSDF Warning: string not ended correctly on line %i."%linenr)
-                return name, None
+        elif len(tmp) > 1:
+            # stored in ascii
+            value = np.zeros((len(tmp),),dtype=dtypestr)
+            for i in range(len(tmp)):
+                try:                    
+                    value[i] = float(tmp[i])
+                except Exception:
+                    value[i] = np.NaN
+            if np.prod(shape) == value.size:
+                value.shape = tuple(shape)
             else:
-                line = m.group(0)[1:-1]
-            
-            # decode stuff
-            line = line.replace('\\n','\n')
-            line = line.replace("\\'","'")
-            line = line.replace('0x07','\\')
-            return name, line
-        
-        elif line.startswith('array'):
-            
-            # split
-            tmp = line.split(' ',3)
-            if len(tmp) < 4:
-                print("SSDF Warning: invalid array definition on line %i."%linenr)
-                return name, None
-            # word1 = tmp[0] # says "array"
-            word2 = tmp[1]
-            word3 = tmp[2]
-            word4 = tmp[3]
-            
-            # determine shape            
-            try:
-                shape = [int(i) for i in word2.split('x') if i]
-            except Exception:
-                print("SSDF Warning: invalid array shape on line %i."%linenr)
-                return name, None
-            
-            # determine datatype 
-            # must use 1byte/char string in Py2.x, or numpy wont understand )
-            dtypestr = simplestr(word3)
-            if dtypestr not in ['uint8', 'int8', 'uint16', 'int16', 
-                                'uint32', 'int32', 'float32', 'float64']:
-                print("SSDF Warning: invalid array data type on line %i."%linenr)
-                return name, None
-            
-            # non-numpy user? (cannot load this)
-            if np is None:
-                return name, UnloadedArray(tuple(shape), dtypestr)
-            
-            # get data           
-            tmp = word4.split(",")
-            
-            if np.prod(shape)==0:
-                # empty array
-                value = np.zeros(shape, dtype=dtypestr)
-                return name, value
-            
-            elif len(tmp) > 1:
-                # stored in ascii                
-                value = np.zeros((len(tmp),), dtype=dtypestr)
-                for i in range(len(tmp)):
-                    try:                    
-                        value[i] = float(tmp[i])
-                    except Exception:
-                        value[i] = np.NaN
-                if np.prod(shape) == value.size:
-                    value.shape = tuple(shape)
-                else:
-                    print("SSDF Warning: prod(shape)!=size on line %i."%linenr)
-                return name, value
-            
-            else:
-                # stored binary
-                
-                # get data: decode and decompress, convert to numpy array
-                data = base64.decodestring(word4)
-                data = zlib.decompress(data)
-                value  = np.frombuffer(data, dtype=dtypestr )
-                
-                # set shape
-                if np.prod(shape) == value.size:
-                    value.shape = tuple(shape)
-                else:
-                    print("SSDF Warning: prod(shape)!=size on line %i."%linenr)
-                return name, value
+                print("SSDF Warning: prod(shape)!=size on line %i."%linenr)
+            return name, value
         
         else:
-            # try making int or float
+            # stored binary
             
-            # first remove any comments
-            i = line.find('#')
-            if i>0:
-                line = line[:i].strip()
+            # get data: decode and decompress, convert to numpy array
+            data = base64.decodestring(word4)
+            data = zlib.decompress(data)
+            value  = np.frombuffer(data, dtype=dtypestr )
             
-            # first float
-            try:
-                value = float(line)
-            except Exception:
-                print("SSDF Warning: unknown value on line %i."%linenr)
-                return name, None
-            
-            # now check if it was in fact an int
-            if line.count('.'):
-                return name, value
+            # set shape
+            if np.prod(shape) == value.size:
+                value.shape = tuple(shape)
             else:
-                return name, int(value)
+                print("SSDF Warning: prod(shape)!=size on line %i."%linenr)
+            return name, value
     
-    except Exception:
-        print("SSDF error on line %i ..." % linenr)
-        raise
+    else:
+        # try making int or float
+        
+        # first remove any comments
+        i = line.find('#')
+        if i>0:
+            line = line[:i].strip()
+        
+        # first float
+        try:
+            value = float(line)
+        except Exception:
+            print("SSDF Warning: unknown value on line %i."%linenr)
+            return name, None
+        
+        # now check if it was in fact an int
+        if line.count('.'):
+            return name, value
+        else:
+            return name, int(value)
+
     
 ## Helper functions and classes
 
