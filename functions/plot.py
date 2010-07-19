@@ -95,7 +95,7 @@ def plot(data1, data2=None, data3=None,
         # check dimensions
         L = data1.size
         if L != data2.size or L != data3.size:
-            raise("Array dimensions do not match! %i vs %i vs %i" % 
+            raise Exception("Array dimensions do not match! %i vs %i vs %i" % 
                     (data1.size, data2.size, data3.size))
         
         # build points
