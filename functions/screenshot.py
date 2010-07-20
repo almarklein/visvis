@@ -62,10 +62,15 @@ def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
     if not hasattr(ob, 'DrawNow'):
         fig = ob.GetFigure()
     
+    # Get object to set background of
+    bgob = ob
+    if isinstance(ob, vv.core.AxesContainer):
+        bgob = ob.GetAxes()
+    
     # Set background
     if bg and fig:
-        bgOld = ob.bgcolor
-        ob.bgcolor = bg
+        bgOld = bgob.bgcolor
+        bgob.bgcolor = bg
         fig.DrawNow()  
     
     # Obtain image      
@@ -74,7 +79,7 @@ def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
     
     # Return background
     if bg and fig:
-        ob.bgcolor = bgOld
+        bgob.bgcolor = bgOld
         fig.Draw()
     
     # Pad original image, so we have no trouble at the edges
