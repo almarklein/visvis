@@ -12,7 +12,7 @@ import numpy as np
 
 def getframe(ob):
     """ getframe(object)
-    Get a snapshot of the current figure or axes.
+    Get a snapshot of the current figure or axes or axesContainer.
     It is retured as a numpy array (color image).
     Also see vv.screenshot().
     """
@@ -23,10 +23,13 @@ def getframe(ob):
     # establish rectangle to sample
     if isinstance(ob, vv.BaseFigure):
         x,y,w,h = 0, 0, ob.position.w, ob.position.h
-    elif isinstance(ob, vv.Axes):
-        x,y = ob.position.topLeft
+    elif isinstance(ob, vv.core.AxesContainer):
+        x,y = ob.position.absTopLeft
         w,h = ob.position.size
-        #print ob.GetFigure().position.h, y
+        y = ob.GetFigure().position.h - (y+h)
+    elif isinstance(ob, vv.Axes):
+        x,y = ob.position.absTopLeft
+        w,h = ob.position.size
         y = ob.GetFigure().position.h - (y+h)
         x+=1; y+=1; w-=1; h-=1;  # first pixel is the bounding box
     else:
