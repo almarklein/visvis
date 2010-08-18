@@ -243,4 +243,5 @@ def getResourceDir():
         path = os.path.abspath( os.path.dirname(__file__) )
     return os.path.join(path, 'visvisResources')
 
-
+# Set __file__ absolute when loading
+__file__ = os.path.abspath(__file__)

@@ -64,6 +64,7 @@ The backend is chosen/selected as follows:
 # - use is the user friendly function that calls _loadBackend
 
 import os, sys
+import imp
 import visvis
 from visvis.misc import isFrozen
 
@@ -91,6 +92,8 @@ class BackendDescription:
         self.app = None
 currentBackend = BackendDescription()
 
+# Set __file__ absolute when loading
+__file__ = os.path.abspath(__file__)
 
 def testLoaded():
     """ Tests to see whether a backend is already loaded.
@@ -106,7 +109,7 @@ def testLoaded():
         
         # see which backends we have
         path = __file__
-        path = os.path.dirname( os.path.abspath(path) )
+        path = os.path.dirname( path )
         files = os.listdir(path)
         
         for filename in files:
@@ -131,6 +134,7 @@ def _loadBackend(name):
     # Get module names
     modName = 'backend_' + name
     modNameFull = 'visvis.backends.backend_'+name
+    modFileName = os.path.join(os.path.dirname(__file__), modName+'.py')
     
     # Try importing the backend toolkit
     try:
@@ -141,7 +145,8 @@ def _loadBackend(name):
     
     # Try importing the visvis backend module
     try:
-        module = __import__(modNameFull, fromlist=[modName])
+        #module = __import__(modNameFull, fromlist=[modName])
+        module = imp.load_source(modNameFull, modFileName)
     except Exception, why:
         print 'Error importing %s backend:' % name, why
         return False
