@@ -39,8 +39,11 @@ There are three things to take into account when making a new function:
 
 """
 
+import os
+
+
 def _insertFunctions():
-    import os
+    
     # see which files we have
     path = __file__
     path = os.path.dirname( os.path.abspath(path) )
