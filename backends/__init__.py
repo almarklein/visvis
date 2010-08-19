@@ -147,6 +147,7 @@ def _loadBackend(name):
     try:
         #module = __import__(modNameFull, fromlist=[modName])
         module = imp.load_source(modNameFull, modFileName)
+        globals()[modName] = module
     except Exception, why:
         print 'Error importing %s backend:' % name, why
         return False
