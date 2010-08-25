@@ -10,37 +10,32 @@ def getSpanVectors(normal, c, d):
     Given a normal, return two orthogonal vectors which are both orthogonal
     to the normal. The vectors are calculated so they match as much as possible
     the previous vectors.
-    These vectors will be used to span the circle.
     """
-    
-    # init random vector
-    # A normal vector only defines two rotations not the in plane rotation.
-    # Thus a (random) vector is needed which is not orthogonal with 
-    # the normal vector.
-    randomv = Point(0.57745, 0.5774, 0.57735)
-    randomv2 = Point(0,0,1)
     
     # Calculate a from previous b
     a1 = d.Cross(normal)
+    
     if a1.Norm() < 0.001:
-        a1 = d
-    else:
-        a2 = -1 * a1
-        if c.Distance(a1) > c.Distance(a2):
-            a1 = a2
+        # The normal and  d point in same or reverse direction
+        # -> Calculate b from previous a
+        b1 = c.Cross(normal)
+        a1 = b1.Cross(normal)
     
-    # Make sure the vector is not Nan or Inf
-    if a1.x*0!=0:
-        a1 = randomv.Cross(normal)
-    if a1.x*0!=0:
-        a1 = randomv2.Cross(normal)
+    # Consider the opposite direction
+    a2 = -1 * a1
+    if c.Distance(a1) > c.Distance(a2):
+        a1 = a2
     
-    # Calculate b
-    b = a1.Cross(normal)
-    if a1.x*0!=0:
-        print  normal, c, d
+    # Ok, calculate b
+    b1 = a1.Cross(normal)
+        
+#     # Consider the opposite (don't: this would make backfacing faces)
+#     b2 = -1 * b1
+#     if d.Distance(b1) > d.Distance(b2):
+#         b1 = b2
+
     # Done
-    return a1.Normalize(), b.Normalize()
+    return a1.Normalize(), b1.Normalize()
 
 
 def getCircle(angles_cos, angles_sin, a, b):
