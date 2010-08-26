@@ -261,9 +261,10 @@ class BasePoints(object):
         if p1.ndim ==2:
             # calculate 2D case
             data1, data2 = p1.data, p2.data
-            angs1 = np.arctan2( data1[:,1], data1[:,0] )
-            angs2 = np.arctan2( data2[:,1], data2[:,0] )
-            dangs =  angs1 - angs2
+#             angs1 = np.arctan2( data1[:,1], data1[:,0] )
+#             angs2 = np.arctan2( data2[:,1], data2[:,0] )
+#             dangs =  angs1 - angs2
+            dangs = np.arctan2( data2[:,1]-data1[:,1], data2[:,0]-data1[:,0] )
             # make number between -pi and pi
             I = np.where(dangs<-np.pi)
             dangs[I] += 2*np.pi
