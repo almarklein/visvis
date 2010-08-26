@@ -181,8 +181,12 @@ class BaseEvent:
                     i2 = s.find(" ",i1+1)
                     if i1>=0 and i2>=0:
                         s = s[i1+1:i2]
-                # get traceback
+                # get traceback and store
                 type, value, tb = sys.exc_info()
+                sys.last_type = type
+                sys.last_value = value
+                sys.last_traceback = tb
+                # Show traceback
                 tblist = traceback.extract_tb(tb)                
                 list = traceback.format_list(tblist[2:]) # remove "Fire"
                 list.extend( traceback.format_exception_only(type, value) )
