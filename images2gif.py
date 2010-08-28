@@ -68,6 +68,24 @@ def getheaderAnim(im):
     return bb
 
 
+def getImageDescriptor(im):
+    """ Used for the local color table properties per image.
+    Otherwise global color table applies to all frames irrespective of
+    wether additional colours comes in play that require a redefined palette
+    Still a maximum of 256 color per frame, obviously.
+    
+    Written by ant1 on 2010-08-22
+    """
+    bb = '\x2C' # Image separator,
+    bb += intToBin( 0 ) # Left position
+    bb += intToBin( 0 ) # Top position
+    bb += intToBin( im.size[0] ) # image width
+    bb += intToBin( im.size[1] ) # image height
+    bb += '\x87' # packed field : local color table flag1, interlace0, sorted table0, reserved00, lct size111=7=2^(7+1)=256.
+    # LZW minimum size code now comes later, begining of [image data] blocks
+    return bb
+
+
 def getAppExt(loops=float('inf')):
     """ Application extention. Part that specifies amount of loops. 
     If loops is inf, it goes on infinitely.
@@ -111,7 +129,7 @@ def _writeGifToFile(fp, images, durations, loops):
         if not previous:
             # first image
             
-            # gather data
+            # gather info
             palette = getheader(im)[1]
             data = getdata(im)
             imdes, data = data[0], data[1:]            
@@ -124,49 +142,45 @@ def _writeGifToFile(fp, images, durations, loops):
             fp.write(palette)
             fp.write(appext)
             
-            # write image
+            # write local header
             fp.write(graphext)
             fp.write(imdes)
+            
+            # write image data
             for d in data:
                 fp.write(d)
             
         else:
-            # gather info (compress difference)              
+            # next images
+            
+            # gather info (compress difference)           
+            localPalette = getheader(im)[1] # local color table
             data = getdata(im) 
             imdes, data = data[0], data[1:]       
             graphext = getGraphicsControlExt(durations[frames])
+            # make image descriptor suitable for using 256 local color palette
+            lid = getImageDescriptor(im) 
             
-            # write image
-            fp.write(graphext)
-            fp.write(imdes)
+            # write local header
+            if localPalette != palette:
+                # use local color palette
+                fp.write(graphext)
+                fp.write(lid) # write suitable image descriptor
+                fp.write(localPalette) # write local color table
+                fp.write('\x08') # LZW minimum size code
+            else:
+                # use global color palette
+                fp.write(graphext)
+                fp.write(imdes) # write suitable image descriptor
+            
+            # write image data
             for d in data:
                 fp.write(d)
-
-#             # delta frame - does not seem to work
-#             delta = ImageChops.subtract_modulo(im, previous)            
-#             bbox = delta.getbbox()
-#             
-#             if bbox:
-#                 
-#                 # gather info (compress difference)              
-#                 data = getdata(im.crop(bbox), offset = bbox[:2]) 
-#                 imdes, data = data[0], data[1:]       
-#                 graphext = getGraphicsControlExt(durations[frames])
-#                 
-#                 # write image
-#                 fp.write(graphext)
-#                 fp.write(imdes)
-#                 for d in data:
-#                     fp.write(d)
-#                 
-#             else:
-#                 # FIXME: what should we do in this case?
-#                 pass
         
         # prepare for next round
         previous = im.copy()        
         frames = frames + 1
-
+    
     fp.write(";")  # end gif
     return frames
 
@@ -182,13 +196,14 @@ def writeGif(filename, images, duration=0.1, loops=0, dither=1):
     if PIL is None:
         raise RuntimeError("Need PIL to write animated gif files.")
     
+    AD = Image.ADAPTIVE
     images2 = []
     
     # convert to PIL
     for im in images:
         
         if isinstance(im,Image.Image):
-            images2.append( im.convert('P',dither=dither) )
+            images2.append( im.convert('P', palette=AD, dither=dither) )
             
         elif np and isinstance(im, np.ndarray):
             if im.dtype == np.uint8:
@@ -199,9 +214,9 @@ def writeGif(filename, images, duration=0.1, loops=0, dither=1):
                 im = im.astype(np.uint8)
             # convert
             if len(im.shape)==3 and im.shape[2]==3:
-                im = Image.fromarray(im,'RGB').convert('P',dither=dither)
+                im = Image.fromarray(im,'RGB').convert('P', palette=AD, dither=dither)
             elif len(im.shape)==2:
-                im = Image.fromarray(im,'L').convert('P',dither=dither)
+                im = Image.fromarray(im,'L').convert('P', palette=AD, dither=dither)
             else:
                 raise ValueError("Array has invalid shape to be an image.")
             images2.append(im)
