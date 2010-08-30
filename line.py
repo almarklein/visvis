@@ -741,7 +741,7 @@ class Line(Wobject):
             tmp = f._markerManager.GetSprites(self.ms, self.mw, self.mew)
             pSize, sprite1, sprite2 = tmp
             gl.glPointSize(pSize)
-
+            
             # draw points for the faces
             if drawFace:
                 sprite1.Enable()
@@ -753,8 +753,9 @@ class Line(Wobject):
                 gl.glColor3f(clr2[0],clr2[1],clr2[2])
                 gl.glDrawArrays(gl.GL_POINTS, 0, len(self._points))
             # disable sprites
-            sprite2.Disable()
-
+            gl.glDisable(gl.GL_TEXTURE_2D)
+            gl.glDisable(gl.GL_POINT_SPRITE)
+        
         # clean up
         gl.glDisable(gl.GL_ALPHA_TEST)
         gl.glEnable(gl.GL_DEPTH_TEST)
