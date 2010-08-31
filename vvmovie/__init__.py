@@ -48,9 +48,9 @@ More information about compression and limitations:
   * SWF. Provides lossless storage of movie frames with good (ZLIB) 
     compression. Reading of SWF files is limited to images stored using ZLIB
     compression (no JPEG files). Requires no external libraries.
-  * AVI. Requires mencoder. Most Linux can obtain it using their package
+  * AVI. Requires ffmpeg. Most Linux can obtain it using their package
     manager. Windows users can use the installer at the visvis website.
-    Provides excelent mpeg4 (or any other supported by mencoder) compression.
+    Provides excelent mpeg4 (or any other supported by ffmpeg) compression.
     Not intended for reading very large movies.
   * IMS. Requires PIL. Quality depends on the used image type. Use png for  
     lossless compression and jpg otherwise.
@@ -87,7 +87,7 @@ def movieWrite(filename, images, duration=0.1, repeat=True, encoding='mpeg4',
     enable easy creation of a new directory with image files, it is made 
     sure that the full path exists.
     
-    Notice: writing AVI requires the "mencoder" application:
+    Notice: writing AVI requires the "ffmpeg" application:
       * Most linux users can install it using their package manager
       * There is a windows installer on the visvis website
     
@@ -126,7 +126,7 @@ def movieRead(filename, **kwargs):
     Read the movie from GIF, SWF, AVI, or a series of images (PNG,JPG,TIF,BMP). 
     Returns a list of numpy arrays.
     
-    Notice: reading AVI requires the "mencoder" application:
+    Notice: reading AVI requires the "ffmpeg" application:
       * Most linux users can install it using their package manager
       * There is a windows installer on the visvis website
     
