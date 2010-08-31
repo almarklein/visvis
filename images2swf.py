@@ -29,6 +29,7 @@ library, and allthough the filesize is then very small, the quality is
 sometimes not adequate. Besides I'd like to be independant of yet another 
 package. I tried writing animated gif using PIL (which is widely available), 
 but the quality is so poor because it only allows for 256 different colours.
+[EDIT: thanks to Ant1, now the quality of animated gif isn't so bad!]
 I also looked into MNG and APNG, two standards similar to the PNG stanard.
 Both standards promise exactly what I need. However, hardly any application
 can read those formats, and I cannot import them in flash. 
@@ -65,7 +66,7 @@ except ImportError:
 
 import numpy as np
 import zlib
-import sys, time
+import os, sys, time
 
 
 ## Base functions and classes
@@ -192,6 +193,50 @@ def intToBits(i,n=None):
     # done
     return BitArray(bb)
 
+def bitsToInt(bb, n=8):
+    # Init
+    value = ''
+    
+    # Get value in bits
+    for b in bb:
+        tmp = bin(ord(b))[2:]
+        #value += tmp.rjust(8,'0')
+        value = tmp.rjust(8,'0') + value
+    
+    # Make decimal
+    return( int(value[:n], 2) )
+
+def getTypeAndLen(bb):
+    """ bb should be 6 bytes at least
+    Return (type, length, length_of_full_tag)
+    """
+    # Init
+    value = ''
+    
+    # Get first 16 bits
+    for b in bb[:2]:
+        tmp = bin(ord(b))[2:]
+        #value += tmp.rjust(8,'0')
+        value = tmp.rjust(8,'0') + value
+    
+    # Get type and length
+    type = int( value[:10], 2)
+    L = int( value[10:], 2)
+    L2 = L + 2
+    
+    # Long tag header?
+    if L == 63: # '111111'
+        value = ''
+        for b in bb[2:6]:
+            tmp = bin(ord(b))[2:]
+            #value += tmp.rjust(8,'0')
+            value = tmp.rjust(8,'0') + value
+        L = int( value, 2)
+        L2 = L + 6
+    
+    # Done    
+    return type, L, L2
+
 
 def signedIntToBits(i,n=None):
     """ convert signed int to a string of bits (0's and 1's in a string), 
@@ -266,7 +311,19 @@ def floatsToBits(arr):
         bits += intToBits(i2*2**16, 16)
     return bits
     
-    
+
+def _readFrom(fp, n):
+    bb = ''
+    try:
+        while len(bb) < n:
+            tmp = fp.read(n-len(bb))
+            bb += tmp
+            if not tmp:
+                break
+    except EOFError:
+        pass
+    return bb
+
 
 ## Base Tag
 
@@ -422,7 +479,7 @@ class BitmapTag(DefinitionTag):
         self.tagtype = 36 # DefineBitsLossless2
         
         # convert image (note that format is ARGB)
-        # even a grayscale image is stored in ARGB, nevetheless,
+        # even a grayscale image is stored in ARGB, nevertheless,
         # the fabilous deflate compression will make it that not much
         # more data is required for storing (25% or so, and less than 10%
         # when storing RGB as ARGB).
@@ -617,8 +674,6 @@ class ShapeTag(DefinitionTag):
         #return bitsToBytes(bits)
 
 
-
-
 ## Last few functions
 
     
@@ -715,6 +770,130 @@ def writeSwf(filename, images, fps=10, repeat=True, delays=None):
     print "written %i frames to swf in %1.2f seconds (%1.0f ms/frame)" % (
         len(images), tt, 1000*tt/len(images) )
     
+
+def _readPixels(fp, tagType, L1):
+    """ With pf's seed after the recordheader, reads the pixeldata.
+    """
+    
+    # Get info
+    charId = _readFrom(fp, 2)
+    format = ord(_readFrom(fp, 1))
+    width = bitsToInt( _readFrom(fp, 2), 16 )    
+    height = bitsToInt( _readFrom(fp, 2), 16 )
+    
+    # If we can, get pixeldata and make nunmpy array
+    if format != 5:
+        print "Can only read 24bit or 32bit RGB(A) lossless images."
+    else:
+        # Read byte data
+        offset = 2+1+2+2 # all the info bits
+        bb = _readFrom(fp, L1-offset)
+        
+        # Decompress and make numpy array
+        data = zlib.decompress(bb)
+        a = np.frombuffer(data, dtype=np.uint8)
+        
+        # Set shape
+        if tagType == 20:
+            # DefineBitsLossless - RGB data
+            try:
+                a.shape = height, width, 3
+            except Exception:
+                # Byte align stuff might cause troubles
+                print "Cannot read image due to byte alignment"
+        if tagType == 36:
+            # DefineBitsLossless2 - ARGB data
+            a.shape = height, width, 4
+            # Swap alpha channel to make RGBA
+            b = a
+            a = np.zeros_like(a)
+            a[:,:,0] = b[:,:,1]
+            a[:,:,1] = b[:,:,2]
+            a[:,:,2] = b[:,:,3]
+            a[:,:,3] = b[:,:,0]
+            
+        return a
+
+
+def readSwf(filename):
+    """ readSwf(filename)
+    Read all images from an swf file.
+    Limitation: only read the PNG encoded images (not the JPG encoded ones).
+    """
+    
+    # Check whether it exists
+    if not os.path.isfile(filename):
+        raise IOError('File not found: '+str(filename))
+    
+    # Init ims
+    ims = []
+    
+    # Open file
+    fp = open(filename, 'rb')
+    
+    try:
+        # Check opening tag
+        tmp = _readFrom(fp,3)
+        if tmp.upper() == 'FWS':
+            pass # ok
+        elif tmp.upper() == 'CWS':
+            raise IOError('Cannot read compressed SWF file:' + str(filename))
+        else:
+            raise IOError('Not a valid SWF file: ' + str(filename))
+        
+        # Set filepointer at first tag (skipping framesize RECT and two uin16's
+        i = 8
+        fp.seek(i)
+        nbits = bitsToInt(_readFrom(fp,1), 5) # skip FrameSize    
+        nbits = 5 + nbits * 4
+        Lrect = nbits / 8.0
+        if Lrect%1:
+            Lrect += 1    
+        Lrect = int(Lrect)
+        i += Lrect+4
+        
+        # Iterate over the tags
+        counter = 0
+        while True:
+            counter += 1
+            
+            # Get tag header
+            fp.seek(i)
+            bb = _readFrom(fp,6)
+            if not bb:
+                break # Done (we missed end tag)
+            
+            # Determine type and length
+            T, L1, L2 = getTypeAndLen( bb )
+            if not L2:
+                print 'Invalid tag length, could not proceed'
+                break
+            #print T, L2
+            
+            # Read image if we can
+            if T in [20, 36]:            
+                im = _readPixels(fp, T, L1)
+                if im is not None:
+                    ims.append(im)
+            elif T in [6, 21, 35, 90]:
+                print 'Ignoring JPEG image: cannot read JPEG.'
+            else:
+                pass # Not an image tag 
+            
+            # Detect end tag
+            if T==0:
+                break
+            
+            # Next tag!
+            i += L2
+    
+    finally:
+        fp.close()
+    
+    # Done
+    print "Read %s frames." % len(ims)
+    return ims
+
     
 if __name__ == "__main__":
     import visvis as vv
@@ -724,7 +903,7 @@ if __name__ == "__main__":
     im[:,80:120] = 255
     im[-50:-40,:] = 50
     
-    im = vv.imread(r'D:\almar\projects\_p\smith.jpg')
+    im = vv.imread(r'c:\almar\data\images\smith.jpg')
     
     images = [im*i for i in np.arange(0.1,1,0.1)]
     delays = [1 for i in range(len(images))]
