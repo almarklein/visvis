@@ -25,7 +25,7 @@ def imwrite(filename, image):
         if image.shape[2] == 3:
             pass # RGB
         else:
-            raise ValueError("Cannot write image: To many values in third dim.")
+            raise ValueError("Cannot write image: Too many values in third dim.")
     else:
         raise ValueError("Cannot write image: Invalid number of dimensions.")
     

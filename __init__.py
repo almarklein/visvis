@@ -65,6 +65,7 @@ from constants import *
 from events import Timer
 from misc import Range
 from misc import (Transform_Translate, Transform_Scale, Transform_Rotate)
+import vvmovie
 
 from polygonalModeling import BaseMesh
 from points import Point, Pointset, Aarray, Quaternion

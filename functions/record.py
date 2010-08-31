@@ -3,8 +3,8 @@
 
 import visvis as vv
 
-from visvis.images2gif import writeGif
-from visvis.images2swf import writeSwf
+# from visvis.images2gif import writeGif
+# from visvis.images2swf import writeSwf
 
 import OpenGL.GL as gl
 import OpenGL.GL.ARB.shader_objects as gla

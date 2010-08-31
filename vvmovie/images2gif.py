@@ -1,21 +1,29 @@
-#   This file is part of VISVIS. This file may be distributed 
-#   seperately, but under the same license as VISVIS (LGPL).
-#    
-#   images2gif is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   images2gif is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+#   Copyright (c) 2010, Almar Klein
+#   All rights reserved.
 #
-#   Copyright (C) 2009 Almar Klein
+#   This code is subject to the (new) BSD license:
+#
+#   Redistribution and use in source and binary forms, with or without
+#   modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the <organization> nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY 
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Module images2gif
 
@@ -52,6 +60,46 @@ except ImportError:
 # getdatas()[1:] is the image data itself in chuncks of 256 bytes (well
 # technically the first byte says how many bytes follow, after which that
 # amount (max 255) follows).
+
+def checkImages(images):
+    """ checkImages(images)
+    Check numpy images and correct intensity range etc.
+    The same for all movie formats.
+    """ 
+    # Init results
+    images2 = []
+    
+    for im in images:
+        if PIL and isinstance(im, PIL.Image.Image):
+            # We assume PIL images are allright
+            images2.append(im)
+        
+        elif np and isinstance(im, np.ndarray):
+            # Check and convert dtype
+            if im.dtype == np.uint8:
+                images2.append(im) # Ok
+            elif im.dtype in [np.float32, np.float64]:
+                im = im.copy()
+                im[im<0] = 0
+                im[im>1] = 1
+                im *= 255
+                images2.append( im.astype(np.uint8) )
+            else:
+                im = im.astype(np.uint8)
+                images2.append(im)
+            # Check size
+            if im.ndim == 2:
+                pass # ok
+            elif im.ndim == 3:
+                if im.shape[2] not in [3,4]:
+                    raise ValueError('This array can not represent an image.')
+            else:
+                raise ValueError('This array can not represent an image.')
+        else:
+            raise ValueError('Invalid image type: ' + str(type(im)))
+    
+    # Done
+    return images2
 
 
 def intToBin(i):
@@ -95,10 +143,12 @@ def getAppExt(loops=float('inf')):
     If loops is inf, it goes on infinitely.
     """
     if loops == 0:
-        bb = "" # application extension should not be used
+        loops = 2**16-1
+        #bb = "" # application extension should not be used
                 # (the extension interprets zero loops
                 # to mean an infinite number of loops)
-    else:
+                # Mmm, does not seem to work
+    if True:
         bb = "\x21\xFF\x0B"  # application extension
         bb += "NETSCAPE2.0"
         bb += "\x03\x01"
@@ -191,62 +241,66 @@ def _writeGifToFile(fp, images, durations, loops):
 
 ## Exposed functions 
 
-def writeGif(filename, images, duration=0.1, loops=0, dither=1):
-    """ writeGif(filename, images, duration=0.1, loops=0, dither=1)
-    Write an animated gif from the specified images. 
-    images should be a list of numpy arrays of PIL images.
-    Numpy images of type float should have pixels between 0 and 1.
-    Numpy images of other types are expected to have values between 0 and 255.
+def writeGif(filename, images, duration=0.1, repeat=True, dither=False):
+    """ writeGif(filename, images, duration=0.1, repeat=True, dither=False)
+    
+    Write an animated gif from the specified images. Duration may also
+    be a list with durations for each frame. Repeat can also be an 
+    integer specifying the amount of loops.
+    
+    Images should be a list consisting of PIL images or numpy arrays. 
+    The latter should be between 0 and 255 for integer types, and 
+    between 0 and 1 for float types.
+    
     """
     
+    # Check PIL
     if PIL is None:
         raise RuntimeError("Need PIL to write animated gif files.")
     
+    # Check images
+    images = checkImages(images)
+    
+    # Check loops
+    if repeat is False: 
+        loops = 1
+    elif repeat is True:
+        loops = 0 # zero means infinite
+    else:
+        loops = int(repeat)
+    
+    # More init
     AD = Image.ADAPTIVE
     images2 = []
     
-    # convert to PIL
+    # Convert to paletted PIL images
     for im in images:
-        
-        if isinstance(im,Image.Image):
+        if isinstance(im, Image.Image):
             images2.append( im.convert('P', palette=AD, dither=dither) )
-            
         elif np and isinstance(im, np.ndarray):
-            if im.dtype == np.uint8:
-                pass
-            elif im.dtype in [np.float32, np.float64]:
-                im = (im*255).astype(np.uint8)
-            else:
-                im = im.astype(np.uint8)
-            # convert
-            if len(im.shape)==3 and im.shape[2]==3:
-                im = Image.fromarray(im,'RGB').convert('P', palette=AD, dither=dither)
-            elif len(im.shape)==2:
-                im = Image.fromarray(im,'L').convert('P', palette=AD, dither=dither)
-            else:
-                raise ValueError("Array has invalid shape to be an image.")
+            if im.ndim==3 and im.shape[2]==3:
+                im = Image.fromarray(im,'RGB').convert('P', 
+                                                    palette=AD, dither=dither)
+            elif im.ndim==2:
+                im = Image.fromarray(im,'L').convert('P', 
+                                                    palette=AD, dither=dither)
             images2.append(im)
-            
-        else:
-            raise ValueError("Unknown image type.")
     
-    # check duration
+    # Check duration
     if hasattr(duration, '__len__'):
         if len(duration) == len(images2):
             durations = [d for d in duration]
         else:
             raise ValueError("len(duration) doesn't match amount of images.")
     else:
-        durations = [duration for im in images2]
-        
+        duration = [duration for im in images2]
     
-    # open file
+    # Open file
     fp = open(filename, 'wb')
     
-    # write
+    # Write
     try:
-        n = _writeGifToFile(fp, images2, durations, loops)
-        print n, 'frames written'
+        n = _writeGifToFile(fp, images2, duration, loops)
     finally:
         fp.close()
     
