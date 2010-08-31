@@ -19,7 +19,7 @@ def imread(filename):
         raise RuntimeError("visvis.imread requires the PIL package.")
     
     if not os.path.isfile(filename):
-        # try loading from the resource dir
+        # try loadingpil from the resource dir
         path = vv.misc.getResourceDir()
         filename2 = os.path.join(path, filename)
         if os.path.isfile(filename2):
@@ -27,7 +27,12 @@ def imread(filename):
         else:
             raise IOError("Image '%s' does not exist." % filename)
     
+    # Get Pil image and convert if we need to
     im = PIL.Image.open(filename)
+    if im.mode == 'P':
+        im = im.convert
+    
+    # Make numpy array
     a = np.asarray(im)
     if len(a.shape)==0:
         raise MemoryError("Too little memory to convert PIL image to array")
