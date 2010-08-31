@@ -30,7 +30,7 @@ def imread(filename):
     # Get Pil image and convert if we need to
     im = PIL.Image.open(filename)
     if im.mode == 'P':
-        im = im.convert
+        im = im.convert()
     
     # Make numpy array
     a = np.asarray(im)

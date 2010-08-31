@@ -1,21 +1,29 @@
-#   This file is part of VISVIS. This file may be distributed 
-#   seperately, but under the same license as VISVIS (LGPL).
-#    
-#   images2swf is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   images2swf is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+#   Copyright (c) 2010, Almar Klein
+#   All rights reserved.
 #
-#   Copyright (C) 2010 Almar Klein
+#   This code is subject to the (new) BSD license:
+#
+#   Redistribution and use in source and binary forms, with or without
+#   modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the <organization> nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY 
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Module images2swf
 
@@ -59,14 +67,63 @@ sources and tools:
 
 """
 
+import os, sys, time
+import zlib
+
+try:
+    import numpy as np
+except ImportError:
+    np = None 
+
 try: 
     import PIL.Image
 except ImportError:
     PIL = None
 
-import numpy as np
-import zlib
-import os, sys, time
+
+def checkImages(images):
+    """ checkImages(images)
+    Check numpy images and correct intensity range etc.
+    The same for all movie formats.
+    """ 
+    # Init results
+    images2 = []
+    
+    for im in images:
+        if PIL and isinstance(im, PIL.Image.Image):
+            # We assume PIL images are allright
+            images2.append(im)
+        
+        elif np and isinstance(im, np.ndarray):
+            # Check and convert dtype
+            if im.dtype == np.uint8:
+                images2.append(im) # Ok
+            elif im.dtype in [np.float32, np.float64]:
+                theMax = im.max()
+                if theMax > 128 and theMax < 300:
+                    pass # assume 0:255
+                else:
+                    im = im.copy()
+                    im[im<0] = 0
+                    im[im>1] = 1
+                    im *= 255
+                images2.append( im.astype(np.uint8) )
+            else:
+                im = im.astype(np.uint8)
+                images2.append(im)
+            # Check size
+            if im.ndim == 2:
+                pass # ok
+            elif im.ndim == 3:
+                if im.shape[2] not in [3,4]:
+                    raise ValueError('This array can not represent an image.')
+            else:
+                raise ValueError('This array can not represent an image.')
+        else:
+            raise ValueError('Invalid image type: ' + str(type(im)))
+    
+    # Done
+    return images2
 
 
 ## Base functions and classes
@@ -487,11 +544,8 @@ class BitmapTag(DefinitionTag):
         if len(im.shape)==3:
             if im.shape[2] in [3, 4]:
                 tmp = np.ones((im.shape[0], im.shape[1], 4), dtype=np.uint8)*255
-                for i in range(3):
-                    if im.dtype in [np.float32 or np.float64]:
-                        tmp[:,:,i+1] = im[:,:,i]*255
-                    else:
-                        tmp[:,:,i+1] = im[:,:,i]
+                for i in range(3):                    
+                    tmp[:,:,i+1] = im[:,:,i]
                 if im.shape[2]==4:
                     tmp[:,:,0] = im[:,:,3] # swap channel where alpha is in
             else:
@@ -500,11 +554,7 @@ class BitmapTag(DefinitionTag):
         elif len(im.shape)==2:
             tmp = np.ones((im.shape[0], im.shape[1], 4), dtype=np.uint8)*255
             for i in range(3):
-                if im.dtype in [np.float32 or np.float64]:                    
-                    tmp[:,:,i+1] = im[:,:]*255
-                else:
-                    tmp[:,:,i+1] = im[:,:]
-        
+                tmp[:,:,i+1] = im[:,:]
         else:
             raise ValueError("Invalid shape to be an image.")
         
@@ -678,8 +728,7 @@ class ShapeTag(DefinitionTag):
 
     
 
-def buildFile(fp, taglist, nframes=1, framesize=(500,500), 
-        fps=10, version=8):
+def buildFile(fp, taglist, nframes=1, framesize=(500,500), fps=10, version=8):
     """ Give the given file (as bytes) a header. """
     
     # compose header
@@ -706,38 +755,60 @@ def buildFile(fp, taglist, nframes=1, framesize=(500,500),
     fp.write( intToUint32(sze) )
 
 
-def writeSwf(filename, images, fps=10, repeat=True, delays=None):
-    """ writeSwf(filename, images, fps=10, repeat=True, delays=None)
-    Write an swf-file from the specified images. 
-    images should be a list of numpy arrays or PIL images.
-    Numpy images of type float should have pixels between 0 and 1.
-    Numpy images of other types are expected to have values between 0 and 255.
-    When repeat is False, the movie is finished with a stop action.
-    delays (when given) should be a list (or numpy array) of integers
-    specifying for each image how many frames it should be shown.
-    """
-    t0 = time.time()
+def writeSwf(filename, images, duration=0.1, repeat=True):
+    """ writeSwf(filename, images, duration=0.1, repeat=True)
     
-    # check images
+    Write an swf-file from the specified images. If repeat is False, 
+    the movie is finished with a stop action. Duration may also
+    be a list with durations for each frame (note that the duration
+    for each frame is always an integer amount of the minimum duration.)
+    
+    Images should be a list consisting of PIL images or numpy arrays. 
+    The latter should be between 0 and 255 for integer types, and 
+    between 0 and 1 for float types.
+    
+    """
+    
+    # Check Numpy
+    if np is None:
+        raise RuntimeError("Need Numpy to write an SWF file.")
+    
+    # Check images (make all Numpy)
+    images2 = []
+    images = checkImages(images)
     if not images:
         raise ValueError("Image list is empty!")
-    images2 = []
     for im in images:
         if PIL and isinstance(im, PIL.Image.Image):
+            if im.mode == 'P':
+                im = im.convert()
             im = np.asarray(im)
+            if len(im.shape)==0:
+                raise MemoryError("Too little memory to convert PIL image to array")
         images2.append(im)
     
-    # init 
+    # Init 
     taglist = [ FileAttributesTag(), SetBackgroundTag(0,0,0) ]
     
-    # check delays
-    if delays is None:
-        delays = [1 for i in range(len(images2))]
-    if len(delays) != len(images2):
-        raise Exception("Amount of delays does not match amount of images.")
+    # Check duration
+    if hasattr(duration, '__len__'):
+        if len(duration) == len(images2):
+            durations = [d for d in duration]
+        else:
+            raise ValueError("len(duration) doesn't match amount of images.")
+    else:
+        duration = [duration for im in images2]
     
-    # produce series of tags for each image
-    t1 = time.time()
+    # Build delays list
+    minDuration = float(min(duration))
+    delays = [round(d/minDuration) for d in duration]
+    delays = [max(1,int(d)) for d in delays]
+    
+    # Get FPS
+    fps = 1.0/minDuration
+    
+    # Produce series of tags for each image
+    t0 = time.time()
     nframes = 0
     for im in images2:
         bm = BitmapTag(im)
@@ -752,9 +823,7 @@ def writeSwf(filename, images, fps=10, repeat=True, delays=None):
     if not repeat:
         taglist.append(DoActionTag('stop'))
     
-    # build file
-    #print "prepared tags (%1.2f s), building file..." % (time.time()-t1)
-    
+    # Build file
     t1 = time.time()
     fp = open(filename,'wb')    
     try:
@@ -763,18 +832,19 @@ def writeSwf(filename, images, fps=10, repeat=True, delays=None):
         raise
     finally:
         fp.close()
+    t2 =  time.time()
     
-    #print "build tags (%1.2f s)" % (time.time()-t1)
-    
-    tt = time.time()-t0
-    print "written %i frames to swf in %1.2f seconds (%1.0f ms/frame)" % (
-        len(images), tt, 1000*tt/len(images) )
+    #print "Writing SWF took %1.2f and %1.2f seconds" % (t1-t0, t2-t1)
     
 
 def _readPixels(fp, tagType, L1):
     """ With pf's seed after the recordheader, reads the pixeldata.
     """
     
+    # Check Numpy
+    if np is None:
+        raise RuntimeError("Need Numpy to read an SWF file.")
+        
     # Get info
     charId = _readFrom(fp, 2)
     format = ord(_readFrom(fp, 1))
