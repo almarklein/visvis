@@ -27,10 +27,11 @@
 
 """ Module images2avi
 
-Uses mencoder to read and write AVI files. Requires PIL
+Uses ffmpeg to read and write AVI files. Requires PIL
 
-I found this usefull:
+I found these sites usefull:
 http://www.catswhocode.com/blog/19-ffmpeg-commands-for-all-needs
+http://linux.die.net/man/1/ffmpeg
 
 """
 
@@ -39,8 +40,10 @@ import subprocess, shutil
 import images2ims
 
 
-def writeAvi(filename, images, duration=0.1, encoding='mpeg4'):
-    """ writeAvi(self, filename, duration=0.1, encoding='mpeg4')
+def writeAvi(filename, images, duration=0.1, encoding='mpeg4', 
+                                        inputOptions='', outputOptions='' ):
+    """ writeAvi(filename, duration=0.1, encoding='mpeg4',
+                    inputOptions='', outputOptions='')
     
     Export movie to a AVI file, which is encoded with the given 
     encoding. Hint for Windows users: the 'msmpeg4v2' codec is 
@@ -50,7 +53,7 @@ def writeAvi(filename, images, duration=0.1, encoding='mpeg4'):
     The latter should be between 0 and 255 for integer types, and 
     between 0 and 1 for float types.
     
-    Requires the "mencoder" application:
+    Requires the "ffmpeg" application:
       * Most linux users can install using their package manager
       * There is a windows installer on the visvis website
     
@@ -63,25 +66,30 @@ def writeAvi(filename, images, duration=0.1, encoding='mpeg4'):
         raise ValueError("Invalid duration parameter for writeAvi.")
     
     # Determine temp dir and create images
-    tempDir = os.path.join( os.path.expanduser('~'), 'tempIms')
+    tempDir = os.path.join( os.path.expanduser('~'), '.tempIms')
     images2ims.writeIms( os.path.join(tempDir, 'im*.jpg'), images)
     
-    # Compile command to create avi
-    command = "ffmpeg -i im%d.jpg "
-    command += "-r %i -vcodec %s " % (int(fps), encoding)
-    command += '-flags skiprd '
-    #command += "-mbd rd -flags qprd -trellis 2 -cmp 2 -subcmp 2 -g 300 -pass 1/2 "
-    command += "output.avi"
-#     command = "mencoder mf://*.jpg -mf fps=%i:type=jpg -ovc lavc "
-#     command += "-lavcopts vcodec=%s:mbd=2:trell "
-#     command += "-o output.avi"
-#     command = command % (int(fps), encoding)
+    # Determine formatter
+    N = len(images)
+    formatter = '%04d'
+    if N < 10:
+        formatter = '%d'
+    elif N < 100:
+        formatter = '%02d'
+    elif N < 1000:
+        formatter = '%03d'
     
-    # Run mencodec
+    # Compile command to create avi
+    command = "ffmpeg -r %i %s " % (int(fps), inputOptions)
+    command += "-i im%s.jpg " % (formatter,)
+    command += "-g 1 -vcodec %s %s " % (encoding, outputOptions) 
+    command += "output.avi"
+    
+    # Run ffmpeg
     S = subprocess.Popen(command, shell=True, cwd=tempDir,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
-    # Show what mencodec has to say
+    # Show what ffmpeg has to say
     outPut = S.stdout.read()
     
     if S.wait():    
@@ -106,7 +114,7 @@ def readAvi(filename):
     
     Read AVI movie.
     
-    Requires the "mencoder" application:
+    Requires the "ffmpeg" application:
       * Most linux users can install using their package manager
       * There is a windows installer on the visvis website
     
@@ -120,7 +128,7 @@ def readAvi(filename):
     # Copy movie there
     shutil.copy(filename, os.path.join(tempDir, 'output.avi'))
     
-    # Run mencodec
+    # Run ffmpeg
     command = "ffmpeg -i output.avi im%d.jpg"
     S = subprocess.Popen(command, shell=True, cwd=tempDir,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
