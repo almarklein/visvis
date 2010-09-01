@@ -40,6 +40,18 @@ import subprocess, shutil
 import images2ims
 
 
+def _cleanDir(tempDir):
+    for i in range(3):
+        try:
+            shutil.rmtree(tempDir)
+        except Exception:
+            time.sleep(0.2) # Give OS time to free sources
+        else:
+            break
+    else:
+        print "Oops, could not fully clean up temporary files."
+
+
 def writeAvi(filename, images, duration=0.1, encoding='mpeg4', 
                                         inputOptions='', outputOptions='' ):
     """ writeAvi(filename, duration=0.1, encoding='mpeg4',
@@ -97,22 +109,19 @@ def writeAvi(filename, images, duration=0.1, encoding='mpeg4',
         print outPut
         print S.stderr.read() 
         # Clean up
-        try:
-            shutil.rmtree(tempDir)
-        except Exception:
-            pass
+        _cleanDir(tempDir)
         raise RuntimeError("Could not write avi.")
     else:
         # Copy avi
         shutil.copy(os.path.join(tempDir, 'output.avi'), filename)
         # Clean up
-        shutil.rmtree(tempDir)
-    
+        _cleanDir(tempDir)
 
-def readAvi(filename):
-    """ readAvi(self, filename)
+
+def readAvi(filename, asNumpy=True):
+    """ readAvi(filename, asNumpy=True)
     
-    Read AVI movie.
+    Read images from an AVI (or MPG) movie.
     
     Requires the "ffmpeg" application:
       * Most linux users can install using their package manager
@@ -120,16 +129,20 @@ def readAvi(filename):
     
     """
     
+    # Check whether it exists
+    if not os.path.isfile(filename):
+        raise IOError('File not found: '+str(filename))
+    
     # Determine temp dir, make sure it exists
-    tempDir = os.path.join( os.path.expanduser('~'), 'tempIms')
+    tempDir = os.path.join( os.path.expanduser('~'), '.tempIms')
     if not os.path.isdir(tempDir):
         os.makedirs(tempDir)
     
     # Copy movie there
-    shutil.copy(filename, os.path.join(tempDir, 'output.avi'))
+    shutil.copy(filename, os.path.join(tempDir, 'input.avi'))
     
     # Run ffmpeg
-    command = "ffmpeg -i output.avi im%d.jpg"
+    command = "ffmpeg -i input.avi im%d.jpg"
     S = subprocess.Popen(command, shell=True, cwd=tempDir,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
@@ -141,16 +154,13 @@ def readAvi(filename):
         print outPut
         print S.stderr.read() 
         # Clean up
-        try:
-            shutil.rmtree(tempDir)
-        except Exception:
-            pass
+        _cleanDir(tempDir)
         raise RuntimeError("Could not read avi.")
     else:
         # Read images
-        images = images2ims.readIms( os.path.join(tempDir, 'im*.jpg'))
+        images = images2ims.readIms(os.path.join(tempDir, 'im*.jpg'), asNumpy)
         # Clean up
-        shutil.rmtree(tempDir)
+        _cleanDir(tempDir)
     
     # Done
     return images
