@@ -885,18 +885,30 @@ def _readPixels(fp, tagType, L1):
         return a
 
 
-def readSwf(filename):
-    """ readSwf(filename)
-    Read all images from an swf file.
+def readSwf(filename, asNumpy=True):
+    """ readSwf(filename, asNumpy=True)
+    
+    Read all images from an SWF (shockwave flash) file. Returns a list 
+    of numpy arrays, or, if asNumpy is false, a list if PIL images.
+    
     Limitation: only read the PNG encoded images (not the JPG encoded ones).
+    
     """
     
     # Check whether it exists
     if not os.path.isfile(filename):
         raise IOError('File not found: '+str(filename))
     
-    # Init ims
-    ims = []
+    # Check PIL
+    if (not asNumpy) and (PIL is None):
+        raise RuntimeError("Need PIL to return as PIL images.")
+    
+    # Check Numpy
+    if np is None:
+        raise RuntimeError("Need Numpy to read SWF files.")
+    
+    # Init images
+    images = []
     
     # Open file
     fp = open(filename, 'rb')
@@ -944,7 +956,7 @@ def readSwf(filename):
             if T in [20, 36]:            
                 im = _readPixels(fp, T, L1)
                 if im is not None:
-                    ims.append(im)
+                    images.append(im)
             elif T in [6, 21, 35, 90]:
                 print 'Ignoring JPEG image: cannot read JPEG.'
             else:
@@ -960,25 +972,12 @@ def readSwf(filename):
     finally:
         fp.close()
     
+    # Convert to normal PIL images if needed
+    if not asNumpy:
+        images2 = images
+        images = []
+        for im in images2:            
+            images.append( PIL.Image.fromarray(im) )
+    
     # Done
-    print "Read %s frames." % len(ims)
-    return ims
-
-    
-if __name__ == "__main__":
-    import visvis as vv
-    
-    im = np.zeros((200,200), dtype=np.uint8)
-    im[10:30,:] = 100
-    im[:,80:120] = 255
-    im[-50:-40,:] = 50
-    
-    im = vv.imread(r'c:\almar\data\images\smith.jpg')
-    
-    images = [im*i for i in np.arange(0.1,1,0.1)]
-    delays = [1 for i in range(len(images))]
-    delays[2]=3
-    delays[3]=5
-    writeSwf( 'test.swf', images, 5, 1, delays )
-    
-    
+    return images

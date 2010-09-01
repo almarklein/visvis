@@ -175,18 +175,29 @@ def writeIms(filename, images):
 
 
 
-def readIms(filename):
-    """ readIms(filename)
-    Read a movie from a series of images.
+def readIms(filename, asNumpy=True):
+    """ readIms(filename, asNumpy=True)
+    
+    Read images from a series of images in a single directory. Returns a 
+    list of numpy arrays, or, if asNumpy is false, a list if PIL images.
+    
     """
     
+    # Check PIL
+    if PIL is None:
+        raise RuntimeError("Need PIL to read a series of image files.")
+    
     # Check Numpy
-    if np is None:
-        raise RuntimeError("Need Numpy to read series of image files.")
+    if asNumpy and np is None:
+        raise RuntimeError("Need Numpy to return numpy arrays.")
     
     # Get dirname and filename
     filename = os.path.abspath(filename)
     dirname, filename = os.path.split(filename)
+    
+    # Check dir exists
+    if not os.path.isdir(dirname):
+        raise IOError('Directory not found: '+str(dirname))
     
     # Get two parts of the filename
     part1, part2 = _getFilenameParts(filename)
@@ -199,18 +210,28 @@ def readIms(filename):
         if fname.startswith(part1) and fname.endswith(part2):
             # Get sequence number
             nr = _getSequenceNumber(fname, part1, part2)
-            # Get Pil image and convert if we need to            
+            # Get Pil image and store copy (to prevent keeping the file)
             im = PIL.Image.open(os.path.join(dirname, fname))
+            images.append((im.copy(), nr))
+    
+    # Sort images 
+    images.sort(key=lambda x:x[1])    
+    images = [im[0] for im in images]
+    
+    # Convert to numpy if needed
+    if asNumpy:
+        images2 = images
+        images = []
+        for im in images2:
+            # Make without palette
             if im.mode == 'P':
                 im = im.convert()
             # Make numpy array
             a = np.asarray(im)
             if len(a.shape)==0:
                 raise MemoryError("Too little memory to convert PIL image to array")
-            # Store
-            images.append((a, nr))
+            # Add
+            images.append(a)
     
-    # Sort images 
-    images.sort(key=lambda x:x[1])    
-    return [im[0] for im in images]
-    
+    # Done
+    return images
