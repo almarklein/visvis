@@ -98,6 +98,12 @@ def movieWrite(filename, images, duration=0.1, repeat=True, encoding='mpeg4',
     
     """
     
+    # Test images
+    if not isinstance(images, (tuple, list)):
+        raise ValueError("Images should be a tuple or list.")
+    if not images:
+        raise ValueError("List of images is empty.")
+    
     # Get extension
     EXT = os.path.splitext(filename)[1]
     EXT = EXT[1:].upper()
@@ -162,10 +168,13 @@ def movieRead(filename, asNumpy=True, **kwargs):
     t1 = time.time()
     dt = t1-t0
     
-    # Notify    
-    print "Read %i frames from %s in %1.2f seconds (%1.0f ms/frame)" % (
+    # Notify 
+    if images:
+        print "Read %i frames from %s in %1.2f seconds (%1.0f ms/frame)" % (
                         len(images), EXT, dt, 1000*dt/len(images))
-
+    else:
+        print "Could not read any images."
+    
     # Done
     return images
 

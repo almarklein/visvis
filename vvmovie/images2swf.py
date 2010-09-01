@@ -80,6 +80,8 @@ try:
 except ImportError:
     PIL = None
 
+# todo: use PIL to support reading JPEG images from SWF?
+
 
 def checkImages(images):
     """ checkImages(images)
@@ -837,7 +839,7 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
     #print "Writing SWF took %1.2f and %1.2f seconds" % (t1-t0, t2-t1)
     
 
-def _readPixels(fp, tagType, L1):
+def _readPixels(bb, i, tagType, L1):
     """ With pf's seed after the recordheader, reads the pixeldata.
     """
     
@@ -846,10 +848,10 @@ def _readPixels(fp, tagType, L1):
         raise RuntimeError("Need Numpy to read an SWF file.")
         
     # Get info
-    charId = _readFrom(fp, 2)
-    format = ord(_readFrom(fp, 1))
-    width = bitsToInt( _readFrom(fp, 2), 16 )    
-    height = bitsToInt( _readFrom(fp, 2), 16 )
+    charId = bb[i:i+2]; i+=2
+    format = ord(bb[i:i+1]); i+=1
+    width = bitsToInt( bb[i:i+2], 16 ); i+=2
+    height = bitsToInt( bb[i:i+2], 16 ); i+=2
     
     # If we can, get pixeldata and make nunmpy array
     if format != 5:
@@ -857,10 +859,10 @@ def _readPixels(fp, tagType, L1):
     else:
         # Read byte data
         offset = 2+1+2+2 # all the info bits
-        bb = _readFrom(fp, L1-offset)
+        bb2 = bb[i:i+(L1-offset)]
         
         # Decompress and make numpy array
-        data = zlib.decompress(bb)
+        data = zlib.decompress(bb2)
         a = np.frombuffer(data, dtype=np.uint8)
         
         # Set shape
@@ -910,23 +912,24 @@ def readSwf(filename, asNumpy=True):
     # Init images
     images = []
     
-    # Open file
+    # Open file and read all
     fp = open(filename, 'rb')
+    bb = fp.read()
     
     try:
         # Check opening tag
-        tmp = _readFrom(fp,3)
+        tmp = bb[0:3]
         if tmp.upper() == 'FWS':
             pass # ok
         elif tmp.upper() == 'CWS':
-            raise IOError('Cannot read compressed SWF file:' + str(filename))
+            # Decompress movie
+            bb = bb[:8] + zlib.decompress(bb[8:])
         else:
             raise IOError('Not a valid SWF file: ' + str(filename))
         
         # Set filepointer at first tag (skipping framesize RECT and two uin16's
         i = 8
-        fp.seek(i)
-        nbits = bitsToInt(_readFrom(fp,1), 5) # skip FrameSize    
+        nbits = bitsToInt(bb[i:i+1], 5) # skip FrameSize    
         nbits = 5 + nbits * 4
         Lrect = nbits / 8.0
         if Lrect%1:
@@ -940,21 +943,20 @@ def readSwf(filename, asNumpy=True):
             counter += 1
             
             # Get tag header
-            fp.seek(i)
-            bb = _readFrom(fp,6)
-            if not bb:
+            head = bb[i:i+6]
+            if not head:
                 break # Done (we missed end tag)
             
             # Determine type and length
-            T, L1, L2 = getTypeAndLen( bb )
+            T, L1, L2 = getTypeAndLen( head )
             if not L2:
                 print 'Invalid tag length, could not proceed'
                 break
             #print T, L2
             
             # Read image if we can
-            if T in [20, 36]:            
-                im = _readPixels(fp, T, L1)
+            if T in [20, 36]:
+                im = _readPixels(bb, i+6, T, L1)
                 if im is not None:
                     images.append(im)
             elif T in [6, 21, 35, 90]:
