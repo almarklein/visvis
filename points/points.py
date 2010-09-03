@@ -776,15 +776,22 @@ class Pointset(BasePoints):
     
     def __getitem__(self, index):
         """ Get a point or part of the pointset. """
-        # a tuple given: return as array
+        # Single index from numpy scalar
+        if isinstance(index, np.ndarray) and index.size==1:
+            index = int(index)
+        
         if isinstance(index, tuple):
-            return self.data[index]
-        # for a slice, return subset
+            # Multiple indexes: return as array
+            return self.data[index]        
         elif isinstance(index, slice):
+            # Slice: return subset
             return Pointset( self.data[index] )
-        # otherwise, return point
-        else:            
+        elif isinstance(index, int):
+            # Single index: return point
             return Point( self.data[index] )
+        else: 
+            # Probably some other form of subslicing
+            return Pointset( self.data[index])
     
     
     def __delitem__(self, index):
