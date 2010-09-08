@@ -136,6 +136,11 @@ def _loadBackend(name):
     modNameFull = 'visvis.backends.backend_'+name
     modFileName = os.path.join(os.path.dirname(__file__), modName+'.py')
     
+    # Test whether to use the pyc version
+    load_module = imp.load_source    
+    if not os.path.isfile(modFileName):
+        modFileName += "c" # Probably a frozen app
+    
     # Try importing the backend toolkit
     try:
         modNameTk = backendMap[name]
@@ -145,8 +150,10 @@ def _loadBackend(name):
     
     # Try importing the visvis backend module
     try:
-        #module = __import__(modNameFull, fromlist=[modName])
-        module = imp.load_source(modNameFull, modFileName)
+        if modFileName.endswith('.pyc'):
+            module = __import__(modNameFull, fromlist=[modName])
+        else:
+            module = imp.load_source(modNameFull, modFileName)
         globals()[modName] = module
     except Exception, why:
         print 'Error importing %s backend:' % name, why
@@ -191,7 +198,9 @@ def use(backendName=None):
     if backendName:
         # Use given
         if not _loadBackend(backendName):
-            raise RuntimeError('Given backend "%s" could not be loaded.' % backendName)
+            tmp = backendName
+            tmp = os.path.join(os.path.dirname(__file__), backendName+'.xxx')
+            raise RuntimeError('Given backend "%s" could not be loaded.' % tmp)
     elif loadedName:
         # Use loaded (redo to make sure the placeholder is ok)
         if not _loadBackend(loadedName):
