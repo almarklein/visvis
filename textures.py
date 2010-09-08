@@ -457,9 +457,12 @@ class TextureObject(object):
         self._dataRef = None
         
         # A flag to indicate that the data in self._dataRef should be uploaded.
-        # 0 signifies no upload required. 1 signifies an update is required.
-        # -1 signifies the current data failed to upload last time.
-        self._uploadFlag = 0
+        # 1 signifies an update is required.
+        # 2 signifies an update is required, try padding with zeros.
+        # -1 signifies the current data uploaded ok.
+        # -2 ignifies the current data uploaded ok with padding.
+        # 0 signifies failure of uploading
+        self._uploadFlag = 1
         
         # Flag to indicate whether we can use this
         self._canUse = False
@@ -471,16 +474,17 @@ class TextureObject(object):
         If necessary, will upload/update the texture in OpenGl memory now.
         """ 
         
-        # did last time go alright?
-        troubleLastTime = (self._uploadFlag == -1)
+        # Did we fail uploading texture last time?
+        troubleLastTime = (self._uploadFlag==0)
         
-        # If texture invalid, tell to upload
-        if self._texId == 0 or not gl.glIsTexture(self._texId):            
-            if not troubleLastTime: # prevent keep trying to update
-                self._uploadFlag = 1
+        # If texture invalid, tell to upload, but only if we have a chance
+        if self._texId == 0 or not gl.glIsTexture(self._texId):
+            if not troubleLastTime:
+                # Only if not in failure mode
+                self._uploadFlag == abs(self._uploadFlag)
         
         # If we should upload/update, do that now. (SetData also sets the flag)
-        if self._uploadFlag==1:
+        if self._uploadFlag > 0:
             self._SetDataNow()
         
         # check if ok now
@@ -509,7 +513,7 @@ class TextureObject(object):
         
         # No need to disable. Also, if disabled because system does not
         # know 3D textures, we can not call glDisable with that arg.
-        if self._uploadFlag == -1:
+        if self._uploadFlag == 0:
             return
         
         # Select active texture if we can
@@ -542,8 +546,8 @@ class TextureObject(object):
             raise # reraise from here
         
         # ok, store data and raise flag
-        self._dataRef = data
-        self._uploadFlag = 1
+        self._dataRef = data        
+        self._uploadFlag == abs(self._uploadFlag)
     
     
     def _SetDataNow(self):
@@ -552,8 +556,16 @@ class TextureObject(object):
         create a new texture object.
         """
         
-        # set flag to failure (set to success at the end)
-        self._uploadFlag = -1
+        # Test whether padding to a factor of two is required
+        needPadding = (abs(self._uploadFlag) == 2)
+        needPadding = needPadding or not getOpenGlCapable('2.0')
+        
+        # Set flag in case of failure (set to success at the end)
+        # If we tried without padding, we can still try with padding
+        if needPadding:
+            self._uploadFlag = 0 # Give up
+        else:
+            self._uploadFlag = 2 # Try with padding next time
         
         # Get data. 
         if self._dataRef is None:
@@ -606,7 +618,7 @@ class TextureObject(object):
             gl.glBindTexture(self._texType, self._texId)
             
             # Should we make the image a power of two?
-            if not getOpenGlCapable('2.0'):
+            if needPadding:
                 data2 = makePowerOfTwo(data, self._ndim)
                 if data2 is not data:
                     data = data2
@@ -636,8 +648,10 @@ class TextureObject(object):
         
         
         # flag success
-        self._uploadFlag = 0
-    
+        if needPadding:
+            self._uploadFlag = -2
+        else:
+            self._uploadFlag = -1
     
     
     def _UpdateTexture(self, data, internalformat, format, gltype):
