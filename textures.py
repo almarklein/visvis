@@ -458,7 +458,7 @@ class TextureObject(object):
         
         # A flag to indicate that the data in self._dataRef should be uploaded.
         # 1 signifies an update is required.
-        # 2 signifies an update is required, try padding with zeros.
+        # 2 signifies an update is required, with padding zeros.
         # -1 signifies the current data uploaded ok.
         # -2 ignifies the current data uploaded ok with padding.
         # 0 signifies failure of uploading
@@ -561,7 +561,12 @@ class TextureObject(object):
         needPadding = needPadding or not getOpenGlCapable('2.0')
         
         # Set flag in case of failure (set to success at the end)
-        # If we tried without padding, we can still try with padding
+        # If we tried without padding, we can still try with padding.
+        # Note: In theory, getOpenGlCapable('2.0') should be enough to
+        # determine if padding is required. However, bloody ATI drivers
+        # sometimes need 2**n textures even if OpenGl > 2.0. (I've 
+        # encountered this with someones PC and verified that the current
+        # solution solves this.)
         if needPadding:
             self._uploadFlag = 0 # Give up
         else:
