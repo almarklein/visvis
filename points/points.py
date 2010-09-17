@@ -233,8 +233,7 @@ class BasePoints(object):
 
     def Angle(self, *p):
         """ Angle(p)
-        Calculate the angle (in radians) between two points 
-        or pointsets. For 2D and 3D only.
+        Calculate the angle (in radians) between two vectors. 
         For 2D uses the arctan2 method so the angle has a sign.
         For 3D the angle is the smallest angles between the two
         vectors.
@@ -261,10 +260,9 @@ class BasePoints(object):
         if p1.ndim ==2:
             # calculate 2D case
             data1, data2 = p1.data, p2.data
-#             angs1 = np.arctan2( data1[:,1], data1[:,0] )
-#             angs2 = np.arctan2( data2[:,1], data2[:,0] )
-#             dangs =  angs1 - angs2
-            dangs = np.arctan2( data2[:,1]-data1[:,1], data2[:,0]-data1[:,0] )
+            angs1 = np.arctan2( data1[:,1], data1[:,0] )
+            angs2 = np.arctan2( data2[:,1], data2[:,0] )
+            dangs =  angs1 - angs2
             # make number between -pi and pi
             I = np.where(dangs<-np.pi)
             dangs[I] += 2*np.pi
@@ -285,7 +283,42 @@ class BasePoints(object):
         else:
             # not possible
             raise ValueError("Can only calculate angle for 2D and 3D vectors.")
-            
+    
+    
+    def Angle2(self, *p):
+        """ Angle2(p)
+        Calculate the angle (in radians) of the vector between 
+        two points. 
+        
+        Say we have p1=(3,4) and p2=(2,1).
+        
+        p1.Angle(p2) returns the difference of the angles of the two vectors:
+        0.142 = 0.927 - 0.785
+        
+        p1.Angle2(p2) returns the angle of the difference vector (1,3):
+        p1.Angle2(p2) == (p1-p2).Angle()
+        """
+        
+        # the point directly given?
+        if len(p)==1:
+            p = p[0]
+        elif len(p)==0:
+            raise ValueError("Angle2 requires another point.")
+        else:
+            p = Point(*p)
+        
+        # check. Keep the correct order!
+        checkTheTwo(self,p,'angle')
+        p1,p2 = self, p
+        
+        if p1.ndim in [2,3]:
+            # subtract and use Angle()
+            return (p1-p2).Angle()    
+            #meaning: dangs = np.arctan2( data2[:,1]-data1[:,1], data2[:,0]-data1[:,0] )    
+        else:
+            # not possible
+            raise ValueError("Can only calculate angle for 2D and 3D vectors.")
+    
     
     def Dot(self, *p):
         """ Dot(p)
@@ -323,7 +356,7 @@ class BasePoints(object):
         vector points in the direction of the thumb.
         """
         
-         # the point directly given?
+        # the point directly given?
         if len(p)==1:
             p = p[0]
         
@@ -381,14 +414,15 @@ class BasePoints(object):
         
         # apply and return
         data = p1.data - p2.data # this should go well
-        if isinstance(self, Point):
-            return Point(data)
-        else:
+        if isinstance(p1, Pointset) or isinstance(p2, Pointset):
             return Pointset(data)
+        else:
+            return Point(data)
 
 
     def __mul__(self,value):
         """ Scale vectors. """
+        p1, p2 = self, None
         try:
             value = float(value)
             data1, data2 = self.data, value
@@ -396,21 +430,22 @@ class BasePoints(object):
             
             if not isinstance(value,(Point, Pointset)):
                 value = Point(value)
-                
+            
             # check
             p1,p2 = checkTheTwo(self,value,'multiply')
             data1, data2 = self.data, value.data
-            
+        
         # apply and return
         data = data1 * data2 # this should go well
-        if isinstance(self, Point):
-            return Point(data)
-        else:
+        if isinstance(p1, Pointset) or isinstance(p2, Pointset):
             return Pointset(data)
-
+        else:
+            return Point(data)
+    
     
     def __div__(self, value):
         """ Scale vectors. """
+        p1, p2 = self, None
         try:
             value = float(value)
             data1, data2 = self.data, value
@@ -420,15 +455,15 @@ class BasePoints(object):
                 value = Point(value)
                 
             # check (note that the order is important for division!)
-            checkTheTwo(self,value,'divide')
+            p1, p2 = checkTheTwo(self,value,'divide')
             data1, data2 = self.data, value.data
             
         # apply and return
         data = data1 / data2 # this should go well
-        if isinstance(self, Point):
-            return Point(data)
-        else:
+        if isinstance(p1, Pointset) or isinstance(p2, Pointset):
             return Pointset(data)
+        else:
+            return Point(data)
     
     
     def __rmul__(self, value):
@@ -438,6 +473,7 @@ class BasePoints(object):
     
     def __rdiv__(self, value):
         """ Inverse scale vectors. """
+        p1, p2 = self, None
         try:
             value = float(value)
             data1, data2 = self.data, value
@@ -447,15 +483,15 @@ class BasePoints(object):
                 value = Point(value)
                 
             # check (note that the order is important for division!)
-            checkTheTwo(self,value,'divide')
+            p1, p2 = checkTheTwo(self,value,'divide')
             data1, data2 = self.data, value.data
             
         # apply and return
         data = data2 / data1 # here's the difference
-        if isinstance(self, Point):
-            return Point(data)
-        else:
+        if isinstance(p1, Pointset) or isinstance(p2, Pointset):
             return Pointset(data)
+        else:
+            return Point(data)
 
 
 class Point(BasePoints):
