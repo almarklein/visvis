@@ -646,7 +646,9 @@ def _fromString(lineObject):
                     pieces.append(line[i0:i])
                     i0 = i+1
                 elif line[i] == "]":
-                    pieces.append(line[i0:i])
+                    piece = line[i0:i]
+                    if piece.strip(): # Do not add if empty
+                        pieces.append(piece)
                     break
         else:
             print("SSDF Warning: One-line list not closed correctly.")
