@@ -547,7 +547,7 @@ class TextureObject(object):
         
         # ok, store data and raise flag
         self._dataRef = data        
-        self._uploadFlag == abs(self._uploadFlag)
+        self._uploadFlag = abs(self._uploadFlag)
     
     
     def _SetDataNow(self):
@@ -1254,10 +1254,10 @@ class BaseTexture(Wobject):
         self._texture1._climRef.Set(minmax[0], minmax[1])
         self._texture1._clim.Set(minmax[0], minmax[1])
         
-        # Clear texture, on next draw, it is uploaded again, using
+        # Signal update, on next draw, it is uploaded again, using
         # the newly set climref.
-        self._texture1.DestroyGl()
-    
+        self._texture1._uploadFlag = abs(self._texture1._uploadFlag)
+
 
 
 
