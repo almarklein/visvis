@@ -117,8 +117,10 @@ class Range(object):
         """ Set the values of min and max with one call. 
         Same signature as constructor.
         """
-        if isinstance(min, (tuple,list)):
-            min, max = min[0], min[1]            
+        if isinstance(min, Range):
+            min, max = min.min, min.max
+        elif isinstance(min, (tuple,list)):
+            min, max = min[0], min[1]        
         self._min = float(min)
         self._max = float(max)
         self._Check()
