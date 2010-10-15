@@ -33,18 +33,135 @@ from base import Box
 from textures import Colormap
 from textRender import Label, Text
 from core import BaseFigure, Axes
-from simpleWibjects import RadioButton, DraggableBox
+from simpleWibjects import RadioButton, DraggableBox, RangeSlider
 import axises
 
 from points import Point, Pointset
 import weakref
 
+
+class ClimEditor(DraggableBox):
+    """ CLimEditor(parent, *args)
+    
+    A wibject to edit the clim property of textures a la window-width,
+    window-level.
+    
+    During initialization, SetMapables(*args) is called. The easiest way 
+    to use this wibject is to attach it to an axes or figure instance. 
+    The wibject then controls the colormaps of all mapable objects in them.
+    
+    """
+    
+    def __init__(self, parent, *args):
+        DraggableBox.__init__(self, parent)
+        
+        # init size
+        self.position.w = 300
+        self.position.h = 50
+        
+        # Init mappables
+        self._mapables = []
+        
+        # Create slider widget
+        self._slider = RangeSlider(self)
+        self._slider.position = 15,5,-30,-30 # 80 = 55+25
+        self._slider.showTicks = True
+        
+        # Bind events
+        self._slider.eventSliderChanged.Bind(self._UpdateFull)
+        
+        # Set mappables
+        self.SetMapables(*args)
+    
+    @property
+    def range(self):
+        """ Obtain the range that the slider represents. """
+        return self._slider.range
+    
+    def _UpdateFull(self, event):
+        for mappable in self.GetMapables():
+            ra = self._slider.range
+            mappable.SetClim(ra.min, ra.max)
+    
+    
+    def SetMapables(self, *args):
+        """ SetMapables(mapable1, mapable2, mapable3, etc.)
+        
+        Set the mapables to apply the clim to. A mapable is any
+        wibject or wobject that has a clim property and a SetClim method.
+        
+        The argument may also be a list or tuple of objects, or an Axes 
+        or Figure instance, in which case the tree is searched for eligable
+        objects each time the colormap is updated. If args is not given, 
+        the parent is used.
+        
+        The clim of the last mapable obtained by GetMapables is used
+        to initialize the editor (if possible).
+        """
+        
+        # Parse input
+        if not args:
+            args = [self.parent]
+        elif len(args)==1 and hasattr(args, '__len__'):
+            args = args[0]
+        if not args:
+            return
+        
+        # Get the weak refs to the actual wobjects
+        self._mapables = []
+        for arg in args:
+            if isinstance(arg, (BaseFigure,Axes)) or (
+                hasattr(arg, 'clim') and hasattr(arg, 'SetClim')):
+                self._mapables.append( weakref.ref(arg) )
+            else:
+                print 'Warning object is not mappable: ', arg 
+        
+        # Get the last one and obtain its limits
+        mappables = self.GetMapables()
+        if mappables:
+            # Update widget
+            data = mappables[-1]._texture1._dataRef
+            self._slider.fullRange = data.min(), data.max()
+            self._slider.range = mappables[-1].clim
+    
+    
+    def GetMapables(self):
+        """ GetMapables()
+        Get a list of the objects to apply the colormap to. If an axes or 
+        figure was given, all eligable objects are queried from their 
+        children.
+        """
+        
+        # Remove dead refs
+        self._mapables = [ref for ref in self._mapables if ref() is not None]
+        
+        # Get the actual mapable objects
+        mapables = []
+        for arg in self._mapables:
+            # Get real ref
+            arg = arg()
+            if isinstance(arg, (BaseFigure, Axes)):
+                tmp1 = arg.FindObjects('SetClim')
+                tmp2 = arg.FindObjects('clim')
+                mapables.extend(set.intersection(set(tmp1), set(tmp2)))
+            elif hasattr(arg, 'clim') and hasattr(arg, 'SetClim'):
+                mapables.append( arg )
+            else:
+                pass # We checked during SetMapables() method.
+        
+        # Done
+        return mapables
+
+
+
 class ColormapEditor(DraggableBox):
     """ ColormapEditor(parent *args)
-    A wibject to edit colormaps. During initialization, 
-    SetMapables(*args) is called. The easiest way to use this wibject
-    is to attach it to an axes or figure instance. The wibject then 
-    controls the colormaps of all mapable objects in them.
+    
+    A wibject to edit colormaps. 
+    
+    During initialization, SetMapables(*args) is called. The easiest way 
+    to use this wibject is to attach it to an axes or figure instance. 
+    The wibject then controls the colormaps of all mapable objects in them.
     """
     
     def __init__(self, parent, *args):
@@ -89,7 +206,7 @@ class ColormapEditor(DraggableBox):
     
     def _OnDown(self, event):
         """ Pass event on """
-        # Get event of nodwWibject and its position
+        # Get event of nodeWibject and its position
         event2 = self._nodeWidget.eventMouseDown
         pos = self._nodeWidget.position
         # Calc location and limit
@@ -518,6 +635,8 @@ class Colorbar(Box):
         elif isinstance(par, (BaseFigure, Axes)):
             mapables = par.FindObjects('_colormap')
         elif isinstance(par, ColormapEditor):
+            mapables = par.GetMapables()
+        elif isinstance(par, ClimEditor):
             mapables = par.GetMapables()
         else:
             mapables = []

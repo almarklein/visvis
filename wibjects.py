@@ -28,8 +28,9 @@ inserted in the root visvis namespace.
 from base import Wibject, Box
 from textRender import Label
 from core import Axes, BaseFigure
-from simpleWibjects import PushButton, ToggleButton, RadioButton, DraggableBox
-from cm import Colorbar, ColormapEditor
+from simpleWibjects import (PushButton, ToggleButton, RadioButton, 
+        DraggableBox, Slider, RangeSlider)
+from cm import Colorbar, ColormapEditor, ClimEditor
 
 class Title(Label):
     """ Title(axes, text)
