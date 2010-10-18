@@ -47,15 +47,12 @@ from line import lineStyles, PolarLine
 from cameras import depthToZ, TwoDCamera
 from misc import Range, Property, getColor
 
-# A note about tick labels. We format these using '%1.4g', which means
-# they will have 4 significance, and will automatically displayed in
-# exp notation if necessary. This means that the largest string is
-# x.xxxE+yyy -> 10 characters.
-# In practice, the exp will hardly ever be larger than 2 characters. So we
-# strip the zeros in the exponent and assume the (in practice) max string
-# to be "-0.001e+99". With a fontsize of 9, this needs little less than 70
-# pixels. The correction applied when visualizing axis (and ticks) is 60,
-# because the default offset is 10 pixels for the axes.
+# A note about tick labels. We format these such that the width of the ticks
+# never becomes larger than 10 characters (including sign bit).
+# With a fontsize of 9, this needs little less than 70 pixels. The 
+# correction applied when visualizing axis (and ticks) is 60, because 
+# the default offset is 10 pixels for the axes.
+# See the docstring of GetTickTexts() for more info.
 
 # create tick units
 _tickUnits = []
@@ -129,14 +126,111 @@ class AxisLabel(Text):
         self._screenx, self._screeny = pos.x, pos.y
 
 
+def GetTickTexts(ticks):
+    """ GetTickTexts(ticks)
+    
+    Get tick labels of maximally 9 characters (plus sign char). 
+    
+    All ticks will be formatted in the same manner, and with the same number
+    of decimals. In exponential notation, the exponent is written with as
+    less characters as possible, leaving more chars for the decimals.
+    
+    The algorithm is to first test for each tick the number of characters
+    before the dot, the number of decimals, and the number of chars for
+    the exponent. Then the ticks are formatted only without exponent if
+    the first two chars (plus one for the dot) are less than 9.    
+    
+    Examples are:
+    xx.yyyyyy
+    xxxxxxx.y
+    x.yyyye+z
+    x.yye+zzz
+    
+    """
+    
+    # For padding/unpadding exponent notation
+    def exp_pad(s, i=1):
+        return s.lstrip('0').rjust(i,'0')
+    
+    
+    # Round 1: determine amount of chars before dot, after dot, in exp
+    minChars1, maxChars1 = 99999, 0
+    maxChars2 = 0
+    maxChars3 = 0
+    for tick in ticks:
+        
+        # Make abs, our goal is to format the ticks such that without
+        # the sign char, the string is smaller than 9 chars.
+        tick = abs(tick)
+        
+        # Format with exponential notation and get exponent
+        t = '%1.0e' % tick
+        i = t.find('e')
+        expPart = t[i+2:]
+        
+        # Get number of chars before dot
+        chars1 = int(expPart)+1
+        maxChars1 = max(maxChars1, chars1)
+        minChars1 = min(minChars1, chars1)
+        
+        # Get number of chars in exponent
+        maxChars3 = max(maxChars3, len(exp_pad(expPart)))
+        
+        # Get number of chars after the dot
+        t = '%1.7f' % tick
+        i = t.find('.')
+        decPart = t[i+1:]
+        maxChars2 = max(maxChars2, len(decPart.rstrip('0')))
+    
+    # Round 2: Create actual texts
+    ticks2 = []
+    if maxChars1 + maxChars2 + 1 <= 9:
+        # This one is easy
+        
+        chars2 = maxChars2
+        f = '%%1.%if' % chars2
+        for tick in ticks:
+            # Format tick and store
+            if tick == -0: tick = 0
+            ticks2.append( f % tick )
+    
+    elif maxChars1 < 9:        
+        # Do the best we can
+        
+        chars2 = 9 - (maxChars1+1)
+        f = '%%1.%if' % chars2
+        for tick in ticks:
+            # Format tick and store
+            if tick == -0: tick = 0
+            ticks2.append( f % tick )
+    
+    else:
+        # Exponential notation
+        chars2 = 9 - (4+maxChars3)  # 0.xxxe+yy
+        f = '%%1.%ie' % chars2
+        for tick in ticks:
+            # Format tick
+            if tick == -0: tick = 0
+            t = f % tick
+            # Remove zeros in exp
+            i = t.find('e')
+            t = t[:i+2] + exp_pad(t[i+2:], maxChars3)
+            # Store
+            ticks2.append(t)
+    
+    # Done
+    return ticks2
 
-def GetTickText(tick):
+def GetTickText_deprecated(tick):
     """ GetTickText(tick)
     Obtain text from a tick. Convert to exponential notation 
     if necessary. 
     """
+    
+    # Correct -0: 0 has on some systems been reported to be shown as -0
     if tick == -0:
         tick = 0
+    # Get text
     text = '%1.4g' % tick
     iExp = text.find('e')
     if iExp>0:
@@ -153,28 +247,17 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
     (which can be 2d or 3d). If ticks is given, use these values instead.
     """
     
+    # todo: check tick values in property setters    
+    
     # Vector from start to end point
     vec = p1-p0
     
-    # todo: check tick values in property setters    
-    if givenTicks is not None:
-        # Use given ticks
-        
-        # Init ticks and text
-        ticks = []
-        ticksText = []
-        
-        # Apply
-        for i in range(len(givenTicks)):
-            t = givenTicks[i]
-            if isinstance(t, basestring):
-                ticks.append(i)
-                ticksText.append(t)
-            else:
-                ticks.append(float(t))
-                ticksText.append( GetTickText(t) )
+    # Init tick stuff
+    tickValues = []
+    tickTexts = []
+    tickPositions = []
     
-    else:
+    if givenTicks is None:
         # Calculate all ticks if not given
         
         # Get pixels per unit
@@ -200,22 +283,66 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
         firstTick = np.ceil(  lim.min/tickUnit ) * tickUnit
         lastTick  = np.floor( lim.max/tickUnit ) * tickUnit
         count = 0
-        ticks = [firstTick]
-        ticksText = [GetTickText(firstTick)]
-        while ticks[-1] < lastTick-tickUnit/2:
+        tickValues.append(firstTick)
+        while tickValues[-1] < lastTick-tickUnit/2:
             count += 1
             t = firstTick + count*tickUnit
-            ticks.append(t)
-            ticksText.append(GetTickText(t))
+            tickValues.append(t)
+        
+        # Get tick texts
+        tickTexts = GetTickTexts(tickValues)
+    
+    elif isinstance(givenTicks, dict):
+        # Use given ticks in dict
+        
+        for tickValue in givenTicks.keys():
+            if tickValue >= lim.min and tickValue <= lim.max:
+                tickText = givenTicks[tickValue]
+                tickValues.append(tickValue)                
+                if isinstance(tickText, basestring):
+                    tickTexts.append(tickText)
+                else:
+                    tickTexts.append(str(tickText))
+    
+    elif isinstance(givenTicks, (tuple,list)):
+        # Use given ticks as list
+        
+        # Init temp tick texts list
+        tickTexts2 = []
+        
+        for i in range(len(givenTicks)):
+            
+            # Get tick 
+            t = givenTicks[i]            
+            if isinstance(t, basestring):
+                tickValue = i
+                tickText = t
+            else:
+                tickValue = float(t)
+                tickText = None
+            
+            # Store
+            if tickValue >= lim.min and tickValue <= lim.max:
+                tickValues.append(tickValue)
+                tickTexts2.append(tickText)
+        
+        # Get tick text that we normally would have used
+        tickTexts = GetTickTexts(tickValues)
+        
+        # Replace with any given strings
+        for i in range(len(tickTexts)):
+            tmp = tickTexts2[i]
+            if tmp is not None:
+                tickTexts[i] = tmp
+    
     
     # Calculate tick positions
-    ticksPos = []
-    for tick in ticks:
-        pos = p0 + vec * ( (tick-lim.min) / lim.range )
-        ticksPos.append( pos )
+    for t in tickValues:
+        pos = p0 + vec * ( (t-lim.min) / lim.range )
+        tickPositions.append( pos )
     
     # Done
-    return ticks, ticksPos, ticksText
+    return tickValues, tickPositions, tickTexts
 
 
 class BaseAxis(base.Wobject):
@@ -383,64 +510,125 @@ class BaseAxis(base.Wobject):
     @Property
     def xTicks():
         """ Get/Set the ticks for the x dimension. 
-        If None, they are determined automatically. """
+        
+        The value can be:
+          * None: the ticks are determined automatically. 
+          * A tuple/list/numpy_array with float or string values: Floats 
+            specify at which location tickmarks should be drawn. Strings are
+            drawn at integer positions corresponding to the index in the
+            given list.
+          * A dict with numbers or strings as values. The values are drawn at
+            the positions specified by the keys (which should be numbers).
+        """
         def fget(self):
             return self._xticks
         def fset(self, value):
-            m = 'Ticks must be a list/tuple/numpy array of numbers or strings.'
-            if not isinstance(value, (list, tuple, np.ndarray)):
+            m = 'Ticks must be a dict/list/tuple/numpy array of numbers or strings.'
+            if value is None:
+                self._xticks = None
+            elif isinstance(value, dict):
+                try:
+                    ticks = {}
+                    for key in value.keys():
+                        ticks[key] = str(value[key])
+                    self._xticks = ticks
+                except Exception:
+                    raise ValueError(m)
+            elif isinstance(value, (list, tuple, np.ndarray)):
+                try:
+                    ticks = []
+                    for val in value:
+                        if isinstance(val, basestring):
+                            ticks.append(val)
+                        else:
+                            ticks.append(float(val))
+                    self._xticks = ticks
+                except Exception:
+                    raise ValueError(m)
+            else:
                 raise ValueError(m)
-            try:
-                ticks = []
-                for val in value:
-                    if isinstance(val, basestring):
-                        ticks.append(val)
-                    else:
-                        ticks.append(float(val))
-                self._xticks = ticks
-            except Exception:
-                raise ValueError(m)
+            
     
     @Property
     def yTicks():
         """ Get/Set the ticks for the y dimension. 
-        If None, they are determined automatically. """
+        
+        The value can be:
+          * None: the ticks are determined automatically. 
+          * A tuple/list/numpy_array with float or string values: Floats 
+            specify at which location tickmarks should be drawn. Strings are
+            drawn at integer positions corresponding to the index in the
+            given list.
+          * A dict with numbers or strings as values. The values are drawn at
+            the positions specified by the keys (which should be numbers).
+        """
         def fget(self):
             return self._yticks
         def fset(self, value):
-            m = 'Ticks must be a list/tuple/numpy array of numbers or strings.'
-            if not isinstance(value, (list, tuple, np.ndarray)):
-                raise ValueError(m)
-            try:
-                ticks = []
-                for val in value:
-                    if isinstance(val, basestring):
-                        ticks.append(val)
-                    else:
-                        ticks.append(float(val))
-                self._yticks = ticks
-            except Exception:
+            m = 'Ticks must be a dict/list/tuple/numpy array of numbers or strings.'
+            if value is None:
+                self._yticks = None
+            elif isinstance(value, dict):
+                try:
+                    ticks = {}
+                    for key in value.keys():
+                        ticks[key] = str(value[key])
+                    self._yticks = ticks
+                except Exception:
+                    raise ValueError(m)
+            elif isinstance(value, (list, tuple, np.ndarray)):
+                try:
+                    ticks = []
+                    for val in value:
+                        if isinstance(val, basestring):
+                            ticks.append(val)
+                        else:
+                            ticks.append(float(val))
+                    self._yticks = ticks
+                except Exception:
+                    raise ValueError(m)
+            else:
                 raise ValueError(m)
     
     @Property
     def zTicks():
         """ Get/Set the ticks for the z dimension. 
-        If None, they are determined automatically. """
+        
+        The value can be:
+          * None: the ticks are determined automatically. 
+          * A tuple/list/numpy_array with float or string values: Floats 
+            specify at which location tickmarks should be drawn. Strings are
+            drawn at integer positions corresponding to the index in the
+            given list.
+          * A dict with numbers or strings as values. The values are drawn at
+            the positions specified by the keys (which should be numbers).
+        """
         def fget(self):
             return self._zticks
         def fset(self, value):
-            m = 'Ticks must be a list/tuple/numpy array of numbers or strings.'
-            if not isinstance(value, (list, tuple, np.ndarray)):
-                raise ValueError(m)
-            try:
-                ticks = []
-                for val in value:
-                    if isinstance(val, basestring):
-                        ticks.append(val)
-                    else:
-                        ticks.append(float(val))
-                self._zticks = ticks
-            except Exception:
+            m = 'Ticks must be a dict/list/tuple/numpy array of numbers or strings.'
+            if value is None:
+                self._zticks = None
+            elif isinstance(value, dict):
+                try:
+                    ticks = {}
+                    for key in value.keys():
+                        ticks[key] = str(value[key])
+                    self._zticks = ticks
+                except Exception:
+                    raise ValueError(m)
+            elif isinstance(value, (list, tuple, np.ndarray)):
+                try:
+                    ticks = []
+                    for val in value:
+                        if isinstance(val, basestring):
+                            ticks.append(val)
+                        else:
+                            ticks.append(float(val))
+                    self._zticks = ticks
+                except Exception:
+                    raise ValueError(m)
+            else:
                 raise ValueError(m)
     
     
@@ -778,6 +966,7 @@ class CartesianAxis2D(BaseAxis):
                 textDict = self._textDicts[d]
                 if tick in textDict and textDict[tick] in self._children:
                     t = textDict.pop(tick)
+                    t.text = text
                     t.x, t.y, t.z = p2.x, p2.y, p2.z
                 else:
                     t = Text(self,text, p2.x,p2.y,p2.z, 'sans')
@@ -796,7 +985,7 @@ class CartesianAxis2D(BaseAxis):
                     t.valign = -1
             
             # We should hide this last tick if it sticks out
-            if d==0:
+            if d==0 and len(ticks):
                 # Prepare text object to produce _vertices2 and _screenx
                 t._Compile()
                 t._PositionText()
