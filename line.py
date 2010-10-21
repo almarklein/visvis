@@ -36,7 +36,8 @@ import math, time, os
 
 from points import Point, Pointset
 
-from misc import Property, Range, OpenGLError, getColor, getOpenGlCapable
+from misc import Property, PropWithDraw, DrawAfter 
+from misc import Range, OpenGLError, getColor, getOpenGlCapable
 from base import Wobject
 
 
@@ -411,7 +412,7 @@ class Line(Wobject):
     ## Create properties
 
 
-    @Property
+    @PropWithDraw
     def lw():
         """ Get/Set the lineWidth: the width of the line in pixels.
         If zero, the line is not drawn. """
@@ -420,7 +421,7 @@ class Line(Wobject):
         def fset(self, value):
             self._lw = self._AsFloat(value, 'lineWidth')
 
-    @Property
+    @PropWithDraw
     def ls():
         """ Get/Set the lineStyle: the style of the line.
           * -   a solid line
@@ -441,7 +442,7 @@ class Line(Wobject):
                 raise Exception("Error in lineStyle: unknown line style!")
             self._ls = value
 
-    @Property
+    @PropWithDraw
     def lc():
         """ Get/Set the lineColor: the color of the line, as a 3-element
         tuple or as a single character string (shown in uppercase):
@@ -453,7 +454,7 @@ class Line(Wobject):
             self._lc = value
 
 
-    @Property
+    @PropWithDraw
     def mw():
         """ Get/Set the markerWidth: the width (bounding box) of the marker
         in (screen) pixels. If zero no marker is drawn."""
@@ -462,7 +463,7 @@ class Line(Wobject):
         def fset(self, value):
             self._mw = self._AsFloat(value, 'markerWidth')
 
-    @Property
+    @PropWithDraw
     def ms():
         """ Get/Set the markerStyle: the style of the marker.
           * +       : a plus
@@ -486,7 +487,7 @@ class Line(Wobject):
                 raise Exception("Error in markerStyle: unknown line style!")
             self._ms = value
 
-    @Property
+    @PropWithDraw
     def mc():
         """ Get/Set the markerColor: The color of the face of the marker
         If None, '', or False, the marker face is not drawn (but the edge is).
@@ -497,7 +498,7 @@ class Line(Wobject):
             value = getColor(value, 'markerColor')
             self._mc = value
 
-    @Property
+    @PropWithDraw
     def mew():
         """ Get/Set the markerEdgeWidth: the width of the edge of the marker.
         If zero no edge is drawn. """
@@ -506,7 +507,7 @@ class Line(Wobject):
         def fset(self, value):
             self._mew = self._AsFloat(value, 'markerEdgeWidth')
 
-    @Property
+    @PropWithDraw
     def mec():
         """ Get/Set the markerEdgeColor: the color of the edge of the marker.
         """
@@ -526,7 +527,7 @@ class Line(Wobject):
 #     markerEdgeWidth = mew
 #     markerEdgeColor = mec
 
-    @Property
+    @PropWithDraw
     def alpha():
         """ Get/Set the alpha (transparancy) of the line and markers.
         When this is < 1, the line cannot be anti-aliased, and it
@@ -539,24 +540,28 @@ class Line(Wobject):
 
     ## Set methods
 
+    @DrawAfter
     def SetXdata(self, data):
         """ SetXdata(data)
         Set the x coordinates of the points of the line.
         """
         self._points[0,:] = data
-
+    
+    @DrawAfter
     def SetYdata(self, data):
         """ SetYdata(data)
         Set the y coordinates of the points of the line.
         """
         self._points[1,:] = data
 
+    @DrawAfter
     def SetZdata(self, data):
         """ SetZdata(data)
         Set the z coordinates of the points of the line.
         """
         self._points[2,:] = data
 
+    @DrawAfter
     def SetPoints(self, points):
         """ SetPoints(points)
         Set x,y (and optionally z) data at once

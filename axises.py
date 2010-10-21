@@ -45,7 +45,8 @@ import base
 from textRender import Text
 from line import lineStyles, PolarLine
 from cameras import depthToZ, TwoDCamera
-from misc import Range, Property, getColor
+from misc import Range, getColor
+from misc import Property, PropWithDraw, DrawAfter 
 
 # A note about tick labels. We format these such that the width of the ticks
 # never becomes larger than 10 characters (including sign bit).
@@ -61,12 +62,44 @@ for e in range(-10, 21):
         _tickUnits.append( i*10**e)
 
 
-class AxisLabel(Text):
+class AxisText(Text):
+    """ Text with a disabled Draw() method. """
+    
+    def Draw(self):
+        pass
+    
+    @Property
+    def x():
+        """Get/Set the x position of the text."""
+        def fget(self):
+            return self._x
+        def fset(self, value):
+            self._x = value
+    
+    @Property
+    def y():
+        """Get/Set the y position of the text."""
+        def fget(self):
+            return self._y
+        def fset(self, value):
+            self._y = value
+    
+    @Property
+    def z():
+        """Get/Set the z position of the text."""
+        def fget(self):
+            return self._z
+        def fset(self, value):
+            self._z = value
+
+
+class AxisLabel(AxisText):
     """ AxisLabel(parent, text)
     A special label that moves itself just past the tickmarks.
     The _textDict attribute should contain the Text objects of the tickmarks.
 
-    This is a helper class.
+    This is a helper class for the axis classes, and has a disabled Draw()
+    method.
     """
 
     def __init__(self, *args, **kwargs):
@@ -76,7 +109,7 @@ class AxisLabel(Text):
         
         # upon creation, one typically needs a second draw; only after all
         # ticks are drawn can this label be positioned properly.
-
+    
     def OnDrawScreen(self):
         
         # get current position
@@ -247,8 +280,6 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
     (which can be 2d or 3d). If ticks is given, use these values instead.
     """
     
-    # todo: check tick values in property setters    
-    
     # Vector from start to end point
     vec = p1-p0
     
@@ -397,7 +428,7 @@ class BaseAxis(base.Wobject):
     ## Properties
     
     
-    @Property
+    @PropWithDraw
     def showBox():
         """ Get/Set whether to show the box of the axis. """
         def fget(self):
@@ -405,7 +436,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._showBox = bool(value)
     
-    @Property
+    @PropWithDraw
     def axisColor():
         """ Get/Set the color of the box, ticklines and tick marks. """
         def fget(self):
@@ -413,7 +444,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._axisColor = getColor(value, 'setting axis color')
     
-    @Property
+    @PropWithDraw
     def tickFontSize():
         """ Get/Set the font size of the tick marks. """
         def fget(self):
@@ -421,7 +452,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._tickFontSize = value
     
-    @Property
+    @PropWithDraw
     def gridLineStyle():
         """ Get/Set the style of the gridlines as a single char similar
         to the lineStyle (ls) property of the line wobject (or in plot). """
@@ -433,7 +464,7 @@ class BaseAxis(base.Wobject):
             self._gridLineStyle = value
     
     
-    @Property
+    @PropWithDraw
     def showGridX():
         """ Get/Set whether to show a grid for the x dimension. """
         def fget(self):
@@ -441,7 +472,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._xgrid = bool(value)
     
-    @Property
+    @PropWithDraw
     def showGridY():
         """ Get/Set whether to show a grid for the y dimension. """
         def fget(self):
@@ -449,7 +480,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._ygrid = bool(value)
     
-    @Property
+    @PropWithDraw
     def showGridZ():
         """ Get/Set whether to show a grid for the z dimension. """
         def fget(self):
@@ -457,7 +488,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._zgrid = bool(value)
     
-    @Property
+    @PropWithDraw
     def showGrid():
         """ Show/hide the grid for the x,y and z dimension. """
         def fget(self):
@@ -469,7 +500,7 @@ class BaseAxis(base.Wobject):
             else:
                 self._xgrid = self._ygrid = self._zgrid = bool(value)
     
-    @Property
+    @PropWithDraw
     def showMinorGridX():
         """ Get/Set whether to show a minor grid for the x dimension. """
         def fget(self):
@@ -477,7 +508,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._xminorgrid = bool(value)
     
-    @Property
+    @PropWithDraw
     def showMinorGridY():
         """ Get/Set whether to show a minor grid for the y dimension. """
         def fget(self):
@@ -485,7 +516,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._yminorgrid = bool(value)
     
-    @Property
+    @PropWithDraw
     def showMinorGridZ():
         """ Get/Set whether to show a minor grid for the z dimension. """
         def fget(self):
@@ -493,7 +524,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._zminorgrid = bool(value)
     
-    @Property
+    @PropWithDraw
     def showMinorGrid():
         """ Show/hide the minor grid for the x, y and z dimension. """
         def fget(self):
@@ -507,7 +538,7 @@ class BaseAxis(base.Wobject):
                 self._xminorgrid = self._yminorgrid = self._zminorgrid = tmp
     
     
-    @Property
+    @PropWithDraw
     def xTicks():
         """ Get/Set the ticks for the x dimension. 
         
@@ -549,7 +580,7 @@ class BaseAxis(base.Wobject):
                 raise ValueError(m)
             
     
-    @Property
+    @PropWithDraw
     def yTicks():
         """ Get/Set the ticks for the y dimension. 
         
@@ -590,7 +621,7 @@ class BaseAxis(base.Wobject):
             else:
                 raise ValueError(m)
     
-    @Property
+    @PropWithDraw
     def zTicks():
         """ Get/Set the ticks for the z dimension. 
         
@@ -632,7 +663,7 @@ class BaseAxis(base.Wobject):
                 raise ValueError(m)
     
     
-    @Property
+    @PropWithDraw
     def xLabel():
         """ Get/Set the label for the x dimension. """
         def fget(self):
@@ -640,7 +671,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._xlabel = value
     
-    @Property
+    @PropWithDraw
     def yLabel():
         """ Get/Set the label for the y dimension. """
         def fget(self):
@@ -648,7 +679,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._ylabel = value
     
-    @Property
+    @PropWithDraw
     def zLabel():
         """ Get/Set the label for the z dimension. """
         def fget(self):
@@ -728,7 +759,7 @@ class BaseAxis(base.Wobject):
         # get pointset
         if not hasattr(self, '_pps') or not self._pps:
             return
-        pps = self._pps
+        pps = self._pps.Copy()
         pps[:,2] = depthToZ( pps[:,2] )
         
         # Prepare for drawing lines
@@ -969,14 +1000,14 @@ class CartesianAxis2D(BaseAxis):
                     t.text = text
                     t.x, t.y, t.z = p2.x, p2.y, p2.z
                 else:
-                    t = Text(self,text, p2.x,p2.y,p2.z, 'sans')
+                    t = AxisText(self,text, p2.x,p2.y,p2.z, 'sans')
                 # Add to dict
                 newTextDicts[d][tick] = t
                 # Set other properties right
-                t.visible = True
+                t._visible = True
                 if t.fontSize != self._tickFontSize:
                     t.fontSize = self._tickFontSize
-                t.textColor = self._axisColor
+                t._color = self._axisColor
                 if d==1:
                     t.halign = 1
                     t.valign = 0
@@ -998,7 +1029,7 @@ class CartesianAxis2D(BaseAxis):
 #                     tmp2 = t._vertices2[:,0].max() / 2
                     # Apply
                     if t._vertices1 and tmp1 < tmp2:
-                        t.visible = False
+                        t._visible = False
             
             # Get gridlines
             if drawGrid[d] or drawMinorGrid[d]:
@@ -1024,12 +1055,12 @@ class CartesianAxis2D(BaseAxis):
                 t.text = labels[d]
                 t.x, t.y, t.z = p1.x, p1.y, p1.z
             else:
-                #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                #t = AxisText(self,labels[d], p1.x,p1.y,p1.z, 'sans')
                 t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
                 t.fontSize=10
             newTextDicts[d][key] = t
             t.halign = 0
-            t.textColor = self._axisColor
+            t._color = self._axisColor
             # Move label to back, so the repositioning works right
             if not t in self._children[-3:]:
                 self._children.remove(t)
@@ -1190,14 +1221,14 @@ class CartesianAxis3D(BaseAxis):
                     t = textDict.pop(tick)
                     t.x, t.y, t.z = p2.x, p2.y, p2.z
                 else:
-                    t = Text(self,text, p2.x,p2.y,p2.z, 'sans')
+                    t = AxisText(self,text, p2.x,p2.y,p2.z, 'sans')
                 # Add to dict
                 newTextDicts[d][tick] = t
                 # Set other properties right
-                t.visible = True
+                t._visible = True
                 if t.fontSize != self._tickFontSize:
                     t.fontSize = self._tickFontSize
-                t.textColor = self._axisColor
+                t._color = self._axisColor
                 if d==2:
                     t.valign = 0
                     t.halign = 1
@@ -1235,12 +1266,12 @@ class CartesianAxis3D(BaseAxis):
                 t.text = labels[d]
                 t.x, t.y, t.z = p1.x, p1.y, p1.z
             else:
-                #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                #t = AxisText(self,labels[d], p1.x,p1.y,p1.z, 'sans')
                 t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
                 t.fontSize=10
             newTextDicts[d][key] = t
             t.halign = 0
-            t.textColor = self._axisColor
+            t._color = self._axisColor
             # Move to back such that they can position themselves right
             if not t in self._children[-3:]:
                 self._children.remove(t)
@@ -1427,6 +1458,7 @@ class PolarAxis2D(BaseAxis):
         axes.eventMotion.Bind(self.OnMotion)
     
     
+    @DrawAfter
     def RescalePolarData(self):
         """ This method finds and transforms all polar line data
         by the current polar radial axis limits so that data below
@@ -1564,12 +1596,12 @@ class PolarAxis2D(BaseAxis):
                 t.text = labels[d]
                 t.x, t.y, t.z = p1.x, p1.y, p1.z
             else:
-                #t = Text(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                #t = AxisText(self,labels[d], p1.x,p1.y,p1.z, 'sans')
                 t = AxisLabel(self, labels[d], p1.x, p1.y, p1.z, 'sans')
                 t.fontSize = 10
             newTextDicts[d][key] = t
             t.halign = 0
-            t.textColor = self._axisColor
+            t._color = self._axisColor
             # Move to back
             if not t in self._children[-3:]:
                 self._children.remove(t)
@@ -1646,14 +1678,14 @@ class PolarAxis2D(BaseAxis):
                 t = textDict.pop(tick)
                 t.x, t.y, t.z = p2.x, p2.y, p2.z
             else:
-                t = Text(self, text, p2.x, p2.y, p2.z, 'sans')
+                t = AxisText(self, text, p2.x, p2.y, p2.z, 'sans')
             # Add to dict
             newTextDicts[0][tick] = t
             # Set other properties right
-            t.visible = True
+            t._visible = True
             if t.fontSize != self._tickFontSize:
                 t.fontSize = self._tickFontSize
-            t.textColor = self._axisColor
+            t._color = self._axisColor
             t.halign = 0
             t.valign = 0
         #===================================================================
@@ -1740,15 +1772,15 @@ class PolarAxis2D(BaseAxis):
                 t = textDict.pop(tickXformed)
                 t.x, t.y, t.z = ptxt.x, ptxt.y, ptxt.z
             else:
-                t = Text(self, text, ptxt.x, ptxt.y, ptxt.z, 'sans')
+                t = AxisText(self, text, ptxt.x, ptxt.y, ptxt.z, 'sans')
             # Add to dict
             #print tick, '=>',text, 'but', t.text
             newTextDicts[qIndx][tickXformed] = t
            # Set other properties right
-            t.visible = True
+            t._visible = True
             if t.fontSize != self._tickFontSize:
                 t.fontSize = self._tickFontSize
-            t.textColor = self._axisColor
+            t._color = self._axisColor
             t.halign = 1
             t.valign = 0
 
@@ -1899,6 +1931,7 @@ class PolarAxis2D(BaseAxis):
         return True
     
     
+    @DrawAfter
     def SetLimits(self, rangeTheta=None, rangeR=None, margin=0.04):
         """ SetLimits(rangeTheta=None, rangeR=None, margin=0.02)
         
@@ -2003,7 +2036,7 @@ class PolarAxis2D(BaseAxis):
         return self._angularRange, self._radialRange
     
     
-    @Property
+    @PropWithDraw
     def angularRefPos():
         """ Get/Set the angular reference position in
             degrees wrt +x screen axis"""
@@ -2016,7 +2049,7 @@ class PolarAxis2D(BaseAxis):
             self.Draw()
     
     
-    @Property
+    @PropWithDraw
     def isCW():
         """ Get/Set the sense of rotation.
          """

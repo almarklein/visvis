@@ -269,7 +269,8 @@ class Figure(BaseFigure):
             return tmp.left(), tmp.top(), tmp.width(), tmp.height()
     
     def _RedrawGui(self):
-        self._widget.update()
+        if self._widget:
+            self._widget.update()
     
     def _ProcessGuiEvents(self):
         app = QtGui.QApplication.instance()

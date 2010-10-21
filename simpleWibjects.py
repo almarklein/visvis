@@ -25,7 +25,7 @@ Implements basic wibjects like buttons, and, maybe later, sliders etc.
 import OpenGL.GL as gl
 
 from events import BaseEvent, MouseEvent
-from misc import Property, Range
+from misc import Property, PropWithDraw, DrawAfter, Range
 from base import Box
 from textRender import Label
 from points import Pointset, Point
@@ -108,7 +108,7 @@ class ToggleButton(PushButton):
         # Bind event
         self.eventMouseDown.Bind(self._OnDown)
     
-    @Property
+    @Property # _Update will invoke a draw
     def state():
         """ A boolean expressing the state of the toggle button: on or off.
         """
@@ -131,7 +131,7 @@ class ToggleButton(PushButton):
             self.edgeWidth = 2
         else:
             self.edgeWidth = 1        
-        self.Draw()
+        #self.Draw() Setting edgeWidth will invoke redraw
         self._eventStateChanged.Fire()
 
 
@@ -302,6 +302,9 @@ class BaseSlider(Box):
         self._wobjects = [] # So we can have Text objects
         self._labelPool = {}
         
+        # Calculate dots now
+        self._SliderCalcDots()
+        
         # Create new events
         self._eventSliding = BaseEvent(self)
         self._eventSliderChanged = BaseEvent(self)
@@ -314,6 +317,7 @@ class BaseSlider(Box):
         self.eventMouseDown.Bind(self._SliderOnDown)
         self.eventMouseUp.Bind(self._SliderOnUp)
         self.eventMotion.Bind(self._SliderOnMotion)
+        self.eventPosition.Bind(self._SliderCalcDots)
     
     
     @property
@@ -323,6 +327,7 @@ class BaseSlider(Box):
         """
         return self._eventSliding
     
+    
     @property    
     def eventSliderChanged(self):
         """ Event fired when the user releases the moude while changing
@@ -330,9 +335,29 @@ class BaseSlider(Box):
         """
         return self._eventSliderChanged
     
+    
+    @PropWithDraw
+    def fullRange():
+        """ The full possible range for this slider. """
+        def fget(self):
+            return self._fullRange
+        def fset(self, value):
+            self._fullRange = Range(value)
+            self._limitRangeAndSetText()
+    
+    @PropWithDraw
+    def showTicks():
+        """ Whether to show tickmarks (default False)."""
+        def fget(self):
+            return self._showTicks
+        def fset(self, value):
+            self._showTicks = bool(value)
+    
+    
     def _SliderOnEnter(self, event):
         self._isOver = True
         self.Draw()
+    
     
     def _SliderOnLeave(self, event):
         self._isOver = False
@@ -345,13 +370,16 @@ class BaseSlider(Box):
         x0 = self._getNormalizedCurrentPos(event)
         x1, x2 = self._getNormalizedSliderLimits()
         
-        print x0, x1, x2
+        # Determine offset
+        w,h = self.position.size
+        offset = 8.0 / max(w,h)
         
-        if x0 < x1:
+        print x0, x1, x2, offset
+        if x0 < x1+offset:
             # Move on left edge
             self._sliderDown = 1 
             self._sliderRefx = x1 - x0
-        elif x0 > x2:
+        elif x0 > x2-offset:
             # Move on right edge
             self._sliderDown = 3
             self._sliderRefx = x2 - x0
@@ -412,19 +440,33 @@ class BaseSlider(Box):
         self._eventSliderChanged.Set()
         self._eventSliderChanged.Fire()
     
+    
     def _limitRangeAndSetText(self):
+        """ _limitRangeAndSetText()
+        To limit the range of the slider and to set the slider text.
+        Different slider implementation want to do this
+        differently.
+        """
         pass # Abstact method
     
+    
     def _getNormalizedCurrentPos(self, event):
+        """ _getNormalizedCurrentPos(event)
+        Get the current mouse position as a normalized range unit
+        (between 0 and 1, with the fullRange as a references).
+        """
         w,h = self.position.size
-        if w > h:
-            self._label.textAngle = 0
+        if w > h:            
             return float(event.x) / self.position.width
         else:
-            self._label.textAngle = -90
             return float(event.y) / self.position.height
     
+    
     def _getNormalizedSliderLimits(self):
+        """ _getNormalizedSliderLimits()
+        Get the current limits of the slider expressed in normalized 
+        units (between 0 and 1, with the fullRange as a references).
+        """
         # Short names
         R1 = self._range
         R2 = self._fullRange
@@ -435,6 +477,7 @@ class BaseSlider(Box):
         #
         return x1, x2
     
+    
     def _GetBgcolorToDraw(self):
         """ _GetBgcolorToDraw()
         Can be overloaded to indicate mouse over in buttons. """
@@ -443,7 +486,10 @@ class BaseSlider(Box):
             clr = [c+0.05 for c in clr]
         return clr
     
+    
     def _getformat(self):
+        """ _getformat()
+        Get the format in which to display the slider limits. """
         if self._fullRange.range > 10000:
             return '%1.4g'
         elif self._fullRange.range > 1000:
@@ -455,22 +501,30 @@ class BaseSlider(Box):
         else:
             return '%1.4g'
     
-    @Property
-    def fullRange():
-        """ The full possible range for this slider. """
-        def fget(self):
-            return self._fullRange
-        def fset(self, value):
-            self._fullRange = Range(value)
-            self._limitRangeAndSetText()
     
-    @Property
-    def showTicks():
-        """ Whether to show tickmarks (default False)."""
-        def fget(self):
-            return self._showTicks
-        def fset(self, value):
-            self._showTicks = bool(value)
+    def _SliderCalcDots(self, event=None):
+        
+        # Init dots
+        dots1, dots2 = Pointset(2), Pointset(2)
+        
+        # Get width height
+        w,h = self.position.size
+        
+        # Fill pointsets
+        if w > h:
+            i = 5
+            while i < h-5:
+                dots1.Append(2,i); dots1.Append(6,i)
+                dots2.Append(-2,i); dots2.Append(-6,i)
+                i += 3
+        else:
+            i = 5
+            while i < w-5:
+                dots1.Append(i,2); dots1.Append(i,6)
+                dots2.Append(i,-2); dots2.Append(i,-6)
+                i += 3
+        
+        self._dots1, self._dots2 = dots1, dots2
     
     
     def OnDraw(self):
@@ -490,11 +544,25 @@ class BaseSlider(Box):
         
         # Calculate real dimensions of patch
         if w > h:
-            x1, x2 = max(d1, t1*w), min(w-d2, t2*w)            
+            x1, x2 = max(d2, t1*w), min(w-d1, t2*w)            
             y1, y2 = d1, h-d2
+            #
+            dots1 = self._dots1 + Point(x1, 0)
+            dots2 = self._dots2 + Point(x2, 0)
+            #
+            diff = abs(x1-x2)
+            #
+            self._label.textAngle = 0
         else:            
             x1, x2 = d2, w-d1
-            y1, y2 = max(d2, t1*h), min(h-d1, t2*h)
+            y1, y2 = max(d1, t1*h), min(h-d2, t2*h)
+            #
+            dots1 = self._dots1 + Point(0, y1)
+            dots2 = self._dots2 + Point(0, y2)
+            #
+            diff = abs(y1-y2)
+            #
+            self._label.textAngle = -90
         
         # Draw slider bit
         clr = self._frontColor
@@ -507,10 +575,30 @@ class BaseSlider(Box):
         gl.glVertex2f(x2,y1)
         gl.glEnd()
         
-        # Reset color to black
-        gl.glColor(0,0,0, 1.0)
+        
+        # Draw dots
+        if True:
+            
+            # Prepare
+            gl.glColor(0,0,0,1)
+            gl.glPointSize(1)
+            gl.glDisable(gl.GL_POINT_SMOOTH)
+            
+            # Draw
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+            if isinstance(self, RangeSlider) and diff>5:
+                gl.glVertexPointerf(dots1.data)
+                gl.glDrawArrays(gl.GL_POINTS, 0, len(dots1))
+            if diff>5:
+                gl.glVertexPointerf(dots2.data)
+                gl.glDrawArrays(gl.GL_POINTS, 0, len(dots2))
+            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        
         
         if self._showTicks:
+            
+            # Reset color to black
+            gl.glColor(0,0,0,1)
             
             # Draw ticks
             if w>h:
@@ -580,7 +668,7 @@ class Slider(BaseSlider):
         self.fullRange = fullRange
         self.value = value
     
-    @Property
+    @PropWithDraw
     def value():
         """ The current value for this slider. """
         def fget(self):
@@ -616,7 +704,7 @@ class RangeSlider(BaseSlider):
         self.range = range
     
     
-    @Property
+    @PropWithDraw
     def range():
         """ The current range for this slider. """
         def fget(self):

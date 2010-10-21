@@ -38,8 +38,8 @@ import OpenGL.GLU as glu
 import numpy as np
 import math, time, os
 
-from misc import getResourceDir, getOpenGlCapable
-from misc import Property, Range, OpenGLError
+from misc import getResourceDir, getOpenGlCapable, Range, OpenGLError
+from misc import Property, PropWithDraw, DrawAfter
 from events import *
 from base import Wobject
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
@@ -1118,6 +1118,7 @@ class BaseTexture(Wobject):
         self.transformations.append(self._trafo_scale)        
     
     
+    @DrawAfter
     def SetData(self, data):
         """ SetData(data)
         (Re)Set the data to display. If the data has the same shape
@@ -1184,7 +1185,7 @@ class BaseTexture(Wobject):
         self.OnDraw(True)
     
     
-    @Property
+    @PropWithDraw
     def interpolate():
         """ Get/Set whether to interpolate the image when zooming in 
         (using linear interpolation). """
@@ -1200,7 +1201,7 @@ class BaseTexture(Wobject):
             gl.glTexParameteri(texType, gl.GL_TEXTURE_MAG_FILTER, tmp)
     
     
-    @Property
+    @PropWithDraw
     def colormap():
         """ Get/Set the colormap. The argument must be a tuple/list of 
         iterables with each element having 3 or 4 values. The argument may
@@ -1219,7 +1220,7 @@ class BaseTexture(Wobject):
         def fset(self, value):
             self._colormap.SetMap(value)
     
-    @Property
+    @PropWithDraw
     def clim():
         """ Get/Set the contrast limits. For a gray colormap, clim.min 
         is black, clim.max is white.
@@ -1232,6 +1233,7 @@ class BaseTexture(Wobject):
             self._texture1._clim = value
     
     
+    @DrawAfter
     def SetClim(self, *minmax):
         """ Set the contrast limits. Different than the property clim, this
         re-uploads the texture using different transfer functions. You should
@@ -1411,7 +1413,7 @@ class Texture2D(BaseTexture):
         return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
     
     
-    @Property
+    @PropWithDraw
     def aa():
         """ Get/Set anti aliasing.
           * 0 or False for no anti aliasing
@@ -1680,7 +1682,7 @@ class Texture3D(BaseTexture):
         return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
     
     
-    @Property
+    @PropWithDraw
     def renderStyle():
         """ Get/Set the render style to render the volumetric data:
           * mip: maximum intensity projection
@@ -1711,7 +1713,7 @@ class Texture3D(BaseTexture):
             else:
                 print "Unknown render style in Texture3d.renderstyle."
 
-    @Property
+    @PropWithDraw
     def isoThreshold():
         """ Get/Set the isothreshold value used in the isosurface renderer.
         """

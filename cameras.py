@@ -134,7 +134,48 @@ class BaseCamera(object):
         Overload this in the actual camera models.
         """
         pass
-   
+    
+    def ScreenToWorld(self, x_y=None):
+        """ Given a tuple of screen coordinates
+        calculate the world coordinates.
+        If not given, the current mouse position is used.
+        This basically simulates the actions performed in SetView
+        but then for a single location.
+        """
+        
+        # use current mouse position if none given
+        if x_y is None:
+            x,y = self.axes.mousepos
+        else:
+            x, y = x_y[0], x_y[1] # in case the input is 3d
+        
+        # get window size
+        w, h = self.axes.position.size
+        w, h = float(w), float(h) 
+        
+        # get zoom factor
+        fx, fy = self.view_zoomx, self.view_zoomy
+        
+        # correct zoom factor for window size      
+        if not self.axes.daspectAuto:
+            if w > h:
+                fx *= w/h
+            else:
+                fy *= h/w                
+        
+        # determine position in projection. Here is a conversion
+        # of the coordinate system... (flip y)
+        x, y = (x/w-0.5) * fx, (0.5-y/h) * fy
+        
+        # scale
+        ar = self.axes.daspect
+        x, y = x / ar[0], y / ar[1]
+        
+        # translate it
+        x, y = x + self.view_loc[0], y + self.view_loc[1]
+        
+        #print x, y
+        return x,y
 
 
 class TwoDCamera(BaseCamera):
@@ -232,49 +273,6 @@ class TwoDCamera(BaseCamera):
         # set center location -> calls refresh
         BaseCamera.Reset(self)
     
-    
-    def ScreenToWorld(self, x_y=None):
-        """ Given a tuple of screen coordinates
-        calculate the world coordinates.
-        If not given, the current mouse position is used.
-        This basically simulates the actions performed in SetView
-        but then for a single location.
-        """
-        
-        # use current mouse position if none given
-        if x_y is None:
-            x,y = self.axes.mousepos
-        else:
-            x, y = x_y[0], x_y[1] # in case the input is 3d
-        
-        # get window size
-        w, h = self.axes.position.size
-        w, h = float(w), float(h) 
-        
-        # get zoom factor
-        fx, fy = self.view_zoomx, self.view_zoomy
-        
-        # correct zoom factor for window size      
-        if not self.axes.daspectAuto:
-            if w > h:
-                fx *= w/h
-            else:
-                fy *= h/w                
-        
-        # determine position in projection. Here is a conversion
-        # of the coordinate system... (flip y)
-        x, y = (x/w-0.5) * fx, (0.5-y/h) * fy
-        
-        # scale
-        ar = self.axes.daspect
-        x, y = x / ar[0], y / ar[1]
-        
-        # translate it
-        x, y = x + self.view_loc[0], y + self.view_loc[1]
-        
-        #print x, y
-        return x,y
-
     
     def OnMouseDown(self, event):        
         # store mouse position and button
@@ -394,7 +392,7 @@ class TwoDCamera(BaseCamera):
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], 0.0)
     
 
-class ThreeDCamera(TwoDCamera):
+class ThreeDCamera(BaseCamera):
     """ The ThreeDCamera camera is a camera to visualise 3D data. It uses
     orthographic projection, so it is like looking at your data from
     outer space. In contrast to the 2D camera, the camera can be 

@@ -26,7 +26,7 @@ visvis modules.
 
 """
 
-import sys, os
+import sys, os, time
 import OpenGL.GL as gl
 
 class OpenGLError(Exception):
@@ -91,19 +91,70 @@ def Property(function):
     Note that the class to which this is applied must inherit from object!
     Code from George Sakkis: http://code.activestate.com/recipes/410698/
     """
+    # Init
     keys = 'fget', 'fset', 'fdel'
     func_locals = {'doc':function.__doc__}
+    
+    # Define function to probe the special methods defined in function
     def probeFunc(frame, event, arg):
         if event == 'return':
             locals = frame.f_locals
             func_locals.update(dict((k,locals.get(k)) for k in keys))
             sys.settrace(None)
         return probeFunc
+    
+    # Probe the function (fills func_locals)
     sys.settrace(probeFunc)
     function()
+    
+    # Done
     return property(**func_locals)
 
+def PropWithDraw(function):
+    """ A property decorator which allows to define fget, fset and fdel
+    inside the function.
+    Same as Property, but callas self.Draw() when using fset.
+    """
+    # Init
+    keys = 'fget', 'fset', 'fdel'
+    func_locals = {'doc':function.__doc__}
     
+    # Define function to probe the special methods defined in function
+    def probeFunc(frame, event, arg):
+        if event == 'return':
+            locals = frame.f_locals
+            func_locals.update(dict((k,locals.get(k)) for k in keys))
+            sys.settrace(None)
+        return probeFunc
+    
+    # Probe the function (fills func_locals)
+    sys.settrace(probeFunc)
+    function()
+    
+    # Replace fset
+    fset = func_locals.get('fset',None)
+    def fsetWithDraw(self, *args):
+        fset(self, *args)
+        self.Draw()
+        #print fset._propname, self, time.time()
+    if fset:
+        fset._propname = function.__name__
+        func_locals['fset'] = fsetWithDraw
+    
+    # Done
+    return property(**func_locals)
+
+
+def DrawAfter(function):
+    """ Decorator for methods that make self.Draw() be called right after
+    the function is called. 
+    """
+    def newFunc(self, *args, **kwargs):
+        function(self, *args, **kwargs)
+        if hasattr(self, 'Draw'):
+            self.Draw()
+    return newFunc
+
 class Range(object):
     """ Indicates a range ( a minimum and a maximum )
     Range(0,1)

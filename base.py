@@ -35,13 +35,19 @@ import numpy as np
 import math, time
 import weakref
 
-from misc import Property, Range, OpenGLError, Transform_Base
+from misc import Property, PropWithDraw, DrawAfter 
+from misc import Range, OpenGLError, Transform_Base
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 from misc import getColor
 import events
 
 from points import Point, Pointset, Quaternion
 
+# Define draw modes
+DRAW_NORMAL = 1     # draw normally.
+DRAW_FAST = 2       # draw like normal, but faster (while interacting)
+DRAW_SHAPE = 3      # draw the spape of the object in the given color
+DRAW_SCREEN = 4     # for wobjects to draw in screen coordinates
 
 class BaseObject(object):
     """ The base class for wibjects and wobjects.
@@ -59,6 +65,8 @@ class BaseObject(object):
         self._destroyed = False
         # whether or not to draw the object
         self._visible = True
+        # whether the object is currently being drawn
+        self._isbeingdrawn = False
         # whether the object can be clicked
         self._hitTest = False
         # the parent object
@@ -128,39 +136,47 @@ class BaseObject(object):
         return self._eventKeyUp
     
     
-    def _DrawTree(self, mode='normal', pickerHelper=None):
+    def _DrawTree(self, mode=DRAW_NORMAL, pickerHelper=None):
         """ Draw the wibject/wobject and all of its children. 
-        shape can be an ObjectPickerHelper instance in which
-        case only shape is drawn. 
         """
+        
         # are we alive
         if self._destroyed:
             print "Warning, cannot draw destroyed object:", self
             return 
+        
         # only draw if visible
         if not self.visible:
             return
+        
         # transform
         gl.glPushMatrix()
         self._Transform()
-        # draw self        
-        if mode=='shape':
-            if self.hitTest:
-                clr = pickerHelper.GetColorFromId(self._id)
-                self.OnDrawShape(clr)
-        elif mode=='screen':
-            self.OnDrawScreen()            
-        elif mode=='fast':
-            self.OnDrawFast()
-        elif mode=='normal':
-            self.OnDraw()
-        else:
-            raise Exception("Invalid mode for _DrawTree.")        
-        # draw children
-        for item in self._children:
-            if hasattr(item, '_DrawTree'):
-                item._DrawTree(mode,pickerHelper)
-                
+        
+        # draw self
+        self._isbeingdrawn = True
+        try:
+            if mode==DRAW_SHAPE:
+                if self.hitTest:
+                    clr = pickerHelper.GetColorFromId(self._id)
+                    self.OnDrawShape(clr)
+            elif mode==DRAW_SCREEN:
+                self.OnDrawScreen()            
+            elif mode==DRAW_FAST:
+                self.OnDrawFast()
+            elif mode==DRAW_NORMAL:
+                self.OnDraw()
+            else:
+                raise Exception("Invalid mode for _DrawTree.")        
+            
+            # draw children
+            for item in self._children:
+                if hasattr(item, '_DrawTree'):
+                    item._DrawTree(mode,pickerHelper)
+        
+        finally:
+            self._isbeingdrawn = False
+        
         # transform back
         gl.glPopMatrix()
     
@@ -176,6 +192,10 @@ class BaseObject(object):
         Note2: it's best not to reuse destroyed objects. To temporary disable
         an object, better use "ob.parent=None", or "ob.visible=False".
         """
+        
+        # Post draw event 
+        self.Draw()
+        
         # We must make this the current OpenGL context because OnDestroy 
         # methods of objects may want to remove textures etc.
         # When you do not do this, you can get really weird bugs.
@@ -213,7 +233,7 @@ class BaseObject(object):
         Destroy the OpenGl objects managed by this object.
           * Calls DestroyGl() on all its children.
           * Calls OnDestroyGl() on itself.
-        Note: do not overload, overload OnDestroyGl().
+        Note: do not overload, overload OnDestroyGl(). 
         """
         
         # make the right openGlcontext current
@@ -285,7 +305,7 @@ class BaseObject(object):
         """
         pass 
     
-    @Property
+    @PropWithDraw
     def visible():
         """ Get/Set whether the object should be drawn or not. 
         If set to False, the hittest is also not performed. """
@@ -303,7 +323,7 @@ class BaseObject(object):
             self._hitTest = bool(value)
     
     
-    @Property
+    @PropWithDraw
     def parent():
         """ Get/Set the parent of this object. Use this to change the
         tree structure of your visualization objects (for example move a line
@@ -312,6 +332,9 @@ class BaseObject(object):
         def fget(self):
             return self._parent
         def fset(self,value):
+            
+            # Post draw event at parent
+            self.Draw()
             
             # init lists to update
             parentChildren = None
@@ -399,9 +422,13 @@ class BaseObject(object):
         """ Draw(fast=False)
         Calls Draw on the figure if this object is inside one.
         """
-        fig = self.GetFigure()
-        if fig:
-            fig.Draw()
+        if self._isbeingdrawn:
+            return False
+        else:
+            fig = self.GetFigure()
+            if fig:
+                fig.Draw()
+            return True
     
     
     def FindObjects(self, spec):
@@ -489,7 +516,7 @@ class Wibject(BaseObject):
         return self._eventPosition
     
     
-    @Property
+    @PropWithDraw
     def position():
         """ Get/Set the position of this wibject. Setting can be done
         by supplying either a 2-element tuple or list to only change
@@ -504,7 +531,7 @@ class Wibject(BaseObject):
             self._position.Set(value)
     
     
-    @Property
+    @PropWithDraw
     def bgcolor():
         """ Get/Set the background color of the wibject. """
         def fget(self):
@@ -596,9 +623,13 @@ class Wobject(BaseObject):
         """ Draw(fast=False)
         Calls Draw on the axes if this object is inside one.
         """
-        fig = self.GetAxes()
-        if fig:
-            fig.Draw()
+        if self._isbeingdrawn:
+            return False
+        else:
+            axes = self.GetAxes()
+            if axes:
+                axes.Draw()
+            return True
     
     
     def _GetLimits(self, *args):
@@ -721,7 +752,7 @@ class OrientationForWobjects_mixClass(object):
         
     
     
-    @Property
+    @PropWithDraw
     def scaling():
         """ Get/Set the scaling of the object. Can be set using
         a 3-element tuple, a 3D point, or a scalar. The getter always
@@ -747,7 +778,7 @@ class OrientationForWobjects_mixClass(object):
                 raise ValueError('Scaling should be a scalar, 3D Point, or 3-element tuple.')
     
     
-    @Property
+    @PropWithDraw
     def translation():
         """ Get/Set the transaltion of the object. Can be set using
         a 3-element tuple or a 3D point. The getter always returns
@@ -769,7 +800,7 @@ class OrientationForWobjects_mixClass(object):
                 raise ValueError('Translation should be a 3D Point or 3-element tuple.')
     
     
-    @Property
+    @PropWithDraw
     def direction():
         """ Get/Set the direction (i.e. orientation) of the object. Can 
         be set using a 3-element tuple or a 3D point. The getter always 
@@ -820,7 +851,7 @@ class OrientationForWobjects_mixClass(object):
                 self._directionTransform.angle = angle * 180 / np.pi
     
     
-    @Property
+    @PropWithDraw
     def rotation():
         """ Get/Set the rotation of the object (in degrees, around its 
         direction vector).
@@ -1038,6 +1069,7 @@ class Position(object):
     
     ## For getting and setting
     
+    @DrawAfter
     def Set(self, *args):
         """ Set(x, y, w, h) or Set(x,y)
         Set x, y, and optionally w an h.
@@ -1063,6 +1095,7 @@ class Position(object):
         self._Update()
     
     
+    @DrawAfter
     def Correct(self, dx=0, dy=0, dw=0, dh=0):
         """ Correct the position by suplying a delta amount of pixels.
         The correction is only applied if the attribute is in pixels.
@@ -1109,7 +1142,14 @@ class Position(object):
         self._Update()
     
     
-    @Property
+    def Draw(self):
+        # Redraw owner        
+        owner = self._owner()
+        if owner is not None:
+            owner.Draw()
+    
+    
+    @PropWithDraw
     def x():
         """ Get/Set the x-element of the position. This value can be 
         an integer value or a float expressing the x-position as a fraction 
@@ -1120,7 +1160,7 @@ class Position(object):
             self._x = value
             self._Update()
     
-    @Property
+    @PropWithDraw
     def y():
         """ Get/Set the y-element of the position. This value can be 
         an integer value or a float expressing the y-position as a fraction 
@@ -1131,7 +1171,7 @@ class Position(object):
             self._y = value
             self._Update()
     
-    @Property
+    @PropWithDraw
     def w():
         """ Get/Set the w-element of the position. This value can be 
         an integer value or a float expressing the width as a fraction 
@@ -1143,7 +1183,7 @@ class Position(object):
             self._w = value
             self._Update()
     
-    @Property
+    @PropWithDraw
     def h():
         """ Get/Set the h-element of the position. This value can be 
         an integer value or a float expressing the height as a fraction 
@@ -1266,7 +1306,7 @@ class Box(Wibject):
         self._edgeColor = (0,0,0)
         self._edgeWidth = 1.0
     
-    @Property
+    @PropWithDraw
     def edgeColor():
         """ Get/Set the edge color of the wibject. """
         def fget(self):
@@ -1274,7 +1314,7 @@ class Box(Wibject):
         def fset(self, value):
             self._edgeColor = getColor(value, 'setting edgeColor')
     
-    @Property
+    @PropWithDraw
     def edgeWidth():
         """ Get/Set the edge width of the wibject. """
         def fget(self):
