@@ -26,7 +26,10 @@
 # relatively well workable with only applying a Refresh command 
 # on each Activate command of the main window.
 
+import os
+
 from visvis import BaseFigure, events, constants
+from visvis.misc import getResourceDir
 
 import wx
 from wx.glcanvas import GLCanvas
@@ -263,7 +266,6 @@ class Figure(BaseFigure):
         if not self._destroyed:
             window = self._widget.Parent
             if hasattr(window,'SetTitle'):
-                title = title.replace('Figure', 'wx_Figure')
                 window.SetTitle(title)
     
     def _SetPosition(self, x, y, w, h):
@@ -330,6 +332,14 @@ def newFigure():
     # Create figure
     frame = FigureFrame(None, -1, "Figure", size=(560, 420))
     figure = Figure(frame)
+    
+    # Set icon
+    try:
+        iconFile = os.path.join(getResourceDir(), 'visvis_icon_wx.png')
+        frame.SetIcon(wx.Icon(iconFile, wx.BITMAP_TYPE_PNG))
+    except Exception:        
+        pass
+    
     # Show AFTER canvas is added
     frame.Show() 
     

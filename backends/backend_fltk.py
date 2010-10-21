@@ -203,7 +203,6 @@ class Figure(BaseFigure):
         """ Set the title of the figure... """
         window = self._widget
         if hasattr(window,'label'):
-            title = title.replace('Figure', 'fl_Figure')
             window.label(title)
     
     def _SetPosition(self, x, y, w, h):

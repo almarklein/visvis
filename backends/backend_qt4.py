@@ -35,7 +35,10 @@
 # Also note tha wx seems the less affected backend (there is a small fix
 # by redrawing on a Activate event which helps a lot)
 
+import os
+
 from visvis import BaseFigure, events, constants
+from visvis.misc import getResourceDir
 
 from PyQt4 import QtCore, QtGui, QtOpenGL
 
@@ -66,6 +69,15 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose) # keep cleaned up
         self.figure = figure
         # Note that the default QGLFormat has double buffering enabled.
+        
+        # Set icon
+        try:
+            iconFile = os.path.join(getResourceDir(), 'visvis_icon_qt.png')
+            icon = QtGui.QIcon()
+            icon.addFile(iconFile, QtCore.QSize(16,16), 0, 0)
+            self.setWindowIcon(icon)
+        except Exception:        
+            pass
         
         # enable mouse tracking so mousemove events are always fired.        
         self.setMouseTracking(True)
@@ -254,7 +266,6 @@ class Figure(BaseFigure):
         a widget in an application.
         """
         if not self._destroyed:
-            title = title.replace('Figure', 'qt_Figure')
             self._widget.setWindowTitle(title)
 
     def _SetPosition(self, x, y, w, h):
