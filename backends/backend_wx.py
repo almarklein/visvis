@@ -294,7 +294,8 @@ class Figure(BaseFigure):
     
     
     def _RedrawGui(self):
-        self._widget.Refresh()
+        if self._widget:
+            self._widget.Refresh()
     
     
     def _ProcessGuiEvents(self):

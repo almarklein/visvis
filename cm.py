@@ -73,10 +73,14 @@ class ClimEditor(DraggableBox):
         # Set mappables
         self.SetMapables(*args)
     
-    @property
-    def range(self):
-        """ Obtain the range that the slider represents. """
-        return self._slider.range
+    
+    @Property
+    def range():
+        """ Get/set the range that the slider represents. """
+        def fget(self):
+            return self._slider.range
+        def fset(self, value):
+            self._slider.range = value # will invoke a redraw
     
     def _UpdateFull(self, event):
         for mappable in self.GetMapables():
@@ -444,7 +448,7 @@ class CM_NodeWidget(Box):
         self._selectedNode =  None
         
         # Calculate the lines one last time
-        self._NodesToLine(self._nodes, self._line)
+        self._NodesToLine(self._nodes, self._line, True)
         
         # Draw (not fast)
         self.Draw()
@@ -508,7 +512,7 @@ class CM_NodeWidget(Box):
         self.Draw(True)
     
     
-    def _NodesToLine(self, nodes, line):
+    def _NodesToLine(self, nodes, line, update=False):
         """ Convert nodes to a full 256 element line.
         """
         
@@ -529,21 +533,23 @@ class CM_NodeWidget(Box):
         else:
             line[:,1] = np.zeros((256,),dtype=np.float32) # no nodes
         
-        # Create colormap
-        map = {}
-        for i in range(4):            
-            nn = self._allNodes[i]
-            tmp = []
-            for ii in range(len(nn)):
-                tmp.append((nn[ii,0], 1-nn[ii,1]))
-            if tmp:
-                key = 'rgba'[i]
-                map[key] = sorted(tmp, key=lambda x:x[0])
-        
-        # Apply colormap to all registered objects
-        if self.parent:
-            for ob in self.parent.GetMapables():                
-                ob._colormap.SetMap(map)
+        if update:
+            # Create colormap
+            map = {}
+            for i in range(4):            
+                nn = self._allNodes[i]
+                tmp = []
+                for ii in range(len(nn)):
+                    tmp.append((nn[ii,0], 1-nn[ii,1]))
+                if tmp:
+                    key = 'rgba'[i]
+                    map[key] = sorted(tmp, key=lambda x:x[0])
+            
+            # Apply colormap to all registered objects
+            if self.parent:
+                for ob in self.parent.GetMapables():
+                    ob._colormap.SetMap(map)
+                    ob.Draw()
     
     
     def OnDraw(self):

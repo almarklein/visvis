@@ -24,7 +24,7 @@ It also defines lights and algorithmic for managing polygonal models.
 """
 
 from points import Point, Pointset
-from misc import Property, getColor
+from misc import Property, PropWithDraw, DrawAfter, getColor
 from base import Wobject, OrientationForWobjects_mixClass
 from textures import TextureObjectToVisualize, Colormap
 
@@ -89,9 +89,10 @@ class Light(object):
     oriented at the origin by default.
     """
     
-    def __init__(self, index):
+    def __init__(self, axes, index):
         
-        # Store index of the light (OpenGl can handle up to 8 lights)
+        # Store axes and index of the light (OpenGl can handle up to 8 lights)
+        self._axes = axes.GetWeakref()
         self._index = index
         self._on = False
         
@@ -114,7 +115,13 @@ class Light(object):
             self._camLight = False
     
     
-    @Property
+    def Draw(self):
+        # Draw axes
+        axes = self._axes()
+        if axes:
+            axes.Draw()
+    
+    @PropWithDraw
     def color():
         """ Get/Set the reference color of the light. If the ambient,
         diffuse or specular properties specify a scalar, that scalar
@@ -126,7 +133,7 @@ class Light(object):
             self._color = _testColor(value, True)
     
     
-    @Property
+    @PropWithDraw
     def ambient():
         """ Get/Set the ambient color of the light. This is the color
         that is everywhere, coming from all directions, independent of 
@@ -142,7 +149,7 @@ class Light(object):
             self._ambient = _testColor(value)
     
     
-    @Property
+    @PropWithDraw
     def diffuse():
         """ Get/Set the diffuse color of the light. This component is the
         light that comes from one direction, so it's brighter if it comes
@@ -156,7 +163,7 @@ class Light(object):
             self._diffuse = _testColor(value)
     
     
-    @Property
+    @PropWithDraw
     def specular():
         """ Get/Set the specular color of the light. This component
         represents the light that comes from the light source and bounces
@@ -173,7 +180,7 @@ class Light(object):
             self._specular = _testColor(value)
     
     
-    @Property
+    @PropWithDraw
     def position():
         """ Get/Set the position of the light. Can be represented as a
         3 or 4 element tuple. If the fourth element is a 1, the light
@@ -192,7 +199,7 @@ class Light(object):
                 raise ValueError(tmp)
     
     
-    @Property
+    @PropWithDraw
     def isDirectional():
         """ Get/Set whether the light is a directional light. A directional
         light has no real position (it can be thought of as infinitely far
@@ -212,7 +219,7 @@ class Light(object):
             self._position = tmp[0], tmp[1], tmp[2], fourth
     
     
-    @Property
+    @PropWithDraw
     def isCamLight():
         """ Get/Set whether the light is a camera light. A camera light
         moves along with the camera, like the lamp on a miner's hat.
@@ -223,6 +230,7 @@ class Light(object):
             self._camLight = bool(value)
     
     
+    @DrawAfter
     def On(self, on=True):
         """ On(on=True)
         Turn the light on.
@@ -230,6 +238,7 @@ class Light(object):
         self._on = bool(on)
     
     
+    @DrawAfter
     def Off(self):
         """ Off()
         Turn the light off.
@@ -311,6 +320,7 @@ class BaseMesh(object):
         self.SetTexcords(texcords)
     
     
+    @DrawAfter
     def SetVertices(self, vertices):
         """ SetVertices(vertices)
         Set the vertex data as a Nx3 numpy array or as a 3D Pointset. 
@@ -321,6 +331,7 @@ class BaseMesh(object):
             raise ValueError("Vertices should represent an array of 3D vertices.")
     
     
+    @DrawAfter
     def SetNormals(self, normals):
         """ SetNormals(normals)
         Set the normal data as a Nx3 numpy array or as a 3D Pointset. 
@@ -334,6 +345,7 @@ class BaseMesh(object):
             self._normals = None
     
     
+    @DrawAfter
     def SetColors(self, colors):
         """ SetColors(colors)
         Set the color data as a Nx3 numpy array or as a 3D Pointset. 
@@ -357,6 +369,7 @@ class BaseMesh(object):
             self._colors = None
     
     
+    @DrawAfter
     def SetTexcords(self, texcords):
         """ SetTexcords(texcords)
         Set the texture coordinates as a Nx2 numpy array or as a 2D Pointset.
@@ -389,6 +402,7 @@ class BaseMesh(object):
             self._texcords = None
     
     
+    @DrawAfter
     def SetFaces(self, faces):
         """ SetFaces(faces)
         Set the faces data. This can be either a list, a 1D numpy array,
@@ -538,7 +552,7 @@ class Mesh(Wobject, BaseMesh):
     
     ## Material properties: how the object is lit
     
-    @Property
+    @PropWithDraw
     def ambient():
         """ Get/Set the ambient reflection color of the material. Ambient
         light is the light that is everywhere, coming from all directions, 
@@ -554,7 +568,7 @@ class Mesh(Wobject, BaseMesh):
             self._ambient = _testColor(value)
     
     
-    @Property
+    @PropWithDraw
     def diffuse():
         """ Get/Set the diffuse reflection color of the material. Diffuse
         light comes from one direction, so it's brighter if it comes
@@ -571,7 +585,7 @@ class Mesh(Wobject, BaseMesh):
             self._diffuse = _testColor(value)
     
     
-    @Property
+    @PropWithDraw
     def ambientAndDiffuse():
         """ Set the diffuse and ambient component simultaneously. Usually,
         you want to give them the same value. Getting returns the diffuse
@@ -583,7 +597,7 @@ class Mesh(Wobject, BaseMesh):
             self._diffuse = self._ambient = _testColor(value)
     
     
-    @Property
+    @PropWithDraw
     def specular():
         """ Get/Set the specular reflection color of the material. Specular
         light represents the light that comes from the light source and bounces
@@ -600,7 +614,7 @@ class Mesh(Wobject, BaseMesh):
             self._specular = _testColor(value)
     
     
-    @Property
+    @PropWithDraw
     def shininess():
         """ Get/Set the shininess value of the material as a number between
         0 and 128. The higher the value, the brighter and more focussed the
@@ -614,7 +628,7 @@ class Mesh(Wobject, BaseMesh):
             self._shininess = value
     
     
-    @Property
+    @PropWithDraw
     def emission():
         """ Get/Set the emission color of the material. It is the 
         "self-lighting" property of the material, and usually only makes
@@ -632,7 +646,7 @@ class Mesh(Wobject, BaseMesh):
     
     ## Face and edge shading properties, and culling
     
-    @Property
+    @PropWithDraw
     def faceColor():
         """ Get/Set the face reference color of the object. If the
         ambient, diffuse or emissive properties specify a scalar, that
@@ -644,7 +658,7 @@ class Mesh(Wobject, BaseMesh):
             self._faceColor = _testColor(value, True)
     
     
-    @Property
+    @PropWithDraw
     def edgeColor():
         """ Get/Set the edge reference color of the object. If the
         ambient, diffuse or emissive properties specify a scalar, that
@@ -656,7 +670,7 @@ class Mesh(Wobject, BaseMesh):
             self._edgeColor = _testColor(value, True)
     
     
-    @Property    
+    @PropWithDraw    
     def faceShading():
         """ Get/Set the type of shading to apply for the faces. 
           * None - Do not show the faces
@@ -677,7 +691,7 @@ class Mesh(Wobject, BaseMesh):
                 raise ValueError(tmp)
     
     
-    @Property    
+    @PropWithDraw    
     def edgeShading():
         """ Get/Set the type of shading to apply for the edges. 
           * None - Do not show the edges
@@ -698,7 +712,7 @@ class Mesh(Wobject, BaseMesh):
                 raise ValueError(tmp)
     
     
-    @Property
+    @PropWithDraw
     def cullFaces():
         """ Get/Set the culling of faces. 
         Values can be 'front', 'back', or None (default). If 'back', 
@@ -724,7 +738,7 @@ class Mesh(Wobject, BaseMesh):
     
     
     
-    
+    @DrawAfter
     def SetTexture(self, data):
         """ SetTexture(data)
         Set the texture image to map to the mesh.
@@ -745,7 +759,7 @@ class Mesh(Wobject, BaseMesh):
             self._texture = None
     
     
-    @Property
+    @PropWithDraw
     def colormap():
         """ Get/Set the colormap. The argument must be a tuple/list of 
         iterables with each element having 3 or 4 values. The argument may

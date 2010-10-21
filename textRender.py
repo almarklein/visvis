@@ -76,7 +76,8 @@ import numpy as np
 
 from textures import TextureObject
 from base import Wobject, Wibject, Box
-from misc import Property, getResourceDir, getColor
+from misc import Property, PropWithDraw, DrawAfter 
+from misc import getResourceDir, getColor
 from cameras import depthToZ
 
 class TextException(Exception):
@@ -337,7 +338,7 @@ class BaseText(object):
         self._vertices2 = None
     
     
-    @Property
+    @Property # Smart draw
     def text():
         """Get/Set the text to display. """
         def fget(self):
@@ -346,9 +347,10 @@ class BaseText(object):
             if value != self._text:
                 self._text = value
                 self._Invalidate() # force recalculation
+                self.Draw()
     
     
-    @Property
+    @Property  # Smart draw
     def textAngle():
         """Get/Set the angle of the text in degrees."""
         def fget(self):
@@ -357,6 +359,7 @@ class BaseText(object):
             if value != self._angle:
                 self._angle = value
                 self._vertices2 = None # force recalculation
+                self.Draw()
     
     
     @Property
@@ -368,6 +371,7 @@ class BaseText(object):
             if value != self._charSpacing:
                 self._charSpacing = value
                 self._Invalidate() # force recalculation
+                self.Draw()
     
     
     @Property
@@ -379,6 +383,7 @@ class BaseText(object):
             if value != self._size:
                 self._size = value
                 self._Invalidate() # force recalculation
+                self.Draw()
     
     
     @Property
@@ -390,6 +395,7 @@ class BaseText(object):
             if value != self._fontname:
                 self._fontname = value
                 self._Invalidate() # force recalculation
+                self.Draw()
     
     
     @Property
@@ -398,7 +404,9 @@ class BaseText(object):
         def fget(self):
             return self._color
         def fset(self, value):
-            self._color = getColor(value,'setting textColor')    
+            value = getColor(value,'setting textColor')
+            self.Draw()
+    
     
     @Property
     def halign():
@@ -423,7 +431,7 @@ class BaseText(object):
             if value != self._halign:
                 self._halign = value
                 self._vertices2 = None # force recalculation
-    
+                self.Draw()
     
     @Property
     def valign():
@@ -449,6 +457,7 @@ class BaseText(object):
             if value != self._valign:
                 self._valign = value
                 self._vertices2 = None # force recalculation
+                self.Draw()
     
     
     def _Compile(self):
@@ -708,7 +717,7 @@ class Text(Wobject, BaseText):
         self._screenx, self._screeny, self._screenz = 0, 0, 0
     
     
-    @Property
+    @PropWithDraw
     def x():
         """Get/Set the x position of the text."""
         def fget(self):
@@ -716,7 +725,7 @@ class Text(Wobject, BaseText):
         def fset(self, value):
             self._x = value
         
-    @Property
+    @PropWithDraw
     def y():
         """Get/Set the y position of the text."""
         def fget(self):
@@ -724,7 +733,7 @@ class Text(Wobject, BaseText):
         def fset(self, value):
             self._y = value
     
-    @Property
+    @PropWithDraw
     def z():
         """Get/Set the z position of the text."""
         def fget(self):

@@ -222,7 +222,8 @@ class Figure(BaseFigure):
         return widget.x(), widget.y(), widget.w(), widget.h()
     
     def _RedrawGui(self):
-        self._widget.redraw()
+        if self._widget:
+            self._widget.redraw()
     
     def _ProcessGuiEvents(self):
         fltk.Fl.wait(0) 

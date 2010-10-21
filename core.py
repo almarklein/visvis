@@ -33,10 +33,13 @@ from points import Point, Pointset
 import numpy as np
 
 import base
+from base import DRAW_NORMAL, DRAW_FAST, DRAW_SHAPE, DRAW_SCREEN
+
 import simpleWibjects
 import textures
 from cameras import (ortho, depthToZ, TwoDCamera, ThreeDCamera, FlyCamera)
-from misc import Property, Range, OpenGLError, getColor, getOpenGlInfo
+from misc import Property, PropWithDraw, DrawAfter 
+from misc import Range, OpenGLError, getColor, getOpenGlInfo
 import events
 from textRender import FontManager, BaseText, Text, Label
 from line import MarkerManager, Line, lineStyles
@@ -45,6 +48,23 @@ from polygonalModeling import Light
 
 # a variable to indicate whether to print FPS, for testing
 printFPS = False
+
+
+
+def _Screenshot():
+    """ _Screenshot()
+    Capture the screen as a numpy array to use it later.
+    Used by the object picker helper to determine which item is
+    under the mouse, and by the axes to buffer its content. 
+    """
+    gl.glReadBuffer(gl.GL_BACK)
+    xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
+    x,y,w,h = xywh[0], xywh[1], xywh[2], xywh[3]
+    # use floats to prevent strides etc. uint8 caused crash on qt backend.
+    im = gl.glReadPixels(x, y, w, h, gl.GL_RGB, gl.GL_FLOAT)
+    # reshape, flip, and store
+    im.shape = h,w,3
+    return im
 
 
 class ObjectPickerHelper(object):
@@ -86,21 +106,8 @@ class ObjectPickerHelper(object):
         id =  (idr*fg + idg)*fb + idb
         return int(id)
     
-    
-    def CaptureScreen(self, figure):
-        """ Capture the screen as a numpy array to use it later to determine
-        which item is under the mouse. """
-        gl.glReadBuffer(gl.GL_BACK)
-        xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        x,y,w,h = xywh[0], xywh[1], xywh[2], xywh[3]
-        #im = gl.glReadPixels(x, y, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE)
-        #im = np.fromstring(im,dtype=np.uint8)
-        im = gl.glReadPixels(x, y, w, h, gl.GL_RGB, gl.GL_FLOAT)
-        # use floats to prevent strides etc. uint8 caused crash on qt backend.
-        # reshape, flip, and store
-        im.shape = h,w,3
-        self.screen = np.flipud(im)
-    
+    def CaptureScreen(self):
+        self.screen = np.flipud( _Screenshot() )
     
     def GetItemsUnderMouse(self, figure):
         """ Detect over which objects the mouse is now.
@@ -210,6 +217,12 @@ class BaseFigure(base.Wibject):
         # to prevent recursion
         self._resizing = False
         
+        # create a timer to handle the drawing better
+        self._drawTimer = events.Timer(self, 10, oneshot=True)
+        self._drawTimer.Bind(self._DrawTimerTimeOutHandler)        
+        self._drawtime = time.time() # to calculate fps
+        self._drawWell = -1
+        
         # init background
         self.bgcolor = 0.8,0.8,0.8  # bgcolor is a property
         
@@ -247,12 +260,6 @@ class BaseFigure(base.Wibject):
         self.eventPosition.Bind(self._OnPositionChange)
         self.eventKeyDown.Bind(self._PassOnKeyDownEvent)
         self.eventKeyUp.Bind(self._PassOnKeyUpEvent)
-        
-        # create a timer to handle the drawing better
-        self._drawTimer = events.Timer(self, 10, oneshot=True)
-        self._drawTimer.Bind(self._DrawTimerTimeOutHandler)        
-        self._drawtime = time.time() # to calculate fps
-        self._drawWell = False
     
     
     @property
@@ -376,7 +383,7 @@ class BaseFigure(base.Wibject):
             if BaseFigure._figures[key] is self:
                 return key
     
-    @Property
+    @PropWithDraw
     def title():
         """ Get/Set the title of the figure. If an empty string or None, 
         will display "Figure X", with X the figure nr.
@@ -393,7 +400,7 @@ class BaseFigure(base.Wibject):
             self._title = value
             
     
-    @Property
+    @PropWithDraw
     def currentAxes():
         """ Get/Set the currently active axes of this figure. 
         Returns None if no axes are present. 
@@ -456,7 +463,7 @@ class BaseFigure(base.Wibject):
     # the actual position and or size of the underlying widget (via the
     # backend-implemented _SetPosition().
     
-    @Property
+    @Property # Moving a figure always invokes an update from the window manager
     def position():
         """ The position for the figure works a bit different than for
         other wibjects: it only works with absolute values and it 
@@ -518,7 +525,7 @@ class BaseFigure(base.Wibject):
         self.Draw(timeout=200)
     
     
-    @Property
+    @PropWithDraw
     def relativeFontSize():
         """ The (global) relative font size; all texts in this figure
         are scaled by this amount. This is intended to (slighly) increase
@@ -535,12 +542,11 @@ class BaseFigure(base.Wibject):
             # Update all legend objects
             for ob in self.FindObjects(Legend):
                 ob.SetStrings(ob._stringList)
-            # Redraw
-            self.Draw()
     
     
     ## Extra methods
     
+    @DrawAfter
     def Clear(self):
         """ Clear()
         Clear the figure, removing all wibjects inside it and clearing all
@@ -562,6 +568,7 @@ class BaseFigure(base.Wibject):
         self.eventKeyUp.Bind(self._PassOnKeyUpEvent)
     
     ## Implement methods
+    
     
     def Destroy(self):
         """ Destroy()
@@ -611,13 +618,29 @@ class BaseFigure(base.Wibject):
         Multiple calls in a short amount of time will result in only
         one redraw.
         """
-        # Set draw well (is reciprocal of fast, this is to handle it easier.)
+        
+        # Only if not currently being drawn
+        if self._isbeingdrawn:
+            return False
+        
+        # Get whether the request is to draw well
         well = not fast
-        self._drawWell = self._drawWell or well
+        
+        # Set draw well (is reciprocal of fast, to handle it easier.)
+        # -1 means it is unset, and when a paint event occurs, will draw well
+        # 0 means to draw fast, will only occur if only Draw(True) calls
+        # 1 means draw well.
+        if self._drawWell == -1:
+            self._drawWell = well
+        else:
+            self._drawWell = self._drawWell or well
         
         # Restart timer if we need to
         if not self._drawTimer.isRunning:
             self._drawTimer.Start(timeout)
+        
+        # Done
+        return True
     
     
     def _DrawTimerTimeOutHandler(self, event=None):
@@ -630,7 +653,7 @@ class BaseFigure(base.Wibject):
         Call this from time to time if you want to update your figure while 
         running some algorithm, and let the figure stay responsive.         
         """
-        self._drawWell = not fast
+        self._drawWell = not bool(fast)
         self._RedrawGui() # post event
         self._ProcessGuiEvents() # process all events (including our draw)
     
@@ -649,49 +672,54 @@ class BaseFigure(base.Wibject):
         if self._destroyed:
             return
         
-        # calculate fps
-        dt = time.time() - self._drawtime
-        self._drawtime = time.time()
-        if printFPS:
-            print 'FPS: ', 1.0/dt  # for testing
+        # Init drawing
+        self._isbeingdrawn = True
         
-        # get fast
-        fast = not self._drawWell
-        self._drawWell = False
+        try:
+            # calculate fps
+            dt = time.time() - self._drawtime
+            self._drawtime = time.time()
+            if printFPS:
+                print 'FPS: ', 1.0/dt  # for testing
+            
+            # get whether to draw fast and reset drawWell flag
+            fast = self._drawWell == 0
+            self._drawWell = -1
+            
+            # make sure to draw to this canvas/widget
+            self._SetCurrent()
+            
+            # get bits for this buffer
+            self._pickerHelper.bits_r = rb = gl.glGetIntegerv(gl.GL_RED_BITS)
+            self._pickerHelper.bits_g = gb = gl.glGetIntegerv(gl.GL_GREEN_BITS)
+            self._pickerHelper.bits_b = bb = gl.glGetIntegerv(gl.GL_BLUE_BITS)
+            if 0 in [rb, gb, bb]:
+                raise RuntimeError('OpenGL context not set.')
+            
+            # set ids
+            self._pickerHelper.AssignIds(self)
+            
+            # draw shape (to backbuffer)
+            self._Draw(DRAW_SHAPE)
+            gl.glFinish() # call finish, normally swapbuffers does this...
+            
+            # read screen (of backbuffer)
+            self._pickerHelper.CaptureScreen()
+            #self._SwapBuffers() # uncomment to see the color coded objects
+            
+            # draw picture
+            mode = [DRAW_NORMAL, DRAW_FAST][bool(fast)]
+            self._Draw(mode)
+            
+            # write the output to the screen
+            self._SwapBuffers()
+            
+            # Notify        
+            self.eventAfterDraw.Fire()
         
-        # make sure to draw to this canvas/widget
-        self._SetCurrent()
-        
-        # get bits for this buffer
-        self._pickerHelper.bits_r = rb = gl.glGetIntegerv(gl.GL_RED_BITS)
-        self._pickerHelper.bits_g = gb = gl.glGetIntegerv(gl.GL_GREEN_BITS)
-        self._pickerHelper.bits_b = bb = gl.glGetIntegerv(gl.GL_BLUE_BITS)
-        if 0 in [rb, gb, bb]:
-            raise RuntimeError('OpenGL context not set.')
-        
-        # set ids
-        self._pickerHelper.AssignIds(self)
-        
-        # draw shape (to backbuffer)
-        self._Draw('shape')        
-        gl.glFinish() # call finish, normally swapbuffers does this...
-        
-        # read screen (of backbuffer)
-        self._pickerHelper.CaptureScreen(self)
-        #self._SwapBuffers() # uncomment to see the color coded objects
-        
-        # draw picture
-        mode = 'normal'
-        if fast:
-            mode = 'fast'
-        self._Draw(mode)
-        
-        # write the output to the screen
-        self._SwapBuffers()
-        
-        # Notify        
-        self.eventAfterDraw.Fire()
-        
+        finally:
+            self._isbeingdrawn = False
+    
     
     def _Draw(self, mode):
         """ _Draw(mode)
@@ -706,7 +734,7 @@ class BaseFigure(base.Wibject):
         # init pickerhelper as one
         pickerHelper = None
         
-        if mode=='shape':
+        if mode==DRAW_SHAPE:
             # clear 
             clr = (0,0,0)
             gl.glClearColor(0.0 ,0.0 ,0.0, 0.0)
@@ -748,7 +776,7 @@ class BaseFigure(base.Wibject):
             
             # smooth lines            
             gl.glEnable(gl.GL_LINE_SMOOTH)
-            if mode=='fast':
+            if mode==DRAW_FAST:
                 gl.glHint(gl.GL_POINT_SMOOTH_HINT, gl.GL_FASTEST)
                 gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_FASTEST)
             else:
@@ -977,6 +1005,12 @@ class Axes(base.Wibject):
         # make clickable
         self.hitTest = True
         
+        # screenshot buffer and variable to indicate whether we can use it
+        self._screenshot = None
+        self._isdirty = True
+        self._motionBlur = 0.0
+        self._useBuffer = True
+        
         # varialble to keep track of the position correction to fit labels
         self._xCorr, self._yCorr = 0, 0
         
@@ -1003,7 +1037,7 @@ class Axes(base.Wibject):
         # Let there be lights
         self._lights = []
         for i in range(8):
-            self._lights.append(Light(i))
+            self._lights.append(Light(self, i))
         # Init default light
         self.light0.On()
         
@@ -1011,144 +1045,9 @@ class Axes(base.Wibject):
         figure.currentAxes = self
     
     
-    ## Deprecated axis Properties
-    # todo: remove these in the next version
-    @Property
-    def showAxis():
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def showBox():
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def axisColor():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def tickFontSize():
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def gridLineStyle():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        
-    @Property
-    def showGridX():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def showGridY():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def showGridZ():
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def showGrid():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def showMinorGridX():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def showMinorGridY():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def showMinorGridZ():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def showMinorGrid():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        
-    @Property
-    def xTicks():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def yTicks():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def zTicks():
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def xLabel():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def yLabel():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
-    @Property
-    def zLabel():        
-        def fget(self):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-        def fset(self, value):
-            raise DeprecationWarning('This property has moved to Axes.axis.')
-    
     ## Define more methods
     
-    
+    @DrawAfter
     def SetLimits(self, rangeX=None, rangeY=None, rangeZ=None, margin=0.02):
         """ SetLimits(rangeX=None, rangeY=None, rangeZ=None, margin=0.02)
         
@@ -1296,6 +1195,7 @@ class Axes(base.Wibject):
         return self.camera.GetViewParams()
     
     
+    @DrawAfter
     def SetView(self, s=None):
         """ SetView(s=None)
         Set the camera view using the given structure with camera parameters.
@@ -1307,28 +1207,37 @@ class Axes(base.Wibject):
             self.camera.Reset()
     
     
-    
     def Draw(self, fast=False):
         """ Draw(fast=False)
         Calls Draw(fast) on its figure, as the total opengl canvas 
         has to be redrawn. This might change in the future though. """
-        figure = self.GetFigure()
-        if figure:
-            figure.Draw(fast)
+        
+        if self._isbeingdrawn:
+            return False
+        else:
+            # Make dirty
+            self._isdirty = True
+            
+            # Draw figure
+            figure = self.GetFigure()
+            if figure:
+                figure.Draw(fast)
+            
+            # Done
+            return True
     
     
+    @DrawAfter
     def Clear(self, clearForDestruction=False):
         """ Clear()
         Clear the axes. Removing all wobjects in the scene.
         """
-        # remove wobjects
+        # Remove wobjects
         for w in self.wobjects:
-            if hasattr(w,'Destroy'):
+            if isinstance(w, BaseAxis) and not clearForDestruction:
+                continue
+            elif hasattr(w,'Destroy'):
                 w.Destroy()
-        self._wobjects[:] = []
-        # remake axis and legend?
-        if not clearForDestruction:
-            self._axisClass(self)
     
     @property
     def wobjects(self):
@@ -1345,7 +1254,7 @@ class Axes(base.Wibject):
         xCorr, yCorr = 0, 0
         
         # correction should be applied for 2D camera and a valid label
-        if self.camera is self._cameras['2d']:
+        if isinstance(self.camera, TwoDCamera):
             axis = self.axis
             if isinstance(axis, PolarAxis2D):
                 if axis.visible and axis.xLabel:
@@ -1385,11 +1294,11 @@ class Axes(base.Wibject):
             return self._axisClass(self)
     
     
-    @Property
+    @PropWithDraw
     def axisType():
         """ Get/Set the axis type to use. Currently supported are:
           * 'cartesian' - a normal axis (default)
-          * 'polar' - Curt is working on this.
+          * 'polar' - a polar axis.
         """        
         def fget(self):
             D = {PolarAxis2D:'polar', CartesianAxis:'cartesian'}
@@ -1414,7 +1323,7 @@ class Axes(base.Wibject):
                 # Add new
                 axisClass(self)
     
-    @Property
+    @PropWithDraw
     def cameraType():
         """ Get/Set the camera type to use. Currently supported are:
           * '2d' - a two dimensional camera that looks down the z-dimension.
@@ -1445,7 +1354,7 @@ class Axes(base.Wibject):
         return x-pos.absLeft, y-pos.absTop
     
     
-    @Property
+    @PropWithDraw
     def daspect():
         """ Get/Set the data aspect ratio as a three element tuple. 
         A two element tuple can also be given (then z is assumed 1).
@@ -1472,10 +1381,8 @@ class Axes(base.Wibject):
                     float(value[1]), float(value[2]))
             else:            
                 raise Exception("daspect should be a length 2 or 3 sequence!")
-            # we could normalize... but we dont have to...    
-            self.Draw()
     
-    @Property
+    @PropWithDraw
     def daspectAuto():
         """ Get/Set whether to scale the dimensions independently.
         If True, the dimensions are scaled independently, and only the sign
@@ -1487,7 +1394,7 @@ class Axes(base.Wibject):
         def fset(self, value):
             self._daspectAuto = bool(value)
     
-    @Property
+    @PropWithDraw
     def legend():
         """ Get/Set the string labels for the legend. Upon setting,
         a legend wibject is automatically shown. """
@@ -1517,7 +1424,31 @@ class Axes(base.Wibject):
         enabeled by default. 
         """
         return [light for light in self._lights]
+        
     
+    @PropWithDraw
+    def useBuffer():
+        """ Get/Set whether to use a buffer; after drawing, a screenshot
+        of the result is obtained and stored. When the axes needs to
+        be redrawn, but has not changed, the buffer can be used to 
+        draw the contentx at great speed. """
+        def fget(self):
+            return self._useBuffer
+        def fset(self, value): 
+            self._useBuffer = bool(value)
+    
+    
+    @Property
+    def motionBlur():
+        """ Get/Set the amount of motion blur when interacting with
+        this axes. The value should be a number between 0 and 1. 
+        Warning: this is a rather useless feature, but can look
+        cool at times :) """
+        def fget(self):
+            return self._motionBlur
+        def fset(self, value): 
+            tmp = float(value)
+            self._motionBlur = min(max(tmp,0.0),1.0)
     
     ## Implement methods
     
@@ -1531,90 +1462,31 @@ class Axes(base.Wibject):
         # any wibjects are destoyed automatically by the Destroy command.
     
     
-    def OnDraw(self, mode='normal'):
-        # Draw the background of the axes and the wobjects in it.
+    def OnDrawShape(self, clr):
         
-        # size of figure ...
+        # Correct size for labels (shape is the first draw pass)
+        self._CorrectPositionForLabels()
+        
+        # Get picker helper and draw
+        pickerHelper = self.GetFigure()._pickerHelper
+        
+        # Size of figure ...
         fig = self.GetFigure()
         w,h = fig.position.size
         
-        # correct size for labels
-        self._CorrectPositionForLabels()
-        
         # Find actual position in pixels, do not allow negative values
         pos = self.position.InPixels()
-        pos.w, pos.h = max(pos.w, 1), max(pos.h, 1)
+        pos._w, pos._h = max(pos.w, 1), max(pos.h, 1)
+        pos.h_fig = h
+        pos._Update()
         
-        # set viewport (note that OpenGL has origin in lower-left, visvis
+        # Set viewport (note that OpenGL has origin in lower-left, visvis
         # in upper-left)
-        gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)        
+        gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)
         
-        gl.glDisable(gl.GL_DEPTH_TEST)
+        self._OnDrawContent(DRAW_SHAPE, clr, pos, pickerHelper)
         
-        # draw bg
-        gl.glMatrixMode(gl.GL_PROJECTION)        
-        gl.glLoadIdentity()        
-        ortho( 0, 1, 0, 1)
-        
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
-        # draw background
-        if self.bgcolor:
-            clr = self.bgcolor
-            gl.glColor3f(clr[0], clr[1], clr[2])
-            gl.glBegin(gl.GL_POLYGON)
-            gl.glVertex2f(0,0)
-            gl.glVertex2f(0,1)
-            gl.glVertex2f(1,1)
-            gl.glVertex2f(1,0)
-            gl.glEnd()
-        gl.glEnable(gl.GL_DEPTH_TEST)
-        
-        # setup the camera
-        self.camera.SetView()
-        
-        # Draw other stuff, but wait with lines     
-        for item in self._wobjects:
-            if isinstance(item, (Line,)):
-                pass # draw later
-            else:
-                item._DrawTree(mode)
-        
-        # Lines are special case. In order to blend them well, we should
-        # draw textures, meshes etc, first.
-        for item in self._wobjects:
-            if isinstance(item, Line):
-                item._DrawTree(mode)
-        
-        # set camera to screen coordinates.
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadIdentity()
-        ortho( pos.absLeft, pos.absRight, h-pos.absBottom, h-pos.absTop)
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
-        
-        # allow wobjects to draw in screen coordinates
-        gl.glEnable(gl.GL_DEPTH_TEST)
-        for item in self._wobjects:
-            if not isinstance(item, BaseAxis):
-                item._DrawTree('screen')
-        
-        # let axis object draw in screen coordinates in the full viewport.
-        # (if the twod camera is used)
-        if self.camera is self._cameras['twod']:
-            gl.glViewport(0,0,w,h)
-            gl.glMatrixMode(gl.GL_PROJECTION)
-            gl.glLoadIdentity()
-            ortho(0,w,0,h)
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glDisable(gl.GL_DEPTH_TEST)
-        else:
-            gl.glEnable(gl.GL_DEPTH_TEST)
-        for item in self._wobjects:
-            if isinstance(item, BaseAxis):
-                item._DrawTree('screen')                
-        
-        # prepare for wibject children (draw in full viewport)
+        # Prepare for wibject children (draw in full viewport)
         gl.glViewport(0,0,w,h)
         gl.glDisable(gl.GL_DEPTH_TEST)                
         gl.glMatrixMode(gl.GL_PROJECTION)        
@@ -1622,73 +1494,271 @@ class Axes(base.Wibject):
         ortho( 0, w, h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
+        
+        # Transform
         self.parent._Transform() # Container
         self._Transform() # Self
     
     
-    def OnDrawShape(self, clr):
-        # Draw the shapes of wobjects.
-        
-        # get shape
-        mode = 'shape'
-        pickerHelper = self.GetFigure()._pickerHelper
-        
-        # get position
-        w,h = self.GetFigure().position.size
-        pos = self.position.InPixels()
-        pos.w, pos.h = max(pos.w, 1), max(pos.h, 1)
-        
-        # set viewport (note that OpenGL has origin in lower-left, visvis
-        # in upper-left)
-        gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h) 
-        
-        # prepare for drawing background
-        gl.glMatrixMode(gl.GL_PROJECTION)        
-        gl.glLoadIdentity()        
-        ortho( 0, 1, 0, 1)
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
-        # draw background        
-        gl.glColor3f(clr[0], clr[1], clr[2])
-        gl.glBegin(gl.GL_POLYGON)
-        gl.glVertex2f(0,0)
-        gl.glVertex2f(0,1)
-        gl.glVertex2f(1,1)
-        gl.glVertex2f(1,0)
-        gl.glEnd()
-        
-        #setup the camera
-        self.camera.SetView()
-        
-        # draw other stuff        
-        for item in self._wobjects:
-            if isinstance(item, Line):
-                pass # draw later
-            else:
-                item._DrawTree(mode, pickerHelper)
-        
-        # draw lines AFTER textures
-        # note that this does not work if lines textures are children
-        # of each-other. in that case they should be added to the scene
-        # in the correct order.
-        for item in self._wobjects:
-            if isinstance(item, Line):
-                item._DrawTree(mode, pickerHelper)
-        
-        # prepare for wibject children
-        gl.glDisable(gl.GL_DEPTH_TEST)        
-        gl.glMatrixMode(gl.GL_PROJECTION)        
-        gl.glLoadIdentity()        
-        ortho( 0, pos.w, pos.h, 0)
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
-        # No need to call transform
-    
     def OnDrawFast(self):
-        self.OnDraw(mode='fast')
+        self._OnDrawInMode(DRAW_FAST, self.bgcolor)
+    
+    def OnDraw(self):
+        self._OnDrawInMode(DRAW_NORMAL, self.bgcolor)
+    
+    
+    def _OnDrawInMode(self, mode, bgcolor, pickerHelper=None):
+        # Draw the background of the axes and the wobjects in it.
         
-    def OnDrawPre(self):
-        self.OnDraw(mode='pre')
+        # Prepare
+        if True:
+            
+            # Get size of figure ...
+            fig = self.GetFigure()
+            w,h = fig.position.size
+            
+            # Find actual position in pixels, do not allow negative values
+            pos = self.position.InPixels()
+            pos._w, pos._h = max(pos.w, 1), max(pos.h, 1)
+            pos.h_fig = h
+            pos._Update()
+            
+            # Set viewport (note that OpenGL has origin in lower-left, visvis
+            # in upper-left)
+            gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)        
+            
+            # Select screenshot
+            sshot = self._screenshot
+        
+        
+        # Perform tests
+        if self._useBuffer:
+            
+            # Test if we can use the screenshot
+            canUseScreenshot = (    (sshot is not None) and 
+                                    sshot.shape[0] == pos.h and 
+                                    sshot.shape[1] == pos.w )
+            
+            # Test if we want to blur with the screenshot
+            blurWithScreenshot = (  bool(self._motionBlur) and 
+                                    self._isdirty and
+                                    mode==DRAW_FAST )
+            
+            # Test whether we should use the screenshot
+            shouldUseScreenshot = ( canUseScreenshot and 
+                                    (not self._isdirty or blurWithScreenshot) )
+        
+        else:
+            # Old school mode
+            shouldUseScreenshot = False
+            blurWithScreenshot = False
+        
+        
+        # Draw content of axes (if we need to)
+        if (not shouldUseScreenshot) or blurWithScreenshot:
+            
+            # Draw fresh
+            self._OnDrawContent(mode, bgcolor, pos, pickerHelper)
+            
+            # Make screenshot and store/combine
+            tmp = _Screenshot()
+            shapesMatch = (sshot is not None) and tmp.shape == sshot.shape
+            if blurWithScreenshot and shapesMatch:
+                f = self._motionBlur
+                sshot[:] = f*sshot + (1.0-f)*tmp
+            else:
+                self._screenshot = tmp
+        
+        
+        # Draw screenshot (if we should)
+        if shouldUseScreenshot:
+            
+            # Set view
+            gl.glMatrixMode(gl.GL_PROJECTION)
+            gl.glLoadIdentity()        
+            ortho( 0, 1, 0, 1)             
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glLoadIdentity()
+            
+            # Apply bitmap directly
+            sshot = self._screenshot
+            gl.glRasterPos(0,0)
+            gl.glDrawPixels(pos.w, pos.h, gl.GL_RGB, gl.GL_FLOAT, sshot)
+        
+        
+        # # Set viewport to the full figure and disable depth test
+        if True:
+            gl.glViewport(0,0,w,h)
+            gl.glDisable(gl.GL_DEPTH_TEST)
+        
+        
+        # Draw axis if using the 2D camera
+        if isinstance(self.camera, TwoDCamera):
+            # Let axis object for 2D-camera draw in screen coordinates 
+            # in the full viewport.
+            # Note that if the buffered screenshot is used and the content
+            # is not drawn, the axis' OnDraw method is not called, and the
+            # ticks are therefore not re-calculated (which is time-consuming).
+            
+            # Set view            
+            gl.glMatrixMode(gl.GL_PROJECTION)        
+            gl.glLoadIdentity()
+            ortho( 0, w, 0, h)  # Note that 0 and h are swapped
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glLoadIdentity()
+            
+            # Draw
+            for item in self._wobjects:
+                if isinstance(item, BaseAxis):
+                    item._DrawTree(DRAW_SCREEN)      
+        
+        
+        # Prepare for drawing child wibjects in screen coordinates 
+        if True:
+            
+            # Set view            
+            gl.glMatrixMode(gl.GL_PROJECTION)        
+            gl.glLoadIdentity()
+            ortho( 0, w, h, 0)
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glLoadIdentity()
+            
+            # Transform
+            self.parent._Transform() # Container
+            self._Transform() # Self
+        
+        
+        # We're clean now ...
+        if mode != DRAW_SHAPE:
+            self._isdirty = False
+    
+    
+    def _OnDrawContent(self, mode, bgcolor, pos, pickerHelper=None):
+        
+        # Draw background
+        if bgcolor:
+            
+            # Set view
+            gl.glMatrixMode(gl.GL_PROJECTION)        
+            gl.glLoadIdentity()        
+            ortho( 0, 1, 0, 1)
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glLoadIdentity()
+            
+            # Overwrite all
+            gl.glDisable(gl.GL_DEPTH_TEST)
+            
+            # Draw
+            gl.glColor3f(bgcolor[0], bgcolor[1], bgcolor[2])
+            gl.glBegin(gl.GL_POLYGON)
+            gl.glVertex2f(0,0)
+            gl.glVertex2f(0,1)
+            gl.glVertex2f(1,1)
+            gl.glVertex2f(1,0)
+            gl.glEnd()
+            
+            # Reset
+            gl.glEnable(gl.GL_DEPTH_TEST)
+        
+        
+        # Draw items in world coordinates
+        if True:
+            
+            # Setup the camera
+            self.camera.SetView()
+            
+            # Draw stuff, but wait with lines     
+            lines2draw = []
+            for item in self._wobjects:
+                if isinstance(item, (Line,)):
+                    lines2draw.append(item)
+                else:
+                    item._DrawTree(mode, pickerHelper)
+            
+            # Lines are special case. In order to blend them well, we should
+            # draw textures, meshes etc, first.
+            # Note that this does not work if lines textures are children
+            # of each-other. in that case they should be added to the scene
+            # in the correct order.
+            for item in lines2draw:
+                item._DrawTree(mode, pickerHelper)
+        
+        # Draw items in screen coordinates
+        if mode != DRAW_SHAPE:
+            
+            # Set camera to screen coordinates.
+            gl.glMatrixMode(gl.GL_PROJECTION)
+            gl.glLoadIdentity()
+            h = pos.h_fig
+            ortho( pos.absLeft, pos.absRight, h-pos.absBottom, h-pos.absTop)
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glLoadIdentity()
+            
+            # Allow wobjects to draw in screen coordinates
+            # Note that the axis for the 2d camera needs to draw beyond
+            # the viewport of the axes, and is therefore drawn later.
+            gl.glEnable(gl.GL_DEPTH_TEST)
+            is2dcam = isinstance(self.camera, TwoDCamera)
+            for item in self._wobjects:
+                if is2dcam and isinstance(item, BaseAxis):
+                    continue
+                item._DrawTree(DRAW_SCREEN)
+    
+    
+    
+    
+    
+#     def _OnDrawShapeContent(self, clr):
+#                 
+#         # Draw background
+#         if True:
+#             
+#             # Set view
+#             gl.glMatrixMode(gl.GL_PROJECTION)        
+#             gl.glLoadIdentity()        
+#             ortho( 0, 1, 0, 1)
+#             gl.glMatrixMode(gl.GL_MODELVIEW)
+#             gl.glLoadIdentity()
+#             
+#             # Draw
+#             gl.glColor3f(clr[0], clr[1], clr[2])
+#             gl.glBegin(gl.GL_POLYGON)
+#             gl.glVertex2f(0,0)
+#             gl.glVertex2f(0,1)
+#             gl.glVertex2f(1,1)
+#             gl.glVertex2f(1,0)
+#             gl.glEnd()
+#         
+#         # Draw wobjects
+#         if True:
+#             
+#             # Setup the camera
+#             self.camera.SetView()
+#         
+#             # Draw stuff        
+#             for item in self._wobjects:
+#                 if isinstance(item, Line):
+#                     pass # draw later
+#                 else:
+#                     item._DrawTree(mode, pickerHelper)
+#             
+#             # draw lines AFTER textures
+#             # note that this does not work if lines textures are children
+#             # of each-other. in that case they should be added to the scene
+#             # in the correct order.
+#             for item in self._wobjects:
+#                 if isinstance(item, Line):
+#                     item._DrawTree(mode, pickerHelper)
+#         
+#         # prepare for wibject children
+#         gl.glDisable(gl.GL_DEPTH_TEST)        
+#         gl.glMatrixMode(gl.GL_PROJECTION)        
+#         gl.glLoadIdentity()        
+#         ortho( 0, pos.w, pos.h, 0)
+#         gl.glMatrixMode(gl.GL_MODELVIEW)
+#         gl.glLoadIdentity()
+#         # No need to call transform
+    
     
     
     def _OnMouseDown(self, event):
@@ -1759,6 +1829,7 @@ class Legend(simpleWibjects.DraggableBox):
         """ SetStrings(*stringList)
         Set the strings of the legend labels.
         """
+        # Note that setting the .visible property will invoke a draw
         
         # test
         if len(stringList)==1 and isinstance(stringList[0],(tuple,list)):
