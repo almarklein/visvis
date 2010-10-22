@@ -74,13 +74,11 @@ class ClimEditor(DraggableBox):
         self.SetMapables(*args)
     
     
-    @Property
-    def range():
-        """ Get/set the range that the slider represents. """
-        def fget(self):
-            return self._slider.range
-        def fset(self, value):
-            self._slider.range = value # will invoke a redraw
+    @property
+    def slider(self):
+        """ Get the slider instance of this tool.
+        """
+        return self._slider
     
     def _UpdateFull(self, event):
         for mappable in self.GetMapables():
@@ -106,7 +104,7 @@ class ClimEditor(DraggableBox):
         # Parse input
         if not args:
             args = [self.parent]
-        elif len(args)==1 and hasattr(args, '__len__'):
+        elif len(args)==1 and hasattr(args[0], '__len__'):
             args = args[0]
         if not args:
             return
@@ -281,7 +279,7 @@ class ColormapEditor(DraggableBox):
         # Parse input
         if not args:
             args = [self.parent]
-        elif len(args)==1 and hasattr(args, '__len__'):
+        elif len(args)==1 and hasattr(args[0], '__len__'):
             args = args[0]
         if not args:
             return

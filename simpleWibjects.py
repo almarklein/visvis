@@ -374,7 +374,6 @@ class BaseSlider(Box):
         w,h = self.position.size
         offset = 8.0 / max(w,h)
         
-        print x0, x1, x2, offset
         if x0 < x1+offset:
             # Move on left edge
             self._sliderDown = 1 
@@ -514,14 +513,14 @@ class BaseSlider(Box):
         if w > h:
             i = 5
             while i < h-5:
-                dots1.Append(2,i); dots1.Append(6,i)
-                dots2.Append(-2,i); dots2.Append(-6,i)
+                dots1.Append(2,i); dots1.Append(5,i)
+                dots2.Append(-2,i); dots2.Append(-5,i)
                 i += 3
         else:
             i = 5
             while i < w-5:
-                dots1.Append(i,2); dots1.Append(i,6)
-                dots2.Append(i,-2); dots2.Append(i,-6)
+                dots1.Append(i,2); dots1.Append(i,5)
+                dots2.Append(i,-2); dots2.Append(i,-5)
                 i += 3
         
         self._dots1, self._dots2 = dots1, dots2
