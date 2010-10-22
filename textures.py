@@ -481,7 +481,7 @@ class TextureObject(object):
         if self._texId == 0 or not gl.glIsTexture(self._texId):
             if not troubleLastTime:
                 # Only if not in failure mode
-                self._uploadFlag == abs(self._uploadFlag)
+                self._uploadFlag = abs(self._uploadFlag)
         
         # If we should upload/update, do that now. (SetData also sets the flag)
         if self._uploadFlag > 0:
@@ -650,7 +650,6 @@ class TextureObject(object):
             
             # keep reference of data shape (as loaded to opengl)
             self._shape = data.shape
-        
         
         # flag success
         if needPadding:

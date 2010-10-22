@@ -47,8 +47,7 @@ void main()
     }
     
     // finaly, apply window-level window-width    
-    gl_FragColor = ( gl_FragColor + scaleBias[1] ) * scaleBias[0];
-    gl_FragColor.a = 1.0;
+    gl_FragColor.rgb = ( gl_FragColor.rgb + scaleBias[1] ) * scaleBias[0];
     
     // apply colormap
     if (applyColormap == 1)    
