@@ -765,7 +765,7 @@ class BaseAxis(base.Wobject):
         # Prepare for drawing lines
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(pps.data)
-        if axes.camera is axes._cameras['twod']:
+        if isinstance(axes.camera, TwoDCamera):
             gl.glDisable(gl.GL_LINE_SMOOTH)
         
         # Draw lines
@@ -1313,7 +1313,7 @@ class CartesianAxis(CartesianAxis2D, CartesianAxis3D):
     def _CreateLinesAndLabels(self, axes):
         """ Choose depending on what camera is used. """
 
-        if axes.camera.isTwoD:
+        if isinstance(axes.camera, TwoDCamera):
             return CartesianAxis2D._CreateLinesAndLabels(self,axes)
         else:
             return CartesianAxis3D._CreateLinesAndLabels(self,axes)

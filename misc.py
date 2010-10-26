@@ -153,6 +153,7 @@ def DrawAfter(function):
         function(self, *args, **kwargs)
         if hasattr(self, 'Draw'):
             self.Draw()
+    newFunc.__doc__ = function.__doc__
     return newFunc
 
 class Range(object):

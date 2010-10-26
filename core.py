@@ -1018,8 +1018,6 @@ class Axes(base.Wibject):
         self._cameras = {   '2d': TwoDCamera(self), 
                             '3d': ThreeDCamera(self),                            
                             'fly': FlyCamera(self)}
-        self._cameras['twod'] = self._cameras['2d']
-        self._cameras['threed'] = self._cameras['3d']
         self.camera = self._cameras['3d']
         
         # init the background color of this axes
@@ -1173,7 +1171,7 @@ class Axes(base.Wibject):
         if this is not the currently used camera.
         """
         # get camera
-        cam = self._cameras['twod']
+        cam = self._cameras['2d']
         
         # calculate limits
         tmp = cam._fx/2 / self.daspect[0]
@@ -1337,11 +1335,13 @@ class Axes(base.Wibject):
             else:
                 return ''
         def fset(self, cameraName):        
+            MAP = {'twod': '2d', 'threed':'3d'}
             cameraName = cameraName.lower()
+            if cameraName in MAP.keys():
+                cameraName = MAP[cameraName]
             if not self._cameras.has_key(cameraName):
                 raise Exception("Unknown camera type!")
             self.camera = self._cameras[cameraName]
-        
     
     @property
     def mousepos(self):
