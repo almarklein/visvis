@@ -675,6 +675,9 @@ class Slider(BaseSlider):
         def fset(self, value):
             self._range.max = float(value)
             self._limitRangeAndSetText()
+            #
+            self._eventSliderChanged.Set()
+            self._eventSliderChanged.Fire()
     
     def _limitRangeAndSetText(self):
         # Limit
@@ -711,6 +714,9 @@ class RangeSlider(BaseSlider):
         def fset(self, value):
             self._range = Range(value)
             self._limitRangeAndSetText()
+            #
+            self._eventSliderChanged.Set()
+            self._eventSliderChanged.Fire()
     
     def _limitRangeAndSetText(self):
         # Limit
