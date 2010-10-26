@@ -86,9 +86,10 @@ class BaseCamera(object):
     A camera defines the way the data is viewed and how to interact
     with the data.
     """
-    def __init__(self, axes):
-        # store scene to render in
-        self.axes = axes
+    def __init__(self, *axes):
+        
+        # store scenes to render in
+        self.axeses = axes
         
         # flag for axis
         self.isTwoD = False
@@ -99,11 +100,15 @@ class BaseCamera(object):
         self.zlim = Range(0,1)
         self.view_loc = 0,0,0
         self.OnInit()
-        
+    
+    @property
+    def axes(self):
+        return self.axeses[0]
+    
     def OnInit(self):
         """ Override this to do more initializing """
         pass
-        
+    
     def SetLimits(self, xlim, ylim, zlim=None):
         """ Set the limits to visualize  
         Always set this before rendering!
@@ -127,7 +132,8 @@ class BaseCamera(object):
         dx,dy,dz = self.xlim.min, self.ylim.min, self.zlim.min
         self.view_loc = rx/2.0 + dx, ry/2.0 + dy, rz/2.0 + dz
         # refresh
-        self.axes.Draw()
+        for axes in self.axeses:
+            axes.Draw()
     
     def SetView(self):
         """ Set the view, thus simulating a camera.
@@ -205,13 +211,14 @@ class TwoDCamera(BaseCamera):
         self.ref_but = 0        # mouse button when clicked   
         self.ref_zoomx = 100.0  # zoom factors when clicked
         self.ref_zoomy = 100.0        
+        self.ref_axes = None
         
         # bind events
-        axes = self.axes
-        axes.eventMouseDown.Bind( self.OnMouseDown)        
-        axes.eventMouseUp.Bind( self.OnMouseUp)        
-        axes.eventMotion.Bind( self.OnMotion)
-        axes.eventDoubleClick.Bind( self.Reset)
+        for axes in self.axeses:
+            axes.eventMouseDown.Bind( self.OnMouseDown)        
+            axes.eventMouseUp.Bind( self.OnMouseUp)        
+            axes.eventMotion.Bind( self.OnMotion)
+            axes.eventDoubleClick.Bind( self.Reset)
     
     
     def GetViewParams(self):
@@ -274,10 +281,12 @@ class TwoDCamera(BaseCamera):
         BaseCamera.Reset(self)
     
     
-    def OnMouseDown(self, event):        
+    def OnMouseDown(self, event): 
+            
         # store mouse position and button
         self.ref_mloc = event.x, event.y
         self.ref_but = event.button
+        self.ref_axes = event.owner
         
         # store current view parameters        
         self.ref_loc = self.view_loc
@@ -289,19 +298,23 @@ class TwoDCamera(BaseCamera):
 
     def OnMouseUp(self, event):
         self.ref_but = 0
-        self.axes.Draw() # Draw without the fast flag      
+        # Draw without the fast flag      
+        for axes in self.axeses:
+            axes.Draw()
 
 
     def OnMotion(self, event):
-       
+        
         if not self.ref_but:
+            return
+        if not self.ref_axes is event.owner:
             return
         if not self.axes.camera is self:
             return False
         
         # get loc (as the event comes from the figure, not the axes)
-        mloc = self.axes.mousepos
-            
+        mloc = event.owner.mousepos
+        
         if self.ref_but==1:
             # translate
             
@@ -336,7 +349,8 @@ class TwoDCamera(BaseCamera):
                 self.view_zoomx =  self.view_zoomy
         
         # refresh
-        self.axes.Draw(True)
+        for axes in self.axeses:
+            axes.Draw(True)
 
 
     def SetView(self):
@@ -424,14 +438,14 @@ class ThreeDCamera(BaseCamera):
         self.controlIsDown = False
         
         # Bind to events
-        axes = self.axes
-        axes.eventKeyDown.Bind(self.OnKeyDown)
-        axes.eventKeyUp.Bind(self.OnKeyUp)        
-        # 
-        axes.eventMouseDown.Bind(self.OnMouseDown)
-        axes.eventMouseUp.Bind(self.OnMouseUp)        
-        axes.eventMotion.Bind(self.OnMotion)
-        axes.eventDoubleClick.Bind(self.Reset)
+        for axes in self.axeses:
+            axes.eventKeyDown.Bind(self.OnKeyDown)
+            axes.eventKeyUp.Bind(self.OnKeyUp)        
+            # 
+            axes.eventMouseDown.Bind(self.OnMouseDown)
+            axes.eventMouseUp.Bind(self.OnMouseUp)        
+            axes.eventMotion.Bind(self.OnMotion)
+            axes.eventDoubleClick.Bind(self.Reset)
     
     
     def GetViewParams(self):
@@ -528,6 +542,7 @@ class ThreeDCamera(BaseCamera):
         # store mouse position and button
         self.ref_mloc = event.x, event.y
         self.ref_but = event.button
+        self.ref_axes = event.owner
         
         # store current view parameters
         self.ref_az = self.view_az
@@ -541,18 +556,21 @@ class ThreeDCamera(BaseCamera):
    
     def OnMouseUp(self, event):        
         self.ref_but = 0
-        self.axes.Draw()
+        for axes in self.axeses:
+            axes.Draw()
 
-        
+    
     def OnMotion(self, event):
         
         if not self.ref_but:
+            return
+        if not self.ref_axes is event.owner:
             return
         if not self.axes.camera is self:
             return False
         
         # get loc (as the event comes from the figure, not the axes)
-        mloc = self.axes.mousepos
+        mloc = event.owner.mousepos
             
         if self.shiftIsDown and self.ref_but==1:
             # translate
@@ -637,8 +655,9 @@ class ThreeDCamera(BaseCamera):
                 self.view_zoomy = self.ref_zoomy * math.exp(-factory)
                 self.view_zoomx = self.view_zoomy
         
-        # refresh
-        self.axes.Draw(True) # draw fast
+        # refresh (fast)
+        for axes in self.axeses:
+            axes.Draw(True)
     
     def SetView(self):
         
@@ -779,7 +798,8 @@ class FlyCamera(ThreeDCamera):
         self.view_el = 80 # look down
         
         # refresh
-        self.axes.Draw()
+        for axes in self.axeses:
+            axes.Draw()
         
         
     def OnKeyDown(self, event):
@@ -832,6 +852,7 @@ class FlyCamera(ThreeDCamera):
         # store mouse position and button
         self.ref_mloc = event.x, event.y
         self.ref_but = event.button
+        self.ref_axes = event.owner
         
         # store current view parameters
         self.ref_az = self.view_az
@@ -848,7 +869,8 @@ class FlyCamera(ThreeDCamera):
     
     def OnMouseUp(self, event):        
         self.ref_but = 0
-        self.axes.Draw()
+        for axes in self.axeses:
+            axes.Draw()
         self._timer.Stop()
     
     
@@ -906,7 +928,8 @@ class FlyCamera(ThreeDCamera):
         
         # Move and refresh
         self.Move()
-        self.axes.Draw(True) # draw fast
+        for axes in self.axeses:
+            axes.Draw(True)
 
 
     def SetView(self):
