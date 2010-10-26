@@ -1,31 +1,40 @@
 """ MODULE points
-usage:
+
+Provides several classes to represent points, pointsets, anisotropic arrays,
+and quaternions.
+
+Usage
+-----
 from points import Point, Pointset, Aarray, Quaternion
 
+The Point and Pointset classes
+------------------------------
 A point represents a location or vector. The dimension of the point 
-is at least 2D. 
+can be of any dimension.
 
-A pointset represents an ordered set (or list) of points. 
+A pointset represents an ordered (list) of points. 
 It has methods to add and remove points. Both point instances 
 and pointset instances have methods for mathematical operations, like 
 for example calculating distances between points and cross correlation. 
 For the Pointset these operations are efficiently applied to all points.
 
+
+The Aarray class
+----------------
 The Aarray class implements numpy.ndarray and provides a way to manage 
 anisotropic data. 
 
+The Quaternion class
+--------------------
 A Quaternion is a method to describe and work with rotations. It avoids
 the problem of Gimbal lock.
 
-For more information see the docs classes:
-Point, Pointset, Aarray, Quaternion.
+More information and license
+----------------------------
+For more information see the docstrings of the classes.
 
-This software distributed under the BSD license even though it is shipped
-with Visvis, which is LGPL).
-
-Copyright
-Almar Klein
-March 2010
+Copyright (c) 2010, Almar Klein.
+This software distributed under the BSD license.
 
 """
 
@@ -526,31 +535,36 @@ class Point(BasePoints):
         elif len(point)==1:
             point = point[0]
         
-        # a point
         if isinstance(point, Point):
-            self._data = point._data.astype(np.float32)
-        # a tuple or list
+            # a point
+            self._data = point._data.astype(np.float32)        
         elif isinstance(point, (tuple,list)):
+            # a tuple or list
             try:
                 self._data = np.array(point, dtype=np.float32)
             except ValueError, why:
-                raise why
-        # a numpy array
+                raise why        
         elif isinstance(point, np.ndarray):
+            # a numpy array
             self._data = point.astype(np.float32)
-        # otherwise, what were we given?
+        elif isinstance(point, (float,int)):
+            # 1D point
+            self._data = np.empty((1,), dtype=np.float32)
+            self._data[0] = point
         else:
+            # otherwise, what were we given?
             raise ValueError("Cannot create a point with that argument.")
         
         # remove singleton dimensions
-        self._data = np.squeeze(self._data)
+        if self._data.size>1:
+            self._data = np.squeeze(self._data)
         
         # check integrity
         if len(self._data.shape) != 1:
             # this must be the case to allow indexing!
             raise ValueError("A point should be given as a 1D array.")
-        if self._data.shape[0] < 2:
-            raise ValueError("A point should consist of at least two values.")
+        if self._data.shape[0] < 1:
+            raise ValueError("A point should consist of at least one value.")
 
 
     def Copy(self):
@@ -707,10 +721,10 @@ class Pointset(BasePoints):
             # do some checks            
             if len(data.shape) != 2:
                 raise ValueError("A pointset should be given as a 2D array.")
-            if data.shape[1] < 2:
-                tmp = "Each point should consist of at least two values."
-                raise ValueError(tmp)            
-            # create array            
+            if data.shape[1] < 1:
+                tmp = "Each point should consist of at least one value."
+                raise ValueError(tmp)
+            # create array
             self._len = data.shape[0]
             L = max( nearestPowerOfTwo(data.shape[0]), initialLength)
             self._data = np.zeros((L, data.shape[1]), dtype=np.float32)
@@ -1129,7 +1143,7 @@ class Aarray(np.ndarray):
     
     (Although all classes defined in this module use UpperCamelCase
     notation for methods, this class uses lowerCamelCase to conform
-    with numpy.)
+    with the numpy standard.)
     """
     
     def __new__(cls, shapeOrArray, sampling=None, origin=None, fill=None, 
@@ -1261,8 +1275,6 @@ class Aarray(np.ndarray):
     
     
     def _getSampling(self):
-        # todo: when an array is copied... _sampling and _origin are not copied
-        # along... maybe wrap it?
         l1, l2 = len(self._sampling), len(self.shape)
         if  l1 < l2:
             tmp = list(self._sampling)
