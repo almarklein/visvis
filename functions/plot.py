@@ -1,7 +1,7 @@
 # This file is part of VISVIS. 
 # Copyright (C) 2010 Almar Klein
 
-from visvis.points import Point, Pointset
+from visvis.pypoints import Point, Pointset, is_Point, is_Pointset
 import numpy as np
 
 import visvis as vv
@@ -62,9 +62,9 @@ def plot(data1, data2=None, data3=None,
     
     ##  create the data
     
-    if isinstance(data1,Pointset):
+    if is_Pointset(data1):
         pp = data1
-    elif isinstance(data1,Point):
+    elif is_Point(data1):
         pp = Pointset(data1.ndim)
         pp.Append(data1)
     else:   

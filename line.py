@@ -34,7 +34,7 @@ import OpenGL.GLU as glu
 import numpy as np
 import math, time, os
 
-from points import Point, Pointset
+from pypoints import Point, Pointset
 
 from misc import Property, PropWithDraw, DrawAfter 
 from misc import Range, OpenGLError, getColor, getOpenGlCapable

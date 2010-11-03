@@ -38,7 +38,7 @@ import OpenGL.GL as gl
 import OpenGL.GLU as glu
 
 import numpy as np
-from points import Pointset, Point
+from pypoints import Pointset, Point
 import math
 
 import base

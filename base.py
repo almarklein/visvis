@@ -41,7 +41,7 @@ from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 from misc import getColor
 import events
 
-from points import Point, Pointset, Quaternion
+from pypoints import Point, Pointset, Quaternion, is_Point
 
 # Define draw modes
 DRAW_NORMAL = 1     # draw normally.
@@ -770,7 +770,7 @@ class OrientationForWobjects_mixClass(object):
                 self._scaleTransform.sx = float(value[0])
                 self._scaleTransform.sy = float(value[1])
                 self._scaleTransform.sz = float(value[2])
-            elif isinstance(value, Point) and value.ndim == 3:
+            elif is_Point(value) and value.ndim == 3:
                 self._scaleTransform.sx = value.x
                 self._scaleTransform.sy = value.y
                 self._scaleTransform.sz = value.z
@@ -792,7 +792,7 @@ class OrientationForWobjects_mixClass(object):
                 self._translateTransform.dx = value[0]
                 self._translateTransform.dy = value[1]
                 self._translateTransform.dz = value[2]
-            elif isinstance(value, Point) and value.ndim == 3:
+            elif is_Point(value) and value.ndim == 3:
                 self._translateTransform.dx = value.x
                 self._translateTransform.dy = value.y
                 self._translateTransform.dz = value.z
@@ -812,7 +812,7 @@ class OrientationForWobjects_mixClass(object):
             # Store direction
             if isinstance(value, (list, tuple)) and len(value) == 3:
                 self._direction = Point(*tuple(value))
-            elif isinstance(value, Point) and value.ndim == 3:
+            elif is_Point(value) and value.ndim == 3:
                 self._direction = value
             else:
                 raise ValueError('Direction should be a 3D Point or 3-element tuple.')

@@ -29,7 +29,7 @@ import OpenGL.GL as gl
 import OpenGL.GLU as glu
 
 import time
-from points import Point, Pointset
+from pypoints import Point, Pointset
 import numpy as np
 
 import base

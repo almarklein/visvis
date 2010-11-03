@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import visvis as vv
-from visvis.points import Aarray
+from visvis.pypoints import Aarray
 app = vv.use()
 
 # Let's say we have lena, but only the even pixels in the y dimension.
