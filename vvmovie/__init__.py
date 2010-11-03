@@ -68,33 +68,61 @@ videoTypes = ['AVI', 'MPG', 'MPEG', 'MOV', 'FLV']
 imageTypes = ['JPG', 'JPEG', 'PNG', 'TIF', 'TIFF', 'BMP']
 
 
-def movieWrite(filename, images, duration=0.1, repeat=True, encoding='mpeg4', 
-                **kwargs):
-    """ movieWrite(fname, images, duration=0.1, repeat=True, encoding='mpeg4')
+def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
+    """ movieWrite(fname, images, duration=0.1, repeat=True, **kwargs)
     
-    Write the movie specified in images to GIF, SWF, AVI, or a series
-    of images (PNG,JPG,TIF,BMP). Images should be a list consisting of
-    PIL images or numpy arrays. The latter should be between 0 and 255 
-    for integer types, and between 0 and 1 for float types.
+    Write the movie specified in images to GIF, SWF, AVI/MPEG, or a series
+    of images (PNG,JPG,TIF,BMP).
     
-      * duration is the duration per frame for GIF, SWF and AVI. For GIF
-        and SWF, the duration can be set per frame (using a list).
-      * repeat can be used in GIF and SWF to indicate that the movie should
-        loop. For GIF, an integer can be given to specify the number of loops.      
-      * encoding is the encoding to use for AVI. Hint for Windows users: 
-        the 'msmpeg4v2' codec is natively supported on Windows.
-      * additional keyword arguments can be given; these are used to call
-        the underlying write functions.
+    General parameters
+    ------------------
+    filename : string
+       The name of the file to write the image to.
+    images : list
+        Should be a list consisting of PIL images or numpy arrays. 
+        The latter should be between 0 and 255 for integer types, 
+        and between 0 and 1 for float types.
+    duration : scalar
+        The duration for all frames. For GIF and SWF this can also be a list
+        that specifies the duration for each frame. (For swf the durations
+        are rounded to integer amounts of the smallest duration.)
+    repeat : bool or integer
+        Can be used in GIF and SWF to indicate that the movie should
+        loop. For GIF, an integer can be given to specify the number of loops.  
     
-    When writing a series of images: if the filenenumber contains an 
-    asterix, a sequence number is introduced at its location. Otherwise 
-    the sequence number is introduced right before the final dot. To 
-    enable easy creation of a new directory with image files, it is made 
-    sure that the full path exists.
+    Special GIF parameters
+    ----------------------
+    dither : bool
+        Whether to apply dithering
+    nq : integer
+        If nonzero, applies the NeuQuant quantization algorithm to create
+        the color palette. This algorithm is superior, but slower than
+        the standard PIL algorithm. The value of nq is the quality 
+        parameter. 1 represents the best quality. 10 is in general a
+        good tradeoff between quality and speed.
     
-    Notice: writing AVI requires the "ffmpeg" application:
-      * Most linux users can install it using their package manager
-      * There is a windows installer on the visvis website
+    Special AVI/MPEG parameters
+    ---------------------------
+    encoding : {'mpeg4', 'msmpeg4v2', ...}
+        The encoding to use. Hint for Windows users: the 'msmpeg4v2' codec 
+        is natively supported on Windows.
+    inputOptions : string
+        See the documentation of ffmpeg
+    outputOptions : string
+        See the documentation of ffmpeg
+    
+    Notes for writing a series of images
+    ------------------------------------
+    If the filenenumber contains an asterix, a sequence number is introduced 
+    at its location. Otherwise the sequence number is introduced right before
+    the final dot. To enable easy creation of a new directory with image 
+    files, it is made sure that the full path exists.
+    
+    Notes for writing AVI/MPEG
+    --------------------------
+    Writing AVI requires the "ffmpeg" application:
+      * Most linux users can install it using their package manager.
+      * There is a windows installer on the visvis website.
     
     """
     
