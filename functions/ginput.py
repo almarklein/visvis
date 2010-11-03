@@ -2,7 +2,7 @@
 # Copyright (C) 2010 Almar Klein
 
 import visvis as vv
-from visvis.points import Point, Pointset
+from visvis.pypoints import Point, Pointset
 import time
 
 class GinputHelper(object):

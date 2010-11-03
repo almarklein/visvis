@@ -28,7 +28,7 @@ from events import BaseEvent, MouseEvent
 from misc import Property, PropWithDraw, DrawAfter, Range
 from base import Box
 from textRender import Label
-from points import Pointset, Point
+from pypoints import Pointset, Point
 
 # Note that we cannot include the Box and Label class here, since the latter
 # depends on the first, and the BaseText class also needs the Label class.

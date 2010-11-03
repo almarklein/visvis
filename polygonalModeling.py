@@ -23,7 +23,7 @@ It also defines lights and algorithmic for managing polygonal models.
 
 """
 
-from points import Point, Pointset
+from pypoints import Point, Pointset, is_Point, is_Pointset
 from misc import Property, PropWithDraw, DrawAfter, getColor
 from base import Wobject, OrientationForWobjects_mixClass
 from textures import TextureObjectToVisualize, Colormap
@@ -281,7 +281,7 @@ def check3dArray(value):
             return value
         else:
             return value.astype(np.float32)
-    elif isinstance(value, Pointset):
+    elif is_Pointset(value):
         if not value.ndim==3:
             raise ValueError()
         return value.data
@@ -391,7 +391,7 @@ class BaseMesh(object):
                 else:
                     self._texcords = texcords.astype(np.float32)
             
-            elif isinstance(texcords, Pointset):
+            elif is_Pointset(texcords):
                 if not texcords.ndim==2:
                     raise ValueError("Texture coordinates must be 2D or 1D.")
                 self._texcords = texcords.data

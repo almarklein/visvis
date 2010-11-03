@@ -68,7 +68,7 @@ from misc import (Transform_Translate, Transform_Scale, Transform_Rotate)
 import vvmovie
 
 from polygonalModeling import BaseMesh
-from points import Point, Pointset, Aarray, Quaternion
+from pypoints import Point, Pointset, Aarray, Quaternion
 
 import cm
 L = locals()

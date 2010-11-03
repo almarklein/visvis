@@ -2,7 +2,7 @@
 # Copyright (C) 2010 Almar Klein
 
 import numpy as np
-from visvis.points import Point, Pointset
+from visvis.pypoints import Point, Pointset
 from visvis.polygonalModeling import BaseMesh
 
 def getSpanVectors(normal, c, d):
