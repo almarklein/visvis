@@ -44,7 +44,7 @@ from events import *
 from base import Wobject
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
 
-import points
+from pypoints import Pointset, Aarray, is_Aarray
 
 # Variable for debugging / developing to display shader info logs always.
 alwaysShowShaderInfoLog = False
@@ -1122,7 +1122,7 @@ class BaseTexture(Wobject):
         """ SetData(data)
         (Re)Set the data to display. If the data has the same shape
         as the data currently displayed, it can be updated very
-        efficiently. If the data is an anisotripic array (vv.points.Aarray)
+        efficiently. If the data is an anisotripic array (vv.Aarray)
         the sampling and origin are (re-)applied.
         """ 
         
@@ -1130,7 +1130,7 @@ class BaseTexture(Wobject):
         self._texture1.SetData(data)
         
         # if Aarray, edit scaling and transform
-        if isinstance(data, points.Aarray):            
+        if is_Aarray(data):
             if hasattr(data,'_sampling') and hasattr(data,'_origin'):
                 if isinstance(self, Texture2D):
                     self._trafo_scale.sx = data.sampling[1]
@@ -1602,7 +1602,7 @@ class Texture3D(BaseTexture):
         # vertex is facing front, so only 3 planes are rendered at a        
         # time...                
         
-        tex_coord, ver_coord = points.Pointset(3), points.Pointset(3)
+        tex_coord, ver_coord = Pointset(3), Pointset(3)
         indices = [0,1,2,3, 4,5,6,7, 3,2,6,5, 0,4,7,1, 0,3,5,4, 1,7,6,2]
         
         # bottom

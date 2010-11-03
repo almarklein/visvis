@@ -5,7 +5,7 @@ plain color, colormaps and texture.
 
 import numpy as np
 import visvis as vv
-from visvis.points import Point, Pointset
+from visvis.pypoints import Point, Pointset
 vv.figure()
 
 # Define points for the line

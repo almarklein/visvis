@@ -36,7 +36,7 @@ from core import BaseFigure, Axes
 from simpleWibjects import RadioButton, DraggableBox, RangeSlider
 import axises
 
-from points import Point, Pointset
+from pypoints import Point, Pointset
 import weakref
 
 

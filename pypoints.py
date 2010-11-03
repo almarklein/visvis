@@ -1,11 +1,13 @@
-""" MODULE points
+""" Module pypoints
 
 Provides several classes to represent points, pointsets, anisotropic arrays,
 and quaternions.
 
+
 Usage
 -----
-from points import Point, Pointset, Aarray, Quaternion
+from pypoints import Point, Pointset, Aarray, Quaternion
+
 
 The Point and Pointset classes
 ------------------------------
@@ -24,10 +26,20 @@ The Aarray class
 The Aarray class implements numpy.ndarray and provides a way to manage 
 anisotropic data. 
 
+
 The Quaternion class
 --------------------
 A Quaternion is a method to describe and work with rotations. It avoids
 the problem of Gimbal lock.
+
+
+Module compatibility
+--------------------
+Use the is_* methods to test for points, pointsets etc, this will
+make different packages using this module compatible.
+
+from pypoints import is_Point, is_Pointset, is_Aarray, is_Quaternion
+
 
 More information and license
 ----------------------------
@@ -37,6 +49,9 @@ Copyright (c) 2010, Almar Klein.
 This software distributed under the BSD license.
 
 """
+
+# This module was first called points.py. In this newer version, PEP8 is
+# followed more strictly, in order to make it easier to adopt by others.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -62,6 +77,8 @@ This software distributed under the BSD license.
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# Set version number
+__version__ = 2.0
 
 import numpy as np
 import sys
@@ -85,61 +102,86 @@ def Property(function):
     return property(**func_locals)
 
 
-def nearestPowerOfTwo(i):
+def nearest_power_of_two(i):
+    """ nearest_power_of_two(i)
+    Returns the nearest power of two that is at least i.
+    """
     ii = 1
     while ii<i:
         ii*=2
     return ii
 
 
-def checkTheTwo(p1,p2, what='something'):
-        """ Check if the two things (self and a second point/pointset)
-        can be used to calculate stuff.
-        Returns (p1,p2), if one is a point, p1 is it.
-        """
-        
-        # define errors
-        tmp = "To calculate %s between two pointsets, " % what
-        er1 = tmp + "both pointsets must be of equal length."
-        er2 = tmp + "the dimensions must be equal."
-        
-        # if one is a point, put in in p1
-        if isinstance(p1,Pointset):
-            p2,p1 = p1,p2
-        
-        # only pointsets of equal length can be used
-        if not isinstance(p1, Point) and len(p1) != len(p2):
-            raise ValueError(er1)
-        
-        # check dimensions
-        if p1.ndim != p2.ndim:
-            tmp = "the dimensions must be equal."
-            raise ValueError(er2)
-        
-        return p1, p2
+def check_the_two(p1,p2, what='something'):
+    """ check_the_two(p1,p2, what='something')
+    Check if the two things (self and a second point/pointset)
+    can be used to calculate stuff.
+    Returns (p1,p2), if one is a point, p1 is it.
+    """
+    
+    # define errors
+    tmp = "To calculate %s between two pointsets, " % what
+    er1 = tmp + "both pointsets must be of equal length."
+    er2 = tmp + "the dimensions must be equal."
+    
+    # if one is a point, put in in p1
+    if is_Pointset(p1):
+        p2,p1 = p1,p2
+    
+    # only pointsets of equal length can be used
+    if not is_Point(p1) and len(p1) != len(p2):
+        raise ValueError(er1)
+    
+    # check dimensions
+    if p1.ndim != p2.ndim:
+        tmp = "the dimensions must be equal."
+        raise ValueError(er2)
+    
+    return p1, p2
+
+
+# Methods to replace isinstance, so this module becomes compatible with
+# other version
+def is_Point(ob):
+    return hasattr(ob, '_is_Point')
+def is_Pointset(ob):
+    return hasattr(ob, '_is_Pointset')
+def is_Point_or_Pointset(ob):
+    return hasattr(ob, '_is_Point') or hasattr(ob, '_is_Pointset')
+def is_Aarray(ob):
+    return hasattr(ob, '_is_Aarray')
+def is_Quaternion(ob):
+    return hasattr(ob, '_is_Quaternion')
 
 
 class BasePoints(object):
-    """ Abstract class for the Point and Pointset classes. It defines
+    """ BasePoints
+    
+    Abstract class for the Point and Pointset classes. It defines
     addition, substraction, multiplication and devision for points and
     pointsets, and it implements some mathematical methods.
+    
     """
     
     ## Common stuff (of which most is overloaded)
     
     @property
     def ndim(self):
-        """ Get the number of dimensions. """
+        """ Get the number of dimensions. 
+        """
         return self._data.shape[-1]
     
     @property
     def data(self):
-        """ Get the internal numpy array. """
+        """ Get the internal numpy array. 
+        """
         raise NotImplemented()
     
-    def Copy(self):
-        """ Copy()
+    def copy(self):
+        """ copy()
+        
         Make a copy of the point or pointset. 
+        
         """
         raise NotImplemented()
     
@@ -153,15 +195,17 @@ class BasePoints(object):
     ## Math stuff on a single vector
 
 
-    def Norm(self):
-        """ Norm()
+    def norm(self):
+        """ norm()
+        
         Calculate the norm (length) of the vector.
         This is the same as the distance to point 0,0 or 0,0,0,
         but implemented a bit faster.
+        
         """
         
         # we could do something like:
-        #   return self.Distance(Point(0,0,0))
+        #   return self.distance(Point(0,0,0))
         # but we don't have to perform checks now, which is faster...
         
         data = self.data
@@ -171,13 +215,15 @@ class BasePoints(object):
         return np.sqrt(dists)
 
 
-    def Normalize(self):
-        """ Normalize()
+    def normalize(self):
+        """ normalize()
+        
         Return normalized vector (to unit length). 
+        
         """
         
         # calculate factor array
-        f = 1.0/self.Norm()
+        f = 1.0/self.norm()
         f.shape = f.size,1
         f = f.repeat(self.ndim,1)
         
@@ -185,25 +231,28 @@ class BasePoints(object):
         data = self.data * f
         
         # return as point or pointset
-        if isinstance(self, Point):
+        if is_Point(self):
             return Point(data)
         else:
             return Pointset(data)
 
 
-    def Normal(self):
-        """" Normal()
+    def normal(self):
+        """ normal()
+        
         Calculate the normalized normal of a vector.
-        Use (p1-p2).Normal() to calculate the normal of the line p1-p2.
-        Only works on 2D points. For 3D points use Cross().
+        Use (p1-p2).normal() to calculate the normal of the line p1-p2.
+        Only works on 2D points. For 3D points use cross().
+        
         """
+        
         # check dims
         if not self.ndim == 2:
             raise ValueError("Normal can only be calculated for 2D points.")
         
         # prepare
-        a = self.Copy()        
-        f = 1.0/self.Norm()
+        a = self.copy()        
+        f = 1.0/self.norm()
         
         # swap xy, y goes minus
         tmp = a.data[:,0].copy()
@@ -215,10 +264,12 @@ class BasePoints(object):
     ## Math stuff on two vectors
     
     
-    def Distance(self, *p):
-        """ Distance(p)
+    def distance(self, *p):
+        """ distance(p)
+        
         Calculate the Euclidian distance between two points or pointsets. 
-        Use Norm() to calculate the length of a vector.
+        Use norm() to calculate the length of a vector.
+        
         """
         
         # the point directly given?
@@ -226,11 +277,11 @@ class BasePoints(object):
             p = p[0]
         
         # make sure p is a point or poinset
-        if not isinstance(p,(Point, Pointset)):
+        if not is_Point_or_Pointset(p):
             p = Point(p)        
         
         # check
-        p1,p2 = checkTheTwo(self,p,'distance')
+        p1,p2 = check_the_two(self,p,'distance')
         
         # calculate
         dists = np.zeros( (p2.data.shape[0],) )
@@ -240,14 +291,17 @@ class BasePoints(object):
         return np.sqrt(dists)
 
 
-    def Angle(self, *p):
-        """ Angle(p)
+    def angle(self, *p):
+        """ angle(p)
+        
         Calculate the angle (in radians) between two vectors. 
         For 2D uses the arctan2 method so the angle has a sign.
         For 3D the angle is the smallest angles between the two
         vectors.
+        
         If no point is given, the angle is calculated relative to the
         positive x-axis.
+        
         """
         
         # the point directly given?
@@ -259,11 +313,11 @@ class BasePoints(object):
             p.x = 1
             
         # make sure p is a point or poinset
-        if not isinstance(p,(Point, Pointset)):
+        if not is_Point_or_Pointset(p):
             p = Point(p)        
         
         # check. Keep the correct order!
-        checkTheTwo(self,p,'angle')
+        check_the_two(self,p,'angle')
         p1,p2 = self, p
         
         if p1.ndim ==2:
@@ -281,8 +335,8 @@ class BasePoints(object):
             
         elif p1.ndim ==3:
             # calculate 3D case
-            p1, p2 = p1.Normalize(), p2.Normalize()
-            data = p1.Dot(p2)
+            p1, p2 = p1.normalize(), p2.normalize()
+            data = p1.dot(p2)
             # correct for round off errors (or we will get NANs)
             data[data>1.0] = 1.0
             data[data<-1.0] = -1.0
@@ -294,46 +348,52 @@ class BasePoints(object):
             raise ValueError("Can only calculate angle for 2D and 3D vectors.")
     
     
-    def Angle2(self, *p):
-        """ Angle2(p)
+    def angle2(self, *p):
+        """ angle2(p)
+        
         Calculate the angle (in radians) of the vector between 
         two points. 
         
+        Notes
+        -----
         Say we have p1=(3,4) and p2=(2,1).
         
-        p1.Angle(p2) returns the difference of the angles of the two vectors:
+        p1.angle(p2) returns the difference of the angles of the two vectors:
         0.142 = 0.927 - 0.785
         
-        p1.Angle2(p2) returns the angle of the difference vector (1,3):
-        p1.Angle2(p2) == (p1-p2).Angle()
+        p1.angle2(p2) returns the angle of the difference vector (1,3):
+        p1.angle2(p2) == (p1-p2).angle()
+        
         """
         
         # the point directly given?
         if len(p)==1:
             p = p[0]
         elif len(p)==0:
-            raise ValueError("Angle2 requires another point.")
+            raise ValueError("Function angle2() requires another point.")
         else:
             p = Point(*p)
         
         # check. Keep the correct order!
-        checkTheTwo(self,p,'angle')
+        check_the_two(self,p,'angle')
         p1,p2 = self, p
         
         if p1.ndim in [2,3]:
-            # subtract and use Angle()
-            return (p1-p2).Angle()    
+            # subtract and use angle()
+            return (p1-p2).angle()    
             #meaning: dangs = np.arctan2( data2[:,1]-data1[:,1], data2[:,0]-data1[:,0] )    
         else:
             # not possible
             raise ValueError("Can only calculate angle for 2D and 3D vectors.")
     
     
-    def Dot(self, *p):
-        """ Dot(p)
+    def dot(self, *p):
+        """ dot(p)
+        
         Calculate the dot product of the two points or pointsets. 
         The dot producet is the standard inner product of the 
         orthonormal Euclidean space.
+        
         """
         
         # the point directly given?
@@ -341,11 +401,11 @@ class BasePoints(object):
             p = p[0]
             
         # make sure p is a point or poinset
-        if not isinstance(p,(Point, Pointset)):
+        if not is_Point_or_Pointset(p):
             p = Point(p)        
         
         # check
-        p1,p2 = checkTheTwo(self,p,'dot')
+        p1,p2 = check_the_two(self,p,'dot')
         
         # calculate
         data1, data2 = p1.data, p2.data
@@ -356,13 +416,16 @@ class BasePoints(object):
         return data
     
     
-    def Cross(self, *p):
-        """ Cross(p)
+    def cross(self, *p):
+        """ cross(p)
+        
         Calculate the cross product of two 3D vectors. 
+        
         Given two vectors, returns the vector that is orthogonal to
         both vectors. The right hand rule is applied; this vector is
         the middle finger, the argument the index finger, the returned
         vector points in the direction of the thumb.
+        
         """
         
         # the point directly given?
@@ -373,11 +436,11 @@ class BasePoints(object):
             raise ValueError("Cross product only works for 3D vectors!")
         
         # make sure p is a point or poinset
-        if not isinstance(p,(Point, Pointset)):
+        if not is_Point_or_Pointset(p):
             p = Point(p)        
         
         # check (note that we use the original order for calculation)
-        p1, p2 = checkTheTwo(self,p,'cross')
+        p1, p2 = check_the_two(self,p,'cross')
         
         # calculate
         a, b = self.data, p.data
@@ -387,7 +450,7 @@ class BasePoints(object):
         data[:,2] = a[:,0]*b[:,1] - a[:,1]*b[:,0]
         
         # return
-        if isinstance(p2,Pointset):
+        if is_Pointset(p2):
             return Pointset(data)
         else:
             return Point(data)
@@ -397,15 +460,15 @@ class BasePoints(object):
         """ Add vectors. """
         
         # make sure p is a point or poinset
-        if not isinstance(p,(Point, Pointset)):
+        if not is_Point_or_Pointset(p):
             p = Point(p)        
         
         # check
-        p1,p2 = checkTheTwo(self,p,'add')
+        p1,p2 = check_the_two(self,p,'add')
         
         # apply and return
         data = p1.data + p2.data # this should go well
-        if isinstance(self, Point):
+        if is_Point(self):
             return Point(data)
         else:
             return Pointset(data)
@@ -415,15 +478,15 @@ class BasePoints(object):
         """ Subtract vectors. """
         
         # make sure p is a point or pointset
-        if not isinstance(p,(Point, Pointset)):
+        if not is_Point_or_Pointset(p):
             p = Point(p)        
         
         # check
-        p1,p2 = checkTheTwo(self,p,'subtract')
+        p1,p2 = check_the_two(self,p,'subtract')
         
         # apply and return
         data = p1.data - p2.data # this should go well
-        if isinstance(p1, Pointset) or isinstance(p2, Pointset):
+        if is_Pointset(p1) or is_Pointset(p2):
             return Pointset(data)
         else:
             return Point(data)
@@ -431,22 +494,23 @@ class BasePoints(object):
 
     def __mul__(self,value):
         """ Scale vectors. """
+        
         p1, p2 = self, None
         try:
             value = float(value)
             data1, data2 = self.data, value
         except TypeError:
             
-            if not isinstance(value,(Point, Pointset)):
+            if not is_Point_or_Pointset(value):
                 value = Point(value)
             
             # check
-            p1,p2 = checkTheTwo(self,value,'multiply')
+            p1,p2 = check_the_two(self,value,'multiply')
             data1, data2 = self.data, value.data
         
         # apply and return
         data = data1 * data2 # this should go well
-        if isinstance(p1, Pointset) or isinstance(p2, Pointset):
+        if is_Pointset(p1) or is_Pointset(p2):
             return Pointset(data)
         else:
             return Point(data)
@@ -454,22 +518,23 @@ class BasePoints(object):
     
     def __div__(self, value):
         """ Scale vectors. """
+        
         p1, p2 = self, None
         try:
             value = float(value)
             data1, data2 = self.data, value
         except TypeError:
             
-            if not isinstance(value,(Point, Pointset)):
+            if not is_Point_or_Pointset(value):
                 value = Point(value)
                 
             # check (note that the order is important for division!)
-            p1, p2 = checkTheTwo(self,value,'divide')
+            p1, p2 = check_the_two(self,value,'divide')
             data1, data2 = self.data, value.data
             
         # apply and return
         data = data1 / data2 # this should go well
-        if isinstance(p1, Pointset) or isinstance(p2, Pointset):
+        if is_Pointset(p1) or is_Pointset(p2):
             return Pointset(data)
         else:
             return Point(data)
@@ -477,27 +542,29 @@ class BasePoints(object):
     
     def __rmul__(self, value):
         """ Same as normal multiply. """
+        
         return self.__mul__(value)
     
     
     def __rdiv__(self, value):
         """ Inverse scale vectors. """
+        
         p1, p2 = self, None
         try:
             value = float(value)
             data1, data2 = self.data, value
         except TypeError:
             
-            if not isinstance(value,(Point, Pointset)):
+            if not is_Point_or_Pointset(value):
                 value = Point(value)
                 
             # check (note that the order is important for division!)
-            p1, p2 = checkTheTwo(self,value,'divide')
+            p1, p2 = check_the_two(self,value,'divide')
             data1, data2 = self.data, value.data
             
         # apply and return
         data = data2 / data1 # here's the difference
-        if isinstance(p1, Pointset) or isinstance(p2, Pointset):
+        if is_Pointset(p1) or is_Pointset(p2):
             return Pointset(data)
         else:
             return Point(data)
@@ -506,36 +573,37 @@ class BasePoints(object):
 class Point(BasePoints):
     """ Point(x,y,[z,[...]])
     
-    The point class provides a way to store a vector and provised some 
-    mathematical operations common for vectors/points. There is no limit
-    to the amount of dimensions for a point to have, but it must be at 
-    least two.
+    Represents a point or vector (of any dimension).
     
-    Examples:
-    {{{
+    This class implements many usefull operators such as addition
+    and multiplication, and provides common mathematical operations
+    that can be applied to points and pointsets.
+    
+    Example
+    -------
     p1 = Point(3.2,4)   # a 2D point
-    p2 = p1.Copy()      # make a copy
+    p2 = p1.copy()      # make a copy
     p1[0] = 9           # set the first element
     p1.x                # convenience property (.y and .z also available)
     p1.xi               # idem, but rounded to nearest integer
-    p1.Distance(p2)     # calculate distance
+    p1.distance(p2)     # calculate distance
     p1 + p2             # calculate the addition of the two vectors
     p2 = p1*2           # scale vector
     p2 = p1 * p2        # even for each dimension seperately
-    p2 = p2.Normalize() # make unit length
-    }}}
+    p2 = p2.normalize() # make unit length
     
     """
     
     def __init__(self, *point):
         BasePoints.__init__(self)
+        self.__dict__['_is_'+self.__class__.__name__] = True
         
         if len(point)==0:
             raise ValueError("Cannot create an 'empty' point.")
         elif len(point)==1:
             point = point[0]
         
-        if isinstance(point, Point):
+        if is_Point(point):
             # a point
             self._data = point._data.astype(np.float32)        
         elif isinstance(point, (tuple,list)):
@@ -567,17 +635,18 @@ class Point(BasePoints):
             raise ValueError("A point should consist of at least one value.")
 
 
-    def Copy(self):
-        """ Copy()
+    def copy(self):
+        """ copy()
+        
         Get a copy of this point. 
+        
         """
         return Point(self._data)
     
     
     @property
     def data(self):
-        """ Get the point as the numpy array it is stored in. 
-        The result is always 2D.
+        """ Get the point as the (2D) numpy array it is stored in. 
         """
         # this is overloaded in the Pointset class
         data = self._data[:]
@@ -588,8 +657,7 @@ class Point(BasePoints):
     ## string representation
     
     def __str__(self):
-        """ Return a nice string representation of the point. 
-        """
+        """ Return a nice string representation of the point. """
         s = "<point  "
         for value in self._data.flatten():
             # '% x.yg': x signif, y length '-1.111e+000'. x = y+7
@@ -604,13 +672,13 @@ class Point(BasePoints):
     
     def __eq__(self, other):
         """ Test whether two poins are the same. """
-        if not isinstance(other, Point) or other.ndim != self.ndim:
+        if not is_Point(other) or other.ndim != self.ndim:
             return False
         return (other.data == self.data).sum() == self.ndim
     
     def __ne__(self, other):
         """ Test whether two poins are NOT the same. """
-        if not isinstance(other, Point) or other.ndim != self.ndim:
+        if not is_Point(other) or other.ndim != self.ndim:
             return True
         return (other.data == self.data).sum() != self.ndim
     
@@ -633,7 +701,7 @@ class Point(BasePoints):
     
     @property
     def xi(self):
-        """ Return p[0] rounded to the nearest integer, for indexing. """
+        """ Get p[0] rounded to the nearest integer, for indexing. """
         return int(self._data[0]+0.5)
     
     @Property    
@@ -646,7 +714,7 @@ class Point(BasePoints):
        
     @property
     def yi(self):
-        """ Return p[1] rounded to the nearest integer, for indexing. """
+        """ Get p[1] rounded to the nearest integer, for indexing. """
         return int(self._data[1]+0.5)
     
     @Property    
@@ -659,55 +727,59 @@ class Point(BasePoints):
     
     @property
     def zi(self):
-        """ Return p[2] rounded to the nearest integer, for indexing. """
+        """ Get p[2] rounded to the nearest integer, for indexing. """
         return int(self._data[2]+0.5)
     
 
 class Pointset(BasePoints):
     """ Pointset(ndim)
     
+    Represents a set of points or vectors (of any dimension).
+    
     Can also be initialized using: Pointset(<ndim times npoints numpy array>)
-        
+    
     A pointset provides an efficient way to store points.
     Internally the points are stored in a numpy array that is
     resized by a factor of two when more space is required. This makes adding
     and removing points (from the end) very efficient. Also mathematical 
     operations can be applied on all the points in the set efficiently.
     
-    Slicing:
-      
-        pp[7] When indexing, the corresponding Point instance is get/set.
-        
-        pp[7:20] When slicing, a new poinset (subset) is get/set. 
-       
-        pp[4:9,3] When using two indices or slices, the indices are applied to 
+    Notes on slicing and indexing
+    -----------------------------
+      * pp[7]: When indexing, the corresponding Point instance is get/set.
+      * pp[7:20]: When slicing, a new poinset (subset) is get/set. 
+      * pp[4:9,3] When using two indices or slices, the indices are applied to 
         the internal data. (In this example returning the z-value for
         points 4 till 8.)
     
-    The same mathematical operations that can be applied to a point 
-    instance can also be applied to a pointset instance. The operation
-    is applied to all points in the set. For example pp.Distance(3,4)
+    Math
+    ----
+    The same mathematical operations that can be applied to a Point 
+    instance can also be applied to a Pointset instance. The operation
+    is applied to all points in the set. For example pp.distance(3,4)
     returns an array with the distances of all points in pp to (3,4).
     
-    Examples:
-    {{{
+    Example
+    -------
     a  = <...>          # an existing 100x2 array
-    pp1= Pointset(2)    # pointset with two dimensions
-    pp = Pointset(a)    # dito    
-    pp1.Append(3,4)     # add a point
-    pp1.Append(p)       # add an existing point p
-    pp1.Extend(pp1)     # extend pp1 to itself
-    pp[:4] = pp2        # replace first four points of pp
+    pp1 = Pointset(2)   # pointset with two dimensions
+    pp2 = Pointset(a)   # dito    
+    pp1.append(3,4)     # add a point
+    pp1.append(p)       # add an existing point p
+    pp1.extend(pp1)     # extend pp1 to itself
+    pp2[:4] = pp1       # replace first four points of pp2
     pp[1]               # returns the point (3,4) (as a Point instance)
     pp[1,0]             # returns the value 3.0
     pp[:,1]             # get all y values
-    pp.Contains(3,4)    # will return True
-    }}}
+    pp.contains(3,4)    # will return True
     
     """
     
     def __init__(self, ndim):
         BasePoints.__init__(self)
+        self.__dict__['_is_'+self.__class__.__name__] = True
+        
+        # init
         data = ndim        
         initialLength = 16
         
@@ -726,7 +798,7 @@ class Pointset(BasePoints):
                 raise ValueError(tmp)
             # create array
             self._len = data.shape[0]
-            L = max( nearestPowerOfTwo(data.shape[0]), initialLength)
+            L = max( nearest_power_of_two(data.shape[0]), initialLength)
             self._data = np.zeros((L, data.shape[1]), dtype=np.float32)
             # fill values
             self._data[:data.shape[0],:] = data
@@ -744,23 +816,26 @@ class Pointset(BasePoints):
         the amount of points (at most 4 times as long). This is to 
         make adding/removing points much faster by prevening reallocating 
         memory. The internal array is resized with a factor two when 
-        necesary. 
-        
-        This property returns a (sub)view of that array and is always 2D.        
+        necesary. This property returns a (sub)view of that array and is 
+        always 2D.
         """
         return self._data[:self._len,:]
 
     
-    def _AsPoint(self, *p):
-        """ Return the input as a point instance, also
-        check whether the dimensions match. """
+    def _as_point(self, *p):
+        """ _as_point(*p)
+        
+        Return the input as a point instance, also
+        check whether the dimensions match. 
+        
+        """
         
         # the point directly given?
         if len(p)==1:
             p = p[0]
         
         # make sure we are dealing with a point
-        if not isinstance(p, Point):
+        if not is_Point(p):
             p = Point(p)
         
         # check whether we can append it
@@ -772,13 +847,17 @@ class Pointset(BasePoints):
         return p
     
     
-    def _ResizeIfRequired(self, n=None):
-        """ Resize the internal array, n is the new required
+    def _resize_if_required(self, n=None):
+        """ _resize_if_required(n=None)
+        
+        Resize the internal array, n is the new required
         amount of poinst that we should be able to fit in.
         If not given, self._len is used.
         This method checks if we should reduce our size (if
         the internal length is larger than four times n).
+        
         """
+        
         # n given?
         if n is None:
             n = self._len
@@ -786,9 +865,9 @@ class Pointset(BasePoints):
         # reduce or increase size?
         internalLen = self._data.shape[0]
         if n > internalLen:            
-            L = nearestPowerOfTwo(n)
+            L = nearest_power_of_two(n)
         elif n*4 <= internalLen and internalLen > 16:
-            L = nearestPowerOfTwo(n*2)
+            L = nearest_power_of_two(n*2)
         else:
             # return Now
             return
@@ -806,19 +885,20 @@ class Pointset(BasePoints):
     
     def __setitem__(self, index, value):
         """ Set a point or part of the pointset. """
+        
         # a tuple given: set as array
         if isinstance( index, tuple):
             self.data[index] = value
         # for a slice, return subset
         elif isinstance(index, slice):
-            if not isinstance(value, Pointset):
+            if not is_Pointset(value):
                 tmp = "When slicing with a single index "
                 raise ValueError(tmp+ "the supplied value must be a pointset.")
             self.data[index] = value.data
         # otherwise, return point
         else:
-            value = self._AsPoint(value)
-#             if not isinstance(value, Point):
+            value = self._as_point(value)
+#             if not is_Point(value):
 #                 tmp = "When indexing with a single index "
 #                 raise ValueError(tmp + "the supplied value must be a point.")
             self.data[index] = value.data
@@ -826,6 +906,7 @@ class Pointset(BasePoints):
     
     def __getitem__(self, index):
         """ Get a point or part of the pointset. """
+        
         # Single index from numpy scalar
         if isinstance(index, np.ndarray) and index.size==1:
             index = int(index)
@@ -846,6 +927,7 @@ class Pointset(BasePoints):
     
     def __delitem__(self, index):
         """ Remove one or multiple points from the pointset. """
+        
         # if tuple, not valid
         if isinstance(index, tuple):
             raise IndexError("Can only remove points using 1D slicing.")
@@ -871,42 +953,45 @@ class Pointset(BasePoints):
         self._len = start + len(tmp)
         
         # should we resize?
-        self._ResizeIfRequired()
+        self._resize_if_required()
 
     
     ## Appending / Extending
     
     
-    def Append(self, *p):
-        """ Append(*p)
+    def append(self, *p):
+        """ append(*p)
+        
         Append a point to this pointset. 
         If p is not an instance of the Point class,  the constructor 
         of Point is called to create one from the given argument. This 
-        enables Append(x,y,z)
+        enables pp.append(x,y,z)
+        
         """
         try:
-            p = self._AsPoint(*p)
+            p = self._as_point(*p)
         except Exception, why:
             raise ValueError(why)
         
         # resize if we need to
-        self._ResizeIfRequired(self._len+1)
+        self._resize_if_required(self._len+1)
         
         # append point
         self._data[self._len,:] = p._data
         self._len += 1
     
     
-    def Extend(self, pp):
-        """ Extend(pp)
-        Extend this pointset with another pointset, thus
-        combining the two.         
-        If pointset is not an instance of the Pointset class, the constructor 
+    def extend(self, pp):
+        """ extend(pp)
+        
+        Extend this pointset with another pointset, thus combining the two.         
+        If pp is not an instance of the Pointset class, the constructor 
         of Pointset is called to create one from the given argument.
+        
         """
         
         # make sure we are dealing with a pointset
-        if not isinstance(pp, Pointset):
+        if not is_Pointset(pp):
             try:
                 pp = Pointset(pp)            
             except Exception, why:
@@ -918,7 +1003,7 @@ class Pointset(BasePoints):
         
         # resize the array if needed
         newLen = self._len + pp._len
-        self._ResizeIfRequired(newLen)
+        self._resize_if_required(newLen)
         
         # append new data
         i1 = self._len
@@ -927,10 +1012,13 @@ class Pointset(BasePoints):
         self._len = newLen
 
 
-    def Insert(self, index, *p):
-        """ Insert(index, *p)
+    def insert(self, index, *p):
+        """ insert(index, *p)
+        
         Insert a point at the given index. 
+        
         """
+        
         # check index
         if index < 0:
             index = self._len + index
@@ -939,12 +1027,12 @@ class Pointset(BasePoints):
         
         # make sure p is a point
         try:
-            p = self._AsPoint(*p)
+            p = self._as_point(*p)
         except Exception, why:
             raise ValueError(why)
         
         # resize if we need to
-        self._ResizeIfRequired(self._len+1)
+        self._resize_if_required(self._len+1)
         
         # insert point
         tmp = self._data[index:self._len,:].copy()
@@ -953,16 +1041,18 @@ class Pointset(BasePoints):
         self._len += 1
     
     
-    def Remove(self, *p):
-        """ Remove(*p)
+    def remove(self, *p):
+        """ remove(*p)
+        
         Remove first occurance of the given point from the list. 
         Produces an error if such a point is not present.
-        See also RemoveAll()
+        See also remove_all()
+        
         """
         
         # make sure p is a point
         try:
-            p = self._AsPoint(*p)
+            p = self._as_point(*p)
         except Exception, why:
             raise ValueError(why)
         
@@ -982,15 +1072,17 @@ class Pointset(BasePoints):
         del self[ I[0] ]
 
     
-    def RemoveAll(self, *p):
-        """ RemoveAll(*p)
+    def remove_all(self, *p):
+        """ remove_all(*p)
+        
         Remove all occurances of the given point. If there
         is no occurance, no action is taken. 
+        
         """
         
         # make sure p is a point
         try:
-            p = self._AsPoint(*p)
+            p = self._as_point(*p)
         except Exception, why:
             raise ValueError(why)
         
@@ -1008,12 +1100,14 @@ class Pointset(BasePoints):
             del self[i]
     
     
-    def Pop(self, index=-1):
-        """ Pop(index=-1)
-        Returns and removes a point in the pointset. Default
-        removes last (which is more efficient than popping from 
-        anywhere else).
+    def pop(self, index=-1):
+        """ pop(index=-1)
+        
+        Removes and returns a point from the pointset. Removes the last
+        by default (which is more efficient than popping from anywhere else).
+        
         """
+        
         # check index
         index2 = index
         if index < 0:
@@ -1028,7 +1122,7 @@ class Pointset(BasePoints):
         if index == -1:
             # ooh this is fast
             self._len -= 1
-            self._ResizeIfRequired()            
+            self._resize_if_required()            
         else:            
             del self[index]
         
@@ -1036,16 +1130,20 @@ class Pointset(BasePoints):
         return p
     
     
-    def Clear(self):
-        """ Clear()
+    def clear(self):
+        """ clear()
+        
         Remove all points in the pointset. 
+        
         """
         self.__init__(self.ndim)
     
     
-    def Copy(self):
-        """ Copy()
+    def copy(self):
+        """ copy()
+        
         Return a copy of this pointset. 
+        
         """
         return Pointset(self._data[:self._len,:])
     
@@ -1066,13 +1164,16 @@ class Pointset(BasePoints):
         return self[self._index]
    
     
-    def Contains(self, *p):
-        """ Contains(*p)
+    def contains(self, *p):
+        """ contains(*p)
+        
         Check whether a point is already in this set. 
+        
         """
+        
         # make sure p is a point
         try:
-            p = self._AsPoint(*p)
+            p = self._as_point(*p)
         except Exception, why:
             raise ValueError(why)
         
@@ -1088,8 +1189,7 @@ class Pointset(BasePoints):
     ## String representation
     
     def __str__(self):
-        """ Return a nice string representation of the pointset. 
-        """
+        """ Return a nice string representation of the pointset. """
         s = ""
         for i in range(len(self)):
             s += "%3d: " % (i)            
@@ -1098,39 +1198,53 @@ class Pointset(BasePoints):
         return s
 
     def __repr__(self):
-        """" Return short(one line) string representation of the pointset.
-        """
+        """" Return short(one line) string representation of the pointset. """
         return "<pointset with %i points of %i dimensions>" % (
             len(self), self.ndim )
 
-    
+
 
 class Aarray(np.ndarray):
-    """ Aarray(shapeOrArray, sampling=None, origin=None, fill=None, 
+    """ Aarray(shape_or_array, sampling=None, origin=None, fill=None, 
                 dtype='float32', **kwargs)
     
-    Anisotropic array, inherits from numpy.ndarray and adds a sampling 
+    Anisotropic array; inherits from numpy.ndarray and adds a sampling 
     and origin property which gives the sample distance and offset for
     each dimension. 
     
-    This class implements the following properties and methods:
+    Parameters
+    ----------
+    shape_or_array : shape-tuple or numpy.ndarray
+        Specifies the shape of the produced array. If an array instance is
+        given, the returned Aarray is a view of the same data (i.e. no data
+        is copied).
+    sampling : tuple of ndim elements
+        Specifies the sample distance (i.e. spacing between elements) for
+        each dimension. Default is all ones.
+    origin : tuple of ndim elements
+        Specifies the world coordinate at the first element for each dimension.
+        Default is all zeros.
+    fill : scalar (optional)
+        If given, and the first argument is not an existing array,
+        fills the array with this given value.
+    dtype : any valid numpy data type
+        The type of the data
+    
+    All extra arguments are fed to the constructor of numpy.ndarray.
+    
+    Implemented properties and methods
+    -----------------------------------
       * sampling - The distance between samples as a tuple
       * origin - The origin of the data as a tuple
-      * getStart() - Get the origin of the data as a Point instance
-      * getEnd() - Get the end of the data as a Point instance
-      * getSize() - Get the size of the data as a Point instance
+      * get_start() - Get the origin of the data as a Point instance
+      * get_end() - Get the end of the data as a Point instance
+      * get_size() - Get the size of the data as a Point instance
       * sample() - Sample the value at the given point
-      * pointToIndex() - Given a poin, returns the index in the array
-      * indexToPoint() - Given an index, returns the world coordinate
+      * point_to_index() - Given a poin, returns the index in the array
+      * index_to_point() - Given an index, returns the world coordinate
     
-    World coordinates are expressed as Point instances (except for the 
-    "origin" property). Indices as well as the "sampling" and "origin" 
-    attributes are expressed as tuples in z,y,x order.
-    
-    Init using an existing array (in which case a view of the given 
-    array is returned), or the shape of the new array, in which case it 
-    is filled with the value specified by "fill" (if given).
-    
+    Slicing
+    -------
     This class is aware of slicing. This means that when obtaining a part
     of the data (for exampled 'data[10:20,::2]'), the origin and sampling
     of the resulting array are set appropriately.
@@ -1141,9 +1255,12 @@ class Aarray(np.ndarray):
     the shape of the data, the sampling are set to all zeros and ones
     for the origin and sampling, respectively.
     
-    (Although all classes defined in this module use UpperCamelCase
-    notation for methods, this class uses lowerCamelCase to conform
-    with the numpy standard.)
+    World coordinates vs tuples
+    ---------------------------
+    World coordinates are expressed as Point instances (except for the 
+    "origin" property). Indices as well as the "sampling" and "origin" 
+    attributes are expressed as tuples in z,y,x order.
+    
     """
     
     def __new__(cls, shapeOrArray, sampling=None, origin=None, fill=None, 
@@ -1169,6 +1286,7 @@ class Aarray(np.ndarray):
             ob.origin = origin
         
         # return
+        ob.__dict__['_is_'+ob.__class__.__name__] = True
         return ob
     
     
@@ -1176,7 +1294,7 @@ class Aarray(np.ndarray):
         """ So the sampling and origin is maintained when doing
         calculations with the array. """
         #if hasattr(obj, '_sampling') and hasattr(obj, '_origin'):
-        if isinstance(obj, Aarray):
+        if is_Aarray(obj):
             if self.shape == obj.shape:
                 # Copy sampling and origin for math operation
                 self._sampling = tuple( [i for i in obj._sampling] )        
@@ -1195,7 +1313,7 @@ class Aarray(np.ndarray):
         result = np.ndarray.__getslice__(self, i, j)
         
         # Perform sampling and origin corrections
-        sampling, origin = self._correctSampling(slice(i,j))
+        sampling, origin = self._correct_sampling(slice(i,j))
         result.sampling = sampling
         result.origin = origin
         
@@ -1210,8 +1328,8 @@ class Aarray(np.ndarray):
         
         # If not a scalar, perform sampling and origin corrections
         # This means there is only a very small performance penalty
-        if isinstance(result, Aarray):            
-            sampling, origin = self._correctSampling(index)
+        if is_Aarray(result):            
+            sampling, origin = self._correct_sampling(index)
             result.sampling = sampling
             result.origin = origin
         
@@ -1219,9 +1337,11 @@ class Aarray(np.ndarray):
         return result
     
     
-    def _correctSampling(self, index):
-        """ _correctSampling(index)
+    def _correct_sampling(self, index):
+        """ _correct_sampling(index)
+        
         Get the new sampling and origin when slicing.        
+        
         """
         
         # Init origin and sampling
@@ -1261,7 +1381,7 @@ class Aarray(np.ndarray):
         return sampling, origin
     
     
-    def _setSampling(self,sampling):
+    def _set_sampling(self,sampling):
         if not isinstance(sampling, (list,tuple)):
             raise ValueError("Sampling must be specified as a tuple or list.")
         if len(sampling) != len(self.shape):
@@ -1274,7 +1394,7 @@ class Aarray(np.ndarray):
         self._sampling = tuple(tmp)
     
     
-    def _getSampling(self):
+    def _get_sampling(self):
         l1, l2 = len(self._sampling), len(self.shape)
         if  l1 < l2:
             tmp = list(self._sampling)
@@ -1286,11 +1406,11 @@ class Aarray(np.ndarray):
         else:
             return self._sampling
     
-    sampling = property(_getSampling, _setSampling, None, 
-        "A tuple with the sample distance in each dimension.")
+    sampling = property(_get_sampling, _set_sampling, None, 
+        "A tuple with the sample distance for each dimension.")
     
     
-    def _setOrigin(self,origin):
+    def _set_origin(self,origin):
         if not isinstance(origin, (list,tuple)):
             raise ValueError("Origin must be specified as a tuple or list.")
         if len(origin) != len(self.shape):
@@ -1300,7 +1420,7 @@ class Aarray(np.ndarray):
         self._origin = tuple(tmp)
     
     
-    def _getOrigin(self):
+    def _get_origin(self):
         l1, l2 = len(self._origin), len(self.shape)
         if  l1 < l2:
             tmp = list(self._origin)
@@ -1312,21 +1432,24 @@ class Aarray(np.ndarray):
         else:
             return self._origin
     
-    origin = property(_getOrigin, _setOrigin, None, 
+    origin = property(_get_origin, _set_origin, None, 
         "A tuple with the origin for each dimension.")
     
     
-    def pointToIndex(self, point, noneOnIndexError=False):
-        """ pointToIndex(point, noneOnIndexError=False)
+    def point_to_index(self, point, non_on_index_error=False):
+        """ point_to_index(point, non_on_index_error=False)
+        
         Given a point returns the sample index (z,y,x,..) closest
-        to the given point.
-        Returns a tuple with as many elements as there are dimensions.
+        to the given point. Returns a tuple with as many elements 
+        as there are dimensions.
+        
         If the point is outside the array an IndexError is raised by default,
-        and None is returned when noneOnIndexError = True. In the latter case,
-        we strongly advice to check if None was returned.
+        and None is returned when non_on_index_error == True.
+        
         """
+        
         # check
-        if not isinstance(point,Point):
+        if not is_Point(point):
             raise ValueError("Given point must be an instance of Point.")
         if point.ndim != len(self.shape):
             raise ValueError("Given point must match the number of dimensions.")
@@ -1343,7 +1466,7 @@ class Aarray(np.ndarray):
             ii.append(p)
         
         # return
-        if ii is None and noneOnIndexError:
+        if ii is None and non_on_index_error:
             return None
         elif ii is None:            
             raise IndexError("Sample position out of range: %s" % str(point))
@@ -1353,12 +1476,15 @@ class Aarray(np.ndarray):
     
     def sample(self, point, default=None):
         """ sample(point, default=None)
+        
         Take a sample of the array, given the given point
         in world-coordinates, i.e. transformed using sampling.
         By default raises an IndexError if the point is not inside
         the array, and returns the value of "default" if it is given.
+        
         """
-        tmp = self.pointToIndex(point,True)
+        
+        tmp = self.point_to_index(point,True)
         if tmp is None:
             if default is None:
                 ps = str(point)
@@ -1368,10 +1494,12 @@ class Aarray(np.ndarray):
         return self[tmp]
 
 
-    def indexToPoint(self, *index):
-        """ indexToPoint(*index)
+    def index_to_point(self, *index):
+        """ index_to_point(*index)
+        
         Given a multidimensional index, get the corresponding point in world
         coordinates.
+        
         """
         # check
         if len(index)==1:
@@ -1395,10 +1523,11 @@ class Aarray(np.ndarray):
         return Point(pp)
 
 
-    def getSize(self):
-        """ getSize()
-        Get the size (as a vector) of the array 
-        expressed in world coordinates. 
+    def get_size(self):
+        """ get_size()
+        
+        Get the size (as a vector) of the array expressed in world coordinates.
+        
         """ 
         pp = []
         for i in range(len(self.shape)):
@@ -1407,21 +1536,24 @@ class Aarray(np.ndarray):
         return Point(pp)
     
     
-    def getStart(self):
-        """ getStart()
+    def get_start(self):
+        """ get_start()
+        
         Get the origin of the array expressed in world coordinates. 
         Differs from the property 'origin' in that this method returns
         a point rather than indices z,y,x. 
+        
         """
         pp = [i for i in self.origin]
         pp.reverse()
         return Point(pp)
     
     
-    def getEnd(self):
-        """ getEnd(()
+    def get_end(self):
+        """ get_end(()
+        
         Get the end of the array expressed in world coordinates. 
-        Same as the property 'origin'. 
+        
         """ 
         pp = []
         for i in range(len(self.shape)):
@@ -1430,17 +1562,22 @@ class Aarray(np.ndarray):
         return Point(pp)
 
 
+
 class Quaternion(object):
     """ Quaternion(w=1, x=0, y=0, z=0, normalize=True)
+    
     A quaternion is a mathematically convenient way to
     describe rotations.
+    
     """
     
     def __init__(self, w=1, x=0, y=0, z=0, normalize=True):
+        self.__dict__['_is_'+self.__class__.__name__] = True
+        
         self.w = float(w)
         self.x, self.y, self.z = float(x), float(y), float(z)
         if normalize:
-            self._Normalize()
+            self._normalize()
     
     
     def __repr__(self):
@@ -1448,28 +1585,34 @@ class Quaternion(object):
                 self.w, self.x, self.y, self.z)
     
     
-    def Copy(self):
-        """ Copy()
+    def copy(self):
+        """ copy()
+        
         Create an exact copy of this quaternion. 
+        
         """
         return Quaternion(self.w, self.x, self.y, self.z, False)
     
     
-    def Norm(self):
-        """ Norm()
+    def norm(self):
+        """ norm()
+        
         Returns the norm of the quaternion.
         norm = w**2 + x**2 + y**2 + z**2
+        
         """
         tmp = self.w**2 + self.x**2 + self.y**2 + self.z**2
         return tmp**0.5
     
     
-    def _Normalize(self):
-        """ _Normalize()
+    def _normalize(self):
+        """ _normalize()
+        
         Make the quaternion unit length.
+        
         """
         # Get length
-        L = self.Norm()
+        L = self.norm()
         if not L:
             raise ValueError('Quaternion cannot have 0-length.')
         # Correct
@@ -1479,36 +1622,40 @@ class Quaternion(object):
         self.z /= L
     
     
-    def Normalized(self):
-        """ Normalized()
+    def normalize(self):
+        """ normalize()
+        
         Returns a normalized (unit length) version of the quaternion.
+        
         """
-        new = self.Copy()
-        new._Normalize()
+        new = self.copy()
+        new._normalize()
         return new
     
     
-    def Conjugate(self):
-        """ Conjugate()
+    def conjugate(self):
+        """ conjugate()
+        
         Obtain the conjugate of the quaternion.
         This is simply the same quaternion but with the sign of the
         imaginary (vector) parts reversed.
+        
         """
-        new = self.Copy()
+        new = self.copy()
         new.x *= -1
         new.y *= -1
         new.z *= -1
         return new
     
     
-    def Inverse(self):
-        """ Inverse()
-        returns q.Conjugate()/q.Norm()**2
+    def inverse(self):
+        """ inverse()
+        returns q.conjugate()/q.norm()**2
         So if the quaternion is unit length, it is the same
-        as the Conjugate.
+        as the conjugate.
         """
-        new = self.Conjugate()
-        tmp = self.Norm()**2
+        new = self.conjugate()
+        tmp = self.norm()**2
         new.w /= tmp
         new.x /= tmp
         new.y /= tmp
@@ -1516,10 +1663,12 @@ class Quaternion(object):
         return new
     
     
-    def Exp(self):
-        """ Exp()
+    def exp(self):
+        """ exp()
+        
         Returns the exponent of the quaternion. 
         (not tested)
+        
         """
         
         # Init
@@ -1534,14 +1683,16 @@ class Quaternion(object):
         q.z = wPart * self.z * np.sin(vecNorm) / vecNorm
     
     
-    def Log(self):
-        """ Log()
+    def log(self):
+        """ log()
+        
         Returns the natural logarithm of the quaternion. 
         (not tested)
+        
         """
         
         # Init
-        norm = self.Norm()
+        norm = self.norm()
         vecNorm = self.x**2 + self.y**2 + self.z**2
         tmp = self.w / norm
         q = Quaternion()
@@ -1555,7 +1706,7 @@ class Quaternion(object):
     
     def __add__(self, q):
         """ Add quaternions. """
-        new = self.Copy()
+        new = self.copy()
         new.w += q.w
         new.x += q.x
         new.y += q.y
@@ -1565,7 +1716,7 @@ class Quaternion(object):
     
     def __sub__(self, q):
         """ Subtract quaternions. """
-        new = self.Copy()
+        new = self.copy()
         new.w -= q.w
         new.x -= q.x
         new.y -= q.y
@@ -1584,24 +1735,28 @@ class Quaternion(object):
         return new
     
     
-    def RotatePoint(self, p):
-        """ RotatePoint(p)
+    def rotate_point(self, p):
+        """ rotate_point(p)
+        
         Rotate a Point instance using this quaternion.
+        
         """
         # Prepare 
         p = Quaternion(0, p.x, p.y, p.z, False) # Do not normalize!
-        q1 = self.Normalized()
-        q2 = self.Inverse()
+        q1 = self.normalized()
+        q2 = self.inverse()
         # Apply rotation
         r = (q1*p)*q2
         # Make point and return        
         return Point(r.x, r.y, r.z)
     
     
-    def GetMatrix(self):
-        """ GetMatrix()
+    def get_matrix(self):
+        """ get_matrix()
+        
         Create a 4x4 homography matrix that represents the rotation
         of the quaternion.
+        
         """
         
         # Init matrix (remember, a matrix, not an array)
@@ -1635,10 +1790,12 @@ class Quaternion(object):
         return a
     
     
-    def GetAxisAngle(self):
-        """ GetAxisAngle()
+    def get_axis_angle(self):
+        """ get_axis_angle()
+        
         Get the axis-angle representation of the quaternion. 
         (The angle is in radians)
+        
         """
         
         # Init
@@ -1659,10 +1816,12 @@ class Quaternion(object):
 
     
     @classmethod
-    def CreateFromAxisAngle(cls, angle, ax, ay, az):
-        """ CreateFromAxisAngle(angle, ax, ay, ax)
+    def create_from_axis_angle(cls, angle, ax, ay, az):
+        """ create_from_axis_angle(angle, ax, ay, ax)
+        
         Classmethod to create a quaternion from an axis-angle representation. 
         (angle should be in radians).
+        
         """
         angle2 = angle/2.0
         sinang2 = np.sin(angle2)
@@ -1670,9 +1829,11 @@ class Quaternion(object):
     
     
     @classmethod
-    def CreateFromEulerAngles(cls, rx, ry, rz):
-        """ CreateFromEulerAngles( rx, ry, rz)
+    def create_from_euler_angles(cls, rx, ry, rz):
+        """ create_from_euler_angles( rx, ry, rz)
+        
         Classmethod to create a quaternion given the euler angles. 
+        
         """
         
         # Obtain quaternions
@@ -1687,14 +1848,15 @@ class Quaternion(object):
 ## Main
 
 if __name__ =='__main__':
-
+    # A small test
+    
     pp = Pointset(3)
 
-    pp.Append(1,200,3)
-    pp.Append(-90,-3.4,0)
-    pp.Append(-0.0031,0.00000498,0)
-    pp.Append(2,3,4)
-    pp.Extend(pp)
+    pp.append(1,200,3)
+    pp.append(-90,-3.4,0)
+    pp.append(-0.0031,0.00000498,0)
+    pp.append(2,3,4)
+    pp.extend(pp)
     print pp
-    pp.Contains(2,3,4)
+    pp.contains(2,3,4)
     

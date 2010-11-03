@@ -3,7 +3,7 @@
 
 import numpy as np
 import visvis as vv
-from visvis.points import Point, Pointset
+from visvis.pypoints import Point, Pointset
 
 import OpenGL.GL as gl
 import time

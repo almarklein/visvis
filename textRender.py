@@ -68,7 +68,7 @@ omega
 
 import os
 import ssdf
-from points import Point, Pointset
+from pypoints import Point, Pointset
 
 import OpenGL.GL as gl
 import OpenGL.GLU as glu

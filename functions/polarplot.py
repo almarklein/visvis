@@ -6,7 +6,7 @@
 import numpy as np
 import visvis as vv
 
-from visvis.points import Point, Pointset
+from visvis.pypoints import Point, Pointset, is_Point, is_Pointset
 from visvis.line import PolarLine
 from visvis.misc import Range
 
@@ -80,9 +80,9 @@ def polarplot(data1, data2=None,  inRadians=False,
             kwargs[i] = tmp[i]
     
     ##  create the data
-    if isinstance(data1, Pointset):
+    if is_Pointset(data1):
         pp = data1
-    elif isinstance(data1, Point):
+    elif is_Point(data1):
         pp = Pointset(data1.ndim)
         pp.Append(data1)
     else:
