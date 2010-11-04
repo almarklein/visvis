@@ -149,7 +149,10 @@ def is_Pointset(ob):
 def is_Point_or_Pointset(ob):
     return hasattr(ob, '_is_Point') or hasattr(ob, '_is_Pointset')
 def is_Aarray(ob):
-    return hasattr(ob, '_is_Aarray')
+    # Use name, as it is quite unique anyway, and setting attribute is
+    # not really failsafe
+    return ob.__class__.__name__ == 'Aarray'
+    #return hasattr(ob, '_is_Aarray')
 def is_Quaternion(ob):
     return hasattr(ob, '_is_Quaternion')
 
@@ -1286,7 +1289,6 @@ class Aarray(np.ndarray):
             ob.origin = origin
         
         # return
-        ob.__dict__['_is_'+ob.__class__.__name__] = True
         return ob
     
     
@@ -1295,7 +1297,6 @@ class Aarray(np.ndarray):
         calculations with the array. """
         #if hasattr(ob, '_sampling') and hasattr(ob, '_origin'):
         if isinstance(ob, Aarray):
-            ob.__dict__['_is_'+ob.__class__.__name__] = True
             if self.shape == ob.shape:
                 # Copy sampling and origin for math operation
                 self._sampling = tuple( [i for i in ob._sampling] )        
