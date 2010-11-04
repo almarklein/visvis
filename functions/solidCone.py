@@ -50,9 +50,9 @@ def solidCone(translation=None, scaling=None, direction=None, rotation=None,
             u = float(n) / (N)
             x = cos(b) * (1.0-z)
             y = sin(b) * (1.0-z)
-            vertices.Append(x,y,z)
-            normals.Append(x,y,zn)
-            texcords.Append(u,v)
+            vertices.append(x,y,z)
+            normals.append(x,y,zn)
+            texcords.append(u,v)
     # Bottom
     for m in range(2):
         for n in range(N+1):
@@ -60,9 +60,9 @@ def solidCone(translation=None, scaling=None, direction=None, rotation=None,
             u = float(n) / (N)
             x = cos(b) * (1-m)
             y = sin(b) * (1-m)
-            vertices.Append(x,y,0)
-            normals.Append(0,0,-1)
-            texcords.Append(u,1)
+            vertices.append(x,y,0)
+            normals.append(0,0,-1)
+            texcords.append(u,1)
     
     # Calculate indices
     indices = []
