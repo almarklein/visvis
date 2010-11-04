@@ -360,7 +360,7 @@ class Line(Wobject):
         Wobject.__init__(self, parent)
 
         # make a copy
-        points = points.Copy()
+        points = points.copy()
 
         # add z dimension to points if not available
         if points.ndim == 2:
@@ -570,7 +570,7 @@ class Line(Wobject):
         If you do want this, use the ._points attribute, but note that it
         should always have three dimensions.
         """
-        self._points = points.Copy()
+        self._points = points.copy()
 
 
     ## Draw methods
@@ -816,7 +816,7 @@ class Line(Wobject):
 
     def OnDestroy(self):
         # clean up some memory
-        self._points.Clear()
+        self._points.clear()
 
 
 # This is a new type of wobject called PolarLine which encapsulates

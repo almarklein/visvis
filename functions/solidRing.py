@@ -60,9 +60,9 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
             u = float(m) / (M)
             b = pi2 * (u+rotOffset) 
             dp = cos(b) * p1 + sin(b) * p2
-            vertices.Append(pc+dp)
-            normals.Append(dp.Normalize())
-            texcords.Append(v,u)
+            vertices.append(pc+dp)
+            normals.append(dp.normalize())
+            texcords.append(v,u)
     
     # Calculate indices
     indices = []

@@ -37,9 +37,9 @@ def getSphere(ndiv=3, radius=1.0):
     # Define function to recursively create vertices and normals
     def drawtri(a, b, c, div):
         if (div<=0):
-            vertices.Append(a)
-            vertices.Append(b)
-            vertices.Append(c)
+            vertices.append(a)
+            vertices.append(b)
+            vertices.append(c)
         else:
             ab = Point(0,0,0)
             ac = Point(0,0,0)
@@ -48,7 +48,7 @@ def getSphere(ndiv=3, radius=1.0):
                 ab[i]=(a[i]+b[i])/2.0;
                 ac[i]=(a[i]+c[i])/2.0;
                 bc[i]=(b[i]+c[i])/2.0;
-            ab = ab.Normalize(); ac = ac.Normalize(); bc = bc.Normalize()
+            ab = ab.normalize(); ac = ac.normalize(); bc = bc.normalize()
             drawtri(a, ab, ac, div-1)
             drawtri(b, bc, ab, div-1)
             drawtri(c, ac, bc, div-1)
@@ -62,7 +62,7 @@ def getSphere(ndiv=3, radius=1.0):
                     ndiv )
     
     # Create normals and scale vertices
-    normals = vertices.Copy()
+    normals = vertices.copy()
     vertices *= radius
     
     # Done
@@ -109,9 +109,9 @@ def solidSphere(translation=None, scaling=None, direction=None, rotation=None,
             u = float(n) / (N)
             x = cos(b) * sin(a)
             y = sin(b) * sin(a)
-            vertices.Append(x,y,z)
-            normals.Append(x,y,z)
-            texcords.Append(u,v)
+            vertices.append(x,y,z)
+            normals.append(x,y,z)
+            texcords.append(u,v)
     
     # Calculate indices
     indices = []

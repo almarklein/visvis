@@ -45,11 +45,10 @@ mesh = vv.solidTeapot((32,32,80), scaling=(50,50,50))
 mesh.faceColor = 0.4, 1, 0.4
 mesh.specular = 'r'
 
-# Create labels for the axis (show some formatting options)
-a2.axis.xLabel = '\bx-\i{axis}' # bold and italic
-a2.axis.yLabel = 'y_{ax}^{is}' # sub and super script
-a2.axis.zLabel = 'z-\alpha\chi\Iota\sigma \\approx z-axis'  # greek and math
-
+# Create labels for the axis
+a2.axis.xLabel = 'x-axis'
+a2.axis.yLabel = 'y-axis'
+a2.axis.zLabel = 'z-axis'
 
 # Enter main loop
 fig.Draw() # Post a draw event (to update labels and mesh settings)

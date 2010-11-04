@@ -676,7 +676,7 @@ class Wobject(BaseObject):
         for x in [x1, x2]:
             for y in [y1, y2]:
                 for z in [z1, z2]:
-                    pp.Append(x,y,z)
+                    pp.append(x,y,z)
         
         # Transform these points
         for i in range(len(pp)):
@@ -692,8 +692,8 @@ class Wobject(BaseObject):
                     p.z *= t.sz
                 elif isinstance(t, Transform_Rotate):
                     angle = float(t.angle * np.pi / 180.0)
-                    q = Quaternion.CreateFromAxisAngle(angle, t.ax, t.ay, t.az)
-                    p = q.RotatePoint(p)
+                    q = Quaternion.create_from_axis_angle(angle, t.ax, t.ay, t.az)
+                    p = q.rotate_point(p)
             # Update
             pp[i] = p
         
@@ -807,7 +807,7 @@ class OrientationForWobjects_mixClass(object):
         returns a Point. 
         """
         def fget(self):
-            return self._direction.Copy()
+            return self._direction.copy()
         def fset(self, value):
             # Store direction
             if isinstance(value, (list, tuple)) and len(value) == 3:
@@ -818,9 +818,9 @@ class OrientationForWobjects_mixClass(object):
                 raise ValueError('Direction should be a 3D Point or 3-element tuple.')
             
             # Normalize
-            if self._direction.Norm()==0:
+            if self._direction.norm()==0:
                 raise ValueError('Direction vector must have a non-zero length.')            
-            self._direction = self._direction.Normalize()
+            self._direction = self._direction.normalize()
             
             # Create ref point
             refPoint = self._refDirection
@@ -828,8 +828,8 @@ class OrientationForWobjects_mixClass(object):
             # Convert to rotation. The cross product of two vectors results
             # in a vector normal to both vectors. This is the axis of rotation
             # over which the minimal rotation is achieved.
-            axis = self._direction.Cross(refPoint)
-            if axis.Norm() < 0.1:
+            axis = self._direction.cross(refPoint)
+            if axis.norm() < 0.1:
                 if self._direction.z > 0:
                     # No rotation
                     self._directionTransform.ax = 0.0
@@ -843,8 +843,8 @@ class OrientationForWobjects_mixClass(object):
                     self._directionTransform.az = 0.0
                     self._directionTransform.angle = np.pi
             else:
-                axis = axis.Normalize()
-                angle = -refPoint.Angle(self._direction)
+                axis = axis.normalize()
+                angle = -refPoint.angle(self._direction)
                 self._directionTransform.ax = axis.x
                 self._directionTransform.ay = axis.y
                 self._directionTransform.az = axis.z

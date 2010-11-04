@@ -66,7 +66,7 @@ def plot(data1, data2=None, data3=None,
         pp = data1
     elif is_Point(data1):
         pp = Pointset(data1.ndim)
-        pp.Append(data1)
+        pp.append(data1)
     else:   
         
         if data1 is None:
