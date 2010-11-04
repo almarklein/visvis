@@ -1290,51 +1290,53 @@ class Aarray(np.ndarray):
         return ob
     
     
-    def __array_finalize__(self, obj):
+    def __array_finalize__(self, ob):
         """ So the sampling and origin is maintained when doing
         calculations with the array. """
-        #if hasattr(obj, '_sampling') and hasattr(obj, '_origin'):
-        if is_Aarray(obj):
-            if self.shape == obj.shape:
+        #if hasattr(ob, '_sampling') and hasattr(ob, '_origin'):
+        if isinstance(ob, Aarray):
+            ob.__dict__['_is_'+ob.__class__.__name__] = True
+            if self.shape == ob.shape:
                 # Copy sampling and origin for math operation
-                self._sampling = tuple( [i for i in obj._sampling] )        
-                self._origin = tuple( [i for i in obj._origin] )
+                self._sampling = tuple( [i for i in ob._sampling] )        
+                self._origin = tuple( [i for i in ob._origin] )
             else:
                 # Don't bother (__getitem__ will set them after this)
                 # Other functions that change the shape cannot be trusted.
                 self._sampling = tuple( [1.0 for i in self.shape] )
                 self._origin = tuple( [0.0 for i in self.shape] )
+            
     
     
     def __getslice__(self, i, j):
         # Called only when indexing first dimension and without a step
         
         # Call base getitem method      
-        result = np.ndarray.__getslice__(self, i, j)
+        ob = np.ndarray.__getslice__(self, i, j)
         
         # Perform sampling and origin corrections
         sampling, origin = self._correct_sampling(slice(i,j))
-        result.sampling = sampling
-        result.origin = origin
+        ob.sampling = sampling
+        ob.origin = origin
         
         # Done
-        return result
+        return ob
     
     
     def __getitem__(self, index):
         
         # Call base getitem method
-        result = np.ndarray.__getitem__(self, index)
+        ob = np.ndarray.__getitem__(self, index)
         
         # If not a scalar, perform sampling and origin corrections
         # This means there is only a very small performance penalty
-        if is_Aarray(result):            
+        if isinstance(ob, Aarray):
             sampling, origin = self._correct_sampling(index)
-            result.sampling = sampling
-            result.origin = origin
+            ob.sampling = sampling
+            ob.origin = origin
         
         # Return
-        return result
+        return ob
     
     
     def _correct_sampling(self, index):
@@ -1743,7 +1745,7 @@ class Quaternion(object):
         """
         # Prepare 
         p = Quaternion(0, p.x, p.y, p.z, False) # Do not normalize!
-        q1 = self.normalized()
+        q1 = self.normalize()
         q2 = self.inverse()
         # Apply rotation
         r = (q1*p)*q2

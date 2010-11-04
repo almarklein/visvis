@@ -197,13 +197,13 @@ class DraggableBox(Box):
         w,h = self.position.size
         dots = Pointset(2)
         #        
-        dots.Append(3,3); dots.Append(3,6); dots.Append(3,9)
-        dots.Append(6,3); dots.Append(6,6); dots.Append(6,9)
-        dots.Append(9,3); dots.Append(9,6); dots.Append(9,9)
+        dots.append(3,3); dots.append(3,6); dots.append(3,9)
+        dots.append(6,3); dots.append(6,6); dots.append(6,9)
+        dots.append(9,3); dots.append(9,6); dots.append(9,9)
         #
-        dots.Append(w-3, h-3); dots.Append(w-3, h-6); dots.Append(w-3, h-9)
-        dots.Append(w-6, h-3); dots.Append(w-6, h-6);
-        dots.Append(w-9, h-3);
+        dots.append(w-3, h-3); dots.append(w-3, h-6); dots.append(w-3, h-9)
+        dots.append(w-6, h-3); dots.append(w-6, h-6);
+        dots.append(w-9, h-3);
         self._dots = dots
     
     def _DragOnEnter(self, event):
@@ -513,14 +513,14 @@ class BaseSlider(Box):
         if w > h:
             i = 5
             while i < h-5:
-                dots1.Append(2,i); dots1.Append(5,i)
-                dots2.Append(-2,i); dots2.Append(-5,i)
+                dots1.append(2,i); dots1.append(5,i)
+                dots2.append(-2,i); dots2.append(-5,i)
                 i += 3
         else:
             i = 5
             while i < w-5:
-                dots1.Append(i,2); dots1.Append(i,5)
-                dots2.Append(i,-2); dots2.Append(i,-5)
+                dots1.append(i,2); dots1.append(i,5)
+                dots2.append(i,-2); dots2.append(i,-5)
                 i += 3
         
         self._dots1, self._dots2 = dots1, dots2
@@ -623,7 +623,7 @@ class BaseSlider(Box):
                 pos2 = pos + delta
                 
                 # Add line piece
-                linePieces.Append(pos); linePieces.Append(pos2)
+                linePieces.append(pos); linePieces.append(pos2)
                 
                 # Create or reuse label
                 if tick in self._labelPool:

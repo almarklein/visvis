@@ -544,19 +544,19 @@ class BaseText(object):
             dy = g.dy
             
             # append texture coordinates
-            texCords.Append(g.s1, g.t1)
-            texCords.Append(g.s2, g.t1)
-            texCords.Append(g.s2, g.t2)
-            texCords.Append(g.s1, g.t2)
+            texCords.append(g.s1, g.t1)
+            texCords.append(g.s2, g.t1)
+            texCords.append(g.s2, g.t2)
+            texCords.append(g.s1, g.t2)
             
             # set skewing for position
             skew = self._size * g.skewFactor
             
             # append vertices
-            vertices.Append(x1+skew, y1+dy, z)
-            vertices.Append(x2+skew, y1+dy, z)
-            vertices.Append(x2, y2+dy, z)
-            vertices.Append(x1, y2+dy, z)
+            vertices.append(x1+skew, y1+dy, z)
+            vertices.append(x2+skew, y1+dy, z)
+            vertices.append(x2, y2+dy, z)
+            vertices.append(x1, y2+dy, z)
             
             # prepare for next glyph
             x1 = x1 + g.width + self._charSpacing          
@@ -579,7 +579,7 @@ class BaseText(object):
         # get vertices
         if self._vertices1 is None:
             return
-        vertices = self._vertices1.Copy()
+        vertices = self._vertices1.copy()
         
         # scale text according to global text size property
         vertices *= fig._relativeFontSize
@@ -675,8 +675,8 @@ class BaseText(object):
         font.Enable()
         
         # prepare
-        texCords = self._texCords#.Copy()
-        vertices = self._vertices2#.Copy()
+        texCords = self._texCords#.copy()
+        vertices = self._vertices2#.copy()
         
         # init vertex and texture array
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)

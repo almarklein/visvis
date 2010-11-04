@@ -1606,15 +1606,15 @@ class Texture3D(BaseTexture):
         indices = [0,1,2,3, 4,5,6,7, 3,2,6,5, 0,4,7,1, 0,3,5,4, 1,7,6,2]
         
         # bottom
-        tex_coord.Append((t0,t0,t0)); ver_coord.Append((x0, y0, z0)) # 0
-        tex_coord.Append((t1,t0,t0)); ver_coord.Append((x1, y0, z0)) # 1
-        tex_coord.Append((t1,t1,t0)); ver_coord.Append((x1, y1, z0)) # 2
-        tex_coord.Append((t0,t1,t0)); ver_coord.Append((x0, y1, z0)) # 3
+        tex_coord.append((t0,t0,t0)); ver_coord.append((x0, y0, z0)) # 0
+        tex_coord.append((t1,t0,t0)); ver_coord.append((x1, y0, z0)) # 1
+        tex_coord.append((t1,t1,t0)); ver_coord.append((x1, y1, z0)) # 2
+        tex_coord.append((t0,t1,t0)); ver_coord.append((x0, y1, z0)) # 3
         # top
-        tex_coord.Append((t0,t0,t1)); ver_coord.Append((x0, y0, z1)) # 4    
-        tex_coord.Append((t0,t1,t1)); ver_coord.Append((x0, y1, z1)) # 5
-        tex_coord.Append((t1,t1,t1)); ver_coord.Append((x1, y1, z1)) # 6
-        tex_coord.Append((t1,t0,t1)); ver_coord.Append((x1, y0, z1)) # 7
+        tex_coord.append((t0,t0,t1)); ver_coord.append((x0, y0, z1)) # 4    
+        tex_coord.append((t0,t1,t1)); ver_coord.append((x0, y1, z1)) # 5
+        tex_coord.append((t1,t1,t1)); ver_coord.append((x1, y1, z1)) # 6
+        tex_coord.append((t1,t0,t1)); ver_coord.append((x1, y0, z1)) # 7
         
         # Store quads
         self._quads = (tex_coord, ver_coord, np.array(indices,dtype=np.uint8))

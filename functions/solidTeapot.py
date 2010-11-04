@@ -28,7 +28,7 @@ if False:
     for line in open('d:/almar/projects/teapot.txt'):
         parts = line[2:].split(' ')
         if line.startswith('v'):
-            vertices.Append([float(part) for part in parts])
+            vertices.append([float(part) for part in parts])
         elif line.startswith('f'):
             indices.extend([int(part)-1 for part in parts])
     

@@ -20,15 +20,15 @@ def solidBox(translation=None, scaling=None, direction=None, rotation=None,
     # Create vertices of a cube
     pp = Pointset(3)
     # Bottom
-    pp.Append(-0.5,-0.5,-0.5)
-    pp.Append(+0.5,-0.5,-0.5)
-    pp.Append(+0.5,+0.5,-0.5)
-    pp.Append(-0.5,+0.5,-0.5)
+    pp.append(-0.5,-0.5,-0.5)
+    pp.append(+0.5,-0.5,-0.5)
+    pp.append(+0.5,+0.5,-0.5)
+    pp.append(-0.5,+0.5,-0.5)
     # Top
-    pp.Append(-0.5,-0.5,+0.5)
-    pp.Append(-0.5,+0.5,+0.5)
-    pp.Append(+0.5,+0.5,+0.5)
-    pp.Append(+0.5,-0.5,+0.5)
+    pp.append(-0.5,-0.5,+0.5)
+    pp.append(-0.5,+0.5,+0.5)
+    pp.append(+0.5,+0.5,+0.5)
+    pp.append(+0.5,-0.5,+0.5)
     
     # Init vertices and normals
     vertices = Pointset(3)
@@ -36,17 +36,17 @@ def solidBox(translation=None, scaling=None, direction=None, rotation=None,
     
     # Create vertices
     for i in [0,1,2,3]: # Top
-        vertices.Append(pp[i]); normals.Append(0,0,-1)
+        vertices.append(pp[i]); normals.append(0,0,-1)
     for i in [4,5,6,7]: # Bottom
-        vertices.Append(pp[i]); normals.Append(0,0,+1)
+        vertices.append(pp[i]); normals.append(0,0,+1)
     for i in [3,2,6,5]: # Front
-        vertices.Append(pp[i]); normals.Append(0,+1,0)
+        vertices.append(pp[i]); normals.append(0,+1,0)
     for i in [0,4,7,1]: # Back
-        vertices.Append(pp[i]); normals.Append(0,-1,0)
+        vertices.append(pp[i]); normals.append(0,-1,0)
     for i in [0,3,5,4]: # Left
-        vertices.Append(pp[i]); normals.Append(-1,0,0)
+        vertices.append(pp[i]); normals.append(-1,0,0)
     for i in [1,7,6,2]: # Right
-        vertices.Append(pp[i]); normals.Append(+1,0,0)
+        vertices.append(pp[i]); normals.append(+1,0,0)
     
     
     ## Visualize

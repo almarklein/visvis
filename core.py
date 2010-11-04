@@ -1816,9 +1816,9 @@ class Legend(simpleWibjects.DraggableBox):
         y2 = (label._deltay[1] - label._deltay[0]) / 2 
         # create 2-element pointset
         pp = Pointset(2)        
-        pp.Append(self._xoffset, y + y2)
+        pp.append(self._xoffset, y + y2)
         if twoPoints:
-            pp.Append(self._xoffset + self._linelen, y + y2)
+            pp.append(self._xoffset + self._linelen, y + y2)
         # create line
         line = Line(self, pp) # line has no parent        
         # return

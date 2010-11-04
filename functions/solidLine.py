@@ -47,11 +47,11 @@ def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):
     
 if __name__ == '__main__':    
     pp = Pointset(3)
-    pp.Append(0,1,0)
-    pp.Append(3,2,1)
-    pp.Append(4,5,2)
-    pp.Append(2,3,1)
-    pp.Append(0,4,0)
-#     pp.Append(0,1,0)
+    pp.append(0,1,0)
+    pp.append(3,2,1)
+    pp.append(4,5,2)
+    pp.append(2,3,1)
+    pp.append(0,4,0)
+#     pp.append(0,1,0)
     vv.figure()
     m = solidLine(pp, [0.1, 0.2, 0.3, 0.03, 0.2], 8)

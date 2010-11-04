@@ -124,13 +124,13 @@ class AxisLabel(AxisText):
             a = (self.textAngle - 90) * np.pi/180
             self.valign = -1
             distance = 3
-        normal = Point(np.cos(a), np.sin(a)).Normalize()
+        normal = Point(np.cos(a), np.sin(a)).normalize()
         
         # project the corner points of all text objects to the normal vector.
         def project(p,normal):
             p = p-pos
-            phi = abs(normal.Angle(p))
-            return float( p.Norm()*np.cos(phi) )
+            phi = abs(normal.angle(p))
+            return float( p.norm()*np.cos(phi) )
         # apply
         alpha = []
         for text in self._textDict.values():
@@ -294,7 +294,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
         # Get pixels per unit
         if lim.range == 0:
             return [],[],[]
-        pixelsPerUnit = vec.Norm() / lim.range
+        pixelsPerUnit = vec.norm() / lim.range
         
         # Try all tickunits, starting from the smallest, until we find
         # one which results in a distance between ticks more than
@@ -411,9 +411,9 @@ class BaseAxis(base.Wobject):
         
         # Corners of a cube in relative coordinates
         self._corners = tmp = Pointset(3)
-        tmp.Append(0,0,0);  tmp.Append(1,0,0);  tmp.Append(0,1,0);
-        tmp.Append(0,0,1);  tmp.Append(1,1,0);  tmp.Append(1,0,1);
-        tmp.Append(0,1,1);  tmp.Append(1,1,1);
+        tmp.append(0,0,0);  tmp.append(1,0,0);  tmp.append(0,1,0);
+        tmp.append(0,0,1);  tmp.append(1,1,0);  tmp.append(1,0,1);
+        tmp.append(0,1,1);  tmp.append(1,1,1);
         
         # Indices of the base corners for each dimension.
         # The order is very important, don't mess it up...
@@ -759,7 +759,7 @@ class BaseAxis(base.Wobject):
         # get pointset
         if not hasattr(self, '_pps') or not self._pps:
             return
-        pps = self._pps.Copy()
+        pps = self._pps.copy()
         pps[:,2] = depthToZ( pps[:,2] )
         
         # Prepare for drawing lines
@@ -937,7 +937,7 @@ class CartesianAxis2D(BaseAxis):
                     minTickDist = 80
 
             # Calculate tick distance in world units
-            minTickDist *= vector_c.Norm() / vector_s.Norm()
+            minTickDist *= vector_c.norm() / vector_s.norm()
 
             # Get index of corner to put ticks at
             i0 = 0; bestVal = 999999999999999999999999
@@ -956,25 +956,25 @@ class CartesianAxis2D(BaseAxis):
             gv2 = corners4_c[i2] - corners4_c[i1]
             # Get tick vector to indicate tick
             gv1s = corners4_s[i1] - corners4_s[i0]
-            #tv = gv1 * (5 / gv1s.Norm() )
+            #tv = gv1 * (5 / gv1s.norm() )
             npixels = ( gv1s.x**2 + gv1s.y**2 ) ** 0.5 + 0.000001
             tv = gv1 * (5.0 / npixels )
 
             # Always draw these corners
-            pps.Append(corners4_s[i0])
-            pps.Append(corners4_s[i0]+vector_s)
+            pps.append(corners4_s[i0])
+            pps.append(corners4_s[i0]+vector_s)
 
             # Add line pieces to draw box
             if self._showBox:
                 for i in range(2):
                     if i != i0:
                         corner = corners4_s[i]
-                        pps.Append(corner)
-                        pps.Append(corner+vector_s)
+                        pps.append(corner)
+                        pps.append(corner+vector_s)
             
             # Get ticks stuff
             tickValues = ticksPerDim[d] # can be None
-            p1, p2 = firstCorner.Copy(), firstCorner+vector_c
+            p1, p2 = firstCorner.copy(), firstCorner+vector_c
             tmp = GetTicks(p1,p2, lim, minTickDist, tickValues)
             ticks, ticksPos, ticksText = tmp
             
@@ -990,8 +990,8 @@ class CartesianAxis2D(BaseAxis):
                 p1s = corners4_s[i0] + vector_s * factor
                 tmp = Point(0,0,0)
                 tmp[int(not d)] = 4
-                pps.Append(p1s)
-                pps.Append(p1s-tmp)
+                pps.append(p1s)
+                pps.append(p1s-tmp)
                 
                 # Put a textlabel at tick
                 textDict = self._textDicts[d]
@@ -1039,12 +1039,12 @@ class CartesianAxis2D(BaseAxis):
                 # Get positions
                 for tick in ticks:
                     # Get tick location
-                    p1 = firstCorner.Copy()
+                    p1 = firstCorner.copy()
                     p1[d] = tick
                     # Add gridlines
                     p3 = p1+gv1
                     p4 = p3+gv2
-                    ppg.Append(p1);  ppg.Append(p3)
+                    ppg.append(p1);  ppg.append(p3)
             
             # Apply label
             textDict = self._textDicts[d]
@@ -1069,7 +1069,7 @@ class CartesianAxis2D(BaseAxis):
             vec = Point(vector_s.x, vector_s.y)
             if vec.x < 0:
                 vec = vec * -1
-            t.textAngle = float(vec.Angle() * 180/np.pi)
+            t.textAngle = float(vec.angle() * 180/np.pi)
             # Keep up to date (so label can move itself just beyond ticks)
             t._textDict = newTextDicts[d]
         
@@ -1162,7 +1162,7 @@ class CartesianAxis3D(BaseAxis):
 
             # Calculate tick distance in units
             minTickDist = self._minTickDist
-            minTickDist *= vector_c.Norm() / vector_s.Norm()
+            minTickDist *= vector_c.norm() / vector_s.norm()
 
             # Get index of corner to put ticks at
             i0 = 0; bestVal = 999999999999999999999999
@@ -1182,7 +1182,7 @@ class CartesianAxis3D(BaseAxis):
             gv2 = corners4_c[i2] - corners4_c[i1]
             # Get tick vector to indicate tick
             gv1s = corners4_s[i1] - corners4_s[i0]
-            #tv = gv1 * (5 / gv1s.Norm() )
+            #tv = gv1 * (5 / gv1s.norm() )
             npixels = ( gv1s.x**2 + gv1s.y**2 ) ** 0.5 + 0.000001
             tv = gv1 * (5.0 / npixels )
             
@@ -1191,12 +1191,12 @@ class CartesianAxis3D(BaseAxis):
                 if self._showBox or i in [i0, i1, i2]:
                 #if self._showBox or i ==i0: # for a real minimalistic axis
                     corner = corners4_s[i]
-                    pps.Append(corner)
-                    pps.Append(corner+vector_s)
+                    pps.append(corner)
+                    pps.append(corner+vector_s)
             
             # Get ticks stuff
             tickValues = ticksPerDim[d] # can be None
-            p1, p2 = firstCorner.Copy(), firstCorner+vector_c
+            p1, p2 = firstCorner.copy(), firstCorner+vector_c
             tmp = GetTicks(p1,p2, lim, minTickDist, tickValues)
             ticks, ticksPos, ticksText = tmp
             
@@ -1208,8 +1208,8 @@ class CartesianAxis3D(BaseAxis):
                 p2 = pos - tv
                 
                 # Add tick lines
-                ppc.Append(p1)
-                ppc.Append(p2)
+                ppc.append(p1)
+                ppc.append(p2)
                 
                 # z-axis has valign=0, thus needs extra space
                 if d==2:
@@ -1248,14 +1248,14 @@ class CartesianAxis3D(BaseAxis):
                 # get positions
                 for tick in ticks:
                     # get tick location
-                    p1 = firstCorner.Copy()
+                    p1 = firstCorner.copy()
                     p1[d] = tick
                     if tick not in [lim.min, lim.max]: # not ON the box
                         # add gridlines (back and front)
                         p3 = p1+gv1
                         p4 = p3+gv2
-                        ppg.Append(p1);  ppg.Append(p3)
-                        ppg.Append(p3);  ppg.Append(p4)
+                        ppg.append(p1);  ppg.append(p3)
+                        ppg.append(p3);  ppg.append(p4)
             
             # Apply label
             textDict = self._textDicts[d]
@@ -1280,7 +1280,7 @@ class CartesianAxis3D(BaseAxis):
             vec = Point(vector_s.x, vector_s.y)
             if vec.x < 0:
                 vec = vec * -1
-            t.textAngle = float(vec.Angle() * 180/np.pi)
+            t.textAngle = float(vec.angle() * 180/np.pi)
             # Keep up to date (so label can move itself just beyond ticks)
             t._textDict = newTextDicts[d]
         
@@ -1550,12 +1550,12 @@ class PolarAxis2D(BaseAxis):
         # For the axis to fit this will simply be the smallest window size in
         # x or y.  We also need to reduce it further so
         # that tick labels can be drawn
-        if vector_cx.Norm() < vector_cy.Norm():
-            dimMax_c = (vector_cx.Norm() / 2)
-            dimMax_s = (vector_sx.Norm() / 2)
+        if vector_cx.norm() < vector_cy.norm():
+            dimMax_c = (vector_cx.norm() / 2)
+            dimMax_s = (vector_sx.norm() / 2)
         else:
-            dimMax_c = (vector_cy.Norm() / 2)
-            dimMax_s = (vector_sy.Norm() / 2)
+            dimMax_c = (vector_cy.norm() / 2)
+            dimMax_s = (vector_sy.norm() / 2)
 
         pix2c = dimMax_c / dimMax_s  # for screen to world conversion
         txtSize = self.labelPix * pix2c
@@ -1612,7 +1612,7 @@ class PolarAxis2D(BaseAxis):
                 vec = vec * -1
 
             # This was causing weird behaviour, so I commented it out
-            # t.textAngle = float(vec.Angle() * 180/np.pi)
+            # t.textAngle = float(vec.angle() * 180/np.pi)
             # Keep up to date (so label can move itself just beyond ticks)
             t._textDict = newTextDicts[d]
 
@@ -1638,10 +1638,10 @@ class PolarAxis2D(BaseAxis):
         # ppb is the largest circle that will fit
         # and is used  to draw the  polar background poly
         for x, y in  np.column_stack((xb, yb)):
-            self.ppb.Append(x, y, -10.0)
+            self.ppb.append(x, y, -10.0)
 
         for x, y in  np.column_stack((xc, yc)):
-            self.ppr.Append(x, y, -1.0)
+            self.ppr.append(x, y, -1.0)
 
         # polar ticks
         # Correct the tickdist for the x-axis if the numbers are large
@@ -1660,13 +1660,13 @@ class PolarAxis2D(BaseAxis):
         for tick, pos, text in zip(ticks, ticksPos, ticksText):
             # Get little tail to indicate tick, current hard coded to 4
             p1 = pos
-            tv = 0.05 * radiusMax_c * p1 / p1.Norm()
+            tv = 0.05 * radiusMax_c * p1 / p1.norm()
             # polar ticks are inline with vector to tick position
             p2s = pos - tv
 
             # Add tick lines
-            ppc.Append(pos)
-            ppc.Append(p2s)
+            ppc.append(pos)
+            ppc.append(p2s)
 
             # Text is in word coordinates so need to create them based on ticks
             theta = self._angularRefPos + (self._sense * tick * np.pi / 180.0)
@@ -1696,8 +1696,8 @@ class PolarAxis2D(BaseAxis):
                 ticks = self._GetPolarTicks(tickUnit / 5, lim)
             # Get positions
             for tick, p in zip(ticks, ticksPos):
-                ppg.Append(center_c)
-                ppg.Append(p)
+                ppg.append(center_c)
+                ppg.append(p)
 
         #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         #  radial Axis lines, tick  calculations
@@ -1711,8 +1711,8 @@ class PolarAxis2D(BaseAxis):
         yc = radiusMax_c * np.sin(theta)
 
         for x, y in  np.column_stack((xc, yc)):
-            ppc.Append(0.0, 0.0, 0.0)
-            ppc.Append(x, y, 0.0)
+            ppc.append(0.0, 0.0, 0.0)
+            ppc.append(x, y, 0.0)
 
         # radial ticks
         # Correct the tickdist for the x-axis if the numbers are large
@@ -1748,10 +1748,10 @@ class PolarAxis2D(BaseAxis):
                 text = front + text[iExp + 2:].lstrip('0')
 
             p1 = pos
-            if (p1.Norm() != 0):
-                tv = (4 * pix2c[0]) * p1 / p1.Norm()
+            if (p1.norm() != 0):
+                tv = (4 * pix2c[0]) * p1 / p1.norm()
                 tvTxt = ((4 * pix2c[0]) + \
-                         txtSize[0].view(float)) * p1 / p1.Norm()
+                         txtSize[0].view(float)) * p1 / p1.norm()
             else:
                 tv = Point(0, 0, 0)
                 tvTxt = Point(-txtSize[0], 0, 0)
@@ -1800,8 +1800,8 @@ class PolarAxis2D(BaseAxis):
                 xlast = xc[:-1][0]
                 ylast = yc[:-1][0]
                 for x, y in  np.column_stack((xc, yc)):
-                    ppg.Append(Point(xlast, ylast, 0.0))
-                    ppg.Append(Point(x, y, 0.0))
+                    ppg.append(Point(xlast, ylast, 0.0))
+                    ppg.append(Point(x, y, 0.0))
                     xlast = x
                     ylast = y
 

@@ -10,7 +10,7 @@ vv.figure()
 
 # Define points for the line
 pp = Pointset(3)
-pp.Append(0,0,0); pp.Append(0,1,0); pp.Append(1,2,0); pp.Append(0,2,1)
+pp.append(0,0,0); pp.append(0,1,0); pp.append(1,2,0); pp.append(0,2,1)
 
 # Create all solids
 box = vv.solidBox((0,0,0))
