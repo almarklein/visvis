@@ -13,29 +13,29 @@ def getSpanVectors(normal, c, d):
     """
     
     # Calculate a from previous b
-    a1 = d.Cross(normal)
+    a1 = d.cross(normal)
     
-    if a1.Norm() < 0.001:
+    if a1.norm() < 0.001:
         # The normal and  d point in same or reverse direction
         # -> Calculate b from previous a
-        b1 = c.Cross(normal)
-        a1 = b1.Cross(normal)
+        b1 = c.cross(normal)
+        a1 = b1.cross(normal)
     
     # Consider the opposite direction
     a2 = -1 * a1
-    if c.Distance(a1) > c.Distance(a2):
+    if c.distance(a1) > c.distance(a2):
         a1 = a2
     
     # Ok, calculate b
-    b1 = a1.Cross(normal)
+    b1 = a1.cross(normal)
         
 #     # Consider the opposite (don't: this would make backfacing faces)
 #     b2 = -1 * b1
-#     if d.Distance(b1) > d.Distance(b2):
+#     if d.distance(b1) > d.distance(b2):
 #         b1 = b2
 
     # Done
-    return a1.Normalize(), b1.Normalize()
+    return a1.normalize(), b1.normalize()
 
 
 def getCircle(angles_cos, angles_sin, a, b):
@@ -77,7 +77,7 @@ def lineToMesh(pp, radius, vertex_num):
     angle_sin = np.sin(angles)
     
     # calculate distance between two line pieces (for smooth cylinders)
-    dists = pp[1:].Distance(pp[:-1])
+    dists = pp[1:].distance(pp[:-1])
     bufdist = min( radius.max(), dists.min()/2.2)
     
     # check if line is closed
@@ -86,10 +86,10 @@ def lineToMesh(pp, radius, vertex_num):
     # calculate normal vectors on each line point    
     normals = pp[1:] - pp[:-1]
     if lclosed:        
-        normals.Append( pp[0]-pp[1] )
+        normals.append( pp[0]-pp[1] )
     else:        
-        normals.Append( pp[-2]-pp[-1] )
-    normals = -1 * normals.Normalize()
+        normals.append( pp[-2]-pp[-1] )
+    normals = -1 * normals.normalize()
     
     # create list to store vertices
     vertices = Pointset(3)
@@ -112,10 +112,10 @@ def lineToMesh(pp, radius, vertex_num):
             r = (1-(j/5.0)**2)**0.5
             circmp = float(r*radius[0])*circm + (pp[0]-(j/5.0)*bufdist*normals[0])
             # Calc normals
-            circmn = ( circmp - pp[0]).Normalize() 
+            circmn = ( circmp - pp[0]).normalize() 
             # Store the vertex list            
-            vertices.Extend( circmp )
-            surfaceNormals.Extend( -1*circmn )
+            vertices.extend( circmp )
+            surfaceNormals.extend( -1*circmn )
             n_cylinders += 1
     
     # Loop through all line pieces    
@@ -134,8 +134,8 @@ def lineToMesh(pp, radius, vertex_num):
         
         # Translate the circle, and store
         circmp = float(radius[i])*circm + (point1+bufdist*normal1)        
-        vertices.Extend( circmp )
-        surfaceNormals.Extend( circm )
+        vertices.extend( circmp )
+        surfaceNormals.extend( circm )
         n_cylinders += 1
         
         # calc second normal and line
@@ -144,8 +144,8 @@ def lineToMesh(pp, radius, vertex_num):
         
         # Translate the circle, and store
         circmp = float(radius[i+1])*circm + (point2-bufdist*normal1)
-        vertices.Extend( circmp )
-        surfaceNormals.Extend( circm )
+        vertices.extend( circmp )
+        surfaceNormals.extend( circm )
         n_cylinders += 1
         
         
@@ -155,7 +155,7 @@ def lineToMesh(pp, radius, vertex_num):
             break
         
         # get normal and point
-        normal12 = (normal1 + normal2).Normalize()
+        normal12 = (normal1 + normal2).normalize()
         tmp = (point2+bufdist*normal2) + (point2-bufdist*normal1)
         point12 = 0.5858*point2 + 0.4142*(0.5*tmp)
         
@@ -165,8 +165,8 @@ def lineToMesh(pp, radius, vertex_num):
         
         # Translate the circle, and store
         circmp = float(radius[i+1])*circm + point12
-        vertices.Extend( circmp )
-        surfaceNormals.Extend( circm )
+        vertices.extend( circmp )
+        surfaceNormals.extend( circm )
         n_cylinders += 1
     
     
@@ -178,10 +178,10 @@ def lineToMesh(pp, radius, vertex_num):
             r = (1-(j/5.0)**2)**0.5
             circmp = float(r*radius[-1])*circm + (pp[-1]+(j/5.0)*bufdist*normals[-1])
             # Calc normals
-            circmn = ( circmp - pp[-1]).Normalize()            
+            circmn = ( circmp - pp[-1]).normalize()            
             # Store the vertex list
-            vertices.Extend( circmp )
-            surfaceNormals.Extend( -1*circmn )
+            vertices.extend( circmp )
+            surfaceNormals.extend( -1*circmn )
             n_cylinders += 1
     else:
         # get normal and point
@@ -194,8 +194,8 @@ def lineToMesh(pp, radius, vertex_num):
         
         # Translate the circle, and store
         circmp = float(radius[0])*circm + (point1+bufdist*normal1)        
-        vertices.Extend( circmp )
-        surfaceNormals.Extend( circm )
+        vertices.extend( circmp )
+        surfaceNormals.extend( circm )
         n_cylinders += 1
     
     

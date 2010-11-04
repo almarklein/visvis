@@ -59,7 +59,7 @@ class GinputHelper(object):
         
         # Add point
         if self.pp is not None:
-            self.pp.Append(event.x2d, event.y2d, 0.1)
+            self.pp.append(event.x2d, event.y2d, 0.1)
         
         # Draw
         if self.axes:

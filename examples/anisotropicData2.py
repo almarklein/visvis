@@ -25,8 +25,9 @@ im4 = im[300::4,300::4]
 a = vv.gca()
 
 # Show all images
+tt = []
 for im in [im1, im2, im3, im4]:
-    vv.imshow(im)
+    tt.append(vv.imshow(im))
 
 # Note that some parts seem to stick out. This is because visvis
 # renders data such that the pixel center is at the spefied position;

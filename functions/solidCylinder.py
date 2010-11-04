@@ -47,9 +47,9 @@ def solidCylinder(translation=None, scaling=None, direction=None, rotation=None,
             u = float(n) / (N)
             x = cos(b)
             y = sin(b)
-            vertices.Append(x,y,z)
-            normals.Append(x,y,0)
-            texcords.Append(u,v)
+            vertices.append(x,y,z)
+            normals.append(x,y,0)
+            texcords.append(u,v)
     # Top
     for m in range(2):
         for n in range(N+1):
@@ -57,9 +57,9 @@ def solidCylinder(translation=None, scaling=None, direction=None, rotation=None,
             u = float(n) / (N)
             x = cos(b) * m # todo: check welke frontfacing!
             y = sin(b) * m
-            vertices.Append(x,y,1)
-            normals.Append(0,0,1)
-            texcords.Append(u,0)
+            vertices.append(x,y,1)
+            normals.append(0,0,1)
+            texcords.append(u,0)
     # Bottom
     for m in range(2):
         for n in range(N+1):
@@ -67,12 +67,12 @@ def solidCylinder(translation=None, scaling=None, direction=None, rotation=None,
             u = float(n) / (N)
             x = cos(b) * (1-m)
             y = sin(b) * (1-m)
-            vertices.Append(x,y,0)
-            normals.Append(0,0,-1)
-            texcords.Append(u,1)
+            vertices.append(x,y,0)
+            normals.append(0,0,-1)
+            texcords.append(u,1)
     
     # Normalize normals
-    normals = normals.Normalize()
+    normals = normals.normalize()
     
     # Calculate indices
     indices = []

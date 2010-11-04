@@ -307,16 +307,16 @@ class ColormapEditor(DraggableBox):
                     
                     # Clear nodes
                     for i in range(4):
-                        self._nodeWidget._allNodes[i].Clear()
+                        self._nodeWidget._allNodes[i].clear()
                         
                     # Create nodes
                     for t, node in zip(tt,nodeData):
                         for i in range(4):
                             nodes = self._nodeWidget._allNodes[i]
                             if i< len(node):
-                                nodes.Append(t,1-node[i])
+                                nodes.append(t,1-node[i])
                             else:
-                                nodes.Append(t,0)
+                                nodes.append(t,0)
                 
                 elif isinstance(nodeData, dict):
                     # Allow several color names
@@ -335,9 +335,9 @@ class ColormapEditor(DraggableBox):
                         key = 'rgba'[i]
                         if key in nodeData:
                             nodes = self._nodeWidget._allNodes[i]
-                            nodes.Clear()
+                            nodes.clear()
                             for t, val in nodeData[key]:
-                                nodes.Append(t,1-val)
+                                nodes.append(t,1-val)
                 
                 # Update
                 self._nodeWidget._UpdateFull()
@@ -393,14 +393,14 @@ class CM_NodeWidget(Box):
         
         # Init nodes
         for nodes in self._allNodes:
-            nodes.Append(0,1)
-            nodes.Append(1,0)
+            nodes.append(0,1)
+            nodes.append(1,0)
         self._allNodes[3][0,1] = 0 # alpha is completele ones by default
         
         # Init lines
         for line in self._allLines:
             for i in np.linspace(0,1,256):
-                line.Append(i,1) # the actual map will be 1-line
+                line.append(i,1) # the actual map will be 1-line
         
         # Make lines correct now
         for nodes, line in zip(self._allNodes, self._allLines):
@@ -422,7 +422,7 @@ class CM_NodeWidget(Box):
         
         # calculate distance of mouse to all points
         p = Point(event.x, event.y)
-        dists = p.Distance( self._nodes * Point(self.position.size) )
+        dists = p.distance( self._nodes * Point(self.position.size) )
         
         # is one close enough?
         i = -1
@@ -491,10 +491,10 @@ class CM_NodeWidget(Box):
             x, y = event.x, event.y
             if x>-5 and x<pos.width+5 and y>-5 and y<pos.height-5:
                 pos = Point(event.x, event.y) / Point(self.position.size)
-                self._nodes.Append( pos )
+                self._nodes.append( pos )
         else:
             # remove point
-            self._nodes.Pop(self._selectedNode)
+            self._nodes.pop(self._selectedNode)
         # Update
         self._UpdateFull()
     
@@ -519,7 +519,7 @@ class CM_NodeWidget(Box):
         nn.sort(key=lambda n:n.x)
         nodes = Pointset(2)
         for n in nn:
-            nodes.Append(n)
+            nodes.append(n)
         
         # interpolate
         xx = np.linspace(0,1,256)
@@ -725,7 +725,7 @@ class Colorbar(Box):
                 pos2 = pos + delta
                 
                 # Add line piece
-                linePieces.Append(pos); linePieces.Append(pos2)
+                linePieces.append(pos); linePieces.append(pos2)
                 
                 # Create or reuse label
                 if tick in self._labelPool:
