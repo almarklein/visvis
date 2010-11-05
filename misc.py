@@ -283,7 +283,7 @@ def isFrozen():
     import os
     ex = os.path.split(sys.executable)[1]
     ex = os.path.splitext(ex)[0]
-    if ex.lower() == 'python':
+    if ex.lower().startswith('python'):
         return False
     else:
         return True
