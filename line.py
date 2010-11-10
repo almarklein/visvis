@@ -50,22 +50,29 @@ lineStyles = {  ':':int('1010101010101010',2),  '--':int('1111000011110000',2),
 class Sprite:
     """ Represents an OpenGL sprite object. """
 
-    def __init__(self, data):
+    def __init__(self, data, width):
         """ Supply the data, which must be uint8 alpha data,
         preferably shaped with a power of two. """
         self._texId = 0
         self._data = data
-        self._canUse = False # set to True if OpenGl version high enough
+        self._width = width
+        self._canUse = None # set to True/False if OpenGl version high enough
 
     def Create(self):
         """ Create an OpenGL texture from the data. """
-
+        
+        # detemine now if we can use point sprites
+        self._canUse = getOpenGlCapable('2.0',
+            'point sprites (for advanced markers)')
+        if not self._canUse:
+            return
+        
         # gl.glEnable(gl.GL_TEXTURE_2D)
-
+        
         # make texture
         self._texId = gl.glGenTextures(1)
         gl.glBindTexture(gl.GL_TEXTURE_2D, self._texId)
-
+        
         # set interpolation and extrapolation parameters
         tmp = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, tmp)
@@ -76,21 +83,24 @@ class Sprite:
         gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_ALPHA, shape[0], shape[1],
             0, gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, self._data)
 
-        # detemine now if we can use point sprites
-        self._canUse = getOpenGlCapable('2.0',
-            'point sprites (for advanced markers)')
-
-
+    
+    @property
+    def usable(self):
+        return self._canUse
+    
+    
     def Enable(self):
         """ Enable the sprite, drawing points after calling this
         draws this sprite at each point. """
-
-        if not self._texId:
+        
+        if not self._texId and self._canUse in [None, True]:
             self.Create()
-
+        
         if not self._canUse:
-            return # canUse is assigned in Create()
-
+            gl.glEnable(gl.GL_POINT_SMOOTH)
+            gl.glPointSize(self._width)
+            return # proceed if None; canUse is assigned in Create()    
+        
         # bind to texture
         gl.glEnable(gl.GL_TEXTURE_2D)
         gl.glBindTexture(gl.GL_TEXTURE_2D, self._texId)
@@ -112,6 +122,8 @@ class Sprite:
         if self._canUse:
             gl.glDisable(gl.GL_TEXTURE_2D)
             gl.glDisable(gl.GL_POINT_SPRITE)
+        else:
+            gl.glDisable(gl.GL_POINT_SMOOTH)
 
 
     def Destroy(self):
@@ -312,8 +324,8 @@ class MarkerManager:
 
         ## create sprites and return
 
-        sprite1 = Sprite(data1)
-        sprite2 = Sprite(data3-data1)
+        sprite1 = Sprite(data1, mw)
+        sprite2 = Sprite(data3-data1, mw+2*mew)
 
         return d, sprite1, sprite2
 
@@ -741,25 +753,25 @@ class Line(Wobject):
         #elif self.alpha>0:
         else:
             # Use sprites
-
+            
             # get sprites
             tmp = f._markerManager.GetSprites(self.ms, self.mw, self.mew)
             pSize, sprite1, sprite2 = tmp
             gl.glPointSize(pSize)
             
-            # draw points for the faces
-            if drawFace:
-                sprite1.Enable()
-                gl.glColor3f(clr1[0],clr1[1],clr1[2])
-                gl.glDrawArrays(gl.GL_POINTS, 0, len(self._points))
             # draw points for the edges
             if drawEdge:
                 sprite2.Enable()
                 gl.glColor3f(clr2[0],clr2[1],clr2[2])
                 gl.glDrawArrays(gl.GL_POINTS, 0, len(self._points))
+            # draw points for the faces
+            if drawFace:
+                sprite1.Enable()
+                gl.glColor3f(clr1[0],clr1[1],clr1[2])
+                gl.glDrawArrays(gl.GL_POINTS, 0, len(self._points))
+            
             # disable sprites
-            gl.glDisable(gl.GL_TEXTURE_2D)
-            gl.glDisable(gl.GL_POINT_SPRITE)
+            sprite1.Disable() # Could as well have used sprite2
         
         # clean up
         gl.glDisable(gl.GL_ALPHA_TEST)

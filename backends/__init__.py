@@ -69,7 +69,7 @@ import visvis
 from visvis.misc import isFrozen
 
 # The order in which to try loading a backend
-backendOrder = ['wx', 'qt4', 'fltk'] # I'd love to put tk in this list
+backendOrder = ['qt4', 'wx', 'fltk'] # I'd love to put tk in this list
 
 
 # Establish preference based on loaded backends modules
