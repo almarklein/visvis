@@ -1272,6 +1272,11 @@ class Aarray(np.ndarray):
         if isinstance(shapeOrArray, np.ndarray):
             shape = shapeOrArray.shape
             ob = shapeOrArray.view(cls)
+            if is_Aarray(shapeOrArray):
+                if sampling is None:
+                    sampling = shapeOrArray.sampling
+                if origin is None:
+                    origin = shapeOrArray.origin
         else:
             shape = shapeOrArray
             ob = np.ndarray.__new__(cls, shape, dtype=dtype, **kwargs)
