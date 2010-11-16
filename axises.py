@@ -294,7 +294,11 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
         # Get pixels per unit
         if lim.range == 0:
             return [],[],[]
-        pixelsPerUnit = vec.norm() / lim.range
+        
+        # Pixels per unit (use float64 to prevent inf for large numbers)
+        tmp = vec.data.astype('float64')
+        vecNorm = (tmp[0,0]**2 + tmp[0,1]**2 + tmp[0,2]**2)**0.5
+        pixelsPerUnit = vecNorm / lim.range
         
         # Try all tickunits, starting from the smallest, until we find
         # one which results in a distance between ticks more than
@@ -304,7 +308,10 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
                 if tickUnit * pixelsPerUnit >= minTickDist:
                     break
             # if the numbers are VERY VERY large (which is very unlikely)
-            if tickUnit*pixelsPerUnit < minTickDist:
+            # We use smaller-equal and a multiplication, so the error
+            # is also raised when pixelsPerUnit and minTickDist are inf.
+            # Thanks to Torquil Macdonald Sorensen for this bug report.
+            if tickUnit*pixelsPerUnit <= 0.99*minTickDist:
                 raise ValueError
         except (ValueError, TypeError):
             # too small
@@ -319,7 +326,8 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
             count += 1
             t = firstTick + count*tickUnit
             tickValues.append(t)
-        
+            if count > 1000:
+                break # Safety
         # Get tick texts
         tickTexts = GetTickTexts(tickValues)
     
