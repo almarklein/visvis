@@ -214,7 +214,7 @@ class BasePoints(object):
         data = self.data
         dists = np.zeros( (data.shape[0],) )
         for i in range(self.ndim):
-            dists += data[:,i]**2            
+            dists += data[:,i].astype(np.float64)**2
         return np.sqrt(dists)
 
 
@@ -290,7 +290,7 @@ class BasePoints(object):
         dists = np.zeros( (p2.data.shape[0],) )
         for i in range(p1.ndim):
             tmp = p1.data[:,i] - p2.data[:,i]
-            dists += tmp**2        
+            dists += tmp.astype(np.float64)**2        
         return np.sqrt(dists)
 
 

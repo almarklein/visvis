@@ -57,7 +57,7 @@ from misc import Property, PropWithDraw, DrawAfter
 
 # create tick units
 _tickUnits = []
-for e in range(-10, 21):
+for e in range(-10, 98):
     for i in [10, 20, 25, 50]:
         _tickUnits.append( i*10**e)
 
@@ -296,9 +296,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
             return [],[],[]
         
         # Pixels per unit (use float64 to prevent inf for large numbers)
-        tmp = vec.data.astype('float64')
-        vecNorm = (tmp[0,0]**2 + tmp[0,1]**2 + tmp[0,2]**2)**0.5
-        pixelsPerUnit = vecNorm / lim.range
+        pixelsPerUnit = float( vec.norm() / lim.range )
         
         # Try all tickunits, starting from the smallest, until we find
         # one which results in a distance between ticks more than
@@ -313,7 +311,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
             # Thanks to Torquil Macdonald Sorensen for this bug report.
             if tickUnit*pixelsPerUnit <= 0.99*minTickDist:
                 raise ValueError
-        except (ValueError, TypeError):
+        except (ValueError, TypeError), err:
             # too small
             return [],[],[]
         
