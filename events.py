@@ -516,11 +516,9 @@ class App:
     This class should be implemented such that multiple instances can
     be created, and still wrap the same single GUI application instance.
     
-    The method _GetUnderlyingApp() should be called in newFigure() to make
-    sure (as late as possble) that there is a GUI application.
     """
     
-    def _GetUnderlyingApp(self):
+    def _GetNativeApp(self):
         raise NotImplemented()
     
     def ProcessEvents(self):
@@ -528,4 +526,3 @@ class App:
     
     def Run(self):
         raise NotImplemented()
-    

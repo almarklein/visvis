@@ -237,8 +237,9 @@ class Figure(BaseFigure):
 def newFigure():
     """ Create a window with a figure widget.
     """
-    # Make sure the is a GUI application instance
-    app._GetUnderlyingApp()
+    
+    # Make sure there is a native app
+    app._GetNativeApp()
     
     # Create figure
     figure = Figure(560, 420, "Figure")    
@@ -259,15 +260,19 @@ class App(events.App):
     with a simple interface.     
     """
     
-    def _GetUnderlyingApp(self):
+    def _GetNativeApp(self):
         return fltk.Fl
     
     def ProcessEvents(self):
-        app = self._GetUnderlyingApp()
+        app = self._GetNativeApp()
         app.wait(0) 
     
     def Run(self):
-        app = self._GetUnderlyingApp()
-        app.run()
+        app = self._GetNativeApp()
+        if hasattr(app, '_in_event_loop') and app._in_event_loop:
+            pass # Already in event loop
+        else:
+            app.run()
 
+# Create application instance now
 app = App()

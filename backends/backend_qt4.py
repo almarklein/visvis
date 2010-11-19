@@ -39,6 +39,7 @@ import os
 
 from visvis import BaseFigure, events, constants
 from visvis.misc import getResourceDir
+from visvis import guisupport
 
 from PyQt4 import QtCore, QtGui, QtOpenGL
 
@@ -298,8 +299,9 @@ class Figure(BaseFigure):
 def newFigure():
     """ function that produces a new Figure object, the widget
     in a window. """
-    # Make sure the app works
-    app._GetUnderlyingApp()
+    
+    # Make sure there is a native app
+    app._GetNativeApp()
     
     # Create figure
     fig = Figure(None)
@@ -316,22 +318,26 @@ class App(events.App):
     in a simple class with a simple interface.     
     """
     
-    def _GetUnderlyingApp(self):
-        app = QtGui.QApplication.instance()
-        if not app:
-            # No application instance has been made, so we have to 
-            # make it. This means we also have to prevent from getting
-            # deleted. We do this by storing it as qApp.
-            QtGui.qApp = app = QtGui.QApplication([])
+    def _GetNativeApp(self):
+        # Get native app in save way
+        app = guisupport.get_app_qt4()
+        # Store so it won't be deleted, but not on a visvis object,
+        # or an application may produce error when closed
+        QtGui._qApp = app
+        # Return
         return app
     
     def ProcessEvents(self):
-        app = self._GetUnderlyingApp()
+        app = self._GetNativeApp()
         app.flush()
         app.processEvents()
     
     def Run(self):
-        app = self._GetUnderlyingApp()
-        app.exec_()
+        app = self._GetNativeApp()
+        if hasattr(app, '_in_event_loop') and app._in_event_loop:
+            pass # Already in event loop
+        else:
+            app.exec_()
 
+# Create application instance now
 app = App()

@@ -169,7 +169,7 @@ def _loadBackend(name):
         if currentBackend.name != name:
             currentBackend.name = name
             currentBackend.newFigure = module.newFigure
-            currentBackend.app = module.App()
+            currentBackend.app = module.app
         return True
 
 

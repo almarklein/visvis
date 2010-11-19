@@ -30,6 +30,7 @@ import os
 
 from visvis import BaseFigure, events, constants
 from visvis.misc import getResourceDir
+from visvis import guisupport
 
 import wx
 from wx.glcanvas import GLCanvas
@@ -326,8 +327,9 @@ class FigureFrame(wx.Frame):
 def newFigure():
     """ Create a window with a figure widget.
     """
-    # Make sure the app works
-    app._GetUnderlyingApp()
+    
+    # Make sure there is a native app
+    app._GetNativeApp()
     
     # Create figure
     frame = FigureFrame(None, -1, "Figure", size=(560, 420))
@@ -354,16 +356,19 @@ class App(events.App):
     with a simple interface.     
     """
     
-    def _GetUnderlyingApp(self):
-        app = wx.GetApp()
-        if not app:
-            # No application instance has been made, so we have to 
-            # make it. 
-            wx.app_instance = app = wx.PySimpleApp()
+    def _GetNativeApp(self):
+        # Get native app in save way
+        app = guisupport.get_app_wx()
+        # Store so it won't be deleted, but not on a visvis object,
+        # or an application may produce error when closed
+        wx.app_instance = app
+        # Return
         return app
     
     def ProcessEvents(self):
-        app = self._GetUnderlyingApp()
+        
+        # Get app
+        app = self._GetNativeApp()
         
         # Keep reference of old eventloop instance
         old = wx.EventLoop.GetActive()
@@ -378,7 +383,11 @@ class App(events.App):
         wx.EventLoop.SetActive(old)  
     
     def Run(self):
-        app = self._GetUnderlyingApp()
-        app.MainLoop()
+        app = self._GetNativeApp()
+        if hasattr(app, '_in_event_loop') and app._in_event_loop:
+            pass # Already in event loop
+        else:
+            app.MainLoop()
 
+# Create application instance now
 app = App()
