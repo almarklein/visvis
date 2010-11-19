@@ -1311,7 +1311,10 @@ class Aarray(np.ndarray):
                 # Other functions that change the shape cannot be trusted.
                 self._sampling = tuple( [1.0 for i in self.shape] )
                 self._origin = tuple( [0.0 for i in self.shape] )
-            
+        elif isinstance(self, Aarray):
+            # This is an Aarray, but we do not know where it came from
+            self._sampling = tuple( [1.0 for i in self.shape] )
+            self._origin = tuple( [0.0 for i in self.shape] )
     
     
     def __getslice__(self, i, j):
@@ -1338,8 +1341,9 @@ class Aarray(np.ndarray):
         # This means there is only a very small performance penalty
         if isinstance(ob, Aarray):
             sampling, origin = self._correct_sampling(index)
-            ob.sampling = sampling
-            ob.origin = origin
+            if sampling:
+                ob.sampling = sampling
+                ob.origin = origin
         
         # Return
         return ob

@@ -1234,11 +1234,14 @@ class BaseTexture(Wobject):
     
     @DrawAfter
     def SetClim(self, *minmax):
-        """ Set the contrast limits. Different than the property clim, this
+        """ SetClim(self, *minmax)
+        
+        Set the contrast limits. Different than the property clim, this
         re-uploads the texture using different transfer functions. You should
         use this if your data has a higher contrast resolution than 8 bits.
         Takes a bit more time than clim though (which basically takes no
         time at all).
+        
         """
         if len(minmax)==0:
             # set default values

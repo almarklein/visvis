@@ -89,6 +89,8 @@ class BaseCamera(object):
     def __init__(self, *axes):
         
         # store scenes to render in
+        if len(axes)==1 and isinstance(axes[0], (list,tuple)):
+            axes = axes[0]
         self.axeses = axes
         
         # flag for axis
