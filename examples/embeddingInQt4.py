@@ -7,7 +7,10 @@ pyQt or any other backend.
 
 from PyQt4 import QtGui, QtCore
 import visvis as vv
-vv.use('qt4')
+
+# Create a visvis app instance, which wraps a qt4 application object.
+# This needs to be done *before* instantiating the main window. 
+app = vv.use('qt4')
 
 class MainWindow(QtGui.QWidget):
     def __init__(self, *args):
@@ -47,11 +50,10 @@ class MainWindow(QtGui.QWidget):
         self.fig.DrawNow()
     
 
-# Create app and window
-app = QtGui.QApplication([])    
+# Create window
 m = MainWindow()
 m.resize(560, 420)
-
-# Show window and start loop
 m.show()
-app.exec_()
+
+# Run app
+app.Run()

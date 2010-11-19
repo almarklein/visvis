@@ -7,7 +7,11 @@ pyQt or any other backend.
 
 import wx
 import visvis as vv
-vv.use('wx')
+
+# Create a visvis app instance, which wraps a wx application object.
+# This needs to be done *before* instantiating the main window. 
+app = vv.use('wx')
+
 
 class MainWindow(wx.Frame):
     def __init__(self, *args, **kwargs):
@@ -48,10 +52,9 @@ class MainWindow(wx.Frame):
         self.fig.DrawNow()
     
 
-# Create app and window
-app = wx.PySimpleApp()        
+# Create window
 m = MainWindow(None, -1, "Figure", size=(560, 420))
-
-# Show window and start loop
 m.Show()
-app.MainLoop()
+
+# Run app
+app.Run()
