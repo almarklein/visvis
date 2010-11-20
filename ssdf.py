@@ -220,11 +220,17 @@ class Struct(object):
     def __len__(self):
         """ Return amount of fields in the Struct object. """
         return len(self.__dict__)
-        
+    
+    def __add__(self, other):
+        """ Enable adding two structs by combining their elemens. """
+        s = Struct()
+        s.__dict__.update(self.__dict__)
+        s.__dict__.update(other.__dict__)
+        return s
     
     def __repr__(self):
         """ Short string representation. """
-        return "<SSDF struct instance with %i fields>" % len(self)
+        return "<SSDF struct instance with %i elements>" % len(self)
 
 
     def __str__(self):
@@ -236,9 +242,9 @@ class Struct(object):
             c = max(c, len(key))
         
         # How many chars left (to print on less than 80 lines)
-        charsLeft = 79 - (c+3)
+        charsLeft = 79 - (c+4) # 2 spaces and ': '
         
-        s = ''
+        s = 'Elements in SSDF struct:\n'
         for key in self:
             tmp = "%s" % (key)
             value = self[key]
@@ -253,7 +259,7 @@ class Struct(object):
                     #valuestr = "<string with length %i>" % (typestr, len(value))
                 else:
                     valuestr = "<%s with length %i>" % (typestr, len(value))
-            s += tmp.rjust(c+1) + ": %s\n" % (valuestr)
+            s += tmp.rjust(c+2) + ": %s\n" % (valuestr)
         return s
 
 
