@@ -52,9 +52,25 @@ class MainWindow(wx.Frame):
         self.fig.DrawNow()
     
 
-# Create window
-m = MainWindow(None, -1, "Figure", size=(560, 420))
-m.Show()
+# Two ways to create the application and start the main loop
+if True:
+    # The visvis way. Will run in interactive mode when used in IEP or IPython.
+    
+    # Create native app
+    app.Create()
+    # Create window
+    m = MainWindow(None, -1, "Figure", size=(560, 420))
+    m.Show()
+    # Run main loop
+    app.Run()
 
-# Run app
-app.Run()
+else:
+    # The native way.
+    
+    # Create native app
+    wxApp = wx.PySimpleApp()
+    # Create window
+    m = MainWindow(None, -1, "Figure", size=(560, 420))
+    m.Show()
+    # Run main loop
+    wxApp.MainLoop()

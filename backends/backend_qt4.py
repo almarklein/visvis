@@ -57,8 +57,6 @@ KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
             QtCore.Qt.Key_Escape: constants.KEY_ESCAPE,
             }
 
-# todo: get qt4 backend working in IPython
-# Works on vista PC with Python 2.5.2
 
 class GLWidget(QtOpenGL.QGLWidget):
     """ An OpenGL widget inheriting from PyQt4.QtOpenGL.QGLWidget
@@ -87,31 +85,15 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setFocus() # make the widget have focus...
         
-#         # implement timer
-#         self._timer = QtCore.QTimer(self)
-#         self._timer.setInterval(10)  # a bit arbitrary...
-#         self._timer.setSingleShot(True)
-#         self.connect(self._timer, QtCore.SIGNAL('timeout()'), self.timerUpdate)
-#         self._timer.start()
-#         self._CreateTimer()
-
         # Create low level timer
         self._timer = QtCore.QBasicTimer()
         self._timer.start(10,self)
-    
-#     def _CreateTimer(self):
-#         self._timer = QtCore.QTimer(self)
-#         self._timer.setInterval(1)  # a bit arbitrary...
-#         self._timer.setSingleShot(True)
-#         self.connect(self._timer, QtCore.SIGNAL('timeout()'), self.timerUpdate)
-#         self._timer.start()
-    
+
     
     def timerEvent(self, event):       
         
         # Process visvis events
         events.processVisvisEvents()
-        # todo: remove timerUpdate below
     
     def mousePressEvent(self, event):
         but = 0
@@ -301,7 +283,7 @@ def newFigure():
     in a window. """
     
     # Make sure there is a native app
-    app._GetNativeApp()
+    app.Create()
     
     # Create figure
     fig = Figure(None)

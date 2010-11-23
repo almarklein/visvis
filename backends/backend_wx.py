@@ -329,7 +329,7 @@ def newFigure():
     """
     
     # Make sure there is a native app
-    app._GetNativeApp()
+    app.Create()
     
     # Create figure
     frame = FigureFrame(None, -1, "Figure", size=(560, 420))

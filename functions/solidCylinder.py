@@ -55,7 +55,7 @@ def solidCylinder(translation=None, scaling=None, direction=None, rotation=None,
         for n in range(N+1):
             b = pi2 * float(n) / N
             u = float(n) / (N)
-            x = cos(b) * m # todo: check welke frontfacing!
+            x = cos(b) * m # todo: check which ones are frontfacing!
             y = sin(b) * m
             vertices.append(x,y,1)
             normals.append(0,0,1)

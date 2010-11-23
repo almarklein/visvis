@@ -239,7 +239,7 @@ def newFigure():
     """
     
     # Make sure there is a native app
-    app._GetNativeApp()
+    app.Create()
     
     # Create figure
     figure = Figure(560, 420, "Figure")    
