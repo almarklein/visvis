@@ -518,6 +518,15 @@ class App:
     
     """
     
+    def Create(self):
+        """ Create()
+        
+        Create the native application object. 
+        
+        """
+        # Make sure the app exists
+        self._GetNativeApp()
+    
     def _GetNativeApp(self):
         raise NotImplemented()
     
