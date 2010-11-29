@@ -60,9 +60,9 @@ class Recorder:
         return [frame for frame in self._frames]
     
     
-    def Export(self, filename, duration=0.1, repeat=True, encoding='mpeg4', 
-                **kwargs):
-        """ Export(self, filename, duration=0.1, repeat=True, encoding='mpeg4')
+    def Export(self, filename, duration=0.1, repeat=True, **kwargs):
+        """ Export(self, filename, duration=0.1, repeat=True, **kwargs)
+        
         Export recorded movie to either:
           * a series of images
           * an animated GIF 
@@ -70,9 +70,10 @@ class Recorder:
           * an AVI file
         
         See vv.movieWrite for more information.
+        
         """
         frames = self.GetFrames()
-        vv.movieWrite(filename, frames, duration, repeat, encoding, **kwargs)
+        vv.movieWrite(filename, frames, duration, repeat, **kwargs)
 
 
 def record(ob):
