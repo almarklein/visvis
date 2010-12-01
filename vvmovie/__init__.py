@@ -145,7 +145,7 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     elif EXT == 'SWF':
         writeSwf(filename, images, duration, repeat, **kwargs)
     elif EXT in videoTypes:
-        writeAvi(filename, images, duration, encoding, **kwargs)
+        writeAvi(filename, images, duration, **kwargs)
     elif EXT in imageTypes:
         writeIms(filename, images, **kwargs)
     else:
