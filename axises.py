@@ -411,6 +411,9 @@ class BaseAxis(base.Wobject):
         self._xticks, self._yticks, self._zticks = None, None, None
         self._xlabel, self._ylabel, self._zlabel = '','',''
         
+        # For the cartesian 2D axis, xticks can be rotated
+        self._xTicksAngle = 0
+        
         # Define parameters
         self._lineWidth = 1 # 0.8
         self._minTickDist = 40
@@ -450,6 +453,7 @@ class BaseAxis(base.Wobject):
         def fset(self, value):
             self._axisColor = getColor(value, 'setting axis color')
     
+    
     @PropWithDraw
     def tickFontSize():
         """ Get/Set the font size of the tick marks. """
@@ -457,6 +461,7 @@ class BaseAxis(base.Wobject):
             return self._tickFontSize
         def fset(self, value):
             self._tickFontSize = value
+    
     
     @PropWithDraw
     def gridLineStyle():
@@ -873,7 +878,20 @@ class CartesianAxis2D(BaseAxis):
     The CartesianAxis2D is a straightforward axis, drawing straight
     lines for cartesian coordinates in 2D.
     """
-
+    
+    @PropWithDraw
+    def xTicksAngle():
+        """ Get/Set the angle of the tick marks for te x-dimension. 
+        This can be used when the tick labels are long, to prevent
+        them from overlapping. Note that if this value is non-zero, 
+        the horizontal alignment is changed to left (instead of center). 
+        """
+        def fget(self):
+            return self._xTicksAngle
+        def fset(self, value):
+            self._xTicksAngle = value
+    
+    
     def _CreateLinesAndLabels(self, axes):
         """ This is the method that calculates where lines should be
         drawn and where labels should be placed.
@@ -1011,14 +1029,17 @@ class CartesianAxis2D(BaseAxis):
                 newTextDicts[d][tick] = t
                 # Set other properties right
                 t._visible = True
-                if t.fontSize != self._tickFontSize:
-                    t.fontSize = self._tickFontSize
+                t.fontSize = self._tickFontSize
                 t._color = self._axisColor
                 if d==1:
                     t.halign = 1
                     t.valign = 0
                 else:
-                    t.halign = 0
+                    t.textAngle = self._xTicksAngle
+                    if self._xTicksAngle:
+                        t.halign = -1
+                    else:
+                        t.halign = 0
                     t.valign = -1
             
             # We should hide this last tick if it sticks out
