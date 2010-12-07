@@ -1,14 +1,19 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
 from visvis.pypoints import Point, Pointset
 import time
 
 class GinputHelper(object):
-    """
+    """ GinputHelper()
+    
     Helper class for ginput function.
     Keeps track of things.
+    
     """
     
     def __init__(self):
@@ -98,6 +103,7 @@ def ginput(N=0, axes=None, ms='+', **kwargs):
     If no axes is given, the current axes is used. 
     Any other keyword arguments (as well as the ms arg) are passed to plot 
     to show the selected points and the lines between them.
+    
     """
     
     # Get axes

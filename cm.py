@@ -1,20 +1,8 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module cm
 
@@ -43,8 +31,8 @@ import weakref
 class ClimEditor(DraggableBox):
     """ CLimEditor(parent, *args)
     
-    A wibject to edit the clim property of textures a la window-width,
-    window-level.
+    A wibject to edit the clim property of textures (thereby setting
+    window-width and window-level).
     
     During initialization, SetMapables(*args) is called. The easiest way 
     to use this wibject is to attach it to an axes or figure instance. 
@@ -129,9 +117,11 @@ class ClimEditor(DraggableBox):
     
     def GetMapables(self):
         """ GetMapables()
+        
         Get a list of the objects to apply the colormap to. If an axes or 
         figure was given, all eligable objects are queried from their 
         children.
+        
         """
         
         # Remove dead refs
@@ -164,6 +154,7 @@ class ColormapEditor(DraggableBox):
     During initialization, SetMapables(*args) is called. The easiest way 
     to use this wibject is to attach it to an axes or figure instance. 
     The wibject then controls the colormaps of all mapable objects in them.
+    
     """
     
     def __init__(self, parent, *args):
@@ -274,6 +265,7 @@ class ColormapEditor(DraggableBox):
         
         The colormap of the last mapable obtained by GetMapables is used
         to set the nodes in the wibject (if possible).
+        
         """
         
         # Parse input
@@ -346,9 +338,11 @@ class ColormapEditor(DraggableBox):
     
     def GetMapables(self):
         """ GetMapables()
+        
         Get a list of the objects to apply the colormap to. If an axes or 
         figure was given, all eligable objects are queried from their 
         children.
+        
         """
         
         # Remove dead refs
@@ -372,7 +366,10 @@ class ColormapEditor(DraggableBox):
 
 
 class CM_NodeWidget(Box):
-    """ Class to modify node positions using the mouse. 
+    """ CM_NodeWidget(parent)
+    
+    Class to modify node positions using the mouse. 
+    
     """
     
     def __init__(self, parent):
@@ -595,12 +592,14 @@ class CM_NodeWidget(Box):
 
 class Colorbar(Box):
     """ Colorbar(parent)
+    
     This wibject displays the colormap applied to a certain mapable.
     It should be attached to an Axes or Figure. The displayed colormap
     is that of the last added (or last added in the last axes) mapable
     object.
     
     A Colorbar can be created with the function vv.colorbar().
+    
     """
     
     def __init__(self, parent):        

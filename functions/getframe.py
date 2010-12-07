@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
 
@@ -12,9 +15,11 @@ import numpy as np
 
 def getframe(ob):
     """ getframe(object)
+    
     Get a snapshot of the current figure or axes or axesContainer.
     It is retured as a numpy array (color image).
     Also see vv.screenshot().
+    
     """
     
     # we read the pixels as shown on screen.

@@ -1,20 +1,8 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module events
 
@@ -30,8 +18,12 @@ import weakref
 
 
 class CallableObject:
-    """ A class to hold a callable using weak references.
-    It can distinguish between functions and methods. """
+    """ CallableObject(callable)
+    
+    A class to hold a callable using weak references.
+    It can distinguish between functions and methods. 
+    
+    """
     def __init__(self, c):
         if hasattr(c,'im_func'):
             self._func = weakref.ref(c.im_func)
@@ -41,12 +33,16 @@ class CallableObject:
             self._ob = None
     
     def isdead(self):
+        """ Get whether the weak ref is dead. 
+        """
         if self._func() is None or (self._ob and self._ob() is None):
             return True
         else:
             return False
     
     def call(self, *args):
+        """ Call the callable.
+        """
         func = self._func()
         if self._ob:
             return func(self._ob(), *args)
@@ -54,6 +50,8 @@ class CallableObject:
             return func(*args)
     
     def compare(self, other):
+        """ compare this instance with another.
+        """
         # compare func
         if self._func() is not other._func():
             return False
@@ -74,14 +72,15 @@ class BaseEvent:
     
     The purpose of the event class is to provide a way to bind/unbind 
     to events and to fire them. At the same time, it is the place where
-     the properties of the event are stored (such mouse location, key 
+    the properties of the event are stored (such mouse location, key 
     being pressed, ...).
     
-    One can Bind or Unbind a callable to the event. When fired, all 
+    One can Bind() or Unbind() a callable to the event. When fired, all 
     handlers that are bind to this event are called, until the event is 
     handled (a handler returns True). The handlers are called with the 
-    event object as an argument. The event.owner providesa reference of 
-    what wobject/wibject sent the event.     
+    event object as an argument. The event.owner provides a reference of 
+    what wobject/wibject fired the event.
+    
     """
     
     def __init__(self, owner):
@@ -92,30 +91,37 @@ class BaseEvent:
     
     def Set(self):
         """ Set() 
+        
         Set the event properties before firing it. In the base event
         there are not properties to set.
+        
         """
         pass
     
     
     @property
     def owner(self):
-        """ The object that this event belongs to. """
+        """ The object that this event belongs to. 
+        """
         return self._owner()
 
 
     @property
     def type(self):
-        """ The type (__class__) of this event. """
+        """ The type (__class__) of this event. 
+        """
         return self.__class__
     
     
     def Bind(self, func):
         """ Bind(func)
-        Add an eventhandler to the list.             
-        func (the callback/handler) must be a callable. It is called
+        
+        Add an eventhandler to this event.             
+        
+        The callback/handler (func) must be a callable. It is called
         with one argument: the event instance, which contains the mouse 
         location for the mouse event and the keycode for the key event.
+        
         """
         
         # check
@@ -137,7 +143,9 @@ class BaseEvent:
 
     def Unbind(self, func=None):
         """ Unbind(func=None)
-        Unsubscribe a handler, If func is None, remove all handlers.      
+        
+        Unsubscribe a handler, If func is None, remove all handlers.  
+        
         """
         if func is None:
             self._handlers[:] = []
@@ -151,8 +159,10 @@ class BaseEvent:
     
     def Fire(self):
         """ Fire()
+        
         Fire the event, calling all functions that are bound
         to it, untill the event is handled (a handler returns True).
+        
         """
         
         # remove dead weakrefs
@@ -199,8 +209,10 @@ class BaseEvent:
 
 
 class MouseEvent(BaseEvent):
-    """ A MouseEvent is an event for things that happen 
-    with the mouse.
+    """ MouseEvent(owner)
+    
+    A MouseEvent is an event for things that happen  with the mouse.
+    
     """
     
     def __init__(self, owner):
@@ -213,7 +225,9 @@ class MouseEvent(BaseEvent):
     
     def Set(self, absx, absy, but):
         """ Set(absx, absy, but)
+        
         Set the event properties before firing it. 
+        
         """
         
         # Set properties we can alway set
@@ -265,25 +279,29 @@ class MouseEvent(BaseEvent):
     @property
     def absx(self):
         """ The absolute x position in screen coordinates when the event
-        happened. """
+        happened. 
+        """
         return self._absx
     
     @property
     def absy(self):
         """ The absolute y position in screen coordinates when the event
-        happened. """
+        happened. 
+        """
         return self._absy
     
     @property
     def x(self):
         """ The x position in screen coordinates relative to the owning object
-        when the event happened. (For Wobjects, relative to the Axes.) """
+        when the event happened. (For Wobjects, relative to the Axes.) 
+        """
         return self._x
     
     @property
     def y(self):
         """ The y position in screen coordinates relative to the owning object
-        when the event happened. (For Wobjects, relative to the Axes.) """
+        when the event happened. (For Wobjects, relative to the Axes.) 
+        """
         return self._y
     
     @property
@@ -302,13 +320,16 @@ class MouseEvent(BaseEvent):
     
     @property
     def button(self):
-        """ The The mouse button that was pressed, 0=none, 1=left, 2=right. """
+        """ The The mouse button that was pressed, 0=none, 1=left, 2=right. 
+        """
         return self._but
 
 
 class KeyEvent(BaseEvent):
-    """ A KeyEvent event is an event for things that happen 
-    with the keyboard.
+    """ KeyEvent(owner)
+    
+    A KeyEvent event is an event for things that happen with the keyboard.
+    
     """
     
     def __init__(self, owner):
@@ -319,19 +340,23 @@ class KeyEvent(BaseEvent):
     
     def Set(self, key, text=''):
         """ Set(key, text='')
+        
         Set the event properties before firing it. 
+        
         """
         self._key = key
         self._text = text
     
     @property
     def key(self):
-        """ The integer keycode of the key. """
+        """ The integer keycode of the key. 
+        """
         return self._key
     
     @property
     def text(self):
-        """ The text that the key represents (if available). """
+        """ The text that the key represents (if available). 
+        """
         return self._text
 
 
@@ -340,39 +365,81 @@ class KeyEvent(BaseEvent):
 # to help introspection.
 
 class EventMouseDown(MouseEvent):
-    """ Fired when the mouse is pressed down on this object. (Also 
-        fired the first click of a double click.) """
+    """ EventMouseDown(owner)
+    
+    Fired when the mouse is pressed down on this object. (Also 
+    fired the first click of a double click.) 
+    
+    """
     pass
+
 class EventMouseUp(MouseEvent):
-    """ Fired when the mouse is released after having been clicked down
-        on this object (even if the mouse is now not over the object). (Also
-        fired on the first click of a double click.) """
+    """ EventMouseUp(owner)
+    
+    Fired when the mouse is released after having been clicked down
+    on this object (even if the mouse is now not over the object). (Also
+    fired on the first click of a double click.) 
+    
+    """
     pass
+
 class EventDoubleClick(MouseEvent):
-    """ Fired when the mouse is double-clicked on this object. """
+    """ EventDoubleClick(owner)
+    
+    Fired when the mouse is double-clicked on this object. 
+    
+    """
     pass
+
 class EventEnter(MouseEvent):
-    """ Fired when the mouse enters this object or one of its children. """
+    """ EventEnter(owner)
+    
+    Fired when the mouse enters this object or one of its children. 
+    
+    """
     pass
+
 class EventLeave(MouseEvent):
-    """ Fired when the mouse leaves this object (and is also not over any
-        of it's children). """
+    """ EventLeave(owner)
+    
+    Fired when the mouse leaves this object (and is also not over any
+    of it's children). 
+    
+    """
     pass
 
 class EventMotion(MouseEvent):
-    """ Fired when the mouse is moved anywhere in the figure. """
+    """ EventMotion(owner)
+    
+    Fired when the mouse is moved anywhere in the figure. 
+    
+    """
     pass
+
 class EventKeyDown(KeyEvent):
-    """ Fired when a key is pressed down while the figure is active. """
+    """ EventKeyDown(owner)
+    
+    Fired when a key is pressed down while the figure is active. 
+    
+    """
     pass
+
 class EventKeyUp(KeyEvent):
-    """ Fired when a key is released while the figure is active. """
+    """ EventKeyUp(owner) 
+    
+    Fired when a key is released while the figure is active. 
+    
+    """
     pass
 
 ## Only for wibjects
 
 class EventPosition(BaseEvent):
-    """ Fired when the position (or size) of this wibject changes. """ 
+    """ EventPosition(owner)
+    
+    Fired when the position (or size) of this wibject changes. 
+    
+    """ 
     pass
     
 
@@ -392,6 +459,7 @@ def processVisvisEvents():
     
     To keep a figure responsive while running, periodically call 
     Figure.DrawNow() or vv.processEvents().
+    
     """
     Timer._TestAllTimers()
 
@@ -407,6 +475,7 @@ class Timer(BaseEvent):
     behind. If the previous Fire() was a bit too late the next Fire 
     will take place sooner. This will make that at an interval of 
     1000, 3600 events will have been fired in one hour. 
+    
     """
     
     _timers = []    
@@ -428,9 +497,11 @@ class Timer(BaseEvent):
 
 
     def Start(self, interval=None, oneshot=None):
-        """ Start the timer. 
-        If interval end oneshot are not given, their current 
-        values are used.
+        """ Start(interval=None, oneshot=None)
+        
+        Start the timer. If interval end oneshot are not given, 
+        their current values are used.
+        
         """
         # set properties?
         if interval is not None:
@@ -444,12 +515,19 @@ class Timer(BaseEvent):
     
     
     def Stop(self):
-        """ Stop the timer from running. """
+        """ Stop()
+        
+        Stop the timer from running. 
+        
+        """
         self._running = False
     
     
     def Destroy(self):
-        """ Destroy the timer, preventing it from ever fyring again.
+        """ Destroy()
+        
+        Destroy the timer, preventing it from ever fyring again.
+        
         """
         self.Stop()
         tmp = weakref.ref(self)
@@ -458,7 +536,8 @@ class Timer(BaseEvent):
     
     @property
     def isRunning(self):
-        """ Check whether the timer is running. """
+        """ Get whether the timer is running. 
+        """
         return self._running
     
     
@@ -510,7 +589,9 @@ class Timer(BaseEvent):
                 pass
 
 class App:
-    """ Application class to wrap the GUI applications in a simple class
+    """ App()
+    
+    Application class to wrap the GUI applications in a simple class
     with a simple interface.     
     
     This class should be implemented such that multiple instances can
@@ -521,7 +602,8 @@ class App:
     def Create(self):
         """ Create()
         
-        Create the native application object. 
+        Create the native application object. When embedding visvis in an
+        application, call this method before instantiating the main window.
         
         """
         # Make sure the app exists

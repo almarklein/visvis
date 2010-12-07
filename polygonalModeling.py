@@ -1,20 +1,8 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module polygonalModeling
 
@@ -33,10 +21,12 @@ import OpenGL.GL as gl
 
 
 def _testColor(value, canBeScalar=True):
-    """ _testColor(value)
+    """ _testColor(value, canBeScalar=True)
+    
     Tests a color whether it is a sequence of 3 or 4 values.
     It returns a 4 element tuple or raises an error if the suplied
     data is incorrect.
+    
     """
     
     # Deal with named colors
@@ -64,8 +54,10 @@ def _testColor(value, canBeScalar=True):
 
 def _getColor(color, ref):
         """ _getColor(color, reference)
+        
         Get the real color as a 4 element tuple, using the reference
         color if the given color is a scalar.
+        
         """
         if isinstance(color, float):
             return (color*ref[0], color*ref[1], color*ref[2], ref[3])
@@ -75,10 +67,12 @@ def _getColor(color, ref):
 
 # todo: implement spot light and attenuation
 class Light(object):
-    """ A Light object represents a light source in the scene. It 
+    """ Light(axes, index)
+    
+    A Light object represents a light source in the scene. It 
     determines how lit objects (such as Mesh objects) are visualized.
     
-    Each axes has 8 light sources, of which only the 0th is turned on
+    Each axes has 8 light sources, of which the 0th is turned on
     by default. De 0th light source provides the ambient light in the
     scene (the ambient component is 0 by default for the other light
     sources). Obtain the lights using the axes.light0 and axes.lights
@@ -87,6 +81,7 @@ class Light(object):
     The 0th light source is a directional camera light by default; it
     shines in the direction in which you look. The other lights are 
     oriented at the origin by default.
+    
     """
     
     def __init__(self, axes, index):
@@ -155,7 +150,6 @@ class Light(object):
         light that comes from one direction, so it's brighter if it comes
         squarely down on a surface than if it barely glances off the 
         surface. It depends on the light position how a material is lit.
-        
         """
         def fget(self):
             return self._diffuse
@@ -248,12 +242,16 @@ class Light(object):
     
     @property
     def isOn(self):
+        """ Get whether the light is on.
+        """
         return self._on
     
     
     def _Apply(self):
         """ _Apply()
+        
         Apply the light position and other properties.
+        
         """
         thisLight = gl.GL_LIGHT0 + self._index
         if self._on:
@@ -271,8 +269,11 @@ class Light(object):
 
 
 def check3dArray(value):
-    """ Check the shape of vertex/color/texcord data. 
+    """ check3dArray(value)
+    
+    Check the shape of vertex/color/texcord data. 
     Always returns a numpy array. 
+    
     """
     if isinstance(value, np.ndarray):
         if not (value.ndim == 2 and value.shape[1] == 3):
@@ -292,15 +293,16 @@ def check3dArray(value):
 class BaseMesh(object):
     """ BaseMesh(vertices, normals=None, faces=None,
             colors=None, texcords=None, verticesPerFace=3)
-        
-        The BaseMesh class represents a mesh in its pure mathematical
-        form (without any visualization properties). Essentially, it
-        serves as a container for the vertices, normals, faces, colors,
-        and texcords.
-        
-        See the Mesh and OrientableMesh classes for representations that
-        include visualization properties.
-        """
+    
+    The BaseMesh class represents a mesh in its pure mathematical
+    form (without any visualization properties). Essentially, it
+    serves as a container for the vertices, normals, faces, colors,
+    and texcords.
+    
+    See the Mesh and OrientableMesh classes for representations that
+    include visualization properties.
+    
+    """
     
     def __init__(self, vertices, normals=None, faces=None,
             colors=None, texcords=None, verticesPerFace=3):
@@ -323,7 +325,9 @@ class BaseMesh(object):
     @DrawAfter
     def SetVertices(self, vertices):
         """ SetVertices(vertices)
+        
         Set the vertex data as a Nx3 numpy array or as a 3D Pointset. 
+        
         """
         try:
             self._vertices = check3dArray(vertices)
@@ -334,7 +338,9 @@ class BaseMesh(object):
     @DrawAfter
     def SetNormals(self, normals):
         """ SetNormals(normals)
+        
         Set the normal data as a Nx3 numpy array or as a 3D Pointset. 
+        
         """
         if normals is not None:
             try:
@@ -348,8 +354,10 @@ class BaseMesh(object):
     @DrawAfter
     def SetColors(self, colors):
         """ SetColors(colors)
+        
         Set the color data as a Nx3 numpy array or as a 3D Pointset. 
         Use None as an argument to remove the color data.
+        
         """
         if colors is not None:
             # Scale
@@ -372,8 +380,10 @@ class BaseMesh(object):
     @DrawAfter
     def SetTexcords(self, texcords):
         """ SetTexcords(texcords)
+        
         Set the texture coordinates as a Nx2 numpy array or as a 2D Pointset.
         Use None as an argument to turn off the texture.
+        
         """
         if texcords is not None:
         
@@ -405,9 +415,11 @@ class BaseMesh(object):
     @DrawAfter
     def SetFaces(self, faces):
         """ SetFaces(faces)
+        
         Set the faces data. This can be either a list, a 1D numpy array,
         a Nx3 numpy array, or a Nx4 numpy array. In the latter two cases
         the type is set to GL_TRIANGLES or GL_QUADS respectively.
+        
         """
         
         # Check and store faces
@@ -443,10 +455,12 @@ class BaseMesh(object):
     
     def _GetFaces(self):
         """ _GetFaces()
+        
         Get 2D array with face indices (even if the mesh has no faces array).
         To be used for mesh processing. On the 0th axis are the different
         faces. Along the 1st axis are the different vertex indices that
         make up that face. 
+        
         """   
         if self._faces is None:
             faces = np.arange(len(self._vertices))
@@ -474,35 +488,38 @@ class Mesh(Wobject, BaseMesh):
     
     A mesh can also be created from another mesh using Mesh(parent, otherMesh).
     
-    *Vertices* is a Nx3 numpy array of vertex positions in 3D space.
+    Parameters
+    ----------
+    Vertices : Nx3 numpy array 
+        The vertex positions in 3D space.
+    Normals : Nx3 numpy array
+        The vertex normals. If not given, they are calcululated
+        from the vertices.
+    Faces : (optional) numpy array or list of indices
+        Defines the faces. If this array is Nx3 or Nx4, verticesPerFace is
+        inferred from this array. Faces should be of uint8, uint16 or
+        uint32 (if it is not, the data is converted to uint32).
+    Colors : (optional) Nx3 or Nx4 numpy array
+        The ambient and diffuse color for each vertex. 
+    Texcords : (optional) numpy array
+        Used to map a 2D texture or 1D texture (a colormap) to the
+        mesh. The texture color is multiplied after the ambient and diffuse
+        lighting calculations, but before calculating the specular component.
+        If texcords is a 1D (size N) array it specifies the color index at each
+        vertex. If texcords is a Nx2 array it represents the 2D texture 
+        coordinates to map an image to the mesh. Use SetTexture() to set 
+        the image, and the colormap property to set the colormap.
+    VerticesPerFace : 3 or 4
+        Determines whether the faces are triangles or quads. If faces is
+        specified and is 2D, the number of vertices per face is determined
+        from that array.
     
-    *Normals* is a Nx3 numpy array of vertex normals. If not given, 
-    it is calcululated from the vertices.
-    
-    *Faces* (optional) is a numpy array or list of indices to define the faces.
-    If this array is Nx3 or Nx4, verticesPerFace is inferred from this array.
-    Faces should be of uint8, uint16 or uint32 (if it is not, the data is
-    converted to uint32).
-    
+    Colors
+    ------
     Per vertex color can be supplied in three ways:
       * explicitly by giving an Nx3 or Nx4 colors array
       * by supplying 1D texcords which  are looked up in the colormap
       * by supplying a 2D texcords array and setting a 2D texture image
-    
-    *Colors* is a Nx3 or Nx4 numpy array giving the ambient and diffuse color
-    for each vertex. 
-    
-    *Texcords* is used to map a 2D texture or 1D texture (a colormap) to the
-    mesh. The texture color is multiplied after the ambient and diffuse
-    lighting calculations, but before calculating the specular component.
-    If texcords is a 1D (size N) array it specifies the color index at each
-    vertex. If texcords is a Nx2 array it represents the 2D texture 
-    coordinates to map an image to the mesh. Use SetTexture() to set 
-    the image, and the colormap property to set the colormap.
-    
-    *VerticesPerFace* can be 3 or 4. It determines whether the faces are
-    triangles or quads. If faces is specified and is 2D, the number of
-    vertices per face is determined from that array.
     
     """ 
     
@@ -736,13 +753,13 @@ class Mesh(Wobject, BaseMesh):
     ## Setters
     
     
-    
-    
     @DrawAfter
     def SetTexture(self, data):
         """ SetTexture(data)
+        
         Set the texture image to map to the mesh.
         Use None as an argument to remove the texture.
+        
         """
         if data is not None:
             # Check dimensions
@@ -781,7 +798,9 @@ class Mesh(Wobject, BaseMesh):
     
     def _GetLimits(self):
         """ _GetLimits()
+        
         Get the limits in world coordinates between which the object exists.
+        
         """
         
         # Get vertices and remove nans
@@ -967,10 +986,10 @@ class OrientableMesh(Mesh, OrientationForWobjects_mixClass):
     space: scaling, translation, direction, rotation.
     
     See the Mesh class for more information.
+    
     """
     
     def __init__(self, *args, **kwargs):
         Mesh.__init__(self, *args, **kwargs)
         OrientationForWobjects_mixClass.__init__(self)
 
-    

@@ -1,7 +1,11 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
+import numpy as np
 
 def volshow(vol, clim=None, renderStyle='mip', cm=None, 
             axesAdjust=True, axes=None):
@@ -17,11 +21,20 @@ def volshow(vol, clim=None, renderStyle='mip', cm=None,
     If axesAdjust==True, this function will call axes.SetLimits(), and set
     the camera type to 3D. If daspectAuto has not been set yet, it is set 
     to False.
+    
     """
     
     # get axes
     if axes is None:
         axes = vv.gca()
+    
+     # Check data
+    if not isinstance(vol, np.ndarray):
+        raise ValueError('volshow expects an image as a numpy array.')
+    if vol.ndim==3 or vol.ndim==4 and vol.shape[-1] in [1,3,4]:
+        pass
+    else:
+        raise ValueError('volshow expects a 3D image as a numpy array.')
     
     # create texture
     t = vv.Texture3D(axes, vol, renderStyle)

@@ -1,27 +1,14 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module wobjects
 
 All wobjects are inserted in this namespace, thereby providing
 the user with a list of all wobjects. All wobjects are also
 inserted in the root visvis namespace.
-
 
 """
 
@@ -32,11 +19,15 @@ from textures import Texture2D, Texture3D
 from polygonalModeling import Mesh, OrientableMesh
 
 class MotionDataContainer(Wobject):
-    """ The motion data container is a wobject that can contain
+    """ MotionDataContainer(parent, interval=100)
+    
+    The motion data container is a wobject that can contain
     several data, which are displayed alternatively using a 
     timer.
+    
     The data are simply stored as the wobject's children, and are
     made visible one at a time.
+    
     """
     
     def __init__(self, parent, interval=100):
@@ -54,7 +45,8 @@ class MotionDataContainer(Wobject):
     
     @property
     def timer(self):
-        """ Get the timer object used to make the objects visible. """
+        """ Get the timer object used to make the objects visible. 
+        """
         return self._timer
     
     
@@ -78,3 +70,4 @@ class MotionDataContainer(Wobject):
         
         # show it!        
         a.Draw()
+

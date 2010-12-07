@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
 import numpy as np
@@ -80,6 +83,7 @@ def solidSphere(translation=None, scaling=None, direction=None, rotation=None,
     N is the number of subdivisions around the Z axis (similar to lines
     of longitude). M is the number of subdivisions along the Z axis 
     (similar to lines of latitude).
+    
     """
     
     # Note that the number of vertices around the axis is N+1. This

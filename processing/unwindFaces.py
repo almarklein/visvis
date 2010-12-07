@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import numpy as np
 
@@ -10,6 +13,7 @@ def unwindFaces(mesh):
     color and texCords, which are usually larger. The new arrays 
     represent the same surface, but is described without a faces
     array. 
+    
     """
     
     # Make new vertices and normals if faces are used

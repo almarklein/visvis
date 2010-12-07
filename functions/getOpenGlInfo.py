@@ -1,15 +1,20 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
 
 def getOpenGlInfo():
     """ getOpenGlInfo()
+    
     Get information about the OpenGl version on this system. 
     Returned is a tuple (version, vendor, renderer, extensions) 
     
     A figure is created and removed to create an openGl context if
     this is necessary.
+    
     """
     
     # Open figure first. On Windows we can try obtaining the information,

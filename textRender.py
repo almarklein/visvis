@@ -1,20 +1,8 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module textRender
 
@@ -23,46 +11,54 @@ Produces a wibject and a wobject: Label and Text,
 which are both able to produce a single line of text
 oriented at a certain angle.
 
-Characters are available for the following unicode sets:
-u0020 - u003f  numbers
-u0040 - u00bf  alphabet
-u00c0 - u037f  latin
-u0380 - u03ff  greek
-u2000 - u23ff  symbols
+
+Formatting
+----------
 
 Text can be formatted using the following constructs (which can be mixed):
-hello^2 or hello^{there}, makes one or more charactes superscript.
-hello_2 or hello_{there}, makes one or more charactes subscript.
-hell\io or hell\i{ohoo}, makes one or more charactes italic.
-hell\bo or hell\b{ohoo}, makes one or more charactes bold.
-hello\_there,  a backslash escapes, thus keeping the _^ or \ after it.
+  * hello^2 or hello^{there}, makes one or more charactes superscript.
+  * hello_2 or hello_{there}, makes one or more charactes subscript.
+  * hell\io or hell\i{ohoo}, makes one or more charactes italic.
+  * hell\bo or hell\b{ohoo}, makes one or more charactes bold.
+  * hello\_there,  a backslash escapes, thus keeping the _^ or \ after it.
+
+
+Special characters
+------------------
+
+Characters are available for the following unicode sets:
+  * u0020 - u003f  numbers
+  * u0040 - u00bf  alphabet
+  * u00c0 - u037f  latin
+  * u0380 - u03ff  greek
+  * u2000 - u23ff  symbols
 
 There are several escape sequences for (mathematical) characters
 that can be inserted using the backslash (for example '\infty').
 People familiar with Latex know what they do:
-Re          Im          null        infty
-int         iint        iiint       forall
-leq         geq         approx      approxeq        ne          in
-leftarrow   uparrow     rightarrow  downarrow
-Leftarrow   Uparrow     Rightarrow  Downarrow
-leftceil    rightceil   leftfloor   rightfloor
-times       cdot        pm
-oplus       ominus      otimes      oslash
-
-Note: In case one needs a character that is not in this list, 
-one can always look up its unicode value and use that instead.
+  * Re          Im          null        infty
+  * int         iint        iiint       forall
+  * leq         geq         approx      approxeq        ne          in
+  * leftarrow   uparrow     rightarrow  downarrow
+  * Leftarrow   Uparrow     Rightarrow  Downarrow
+  * leftceil    rightceil   leftfloor   rightfloor
+  * times       cdot        pm
+  * oplus       ominus      otimes      oslash
 
 Letters from the greek alfabet can be inserted in the same 
 way (By starting the name with an uppercase letter, the
 corresponding upper case greek letter is inserted):
-alpha       beta        gamma       delta
-epsilon     zeta        eta         theta
-iota        kappa       lambda      mu
-nu          xi          omicron     pi
-rho         varsigma    sigma       tau
-upsilon     phi         chi         psi
-omega
-    
+  * alpha       beta        gamma       delta
+  * epsilon     zeta        eta         theta
+  * iota        kappa       lambda      mu
+  * nu          xi          omicron     pi
+  * rho         varsigma    sigma       tau
+  * upsilon     phi         chi         psi
+  * omega
+
+Note: In case one needs a character that is not in this list, 
+one can always look up its unicode value and use that instead.
+
 """
 
 
@@ -119,8 +115,11 @@ escapesKeys.sort( lambda x,y:len(y)-len(x))
 
 
 class Font(TextureObject):
-    """ A Font object holds the texture that contains all the
-    characters. """
+    """ Font(info)
+    
+    A Font object holds the texture that contains all the characters. 
+    
+    """
     
     def __init__(self, info):
         TextureObject.__init__(self, 2)
@@ -132,7 +131,8 @@ class Font(TextureObject):
         self.SetData(self.info.data)
     
     def _UploadTexture(self, data, *args):
-        """ Overload to make it an alpha map. """
+        """ Overload to make it an alpha map. 
+        """
         
         # Add lumincance channel
         data2 = np.zeros((data.shape[0],data.shape[1],2), dtype=np.uint8)
@@ -154,8 +154,11 @@ class Font(TextureObject):
 
 
 class FontManager:
-    """ Manager of fonts. 
+    """ FontManager()
+    
+    Manager of fonts. 
     There should be only one instance of this class for each figure/context. 
+    
     """
     
     def __init__(self):
@@ -167,9 +170,13 @@ class FontManager:
         self.fonts = {}
         
     def GetFont(self, fontname):
-        """ Get a font instance. If that font was created earlier,
+        """ GetFont(fontname)
+        
+        Get a font instance. If that font was created earlier,
         that font is returned, otherwise it is created and stored
-        for reuse. """
+        for reuse. 
+        
+        """
         if fontname in self.fonts:
             return self.fonts[fontname]
         elif hasattr(self.s, fontname):
@@ -181,13 +188,15 @@ class FontManager:
 
 
 class Glyph(object):
-    """ A glyph is a character. It is visualized by rendering
+    """ Glyph(font, char, size=12, styles=None)
+    
+    A glyph is a character. It is visualized by rendering
     the proper part from the texture stored in the Font object.
-    sizex, sizey - Represent the size of the glyph
-    dy - offset in y direction (for sub/super scripts)
-    width - specifies how much space there should be before the next char
-            is printed.
-    s1 s2 t1 t2 - Represent texture coordinates
+    
+      * sizex and sizey represent the size of the glyph.
+      * dy represents the offset in y direction (for sub/super scripts)
+      * width specifies how much space there should be before the next char
+      * s1 s2 t1 t2 represent texture coordinates
     
     """
     # the font.info contains
@@ -195,6 +204,7 @@ class Glyph(object):
     # - an array of origin 's
     # - an array of size's
     # - fontsize of the font in the data array
+    
     def __init__(self, font, char, size=12, styles=None):
         
         # unwind the style for this glyph
@@ -273,10 +283,14 @@ class Glyph(object):
 
 
 class MiniStyle:
-    """ Class that represents the style of characters (sub/super script,
+    """ MiniStyle(script=0, bold=False, italic=False)
+    
+    Class that represents the style of characters (sub/super script,
     bold, and italic. Used when compiling the text.
     script = {0:'normal', 1:'sub', 2:'super'}
+    
     """
+    
     def __init__(self, script=0, bold=False, italic=False):
         self.script = script
         self.bold = bold
@@ -302,11 +316,14 @@ class MiniStyle:
 
 
 class BaseText(object):
-    """ Base object for the Text wobject and Label wibject.
+    """ BaseText(text='', fontname='sans')
+    
+    Base object for the Text wobject and Label wibject.
     fontname may be 'mono', 'sans', or 'serif'.
+    
     """
     
-    def __init__(self, text='', fontname='sans'):        
+    def __init__(self, text='', fontname='sans'):   
         
         # init drawing data        
         self._texCords = None  # coords in the font texture
@@ -340,7 +357,8 @@ class BaseText(object):
     
     @Property # Smart draw
     def text():
-        """Get/Set the text to display. """
+        """Get/Set the text to display. 
+        """
         def fget(self):
             return self._text
         def fset(self, value):
@@ -352,7 +370,8 @@ class BaseText(object):
     
     @Property  # Smart draw
     def textAngle():
-        """Get/Set the angle of the text in degrees."""
+        """Get/Set the angle of the text in degrees.
+        """
         def fget(self):
             return self._angle
         def fset(self, value):
@@ -364,7 +383,8 @@ class BaseText(object):
     
     @Property
     def textSpacing():
-        """Get/Set the spacing between characters."""
+        """Get/Set the spacing between characters.
+        """
         def fget(self):
             return self._charSpacing  
         def fset(self, value):
@@ -376,7 +396,8 @@ class BaseText(object):
     
     @Property
     def fontSize():
-        """Get/Set the size of the text."""
+        """Get/Set the size of the text.
+        """
         def fget(self):
             return self._size
         def fset(self, value):
@@ -388,7 +409,8 @@ class BaseText(object):
     
     @Property
     def fontName():
-        """Get/Set the font type by its name."""
+        """Get/Set the font type by its name.
+        """
         def fget(self):
             return self._fontname
         def fset(self, value):
@@ -400,7 +422,8 @@ class BaseText(object):
     
     @Property
     def textColor():
-        """Get/Set the color of the text."""
+        """Get/Set the color of the text.
+        """
         def fget(self):
             return self._color
         def fset(self, value):
@@ -411,8 +434,8 @@ class BaseText(object):
     @Property
     def halign():
         """Get/Set the horizontal alignment. Specify as:
-        left, center, right, or
-        -1  ,   0   , 1
+          * 'left', 'center', 'right'
+          * -1, 0, 1
         """
         def fget(self):
             return self._halign
@@ -436,9 +459,9 @@ class BaseText(object):
     @Property
     def valign():
         """Get/Set the vertical alignment. Specify as:
-        up, center, down, or
-        top, center, bottom, or
-        -1  ,   0   , 1
+          * 'up', 'center', 'down'
+          * 'top', 'center', 'bottom'
+          * -1, 0, 1
         """
         def fget(self):
             return self._valign
@@ -702,8 +725,10 @@ class BaseText(object):
     
 class Text(Wobject, BaseText):
     """ Text(parent, text='', x=0, y=0, z=0, fontname='sans')
+    
     A wobject representing a string of characters. The text has 
     a certain position in the scene.
+    
     """
     
     def __init__(self, parent, text='', x=0, y=0, z=0, fontname='sans'):
@@ -719,7 +744,8 @@ class Text(Wobject, BaseText):
     
     @PropWithDraw
     def x():
-        """Get/Set the x position of the text."""
+        """Get/Set the x position of the text.
+        """
         def fget(self):
             return self._x
         def fset(self, value):
@@ -727,7 +753,8 @@ class Text(Wobject, BaseText):
         
     @PropWithDraw
     def y():
-        """Get/Set the y position of the text."""
+        """Get/Set the y position of the text.
+        """
         def fget(self):
             return self._y
         def fset(self, value):
@@ -735,7 +762,8 @@ class Text(Wobject, BaseText):
     
     @PropWithDraw
     def z():
-        """Get/Set the z position of the text."""
+        """Get/Set the z position of the text.
+        """
         def fget(self):
             return self._z
         def fset(self, value):
@@ -756,8 +784,10 @@ class Text(Wobject, BaseText):
     
     
 class Label(Box, BaseText):    
-    """ Label(parent, text='', fontname='sans'
+    """ Label(parent, text='', fontname='sans')
+    
     A wibject (inherits from box) with text inside. 
+    
     """
     
     def __init__(self, parent, text='', fontname='sans'):
@@ -781,4 +811,4 @@ class Label(Box, BaseText):
         
         # Draw the text
         self._DrawText()
-        
+

@@ -1,24 +1,12 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module simpleWibjects
 
-Implements basic wibjects like buttons, and, maybe later, sliders etc.
+Implements basic wibjects like buttons, sliders etc.
 
 """
 
@@ -36,8 +24,10 @@ from pypoints import Pointset, Point
 
 class PushButton(Label):
     """ PushButton(parent, text='', fontname='sans')
+    
     A button to click on. It is a label with an edgewidth of 1, in which
-    text is horizontally aligned. Plus the hittest is put on by default.    
+    text is horizontally aligned. Plus the hittest is put on by default. 
+    
     """
     
     def __init__(self, parent, *args, **kwargs):
@@ -72,7 +62,10 @@ class PushButton(Label):
     
     def _GetBgcolorToDraw(self):
         """ _GetBgcolorToDraw()
-        Can be overloaded to indicate mouse over in buttons. """
+        
+        Can be overloaded to indicate mouse over in buttons. 
+        
+        """
         clr = list(self._bgcolor)
         if self._isOver:
             clr = [c+0.05 for c in clr]
@@ -92,10 +85,12 @@ class PushButton(Label):
 
 class ToggleButton(PushButton):
     """ ToggleButton(parent, text='', fontname='sans')
+    
     Inherits from PushButton. This button can be set on and off by clicking
     on it, or by using it's property "state". The on state is indicated by
     making the edge thicker. The event eventStateChanged is fired when its
     state is changed.
+    
     """
     
     def __init__(self, parent, *args, **kwargs):
@@ -120,7 +115,8 @@ class ToggleButton(PushButton):
     
     @property
     def eventStateChanged(self):
-        """ Fires when the state of the button changes. """
+        """ Fires when the state of the button changes.
+        """
         return self._eventStateChanged
     
     def _OnDown(self, event):
@@ -137,12 +133,14 @@ class ToggleButton(PushButton):
 
 class RadioButton(ToggleButton):
     """ RadioButton(parent, text='', fontname='sans')
+    
     Inherits from ToggleButton. If pressed upon, sets the state of all
     sibling RadioButton instances to False, and its own state to True.
     
     When this happens, all instances will fire eventStateChanged (after
     the states are set). So it's only necessary to bind to one of them 
     to detect the selection of  another item.
+    
     """
     
     def _OnDown(self, event):
@@ -165,8 +163,11 @@ class RadioButton(ToggleButton):
 
 
 class DraggableBox(Box):
-    """ A Box wibject, but draggable and resizable. 
+    """ DraggableBox(parent)
+    
+    A Box wibject, but draggable and resizable. 
     Intended as a base class.
+    
     """
     
     def __init__(self, parent):
@@ -190,7 +191,6 @@ class DraggableBox(Box):
         
         # Bind to figure events
         self.eventMotion.Bind(self._DragOnMove)
-        
     
     
     def _DragCalcDots(self, event=None):
@@ -262,8 +262,11 @@ class DraggableBox(Box):
 
 
 class BaseSlider(Box):
-    """ Abstract slider class forming the base for the
+    """ BaseSlider(parent)
+    
+    Abstract slider class forming the base for the
     Slider and RangeSlider classes.
+    
     """
     
     def __init__(self, parent):
@@ -338,7 +341,8 @@ class BaseSlider(Box):
     
     @PropWithDraw
     def fullRange():
-        """ The full possible range for this slider. """
+        """ The full possible range for this slider.
+        """
         def fget(self):
             return self._fullRange
         def fset(self, value):
@@ -347,7 +351,8 @@ class BaseSlider(Box):
     
     @PropWithDraw
     def showTicks():
-        """ Whether to show tickmarks (default False)."""
+        """ Whether to show tickmarks (default False).
+        """
         def fget(self):
             return self._showTicks
         def fset(self, value):
@@ -478,8 +483,8 @@ class BaseSlider(Box):
     
     
     def _GetBgcolorToDraw(self):
-        """ _GetBgcolorToDraw()
-        Can be overloaded to indicate mouse over in buttons. """
+        """ Can be overloaded to indicate mouse over in buttons. 
+        """
         clr = list(self._bgcolor)
         if self._isOver:
             clr = [c+0.05 for c in clr]
@@ -487,8 +492,8 @@ class BaseSlider(Box):
     
     
     def _getformat(self):
-        """ _getformat()
-        Get the format in which to display the slider limits. """
+        """ Get the format in which to display the slider limits. 
+        """
         if self._fullRange.range > 10000:
             return '%1.4g'
         elif self._fullRange.range > 1000:
@@ -669,7 +674,8 @@ class Slider(BaseSlider):
     
     @PropWithDraw
     def value():
-        """ The current value for this slider. """
+        """ The current value for this slider. 
+        """
         def fget(self):
             return self._range.max
         def fset(self, value):
@@ -708,7 +714,8 @@ class RangeSlider(BaseSlider):
     
     @PropWithDraw
     def range():
-        """ The current range for this slider. """
+        """ The current range for this slider. 
+        """
         def fget(self):
             return self._range
         def fset(self, value):
@@ -730,5 +737,4 @@ class RangeSlider(BaseSlider):
         tmp = self._getformat()
         tmp = tmp + u'  \u2013  ' + tmp
         self._label.text = tmp % (self._range.min, self._range.max)
-
 

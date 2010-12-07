@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import numpy as np
 from unwindFaces import unwindFaces
@@ -13,6 +16,7 @@ def calculateFlatNormals(mesh):
     of all normals of that face. This can in some cases lead to
     wrong results if a vertex is the first vertex of more than one
     face.
+    
     """
     
     # If we want flat shading, we should not use faces

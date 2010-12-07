@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import numpy as np
 
@@ -10,9 +13,12 @@ except ImportError:
 
 def imwrite(filename, image):
     """ imwrite(filename, image)
+    
     Write image to disk, requires PIL. 
+    
     For floating point images, 0 is considered black and 1 is white.
     For integer types, 0 is considered black and 255 is white.
+    
     """
     
     if PIL is None:

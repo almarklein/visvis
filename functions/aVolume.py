@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
+
 import visvis as vv
 import numpy as np
 
@@ -15,10 +21,12 @@ class BarDescription:
 
 def aVolume(N=5, size=64):
     """ aVolume(N=5, size=64)
+    
     Creates a volume with random bars. There shall be N bars for
     each dimension. The returned numpy array has values between 0 and 1.
     
     Intended for quick illustration and test purposes.
+    
     """
     
     # Create volume

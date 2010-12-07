@@ -1,20 +1,8 @@
-#   This file is part of VISVIS.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as
-#   published by the Free Software Foundation, either version 3 of
-#   the License, or (at your option) any later version.
-#
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-#
-#   You should have received a copy of the GNU Lesser General Public
-#   License along with this program.  If not, see
-#   <http://www.gnu.org/licenses/>.
-#
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module line
 
@@ -48,7 +36,11 @@ lineStyles = {  ':':int('1010101010101010',2),  '--':int('1111000011110000',2),
 
 
 class Sprite:
-    """ Represents an OpenGL sprite object. """
+    """ Sprite(data, width)
+    
+    Represents an OpenGL sprite object. 
+    
+    """
 
     def __init__(self, data, width):
         """ Supply the data, which must be uint8 alpha data,
@@ -141,12 +133,15 @@ class Sprite:
 
 
 class MarkerManager:
-    """ The markermanager manages sprites to draw the markers. It
+    """ MarkerManager()
+    
+    The markermanager manages sprites to draw the markers. It
     creates the sprite textures on the fly when they are needed.
     Already created sprites are reused.
 
     Given the markerStyle, markerWidth and markerEdgeWidth a marker
     can be requested.
+    
     """
 
     def __init__(self):
@@ -155,10 +150,14 @@ class MarkerManager:
         self.sprites = {}
 
     def GetSprites(self, ms, mw, mew):
-        """ Get the sprites for drawing the edge and the face, given
+        """ GetSprites(mw, mw, mew)
+        
+        Get the sprites for drawing the edge and the face, given
         the ms, mw and mew.
+        
         This will create the appropriate sprites or reuse a previously
         created set of sprites if available.
+        
         Returns a tuple (size, faceSprite, edgeSprite)
         """
         # find the diameter which best fits, but which is a multiple of 4
@@ -334,11 +333,11 @@ class Line(Wobject):
     """ Line(parent, points)
 
     The line class represents a set of points (locations) in world coordinates.
-    They are displayed by a line between these points and/or markers drawn
-    at the point coordinates.
-
+    This class can draw lines between the points, markers at the point
+    coordinates, or both.
+    
     Line objects can be created with the function vv.plot().
-
+    
     There are several linestyles that can be used:
       * -  a solid line
       * :   a dotted line
@@ -348,7 +347,7 @@ class Line(Wobject):
       * +   draws a line between each pair of points (handy for visualizing
             for example vectore fields)
     If None, '' or False is given no line is drawn.
-
+    
     There are several marker styles that can be used:
       * `+`  a plus
       * `x`  a cross
@@ -359,13 +358,18 @@ class Line(Wobject):
       * `h`  a hexagram
       * `o` or `.`  a point/circle
     If None, '', or False is given, no marker is drawn.
-
-    Performance tip:
+    
+    Performance tips
+    ----------------
     The s, o (and .) styles can be drawn using standard
     OpenGL points if alpha is 1 or if no markeredge is drawn.
+    
     Otherwise point sprites are used, which can be slower
     on some cards (like ATI, Nvidia performs quite ok with with
-    sprites)
+    sprites).
+    
+    Some video cards simply do not support sprites (seen on ATI).
+    
     """
 
     def __init__(self, parent, points):
@@ -405,8 +409,7 @@ class Line(Wobject):
 
 
     def _GetLimits(self):
-        """ _GetLimits()
-        Get the limits in world coordinates between which the object exists.
+        """ Get the limits in world coordinates between which the object exists.
         """
         
         # Obtain untransformed coords (if not an empty set)
@@ -427,7 +430,8 @@ class Line(Wobject):
     @PropWithDraw
     def lw():
         """ Get/Set the lineWidth: the width of the line in pixels.
-        If zero, the line is not drawn. """
+        If zero, the line is not drawn. 
+        """
         def fget(self):
             return self._lw
         def fset(self, value):
@@ -442,7 +446,8 @@ class Line(Wobject):
           * -.  a dashdot line
           * .-  dito
           * +   draws a line between each pair of points
-        If None, '' or False is given no line is drawn. """
+        If None, '' or False is given no line is drawn. 
+        """
         def fget(self):
             return self._ls
         def fset(self, value):
@@ -458,7 +463,8 @@ class Line(Wobject):
     def lc():
         """ Get/Set the lineColor: the color of the line, as a 3-element
         tuple or as a single character string (shown in uppercase):
-        Red, Green, Blue, Yellow, Cyan, Magenta, blacK, White. """
+        Red, Green, Blue, Yellow, Cyan, Magenta, blacK, White. 
+        """
         def fget(self):
             return self._lc
         def fset(self, value):
@@ -469,7 +475,8 @@ class Line(Wobject):
     @PropWithDraw
     def mw():
         """ Get/Set the markerWidth: the width (bounding box) of the marker
-        in (screen) pixels. If zero no marker is drawn."""
+        in (screen) pixels. If zero, no marker is drawn.
+        """
         def fget(self):
             return self._mw
         def fset(self, value):
@@ -513,7 +520,8 @@ class Line(Wobject):
     @PropWithDraw
     def mew():
         """ Get/Set the markerEdgeWidth: the width of the edge of the marker.
-        If zero no edge is drawn. """
+        If zero, no edge is drawn. 
+        """
         def fget(self):
             return self._mew
         def fset(self, value):
@@ -555,32 +563,40 @@ class Line(Wobject):
     @DrawAfter
     def SetXdata(self, data):
         """ SetXdata(data)
+        
         Set the x coordinates of the points of the line.
+        
         """
         self._points[0,:] = data
     
     @DrawAfter
     def SetYdata(self, data):
         """ SetYdata(data)
+        
         Set the y coordinates of the points of the line.
+        
         """
         self._points[1,:] = data
 
     @DrawAfter
     def SetZdata(self, data):
         """ SetZdata(data)
+        
         Set the z coordinates of the points of the line.
+        
         """
         self._points[2,:] = data
 
     @DrawAfter
     def SetPoints(self, points):
         """ SetPoints(points)
+        
         Set x,y (and optionally z) data at once
         using a Pointset object. The data is copied, so changes to the given
         points object will not affect the visualized points.
         If you do want this, use the ._points attribute, but note that it
         should always have three dimensions.
+        
         """
         self._points = points.copy()
 
@@ -835,12 +851,11 @@ class Line(Wobject):
 # polar plot data.
 class PolarLine(Line):
     """ PolarLine(parent, angle(radians), mag)
-
-    The Polarline class represents a set of points (locations) in world
-    coordinates.
-    They are displayed by a line between these points and/or markers drawn
-    at the point coordinates.
-
+    
+    The Polarline class represents a set of points (locations)
+    in world coordinates. This class can draw lines between the points, 
+    markers at the point coordinates, or both.
+    
     There are several linestyles that can be used:
       * -  a solid line
       * :   a dotted line
@@ -862,12 +877,14 @@ class PolarLine(Line):
       * `o` or `.`  a point/circle
     If None, '', or False is given, no marker is drawn.
 
-    Performance tip:
+    Performance tip
+    ---------------
     The s, o (and .) styles can be drawn using standard
     OpenGL points if alpha is 1 or if no markeredge is drawn.
     Otherwise point sprites are used, which can be slower
     on some cards (like ATI, Nvidia performs quite ok with with
     sprites)
+    
     """
     def __init__(self, parent, angs, mags):
         self._angs = angs
@@ -898,3 +915,4 @@ class PolarLine(Line):
         else:
             return Range(self._angs.min(), self._angs.max()), \
                    Range(self._mags.min(), self._mags.max())
+

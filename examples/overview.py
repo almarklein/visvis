@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import visvis as vv
 
 # Create figure and make it wider than the default

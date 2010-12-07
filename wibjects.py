@@ -1,27 +1,14 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module wibjects
 
 All wibjects are inserted in this namespace, thereby providing
 the user with a list of all wibjects. All wibjects are also
 inserted in the root visvis namespace.
-
 
 """
 
@@ -34,11 +21,13 @@ from cm import Colorbar, ColormapEditor, ClimEditor
 
 class Title(Label):
     """ Title(axes, text)
+    
     A label wibject that places itself at the top of its parent (which
     should be an Axes). The axes' position is corrected so the title
     will fit on screen.
     
     A Title can be created with the function vv.title().
+    
     """
     
     def __init__(self, axes, text):
