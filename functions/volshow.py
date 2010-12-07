@@ -2,6 +2,7 @@
 # Copyright (C) 2010 Almar Klein
 
 import visvis as vv
+import numpy as np
 
 def volshow(vol, clim=None, renderStyle='mip', cm=None, 
             axesAdjust=True, axes=None):
@@ -22,6 +23,14 @@ def volshow(vol, clim=None, renderStyle='mip', cm=None,
     # get axes
     if axes is None:
         axes = vv.gca()
+    
+     # Check data
+    if not isinstance(vol, np.ndarray):
+        raise ValueError('volshow expects an image as a numpy array.')
+    if vol.ndim==3 or vol.ndim==4 and vol.shape[-1] in [1,3,4]:
+        pass
+    else:
+        raise ValueError('volshow expects a 3D image as a numpy array.')
     
     # create texture
     t = vv.Texture3D(axes, vol, renderStyle)
