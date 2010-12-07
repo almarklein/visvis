@@ -1,28 +1,17 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module misc
 
 Various things are defined here that did not fit nicely in any
-other module. This module is also meant to be imported by many
+other module. 
+
+This module is also meant to be imported by many
 other visvis modules, and therefore should not depend on other
 visvis modules.
-
 
 """
 
@@ -38,10 +27,12 @@ _glInfo = [None]*4
 
 def getOpenGlInfo():
     """ getOpenGlInfo()
+    
     Get information about the OpenGl version on this system. 
     Returned is a tuple (version, vendor, renderer, extensions) 
     Note that this function will return 4 Nones if the openGl 
-    context is not set. 
+    context is not set.
+    
     """
     
     if not _glInfo[0]:
@@ -54,10 +45,13 @@ def getOpenGlInfo():
 _glLimitations = {}
 def getOpenGlCapable(version, what=None):
     """ getOpenGlCapable(version, what)
+    
     Returns True if the OpenGl version on this system is equal or higher 
     than the one specified and False otherwise.
+    
     If False, will display a message to inform the user, but only the first 
     time that this limitation occurs (identified by the second argument).
+    
     """
     
     # obtain version of system
@@ -86,10 +80,14 @@ def getOpenGlCapable(version, what=None):
 
 
 def Property(function):
-    """ A property decorator which allows to define fget, fset and fdel
+    """ Property(function)
+    
+    A property decorator which allows to define fget, fset and fdel
     inside the function.
+    
     Note that the class to which this is applied must inherit from object!
     Code from George Sakkis: http://code.activestate.com/recipes/410698/
+    
     """
     # Init
     keys = 'fget', 'fset', 'fdel'
@@ -111,9 +109,13 @@ def Property(function):
     return property(**func_locals)
 
 def PropWithDraw(function):
-    """ A property decorator which allows to define fget, fset and fdel
+    """ PropWithDraw(function)
+    
+    A property decorator which allows to define fget, fset and fdel
     inside the function.
+    
     Same as Property, but callas self.Draw() when using fset.
+    
     """
     # Init
     keys = 'fget', 'fset', 'fdel'
@@ -146,8 +148,11 @@ def PropWithDraw(function):
 
 
 def DrawAfter(function):
-    """ Decorator for methods that make self.Draw() be called right after
+    """ DrawAfter(function)
+    
+    Decorator for methods that make self.Draw() be called right after
     the function is called. 
+    
     """
     def newFunc(self, *args, **kwargs):
         function(self, *args, **kwargs)
@@ -157,10 +162,13 @@ def DrawAfter(function):
     return newFunc
 
 class Range(object):
-    """ Indicates a range ( a minimum and a maximum )
-    Range(0,1)
-    Range((3,4)) # also works with tuples and lists
-    If max max is set smaller than min, the min and max are flipped.    
+    """ Range(min=0, max=0)
+    
+    Represents a range (a minimum and a maximum ). Can also be instantiated
+    using a tuple.
+    
+    If max is set smaller than min, the min and max are flipped.    
+    
     """
     def __init__(self, min=0, max=1):
         self.Set(min,max)
@@ -209,35 +217,49 @@ class Range(object):
         
     def __repr__(self):
         return "<Range %1.2f to %1.2f>" % (self.min, self.max)
-    
+
 
 ## Transform classes for wobjects
     
     
 class Transform_Base(object):
-    """ Base transform object. 
+    """ Transform_Base
+    
+    Base transform object. 
     Inherited by classes for translation, scale and rotation.
+    
     """
     pass
     
 class Transform_Translate(Transform_Base):
-    """ Translates the wobject. """
+    """ Transform_Translate(dx=0.0, dy=0.0, dz=0.0)
+    
+    Translates the wobject. 
+    
+    """
     def __init__(self, dx=0.0, dy=0.0, dz=0.0):
         self.dx = dx
         self.dy = dy
         self.dz = dz
-    
+
 class Transform_Scale(Transform_Base):
-    """ Scales the wobject. """
+    """ Transform_Scale(sx=1.0, sy=1.0, sz=1.0)
+    
+    Scales the wobject. 
+    
+    """
     def __init__(self, sx=1.0, sy=1.0, sz=1.0):
         self.sx = sx
         self.sy = sy
         self.sz = sz
 
 class Transform_Rotate(Transform_Base):
-    """ Rotates the wobject. 
-    Angle is in degrees. Use angleInRadians to specify the angle 
-    in radians, which is then converted in degrees. """
+    """ Transform_Rotate( angle=0.0, ax=0, ay=0, az=1, angleInRadians=None) 
+    
+    Rotates the wobject. Angle is in degrees. 
+    Use angleInRadians to specify the angle in radians, 
+    which is then converted in degrees. 
+    """
     def __init__(self, angle=0.0, ax=0, ay=0, az=1, angleInRadians=None):
         if angleInRadians is not None:
             angle = angleInRadians * 180 / np.pi 
@@ -248,11 +270,18 @@ class Transform_Rotate(Transform_Base):
 
 ## Colour stuff
 
+# Define colours (I see a nice mix of UK and US english here :( )
 colours = { 'k':(0,0,0), 'w':(1,1,1), 'r':(1,0,0), 'g':(0,1,0), 'b':(0,0,1),
             'c':(0,1,1), 'y':(1,1,0), 'm':(1,0,1) }
 
+
 def getColor(value, descr='getColor'):
-    """ Make sure a value is a color. """
+    """ getColor(value, descr='getColor')
+    
+    Make sure a value is a color. If a character is given, returns the color
+    as a tuple.
+    
+    """
     tmp = ""
     if not value:
         value = None
@@ -276,9 +305,12 @@ def getColor(value, descr='getColor'):
 ## some functions 
 
 def isFrozen():
-    """ Find out whether this is a frozen application
+    """ isFrozen
+    
+    Returns whether this is a frozen application
     (using bbfreeze or py2exe) by finding out what was
     the executable name to start the application.
+    
     """
     import os
     ex = os.path.split(sys.executable)[1]
@@ -290,7 +322,11 @@ def isFrozen():
 
 
 def getResourceDir():
-    """ Get the directory to the resources. """
+    """ getResourceDir()
+    
+    Get the directory to the visvis resources. 
+    
+    """
     if isFrozen():
         path =  os.path.abspath( os.path.dirname(sys.executable) )
     else:

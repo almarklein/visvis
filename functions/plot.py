@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 from visvis.pypoints import Point, Pointset, is_Point, is_Pointset
 import numpy as np
@@ -46,6 +49,7 @@ def plot(data1, data2=None, data3=None,
     If axesAdjust==True, this function will call axes.SetLimits(), set
     the camera type to 2D when plotting 2D data and to 3D when plotting
     3D data. If daspectAuto has not been set yet, it is set to True.
+    
     """
     
     # create a dict from the properties and combine with kwargs

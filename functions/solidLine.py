@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import numpy as np
 import visvis as vv
@@ -11,6 +14,7 @@ def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):
     
     Creates a solid line in 3D space. pp can be a Pointset.
     Radius can also specify the radius for each point.
+    
     """
     
     # Check first argument

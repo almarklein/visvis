@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis.backends as backends
 from visvis.core import BaseFigure
@@ -7,7 +10,9 @@ from visvis.core import BaseFigure
 
 def figure(nr=None):
     """ figure(nr=None)
+    
     Create a new figure or return the figure with the asociated nr. 
+    
     """
     
     # check if backends are loaded

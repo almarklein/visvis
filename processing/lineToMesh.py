@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import numpy as np
 from visvis.pypoints import Point, Pointset
@@ -7,9 +10,11 @@ from visvis.polygonalModeling import BaseMesh
 
 def getSpanVectors(normal, c, d):
     """ getSpanVectors(normal, prevA, prevB) -> (a,b)
+    
     Given a normal, return two orthogonal vectors which are both orthogonal
     to the normal. The vectors are calculated so they match as much as possible
     the previous vectors.
+    
     """
     
     # Calculate a from previous b
@@ -40,8 +45,10 @@ def getSpanVectors(normal, c, d):
 
 def getCircle(angles_cos, angles_sin, a, b):
     """ getCircle(angles_cos, angles_sin, a, b) -> circle_cords
+    
     Creates a circle of points around the origin, 
     the circle is spanned by the vectors a and b.
+    
     """
     X = np.empty((len(angles_cos),3),dtype=np.float32)    
     X[:,0] = angles_cos * a.x + angles_sin * b.x
@@ -57,6 +64,7 @@ def lineToMesh(pp, radius, vertex_num):
     From a line, create a mesh that represents the line as a tube with 
     given diameter. vertex_num is the number of vertices to create
     along the circumference of the tube. Returns a BaseMesh instance.
+    
     """
     
     # we need this quite a bit

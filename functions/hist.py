@@ -1,14 +1,19 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
 import numpy as np
 
 def hist(data, bins=10, range=None, normed=False, weights=None, **kwargs):
     """ hist(data, bins=10, range=None, normed=False, weights=None, **kwargs)
+    
     Make a histogram plot of the data. Uses np.histogram (new version) 
     internally. See its docs for more information. 
     kwargs are given to the plot function.
+    
     """
     
     # let numpy do the work

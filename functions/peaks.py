@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import numpy as np
 import visvis as vv
@@ -22,8 +25,10 @@ if False:
 
 def peaks():
     """ peaks()
+    
     Returs a 2D map of z-values that represent an example landscape with
     Gaussian blobs. 
+    
     """
     
     # Decode z data

@@ -1,16 +1,21 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
 
 
 class Bars3D(vv.Wobject):
     """ Bars3D(parent)
+    
     The Bars3D class represents a bar chart. It has a few methods to
     change the appearance of the bars.
     
     This class is a container for a series of Mesh objects created using 
     solidBox.
+    
     """
     
     @vv.misc.Property

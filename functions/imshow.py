@@ -1,7 +1,11 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
+import numpy as np
 
 def imshow(im, clim=None, aa=1, interpolate=False, cm=None,
             axesAdjust=True, axes=None):
@@ -28,11 +32,20 @@ def imshow(im, clim=None, aa=1, interpolate=False, cm=None,
     If axesAdjust==True, this function will call axes.SetLimits(), set
     the camera type to 2D, and make axes.daspect[1] negative (i.e. flip 
     the y-axis). If daspectAuto has not been set yet, it is set to False.
+    
     """
     
     # get axes
     if axes is None:
         axes = vv.gca()
+    
+    # Check data
+    if not isinstance(im, np.ndarray):
+        raise ValueError('imshow expects an image as a numpy array.')
+    if im.ndim==2 or im.ndim==3 and im.shape[-1] in [1,3,4]:
+        pass
+    else:
+        raise ValueError('imshow expects a 2D image as a numpy array.')
     
     # determine texture offset, such that lines are always on top
     # of images, and new textures are on top of older images.

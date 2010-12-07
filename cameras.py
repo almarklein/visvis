@@ -1,24 +1,12 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module cameras
 
-A camera is the camera model and the interaction style combined.
+A camera represents both the camera model and the interaction style.
 
 A lot of blood sweat and tears went into this module to get the
 OpenGL transformations right and calculate screen to world coordinates
@@ -27,7 +15,6 @@ etc. Please be carefull when changing stuff here.
 The models were designed such that the order of transformations makes 
 sense, and that as much as possible "just works". Also the diffent
 models were designed to be as consistent as possible.
-
 
 """
 
@@ -39,25 +26,24 @@ from events import Timer
 import math
 import ssdf
 
-
-""" Here's a bit on the depth buffer
-for glOrto(x1,y1,x2,y2,n,f) and s the depth buffer depth:
-def calcPrecision(z=0, n=1000, bits=16): # approximates precision
-    z+=n
-    return z * z / ( n * float(1<<bits) - z )
-    
-For 24 bits and more, we're fine with 100.000, but for 16 bits we
-need 3000 or so. The criterion is that at the center, we should be
-able to distinguish between 0.1, 0.0 and -0.1 etc. So we can draw lines
-on top (0.1) then the gridlines (0.0) and then 2d textures (0.1, 0.2, etc.).
-
-"""
-
-
-
+# Global to store depth Bits
 depthBits = [0]
 
 def getDepthValue():
+    """ Get the depth value.
+    
+    for glOrto(x1,y1,x2,y2,n,f) and s the depth buffer depth:
+    def calcPrecision(z=0, n=1000, bits=16): # approximates precision
+        z+=n
+        return z * z / ( n * float(1<<bits) - z )
+        
+    For 24 bits and more, we're fine with 100.000, but for 16 bits we
+    need 3000 or so. The criterion is that at the center, we should be
+    able to distinguish between 0.1, 0.0 and -0.1 etc. So we can draw lines
+    on top (0.1) then the gridlines (0.0) and then 2d textures 
+    (0.1, 0.2, etc.).
+    
+    """
     if not depthBits[0]:
         bits = gl.glGetInteger(gl.GL_DEPTH_BITS)
         if bits:
@@ -68,24 +54,36 @@ def getDepthValue():
     else:
         return 100000
 
+
 def ortho(x1, x2, y1,y2):
-    """ Like gl.glOrtho() but the z-values are automatically determined
+    """ ortho(x1, x2, y1, y2)
+    
+    Like gl.glOrtho() but the z-values are automatically determined
     dependent on the amount of bits in the depth buffer.
+    
     """    
     val = getDepthValue()
     gl.glOrtho(x1, x2, y1, y2, -val, val)
 
+
 def depthToZ(depth):
-    """ Get the z-coord, given the depth value. """    
+    """ depthToZ(depth)
+    
+    Get the z-coord, given the depth value. 
+    
+    """
     val = getDepthValue()
     return val - depth * 2 * val
 
 
 class BaseCamera(object):
-    """ Abstract camera class.
-    A camera defines the way the data is viewed and how to interact
-    with the data.
+    """ BaseCamera(*axes)
+    
+    Abstract camera class. A camera represents both the camera model
+    and the interaction style.
+    
     """
+    
     def __init__(self, *axes):
         
         # store scenes to render in
@@ -105,16 +103,26 @@ class BaseCamera(object):
     
     @property
     def axes(self):
+        """ Get the axes that this camera applies to (or the first axes if
+        it applies to multiple axes).
+        """
         return self.axeses[0]
     
     def OnInit(self):
-        """ Override this to do more initializing """
+        """ OnInit()
+        
+        Override this to do more initializing.
+        
+        """
         pass
     
     def SetLimits(self, xlim, ylim, zlim=None):
-        """ Set the limits to visualize  
+        """ SetLimits(xlim, ylim, zlim=None)
+        
+        Set the limits to visualize  
         Always set this before rendering!
-        This also calls reset to reset the view
+        This also calls reset to reset the view.
+        
         """
         if zlim is None:
             zlim = Range(-1,1)        
@@ -126,8 +134,11 @@ class BaseCamera(object):
         self.Reset()
     
     def Reset(self):
-        """ Reset the view.
+        """ Reset()
+        
+        Reset the view.
         Overload this in the actual camera models.
+        
         """
         # set centre
         rx,ry,rz = self.xlim.range, self.ylim.range, self.zlim.range
@@ -138,17 +149,24 @@ class BaseCamera(object):
             axes.Draw()
     
     def SetView(self):
-        """ Set the view, thus simulating a camera.
+        """ SetView()
+        
+        Set the view, thus simulating a camera.
         Overload this in the actual camera models.
+        
         """
         pass
     
     def ScreenToWorld(self, x_y=None):
-        """ Given a tuple of screen coordinates
-        calculate the world coordinates.
+        """ ScreenToWorld(x_y=None)
+        
+        Given a tuple of screen coordinates,
+        calculate the world coordinates.        
         If not given, the current mouse position is used.
+        
         This basically simulates the actions performed in SetView
         but then for a single location.
+        
         """
         
         # use current mouse position if none given
@@ -187,10 +205,14 @@ class BaseCamera(object):
 
 
 class TwoDCamera(BaseCamera):
-    """ The default camera for viewing 2D data. 
+    """ TwoDCamera(*axes)
+    
+    The default camera for viewing 2D data. 
+    
     This camera uses orthografic projection and basically looks
     down the z-axis from inifinitly far away. Using the mouse one 
     can zoom and pan the data.
+    
     """
     
     def OnInit(self):
@@ -224,8 +246,10 @@ class TwoDCamera(BaseCamera):
     
     
     def GetViewParams(self):
-        """ GetView()
+        """ GetViewParams()
+        
         Get a structure with view parameters. 
+        
         """
         s = ssdf.new()
         s.loc = self.view_loc
@@ -235,8 +259,10 @@ class TwoDCamera(BaseCamera):
     
     
     def SetViewParams(self, s):
-        """ SetView(s)
+        """ SetViewParams(s)
+        
         Set the view, given a structure with view parameters. 
+        
         """
         self.view_loc = s.loc
         self.view_zoomx = s.zoomx
@@ -244,7 +270,10 @@ class TwoDCamera(BaseCamera):
     
     
     def Reset(self, event=None):
-        """ Reset the view.        
+        """ Reset()
+        
+        Reset the view.        
+        
         """
         
         # get window size
@@ -284,7 +313,7 @@ class TwoDCamera(BaseCamera):
     
     
     def OnMouseDown(self, event): 
-            
+        
         # store mouse position and button
         self.ref_mloc = event.x, event.y
         self.ref_but = event.button
@@ -356,8 +385,11 @@ class TwoDCamera(BaseCamera):
 
 
     def SetView(self):
-        """ Prepare the view for drawing
+        """ SetView()
+        
+        Prepare the view for drawing
         This applies the camera model.
+        
         """
         
         # test zoomfactors
@@ -409,10 +441,14 @@ class TwoDCamera(BaseCamera):
     
 
 class ThreeDCamera(BaseCamera):
-    """ The ThreeDCamera camera is a camera to visualise 3D data. It uses
-    orthographic projection, so it is like looking at your data from
+    """ ThreeDCamera(*axes)
+    
+    The ThreeDCamera camera is a camera to visualise 3D data. 
+    
+    It uses orthographic projection, so it is like looking at your data from
     outer space. In contrast to the 2D camera, the camera can be 
     rotated around the data to look at it from different angles.
+    
     """
     
     def OnInit(self):
@@ -451,8 +487,10 @@ class ThreeDCamera(BaseCamera):
     
     
     def GetViewParams(self):
-        """ GetView()
+        """ GetViewParams()
+        
         Get a structure with view parameters. 
+        
         """
         s = ssdf.new()
         s.loc = self.view_loc
@@ -465,8 +503,10 @@ class ThreeDCamera(BaseCamera):
     
     
     def SetViewParams(self, s):
-        """ SetView(s)
+        """ SetViewParams(s)
+        
         Set the view, given a structure with view parameters. 
+        
         """
         self.view_loc = s.loc
         self.view_zoomx = s.zoomx
@@ -477,7 +517,11 @@ class ThreeDCamera(BaseCamera):
     
     
     def Reset(self, event=None):
+        """ Reset()
         
+        Reset the view.
+        
+        """
         # Set angles
         self.view_az = -10.0
         self.view_el = 30.0
@@ -662,6 +706,12 @@ class ThreeDCamera(BaseCamera):
             axes.Draw(True)
     
     def SetView(self):
+        """ SetView()
+        
+        Prepare the view for drawing
+        This applies the camera model.
+        
+        """
         
         # test zoomfactors
         if not self.axes.daspectAuto:
@@ -723,10 +773,12 @@ class ThreeDCamera(BaseCamera):
 
 # todo: use quaternions to fly it?
 class FlyCamera(ThreeDCamera):
-    """ The fly camera is a funky camera to visualise 3D data.
+    """ FlyCamera(*axes)
+    
+    The fly camera is a funky camera to visualise 3D data.
     
     Think of the fly camera as a remote controlled vessel with
-    which you fly trough your data. A bit like a flight sim.
+    which you fly trough your data, a bit like a flight sim.
     It uses a perspective projection, by zooming you can change
     your "lens" from very wide to zoom.
     
@@ -735,6 +787,7 @@ class FlyCamera(ThreeDCamera):
     the camera, zoom, and fly! Pressing W increases the forward speed, 
     S reduces it. A increases the strafing speed to the left, and D to 
     the right...
+    
     """
     
     # Note that this camera does not use the MouseMove event but uses
@@ -778,7 +831,11 @@ class FlyCamera(ThreeDCamera):
 
 
     def Reset(self, event=None):
-        """ Position the camera at a suitable position from the scene."""
+        """ Reset()
+        
+        Position the camera at a suitable position from the scene.
+        
+        """
         
         # call the 3D camera reset... It calls Draw(), which is thus called
         # unnecesary, but hell, you dont reset that often...
@@ -805,7 +862,7 @@ class FlyCamera(ThreeDCamera):
         
         
     def OnKeyDown(self, event):
-        """ Detect whether the used wants to set things in motion. """        
+        # Detect whether the used wants to set things in motion.
         if event.text == 'w':
             self.ref_speed1 += 1
         elif event.text == 's':
@@ -817,7 +874,7 @@ class FlyCamera(ThreeDCamera):
    
      
     def Move(self, event=None):
-        """ Move the fly -> change its position. """
+        # Move the fly -> change its position.
         
         # get aspect ratio, we need to normalize with it...
         ar = self.axes.daspect
@@ -935,7 +992,12 @@ class FlyCamera(ThreeDCamera):
 
 
     def SetView(self):
+        """ SetView()
         
+        Prepare the view for drawing
+        This applies the camera model.
+        
+        """
         # Note that this method is almost identical to the 3D 
         # camera's implementation. The only difference is that
         # this implementation uses gluPerspective rather than

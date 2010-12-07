@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """ This example illustrate using text and formatting for text
 world objects and labels.
 """

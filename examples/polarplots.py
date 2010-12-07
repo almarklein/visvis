@@ -1,4 +1,5 @@
-''' Example of polar plots'''
+#!/usr/bin/env python
+
 import visvis as vv
 import numpy as np
 angs = 0.1 + np.linspace(-90, 90, 181)  # 0.1+ get rid of singularity

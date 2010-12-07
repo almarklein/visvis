@@ -1,59 +1,45 @@
-#   This file is part of VISVIS.
-#    
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as 
-#   published by the Free Software Foundation, either version 3 of 
-#   the License, or (at your option) any later version.
-# 
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-# 
-#   You should have received a copy of the GNU Lesser General Public 
-#   License along with this program.  If not, see 
-#   <http://www.gnu.org/licenses/>.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   Copyright (C) 2010 Almar Klein
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Package visvis
 
-Visvis is a Python visualization library that uses OpenGl to display
-1D to 4D data; it can be used from simple plotting tasks to rendering 
-3D volumetric data that moves in time. 
+Visvis is a pure Python library for visualization of 1D to 4D data in an
+object oriented way. Essentially, visvis is an object oriented layer of
+Python on top of OpenGl, thereby combining the power of OpenGl with the
+usability of Python. A Matlab-like interface in the form of a set of
+functions allows easy creation of objects (e.g. plot(), imshow(), volshow(), 
+surf()). 
+
+With visvis a range of different data can be visualized by simply adding
+world objects to a scene (or axes). These world objects can be anything
+from plots (lines with markers), to images, 3D rendered volumes, 
+shaded meshes, or you can program your own world object class. If required, 
+these data can also be moved in time.
 
 Visvis can be used in Python scripts, interactive Python sessions (as
 with IPython or IEP) and can be embedded in applications.
 
-Visvis employs an object oriented structure; each object being 
-visualized (e.g. a line or a texture) has various properties that 
-can be modified to change its behaviour or appearance. A Matlab-like 
-interface in the form of a set of functions allows easy creation of 
-these objects (e.g. plot(), imshow(), volshow()). 
-
 Requirements:
   * Numpy
   * PyOpengl
-  * A backend GUI toolkit (PyQt4 or wxPython)
+  * A backend GUI toolkit (PyQt4, wxPython, fltk)
   * (optionally, to enable reading and writing of images) PIL
 
 usage:
 import visvis as vv
 
-Visvis is an object oriented visualization toolkit. There are two
-types of objects that can be visualized: wibjects and wobjects. The
-first are 2D objects that reside in a figure, axes or each-other.
-In fact the Figure and Axes class are wibjects. Wobjects are objects
-that reside in the 3D world inside an axes object. 
-
 All wobjects, wibjects and functions are present in the visvis 
 namespace. For clean lists, see vv.wibjects, vv.wobjects, or vv.functions, 
 respectively.
 
-For more help, see the docs, the examples in the examples dir, or 
-the examples at the bottom of the function modules (in the functions
-dir).
-
+For more help, see ...
+  * the docstrings
+  * the examples in the examples dir
+  * the examples at the bottom of the function modules (in the functions dir)
+  * the online docs: http://code.google.com/p/visvis/
 
 """
 

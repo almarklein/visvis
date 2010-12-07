@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ This example shows a ball that bounces on a surface and has
 two balls rotating around it. It illustrates the use of timers
 and how object hierarchy can be used to build (and move) complex

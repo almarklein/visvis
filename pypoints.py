@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ Module pypoints
 
 Provides several classes to represent points, pointsets, anisotropic arrays,

@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
 
@@ -11,9 +14,15 @@ import os, time
 import numpy as np
 
 class Recorder:
-    """ Recorder class that makes snapshots right after each draw event.
-    It allows storing of the movie in an animated gif.
-    Get the raw frames using GetFrames().
+    """ Recorder(object)
+    
+    Recorder class that makes snapshots right after each draw event.
+    
+    It is then possible to export the movie to SWF, GIF, AVI, or a series
+    of images.
+    
+    See also vv.movieWrite().
+    
     """
     
     def __init__(self, ob):

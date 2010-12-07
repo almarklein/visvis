@@ -1,5 +1,8 @@
-# This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 import visvis as vv
 import numpy as np
@@ -20,6 +23,7 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
     number of faces along the ring, M is the number of faces around the 
     tube that makes up the ring. If N or M is smaller than 8, flat shading
     is used instead of smooth shading. 
+    
     """
     
     # Note that the number of vertices around the axis is N+1. This

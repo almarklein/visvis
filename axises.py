@@ -1,27 +1,8 @@
-#   This file is part of VISVIS.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as
-#   published by the Free Software Foundation, either version 3 of
-#   the License, or (at your option) any later version.
-#
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-#
-#   You should have received a copy of the GNU Lesser General Public
-#   License along with this program.  If not, see
-#   <http://www.gnu.org/licenses/>.
-#
-#   Copyright (C) 2010 Almar Klein
-#
-#   Many thanks to Keith Smith for implementing the polar plot axis.
-#   Not only is it a great thing that Visvis can be used for polar 
-#   plotting, Keiths requirements and ideas have led to quite a few
-#   changes in the Axis and Axes classes. For example, the Axes and
-#   Axis classes are now clearly separated with the properties defined
-#   at the right place.
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module axises
 
@@ -95,11 +76,13 @@ class AxisText(Text):
 
 class AxisLabel(AxisText):
     """ AxisLabel(parent, text)
+    
     A special label that moves itself just past the tickmarks.
     The _textDict attribute should contain the Text objects of the tickmarks.
 
     This is a helper class for the axis classes, and has a disabled Draw()
     method.
+    
     """
 
     def __init__(self, *args, **kwargs):
@@ -256,8 +239,10 @@ def GetTickTexts(ticks):
 
 def GetTickText_deprecated(tick):
     """ GetTickText(tick)
+    
     Obtain text from a tick. Convert to exponential notation 
     if necessary. 
+    
     """
     
     # Correct -0: 0 has on some systems been reported to be shown as -0
@@ -274,10 +259,12 @@ def GetTickText_deprecated(tick):
 
 def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
     """ GetTicks(p0, p1, lim, minTickDist=40, ticks=None)
+    
     Get the tick values, position and texts.
     These are calculated from a start end end position and the range
     of values to map on a straight line between these two points
     (which can be 2d or 3d). If ticks is given, use these values instead.
+    
     """
     
     # Vector from start to end point
@@ -384,12 +371,14 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
 
 class BaseAxis(base.Wobject):
     """ BaseAxis(parent)
+    
     This is the (abstract) base class for all axis classes, such
     as the CartesianAxis and PolarAxis.
     
     An Axis object represents the lines, ticks and grid that make
     up an axis. Not to be confused with an Axes, which represents
     a scene and is a Wibject.
+    
     """
     
     def __init__(self, parent):
@@ -676,7 +665,8 @@ class BaseAxis(base.Wobject):
     
     @PropWithDraw
     def xLabel():
-        """ Get/Set the label for the x dimension. """
+        """ Get/Set the label for the x dimension. 
+        """
         def fget(self):
             return self._xlabel
         def fset(self, value):
@@ -684,7 +674,8 @@ class BaseAxis(base.Wobject):
     
     @PropWithDraw
     def yLabel():
-        """ Get/Set the label for the y dimension. """
+        """ Get/Set the label for the y dimension. 
+        """
         def fget(self):
             return self._ylabel
         def fset(self, value):
@@ -692,7 +683,8 @@ class BaseAxis(base.Wobject):
     
     @PropWithDraw
     def zLabel():
-        """ Get/Set the label for the z dimension. """
+        """ Get/Set the label for the z dimension. 
+        """
         def fget(self):
             return self._zlabel
         def fset(self, value):
@@ -794,7 +786,8 @@ class BaseAxis(base.Wobject):
     ## Help methods
     
     def _DestroyChildren(self):
-        """ Method to clean up the children (text objects). """
+        """ Method to clean up the children (text objects). 
+        """
         if self._children:
             for child in self.children:
                 child.Destroy()
@@ -823,8 +816,7 @@ class BaseAxis(base.Wobject):
 
 
     def _GetTicks(self, tickUnit, lim):
-        """ _GetTicks(tickUnit, lim)
-        Given tickUnit (the distance in world units between the ticks)
+        """ Given tickUnit (the distance in world units between the ticks)
         and the range to cover (lim), calculate the actual tick values.
         """
         
@@ -843,7 +835,8 @@ class BaseAxis(base.Wobject):
 
 
     def _NextCornerIndex(self, i, d, vector_s):
-        """ Calculate the next corner index. """
+        """ Calculate the next corner index. 
+        """
         
         if d<2 and vector_s.x >= 0:
             i+=self._delta
@@ -871,6 +864,7 @@ class BaseAxis(base.Wobject):
 
 class CartesianAxis2D(BaseAxis):
     """ CartesianAxis2D(parent)
+    
     An Axis object represents the lines, ticks and grid that make
     up an axis. Not to be confused with an Axes, which represents
     a scene and is a Wibject.
@@ -1119,6 +1113,7 @@ class CartesianAxis2D(BaseAxis):
 
 class CartesianAxis3D(BaseAxis):
     """ CartesianAxis3D(parent)
+    
     An Axis object represents the lines, ticks and grid that make
     up an axis. Not to be confused with an Axes, which represents
     a scene and is a Wibject.
@@ -1326,6 +1321,7 @@ class CartesianAxis3D(BaseAxis):
 
 class CartesianAxis(CartesianAxis2D, CartesianAxis3D):
     """ CartesianAxis(parent)
+    
     An Axis object represents the lines, ticks and grid that make
     up an axis. Not to be confused with an Axes, which represents
     a scene and is a Wibject.
@@ -1333,6 +1329,7 @@ class CartesianAxis(CartesianAxis2D, CartesianAxis3D):
     The CartesianAxis combines the 2D and 3D axis versions; it uses
     the 2D version when the 2d camera is used, and the 3D axis
     otherwise.
+    
     """
     # A bit ugly inheritance going on here, but otherwise the code below
     # would not work ...
@@ -1351,11 +1348,14 @@ def GetPolarTicks(p0, radius, lim, angularRefPos, sense , minTickDist=100, \
                   ticks=None):
     """ GetPolarTicks(p0, radius, lim, angularRefPos, sense , minTickDist=100,
                        ticks=None)
+                        
     Get the tick values, position and texts.
     These are calculated from the polar center, radius and the range
     of values to map on a straight line between these two points
     (which can be 2d or 3d). If ticks is given, use these values instead.
+    
     """
+    
     pTickUnits = [1,2,3,5,6,9,18,30,45] # 90 = 3*3*2*5*1
     #circumference of circle
     circum = 2*np.pi*radius
@@ -1414,6 +1414,7 @@ def GetPolarTicks(p0, radius, lim, angularRefPos, sense , minTickDist=100, \
 
 class PolarAxis2D(BaseAxis):
     """ PolarAxis2D(parent)
+    
     An Axis object represents the lines, ticks and grid that make
     up an axis. Not to be confused with an Axes, which represents
     a scene and is a Wibject.
@@ -1435,6 +1436,7 @@ class PolarAxis2D(BaseAxis):
         Drag mouse up/down to translate radial axis
         Drag mouse left/right to rotate angular ref position
         Drag mouse + shift key up/down to rescale radial axis (min R fixed)
+    
     """
     
     def __init__(self, parent):
@@ -1487,10 +1489,14 @@ class PolarAxis2D(BaseAxis):
     
     @DrawAfter
     def RescalePolarData(self):
-        """ This method finds and transforms all polar line data
+        """ RescalePolarData()
+        
+        This method finds and transforms all polar line data
         by the current polar radial axis limits so that data below
         the center of the polar plot is set to 0,0,0 and data beyond
-        the maximum (outter radius) is clipped """
+        the maximum (outter radius) is clipped.
+        
+        """
         
         axes = self.GetAxes()
         drawObjs = axes.FindObjects(PolarLine)
@@ -1974,6 +1980,7 @@ class PolarAxis2D(BaseAxis):
         all wobjects, simply use "SetLimits()"
         
         The margin represents the fraction of the range to add (default 2%).
+        
         """
         
         if rangeTheta is None or isinstance(rangeTheta, Range):
@@ -2058,15 +2065,19 @@ class PolarAxis2D(BaseAxis):
     
     def GetLimits(self):
         """ GetLimits()
+        
         Get the limits of the polar axis as displayed now.
-        Returns a tuple of limits for theta and r, respectively."""
+        Returns a tuple of limits for theta and r, respectively.
+        
+        """
         return self._angularRange, self._radialRange
     
     
     @PropWithDraw
     def angularRefPos():
         """ Get/Set the angular reference position in
-            degrees wrt +x screen axis"""
+        degrees wrt +x screen axis.
+        """
         # internal store in radians to avoid constant conversions
         def fget(self):
             return 180.0 * self._angularRefPos / np.pi
@@ -2079,7 +2090,7 @@ class PolarAxis2D(BaseAxis):
     @PropWithDraw
     def isCW():
         """ Get/Set the sense of rotation.
-         """
+        """
         def fget(self):
             return (self._sense == 1)
 
