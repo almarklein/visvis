@@ -399,6 +399,24 @@ def downSample(data, ndim):
     return data2
 
 
+def minmax(data):
+    """ minmax(data) -> (min, max)
+    Get the min and max of the data, ignoring inf and nan.
+    """
+    
+    # Check for inf and nan
+    M1 = np.isnan(data)
+    M2 = np.isinf(data)
+    
+    # Select all 'normal' elements 
+    if np.any(M1) or np.any(M2):
+        data2 = data[ ~(M1|M2) ]
+    else:
+        data2 = data
+    
+    # Return min and max
+    return data2.min(), data2.max()
+
 
 class TextureObject(object):
     """ TextureObject(texType)
@@ -980,7 +998,7 @@ class TextureObjectToVisualize(TextureObject):
         self._climRef = Range(0,1) # the "original" range
         
         # init clim and colormap
-        self._climRef.Set(data.min(), data.max())
+        self._climRef.Set(*minmax(data))
         self._clim = self._climRef.Copy()
     
     
@@ -1099,6 +1117,12 @@ class BaseTexture(Wobject):
     """
     
     def __init__(self, parent, data):
+        
+        # Check data first
+        if not isinstance(data, np.ndarray):
+            raise ValueError('Textures can only be described using Numpy arrays.')
+        
+        # Instantiate as wobject (after making "sure" this texture can be ok)
         Wobject.__init__(self, parent)
         
         # create texture (remember, this is an abstract class)
@@ -1248,7 +1272,7 @@ class BaseTexture(Wobject):
             data = self._texture1._dataRef
             if data is None:
                 return 
-            minmax = data.min(), data.max()
+            minmax = minmax(data)
         
         elif len(minmax)==1:
             # a range was given
