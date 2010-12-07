@@ -10,7 +10,7 @@ def axis(command, axes=None):
     """ axis(command, axes=None)
     
     Convenience function to set axis properties. Note that all functionality
-    can also be applied via the properties of the Axes object.
+    can also be applied via the properties of the Axis object.
     
     Possible string commands:      
       * off: hide the axis (Axes.axis.visible = False)
