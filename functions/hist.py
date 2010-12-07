@@ -12,12 +12,16 @@ def hist(data, bins=10, range=None, normed=False, weights=None, **kwargs):
     
     Make a histogram plot of the data. Uses np.histogram (new version) 
     internally. See its docs for more information. 
+    
     kwargs are given to the plot function.
     
     """
     
     # let numpy do the work
-    values, edges = np.histogram(data, bins, range, normed, weights, new=True)
+    if np.__version__ < '1.3':
+        values, edges = np.histogram(data, bins, range, normed, weights, new=True)
+    else:
+        values, edges = np.histogram(data, bins, range, normed, weights)
     
     # the bins are the left bin edges, let's get the centers
     range = __builtins__['range']

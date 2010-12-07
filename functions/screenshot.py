@@ -30,7 +30,8 @@ def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
     high quality bicubic interpolation. Then vv.imwrite(filename, ..)
     is used to store the resulting image to a file.
     
-    Notes:
+    Notes
+    -----
       * If bg is given, ob.bgcolor is set to bg before the frame is captured.
       * If filename is None, the interpolated image is returned as a numpy array.
       * If using a sf larger than 1, the image is best saved in the jpg format.

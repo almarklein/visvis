@@ -30,13 +30,24 @@ def plot(data1, data2=None, data3=None,
     """ plot(*args, lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
             alpha=1, axesAdjust=True, axes=None):
     
-    Plot 1, 2 or 3 dimensional data and return the Line object:
+    Plot 1, 2 or 3 dimensional data and return the Line object.
+    
+    Usage
+    -----
       * plot(Y, ...) plots a 1D signal, with the values plotted along the y-axis
       * plot(X, Y, ...) also supplies x coordinates
       * plot(X, Y, Z, ...) also supplies z coordinates
       * plot(P, ...) plots using a Point or Pointset instance
-      
-    The longer names for the line properties can also be used:
+    
+    Keyword arguments
+    -----------------
+    (The longer names for the line properties can also be used)
+    lw : scalar
+        lineWidth
+    lc : 3-element tuple or char
+        lineColor. char must be in 'rgbmcywk'
+    ls : char
+        aa
       * lineWidth: lw
       * lineColor: lc
       * lineStyle: ls

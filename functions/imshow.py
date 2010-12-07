@@ -14,24 +14,41 @@ def imshow(im, clim=None, aa=1, interpolate=False, cm=None,
     
     Display a 2D image and returns the Texture2D object. 
     
-    If the image is an anisotropic array (vv.points.Aaray), the appropriate
+    If the image is an anisotropic array (vv.Aaray), the appropriate
     scale and translate transformations are applied. 
     
-    The aa and interpolate parameters can be used to specify anti aliasing
-    and (linear) interpolation, respectively.
+    Parameters
+    ----------
+    im : numpy array
+        The image to visualize. Can be grayscale, RGB, or RGBA.
+    clim : 2-element tuple
+        The color limits to scale the intensities of the image. If not given,
+        the im.min() and im.max() are used (neglecting nan and inf).
+    aa : 0, 1, 2 or 3
+        Anti aliasing. 0 means no anti-aliasing. The higher the number,
+        the more anti-aliasing is applied. (Requires a GLSL compatible
+        OpenGl implementation).
+    interpolation : bool
+        Use no interpolation (i.e. nearest neighbour) or linear interpolation.
+    cm : Colormap
+        Set the colormap to apply in case the image is grayscale.
+    axesAdjust : bool
+        If axesAdjust==True, this function will call axes.SetLimits(), set
+        the camera type to 2D, and make axes.daspect[1] negative (i.e. flip 
+        the y-axis). If daspectAuto has not been set yet, it is set to False.
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
     
+    Notes
+    -----
     New images are positioned on z=-0.1, such that lines and points are
     visible over the image. This z-pos of textures already in the axes
     are moved backwards if new images are displayed with imshow, such that 
     the new image is displayed over the older ones.
-    (the set value is Texture2D._trafo_trans.dz)
+    (the changed value is `Texture2D._trafo_trans.dz`)
     
     Visvis does not use the "hold on / hold off" system. So if updating 
-    an image, better use Texture2D.Refresh() or do Axes.Clear() first.
-    
-    If axesAdjust==True, this function will call axes.SetLimits(), set
-    the camera type to 2D, and make axes.daspect[1] negative (i.e. flip 
-    the y-axis). If daspectAuto has not been set yet, it is set to False.
+    an image, better use Texture2D.Refresh() or call Axes.Clear() first.
     
     """
     

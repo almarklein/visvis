@@ -13,7 +13,7 @@ def processEvents():
     Users can periodically call this function during running 
     an algorithm to keep the figures responsove.
     
-    Note that IEP and IPython with the -wthread option will 
+    Note that IEP and IPython can integrate the GUI event loop to 
     periodically update the GUI events when idle.
     
     Also see Figure.DrawNow()
