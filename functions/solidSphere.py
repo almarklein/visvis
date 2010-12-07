@@ -80,6 +80,7 @@ def solidSphere(translation=None, scaling=None, direction=None, rotation=None,
     N is the number of subdivisions around the Z axis (similar to lines
     of longitude). M is the number of subdivisions along the Z axis 
     (similar to lines of latitude).
+    
     """
     
     # Note that the number of vertices around the axis is N+1. This

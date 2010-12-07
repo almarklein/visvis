@@ -53,9 +53,11 @@ printFPS = False
 
 def _Screenshot():
     """ _Screenshot()
+    
     Capture the screen as a numpy array to use it later.
     Used by the object picker helper to determine which item is
     under the mouse, and by the axes to buffer its content. 
+    
     """
     gl.glReadBuffer(gl.GL_BACK)
     xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
@@ -68,8 +70,11 @@ def _Screenshot():
 
 
 class ObjectPickerHelper(object):
-    """ A simple class to help picking of the objects.
+    """ ObjectPickerHelper()
+    
+    A simple class to help picking of the objects.
     An instance of this is attached to each figure. 
+    
     """
     
     def __init__(self):
@@ -187,7 +192,9 @@ class ObjectPickerHelper(object):
 
 
 class BaseFigure(base.Wibject):
-    """ BaseFigure - the root of all wibjects.
+    """ BaseFigure()
+    
+    Abstract class representing the root of all wibjects. 
     
     A Figure is a wrapper around the OpenGL widget in which it is drawn; 
     this way different backends are possible. Each backend inherits this
@@ -198,6 +205,7 @@ class BaseFigure(base.Wibject):
     of the visualization tree; a Figure Wibject does not have a parent.
     
     A Figure can be created with the function vv.figure() or vv.gcf().
+    
     """
     
     # dictionary of all figures objects: int -> Figure instance
@@ -207,7 +215,7 @@ class BaseFigure(base.Wibject):
     
     def __init__(self):
         """ The init will be oveloaded in the subclasses,
-        but they should call this init from there!
+        but they should call this init from there.
         """
         base.Wibject.__init__(self, None)
         
@@ -264,17 +272,22 @@ class BaseFigure(base.Wibject):
     
     @property
     def eventClose(self):
-        """ Fired when the figure is closed. """
+        """ Fired when the figure is closed. 
+        """
         return self._eventClose
+    
     @property
     def eventAfterDraw(self):
-        """ Fired after each drawing pass. """
+        """ Fired after each drawing pass. 
+        """
         return self._eventAfterDraw
     
     
     def _Register(self):
         """ _Register()
+        
         Register the figure with the list of figures. 
+        
         """ 
         
         # get keys
@@ -314,60 +327,73 @@ class BaseFigure(base.Wibject):
     
     def _SetCurrent(self):
         """ _SetCurrent()
+        
         Make the figure the current OpenGL context. This is required before
         drawing and before doing anything with OpenGl really.
+        
         """
         raise NotImplemented()
     
     def _SwapBuffers(self):
         """ _SwapBuffers()
+        
         Swap the memory and screen buffer such that
         what we rendered appears on the screen.
+        
         """
         raise NotImplemented()
     
     def _PostDrawRequest(self):
         """ _PostDrawRequest()
+        
         Via this method, visvis can request a redraw when something has
         changed, for example when zooming.
+        
         """
         raise NotImplemented()
     
     def _ProcessGuiEvents(self):
         """ _ProcessGuiEvents()
+        
         Process all events in the event queue.
         This is usefull when calling Draw() while an algorithm is 
         running. The figure is then still responsive. 
+        
         """
         raise NotImplemented()
         
     def _SetTitle(self, title):
         """ _SetTitle(title)
+        
         Set the title of the figure. Note that this
         does not have to work if the Figure is used as
         a widget in an application.
+        
         """
         raise NotImplemented()
     
     def _SetPosition(self, x, y, w, h):
-        """ Set the position of the widget. """        
+        """ Set the position of the widget. 
+        """        
         raise NotImplemented()
     
     def _GetPosition(self):
-        """ Get the position of the widget. """        
+        """ Get the position of the widget. 
+        """        
         raise NotImplemented()
     
     
     def _Close(self):
-        """ Close the widget, also calls Destroy(). """
+        """ Close the widget, also calls Destroy(). 
+        """
         raise NotImplemented()
     
     ## Properties
     
     @Property
     def parent():
-        """ The parent of a figure always returns None and
-        cannot be set. """
+        """ The parent of a figure always returns None and cannot be set. 
+        """
         def fget(self):
             return None
         def fset(self, value):
@@ -378,7 +404,8 @@ class BaseFigure(base.Wibject):
     
     @property
     def nr(self):
-        """ Get the number (id) of this figure. """
+        """ Get the number (id) of this figure. 
+        """
         for key in BaseFigure._figures:
             if BaseFigure._figures[key] is self:
                 return key
@@ -443,14 +470,16 @@ class BaseFigure(base.Wibject):
     
     @property
     def underMouse(self):
-        """ Get the object currently under the mouse. Can be None."""
+        """ Get the object currently under the mouse. Can be None.
+        """
         if not self._underMouse:
             return None
         return self._underMouse[-1]()
     
     @property
     def mousepos(self):
-        """ Get the position of the mouse in figure coordinates. """
+        """ Get the position of the mouse in figure coordinates. 
+        """
         return self._mousepos
     
     # ===== Notes about positioning figures.  =====
@@ -468,7 +497,8 @@ class BaseFigure(base.Wibject):
         """ The position for the figure works a bit different than for
         other wibjects: it only works with absolute values and it 
         represents the position on screen or the position in the 
-        parent widget in an application. """
+        parent widget in an application. 
+        """
         def fget(self):
             # Update the position by asking the backend
             # Note we need to use privates to avoid position.Update() being
@@ -500,9 +530,11 @@ class BaseFigure(base.Wibject):
     
     def _OnPositionChange(self,event=None):
         """ _OnPositionChange(event=None)
+        
         When the position was programatically changed, we should
         change the position of the window. 
         But ONLY if it was really changed (or we get into infinite loops).
+        
         """
         
         #if self._resizing:
@@ -515,9 +547,11 @@ class BaseFigure(base.Wibject):
     
     def _OnResize(self, event=None):
         """ _OnResize(event=None)
+        
         Called when the figure is resized.
         This should initiate the event_position event, but not by firing
         the event_position of this object, otherwise it is not propagated.
+        
         """        
         # Allow position tree to update
         self.position._Changed()
@@ -549,8 +583,11 @@ class BaseFigure(base.Wibject):
     @DrawAfter
     def Clear(self):
         """ Clear()
+        
         Clear the figure, removing all wibjects inside it and clearing all
-        callbacks. """        
+        callbacks. 
+        
+        """        
         # remove children
         while self._children:
             child = self._children.pop()
@@ -572,7 +609,9 @@ class BaseFigure(base.Wibject):
     
     def Destroy(self):
         """ Destroy()
+        
         Close the figure and clean up all children.
+        
         """
         if self._widget is None:
             #raise RuntimeError('Attempt to Destroy a dead Figure.')
@@ -614,9 +653,11 @@ class BaseFigure(base.Wibject):
     
     def Draw(self, fast=False, timeout=10):
         """ Draw(fast=False, timeout=10)
+        
         Draw the figure within 10 ms (if the events are handled). 
         Multiple calls in a short amount of time will result in only
         one redraw.
+        
         """
         
         # Only if not currently being drawn
@@ -649,9 +690,11 @@ class BaseFigure(base.Wibject):
     
     def DrawNow(self, fast=False):
         """ DrawNow(fast=False)
+        
         Draw the figure right now and let the GUI toolkit process its events.
         Call this from time to time if you want to update your figure while 
-        running some algorithm, and let the figure stay responsive.         
+        running some algorithm, and let the figure stay responsive.
+        
         """
         self._drawWell = not bool(fast)
         self._RedrawGui() # post event
@@ -660,9 +703,11 @@ class BaseFigure(base.Wibject):
     
     def OnDraw(self, event=None):
         """ OnDraw()
+        
         Perform the actual drawing. Called by the GUI toolkit paint event
         handler. Users should not call this method, but use
         Draw() or DrawNow().
+        
         """ 
         # This is the actual draw entry point. But we will 
         # call _Draw() to draw first the beatiful pictures and then
@@ -723,7 +768,9 @@ class BaseFigure(base.Wibject):
     
     def _Draw(self, mode):
         """ _Draw(mode)
+        
         This method performs a single drawing pass. Used by OnDraw().
+        
         """
         
         # make sure the part to draw to is ok               
@@ -840,7 +887,9 @@ class BaseFigure(base.Wibject):
     
     def _GenerateMouseEvent(self, eventName, absx, absy, button=0):
         """ _GenerateMouseEvent(eventName, x, y, button=0)
+        
         For the backend to generate mouse events. 
+        
         """
         
         # make lower
@@ -918,12 +967,13 @@ class AxesContainer(base.Wibject):
     
     The only correct way to create (and obtain a reference to) 
     an AxesContainer instance is to use:
-      # axes = vv.Axes(figure)
-      # container = axes.parent
+      * axes = vv.Axes(figure)
+      * container = axes.parent
     
     This container is automatically destroyed once the axes is removed. 
     You can attach wibjects to an instance of this class, but note that
     the container object is destroyed as soon as the axes is gone.
+    
     """
     
     def __init__(self, parent, *args, **kwargs):
@@ -938,7 +988,9 @@ class AxesContainer(base.Wibject):
     
     def GetAxes(self):
         """ GetAxes()
+        
         Get the axes. Creates a new axes object if it has none. 
+        
         """
         if self._children:
             child = self._children[0]
@@ -949,7 +1001,10 @@ class AxesContainer(base.Wibject):
     
     def _DrawTree(self, *args, **kwargs):
         """ _DrawTree(*args, **kwargs)
-        Pass on, but Destroy itself if axes is gone. """
+        
+        Pass on, but Destroy itself if axes is gone. 
+        
+        """
         axes = self.GetAxes()
         if axes:
             base.Wibject._DrawTree(self, *args, **kwargs)
@@ -962,8 +1017,11 @@ class Axes(base.Wibject):
     
     An Axes instance represents the scene with a local coordinate system 
     in which wobjects can be drawn. It has various properties to influence 
-    the appearance of the scene, like for example whether to show gridlines,
-    in what color to draw the tickmarks, labels to be shown, etc.
+    the appearance of the scene, such as aspect ration and lighting. 
+    
+    To set the appearance of the axis (the thing that indicates x, y and z), 
+    use the properties of the Axis instance. For example:
+    Axes.axis.showGrid = True
     
     The cameraType determines how the data is visualized and how the user 
     can interact with the data.
@@ -975,6 +1033,7 @@ class Axes(base.Wibject):
     equally zoomed (The function imshow() sets this to False).
     
     An Axes can be created with the function vv.subplot() or vv.gca().
+    
     """ 
     
     def __init__(self, parent, axisClass=None):
@@ -1067,7 +1126,7 @@ class Axes(base.Wibject):
         # Check margin
         if margin and not isinstance(margin, float):
             raise ValueError('In SetLimits(): margin should be a float.')
-            
+        
         # if tuples, convert to ranges
         if rangeX is None or isinstance(rangeX, Range):
             pass # ok
@@ -1163,12 +1222,14 @@ class Axes(base.Wibject):
     
     def GetLimits(self):
         """ GetLimits()
+        
         Get the limits of the 2D axes as currently displayed. This can differ
         from what was set by SetLimits if the daspectAuto is False. 
         Returns a tuple of limits for x and y, respectively.
         
         Note: the limits are queried from the twod camera model, even 
         if this is not the currently used camera.
+        
         """
         # get camera
         cam = self._cameras['2d']
@@ -1185,10 +1246,12 @@ class Axes(base.Wibject):
     
     def GetView(self):
         """ GetView()
+        
         Get a structure with the camera parameters. The parameters are
         named so they can be changed in a natural way and fed back using
         SetView(). Note that the parameters can differ for different camera
         types.
+        
         """
         return self.camera.GetViewParams()
     
@@ -1196,8 +1259,10 @@ class Axes(base.Wibject):
     @DrawAfter
     def SetView(self, s=None):
         """ SetView(s=None)
+        
         Set the camera view using the given structure with camera parameters.
         If s is None, the camera is reset to its initial state.
+        
         """
         if s:
             self.camera.SetViewParams(s)
@@ -1207,8 +1272,11 @@ class Axes(base.Wibject):
     
     def Draw(self, fast=False):
         """ Draw(fast=False)
+        
         Calls Draw(fast) on its figure, as the total opengl canvas 
-        has to be redrawn. This might change in the future though. """
+        has to be redrawn. This might change in the future though. 
+        
+        """
         
         if self._isbeingdrawn:
             return False
@@ -1228,7 +1296,9 @@ class Axes(base.Wibject):
     @DrawAfter
     def Clear(self, clearForDestruction=False):
         """ Clear()
+        
         Clear the axes. Removing all wobjects in the scene.
+        
         """
         # Remove wobjects
         for w in self.wobjects:
@@ -1246,7 +1316,10 @@ class Axes(base.Wibject):
     
     def _CorrectPositionForLabels(self):
         """ _CorrectPositionForLabels()
-        Correct the position for the labels and title etc. """
+        
+        Correct the position for the labels and title etc. 
+        
+        """
         
         # init correction
         xCorr, yCorr = 0, 0
@@ -1345,7 +1418,8 @@ class Axes(base.Wibject):
     
     @property
     def mousepos(self):
-        """ Get position of mouse in screen pixels, relative to this axes. """
+        """ Get position of mouse in screen pixels, relative to this axes. 
+        """
         figure = self.GetFigure()
         if not figure:
             return 0,0
@@ -1397,7 +1471,8 @@ class Axes(base.Wibject):
     @PropWithDraw
     def legend():
         """ Get/Set the string labels for the legend. Upon setting,
-        a legend wibject is automatically shown. """
+        a legend wibject is automatically shown. 
+        """
         def fget(self):
             return self.legendWibject._stringList
         def fset(self, value):            
@@ -1406,7 +1481,8 @@ class Axes(base.Wibject):
     @property
     def legendWibject(self):
         """ Get the legend wibject, so for exampe its position
-        can be changed programatically. """
+        can be changed programatically. 
+        """
         legendWibjects = self.FindObjects(Legend)
         if not legendWibjects:
             legendWibjects = [Legend(self)] # create legend object
@@ -1415,12 +1491,13 @@ class Axes(base.Wibject):
     
     @property
     def light0(self):
-        """ Get the default light. """
+        """ Get the default light source in the scene. 
+        """
         return self._lights[0]
     
     @property
     def lights(self):
-        """ Get a list of all available lights. Only lights0 is
+        """ Get a list of all available lights in the scene. Only light0 is
         enabeled by default. 
         """
         return [light for light in self._lights]
@@ -1431,7 +1508,8 @@ class Axes(base.Wibject):
         """ Get/Set whether to use a buffer; after drawing, a screenshot
         of the result is obtained and stored. When the axes needs to
         be redrawn, but has not changed, the buffer can be used to 
-        draw the contentx at great speed. """
+        draw the contentx at great speed. 
+        """
         def fget(self):
             return self._useBuffer
         def fset(self, value): 
@@ -1442,8 +1520,8 @@ class Axes(base.Wibject):
     def motionBlur():
         """ Get/Set the amount of motion blur when interacting with
         this axes. The value should be a number between 0 and 1. 
-        Warning: this is a rather useless feature, but can look
-        cool at times :) """
+        Note: this is a rather useless feature :) 
+        """
         def fget(self):
             return self._motionBlur
         def fset(self, value): 
@@ -1705,62 +1783,6 @@ class Axes(base.Wibject):
                 item._DrawTree(DRAW_SCREEN)
     
     
-    
-    
-    
-#     def _OnDrawShapeContent(self, clr):
-#                 
-#         # Draw background
-#         if True:
-#             
-#             # Set view
-#             gl.glMatrixMode(gl.GL_PROJECTION)        
-#             gl.glLoadIdentity()        
-#             ortho( 0, 1, 0, 1)
-#             gl.glMatrixMode(gl.GL_MODELVIEW)
-#             gl.glLoadIdentity()
-#             
-#             # Draw
-#             gl.glColor3f(clr[0], clr[1], clr[2])
-#             gl.glBegin(gl.GL_POLYGON)
-#             gl.glVertex2f(0,0)
-#             gl.glVertex2f(0,1)
-#             gl.glVertex2f(1,1)
-#             gl.glVertex2f(1,0)
-#             gl.glEnd()
-#         
-#         # Draw wobjects
-#         if True:
-#             
-#             # Setup the camera
-#             self.camera.SetView()
-#         
-#             # Draw stuff        
-#             for item in self._wobjects:
-#                 if isinstance(item, Line):
-#                     pass # draw later
-#                 else:
-#                     item._DrawTree(mode, pickerHelper)
-#             
-#             # draw lines AFTER textures
-#             # note that this does not work if lines textures are children
-#             # of each-other. in that case they should be added to the scene
-#             # in the correct order.
-#             for item in self._wobjects:
-#                 if isinstance(item, Line):
-#                     item._DrawTree(mode, pickerHelper)
-#         
-#         # prepare for wibject children
-#         gl.glDisable(gl.GL_DEPTH_TEST)        
-#         gl.glMatrixMode(gl.GL_PROJECTION)        
-#         gl.glLoadIdentity()        
-#         ortho( 0, pos.w, pos.h, 0)
-#         gl.glMatrixMode(gl.GL_MODELVIEW)
-#         gl.glLoadIdentity()
-#         # No need to call transform
-    
-    
-    
     def _OnMouseDown(self, event):
         # make current axes
         f = self.GetFigure()
@@ -1771,12 +1793,14 @@ class Axes(base.Wibject):
 
 class Legend(simpleWibjects.DraggableBox):
     """ Legend(parent)
+    
     A legend is a wibject that should be a child (does not have
     to be the direct child) of an axes. It displays a description for 
     each line in the axes, and is draggable.
     
     A Legend can be shown with the function vv.legend(), or using the
     Axes.legend property.
+    
     """
     
     def __init__(self, parent):
@@ -1827,7 +1851,9 @@ class Legend(simpleWibjects.DraggableBox):
     
     def SetStrings(self, *stringList):
         """ SetStrings(*stringList)
+        
         Set the strings of the legend labels.
+        
         """
         # Note that setting the .visible property will invoke a draw
         

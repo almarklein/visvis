@@ -6,9 +6,11 @@ import numpy as np
 
 def hist(data, bins=10, range=None, normed=False, weights=None, **kwargs):
     """ hist(data, bins=10, range=None, normed=False, weights=None, **kwargs)
+    
     Make a histogram plot of the data. Uses np.histogram (new version) 
     internally. See its docs for more information. 
     kwargs are given to the plot function.
+    
     """
     
     # let numpy do the work

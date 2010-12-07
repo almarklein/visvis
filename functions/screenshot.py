@@ -35,13 +35,15 @@ def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
       * If filename is None, the interpolated image is returned as a numpy array.
       * If using a sf larger than 1, the image is best saved in the jpg format.
     
-    Rationale:
+    Rationale
+    ---------
     We'd prefer storing screenshots of plots as vector (eps) images, but 
     the nature of OpenGl prevents this. By applying high quality 
 	interpolation (using a cardinal spline), the resolution can be increased, 
     thereby significantly improving the visibility/smoothness for lines 
     and fonts. Use this to produce publication quality snapshots of your
     plots.
+    
     """
     
     # The tension controls the

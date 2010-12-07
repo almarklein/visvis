@@ -18,7 +18,8 @@ def solidCylinder(translation=None, scaling=None, direction=None, rotation=None,
     
     N is the number of subdivisions around its axis. M is the number of
     subdivisions along its axis. If N or M is smaller than 8, flat shading
-    is used instead of smooth shading.    
+    is used instead of smooth shading.  
+      
     """
     
     # Note that the number of vertices around the axis is N+1. This

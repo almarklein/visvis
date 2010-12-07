@@ -3,7 +3,9 @@ from visvis.polygonalModeling import BaseMesh
 
 def combineMeshes(meshes):
     """ combineMeshes(meshes)
+    
     Given a list of mesh objects, produces a combined mesh.
+    
     """
     
     # Check mesh simularity

@@ -175,9 +175,12 @@ def _loadBackend(name):
 
 def use(backendName=None):
     """ use(backendName=None)
+    
     Use the specified backend and return an App instance that has a run()
     method to enter the GUI toolkit's mainloop.
+    
     If no backend is given, a suitable backend is tried automatically. 
+    
     """
     
     # Make case insensitive and check
@@ -216,3 +219,4 @@ def use(backendName=None):
     
     # Return instance
     return currentBackend.app
+

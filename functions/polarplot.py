@@ -49,16 +49,12 @@ def polarplot(data1, data2=None,  inRadians=False,
     Access these via vv.gca().axis.
     
     These include:    
-        
-        SetLimits(thetaRange, radialRange)
-        
-        thetaRange, radialRange = GetLimits()
-        
-        angularRefPos: Get and Set methods for the relative screen
+      * SetLimits(thetaRange, radialRange)
+      * thetaRange, radialRange = GetLimits()
+      * angularRefPos: Get and Set methods for the relative screen
         angle of the 0 degree polar reference.  Default is 0 degs
         which corresponds to the positive x-axis (y =0)
-        
-        isCW: Get and Set methods for the sense of rotation CCW or
+      * isCW: Get and Set methods for the sense of rotation CCW or
         CW. This method takes/returns a bool (True if the default CW).
     
     Usage:
@@ -69,6 +65,7 @@ def polarplot(data1, data2=None,  inRadians=False,
     If axesAdjust==True, this function will call axes.SetLimits() and set
     the camera type to 2D. If daspectAuto has not been set yet, it is set
     to True.
+    
     """
 
     # create a dict from the properties and combine with kwargs

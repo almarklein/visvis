@@ -15,6 +15,7 @@ def solidBox(translation=None, scaling=None, direction=None, rotation=None,
     
     Creates a solid cube (or box if you scale it) centered at the 
     origin. Returns an OrientableMesh.
+    
     """
     
     # Create vertices of a cube

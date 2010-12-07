@@ -16,6 +16,7 @@ def calculateNormals(mesh):
     
     Calculate the normal data from the vertices.
     Handles triangular and quad faces.
+    
     """
     t0 = time.time()
     
@@ -99,8 +100,10 @@ def _vectorsToNormals(a, b, faces, normals):
 
 def calculateNormals_old(mesh):
     """ calculateNormals(mesh)
+    
     Calculate the normal data from the vertices.
     Handles triangular and quad faces.
+    
     """
     t0 = time.time()
     

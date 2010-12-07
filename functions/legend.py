@@ -5,12 +5,14 @@ import visvis as vv
 
 def legend(*value, **kwargs):
     """ legend('name1', 'name2', 'name3', ..., axes=None)
+    
     Can also be called with a single argument being a tuple/list of strings.
     
     Set the string labels for the legend. If no string labels are given,
     the legend wibject is hidden again.
     
     See also the Axes.legend property.
+    
     """
     
     # Get axes

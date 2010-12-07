@@ -10,6 +10,7 @@ def unwindFaces(mesh):
     color and texCords, which are usually larger. The new arrays 
     represent the same surface, but is described without a faces
     array. 
+    
     """
     
     # Make new vertices and normals if faces are used

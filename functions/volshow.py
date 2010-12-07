@@ -18,6 +18,7 @@ def volshow(vol, clim=None, renderStyle='mip', cm=None,
     If axesAdjust==True, this function will call axes.SetLimits(), and set
     the camera type to 3D. If daspectAuto has not been set yet, it is set 
     to False.
+    
     """
     
     # get axes

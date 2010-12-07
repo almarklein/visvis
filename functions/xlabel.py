@@ -5,8 +5,10 @@ import visvis as vv
 
 def xlabel(text, axes=None):
     """ xlabel(text, axes=None)
+    
     Set the xlabel of the given or current axes. 
     Note: you can also use "axes.axis.xLabel = text".
+    
     """
     if axes is None:
         axes = vv.gca()

@@ -18,6 +18,7 @@ def axis(command, axes=None):
       * ij: flip the y-axis (make second element of Axes.daspect negative) 
       * xy: (make all elements of Axes.daspect positive) 
     If you want to set an Axes' limits, use Axes.SetLimits(xlim, ylim, zlim).
+    
     """
     
     # Get axes

@@ -22,7 +22,6 @@ All wobjects are inserted in this namespace, thereby providing
 the user with a list of all wobjects. All wobjects are also
 inserted in the root visvis namespace.
 
-
 """
 
 from base import Wobject
@@ -32,11 +31,15 @@ from textures import Texture2D, Texture3D
 from polygonalModeling import Mesh, OrientableMesh
 
 class MotionDataContainer(Wobject):
-    """ The motion data container is a wobject that can contain
+    """ MotionDataContainer(parent, interval=100)
+    
+    The motion data container is a wobject that can contain
     several data, which are displayed alternatively using a 
     timer.
+    
     The data are simply stored as the wobject's children, and are
     made visible one at a time.
+    
     """
     
     def __init__(self, parent, interval=100):
@@ -54,7 +57,8 @@ class MotionDataContainer(Wobject):
     
     @property
     def timer(self):
-        """ Get the timer object used to make the objects visible. """
+        """ Get the timer object used to make the objects visible. 
+        """
         return self._timer
     
     
@@ -78,3 +82,4 @@ class MotionDataContainer(Wobject):
         
         # show it!        
         a.Draw()
+

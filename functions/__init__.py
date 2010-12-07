@@ -36,6 +36,8 @@ There are three things to take into account when making a new function:
 import os
 
 def _insertFunctions():
+    """ insert the function is this module's namespace.
+    """
     
     # see which files we have
     path = __file__

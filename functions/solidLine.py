@@ -11,6 +11,7 @@ def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):
     
     Creates a solid line in 3D space. pp can be a Pointset.
     Radius can also specify the radius for each point.
+    
     """
     
     # Check first argument

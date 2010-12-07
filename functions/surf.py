@@ -25,6 +25,7 @@ def surf(*args, **kwargs):
     to False.
     
     Also see grid()
+    
     """
     
     def checkZ(z):

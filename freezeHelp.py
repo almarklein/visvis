@@ -22,12 +22,17 @@ Helps freezing apps made using visvis.
 
 
 """
+
 import visvis as vv
 import os, shutil, sys
 
 def copyResources(destPath):   
-    """ Copy the visvis resource dir to the specified folder. 
-    (The folder containing the frozen executable)"""
+    """ copyResources(destinationPath)
+    
+    Copy the visvis resource dir to the specified folder 
+    (The folder containing the frozen executable).
+    
+    """
     # create folder (if required)
     destPath = os.path.join(destPath, 'visvisResources')
     if not os.path.isdir(destPath):
@@ -39,13 +44,16 @@ def copyResources(destPath):
             continue
         shutil.copy(os.path.join(path,file), os.path.join(destPath,file))
 
+
 def getIncludes(backendName):
-    """ Get a list of includes to extend the 'includes' list
+    """ getIncludes(backendName)
+    
+    Get a list of includes to extend the 'includes' list
     with of py2exe or bbfreeze. The list contains:
-    - the module of the specified backend 
-    - all the functionnames, which are dynamically loaded and therefore 
-      not included by default.
-    - opengl stuff
+      * the module of the specified backend 
+      * all the functionnames, which are dynamically loaded and therefore not included by default.
+      * opengl stuff
+    
     """
     # init
     includes = []
@@ -82,6 +90,4 @@ def getIncludes(backendName):
     
     # done
     return includes
-    
-    
-    
+
