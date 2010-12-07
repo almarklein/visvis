@@ -11,9 +11,15 @@ import os, time
 import numpy as np
 
 class Recorder:
-    """ Recorder class that makes snapshots right after each draw event.
-    It allows storing of the movie in an animated gif.
-    Get the raw frames using GetFrames().
+    """ Recorder(object)
+    
+    Recorder class that makes snapshots right after each draw event.
+    
+    It is then possible to export the movie to SWF, GIF, AVI, or a series
+    of images.
+    
+    See also vv.movieWrite().
+    
     """
     
     def __init__(self, ob):

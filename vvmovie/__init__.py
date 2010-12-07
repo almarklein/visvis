@@ -26,11 +26,11 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Package vvmovie (visvis-movie)
-All submodules have been designed to be work independant of each-other 
-(except the AVI module, which requires the IMS module).
+
+All submodules have been designed to be work independent of each-other 
+(except the image2avi module, which requires the images2ims module).
 
 Provides the following functions:
-
   * readGif & writeGif  -> a movie stored as animated GIF
   * readSwf & writeSwf  -> a movie stored as shockwave flash
   * readAvi & writeAvi  -> a movie stored as compressed video
@@ -42,7 +42,6 @@ the right function depending on the used file extension:
   * movieWrite
 
 More information about compression and limitations:
-
   * GIF. Requires PIL. Animated GIF applies a color-table of maximal
     256 colors and applies poor compression. It's widely applicable though. 
   * SWF. Provides lossless storage of movie frames with good (ZLIB) 
@@ -123,6 +122,18 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     Writing AVI requires the "ffmpeg" application:
       * Most linux users can install it using their package manager.
       * There is a windows installer on the visvis website.
+    
+    Notes on compression and limitations
+    ------------------------------------
+      * GIF. Requires PIL. Animated GIF applies a color-table of maximal
+        256 colors and applies poor compression. It's widely applicable though. 
+      * SWF. Provides lossless storage of movie frames with good (ZLIB) 
+        compression. Reading of SWF files is limited to images stored using
+        ZLIB compression. Requires no external libraries.
+      * AVI. Requires ffmpeg. Provides excelent mpeg4 (or any other supported
+        by ffmpeg) compression. Not intended for reading very large movies.
+      * IMS. Requires PIL. Quality depends on the used image type. Use png for  
+        lossless compression and jpg otherwise.
     
     """
     

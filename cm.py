@@ -43,8 +43,8 @@ import weakref
 class ClimEditor(DraggableBox):
     """ CLimEditor(parent, *args)
     
-    A wibject to edit the clim property of textures a la window-width,
-    window-level.
+    A wibject to edit the clim property of textures (thereby setting
+    window-width and window-level).
     
     During initialization, SetMapables(*args) is called. The easiest way 
     to use this wibject is to attach it to an axes or figure instance. 
@@ -129,9 +129,11 @@ class ClimEditor(DraggableBox):
     
     def GetMapables(self):
         """ GetMapables()
+        
         Get a list of the objects to apply the colormap to. If an axes or 
         figure was given, all eligable objects are queried from their 
         children.
+        
         """
         
         # Remove dead refs
@@ -164,6 +166,7 @@ class ColormapEditor(DraggableBox):
     During initialization, SetMapables(*args) is called. The easiest way 
     to use this wibject is to attach it to an axes or figure instance. 
     The wibject then controls the colormaps of all mapable objects in them.
+    
     """
     
     def __init__(self, parent, *args):
@@ -274,6 +277,7 @@ class ColormapEditor(DraggableBox):
         
         The colormap of the last mapable obtained by GetMapables is used
         to set the nodes in the wibject (if possible).
+        
         """
         
         # Parse input
@@ -346,9 +350,11 @@ class ColormapEditor(DraggableBox):
     
     def GetMapables(self):
         """ GetMapables()
+        
         Get a list of the objects to apply the colormap to. If an axes or 
         figure was given, all eligable objects are queried from their 
         children.
+        
         """
         
         # Remove dead refs
@@ -372,7 +378,10 @@ class ColormapEditor(DraggableBox):
 
 
 class CM_NodeWidget(Box):
-    """ Class to modify node positions using the mouse. 
+    """ CM_NodeWidget(parent)
+    
+    Class to modify node positions using the mouse. 
+    
     """
     
     def __init__(self, parent):
@@ -595,12 +604,14 @@ class CM_NodeWidget(Box):
 
 class Colorbar(Box):
     """ Colorbar(parent)
+    
     This wibject displays the colormap applied to a certain mapable.
     It should be attached to an Axes or Figure. The displayed colormap
     is that of the last added (or last added in the last axes) mapable
     object.
     
     A Colorbar can be created with the function vv.colorbar().
+    
     """
     
     def __init__(self, parent):        

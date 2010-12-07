@@ -13,6 +13,7 @@ def calculateFlatNormals(mesh):
     of all normals of that face. This can in some cases lead to
     wrong results if a vertex is the first vertex of more than one
     face.
+    
     """
     
     # If we want flat shading, we should not use faces

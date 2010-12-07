@@ -30,13 +30,13 @@ def laysin(cols, rows, c):
 
 def subplot(*args):
     """ subplot(ncols, nrows, nr)
+    
     Create or return axes in current figure.
-    usage:
-    subplot(3,2,1)  or, 
-    subplot(321)
+    
     The three numbers represent number of rows, number of columns,
     and index respectively. The index starts from 1 and walks along 
-    the rows, so subplot(3,2,2) refers to the upper righ axes.
+    the rows, so subplot(3,2,2) refers to the upper righ axes. Note 
+    that subplot(322) can also be used.
     
     It is checked whether (the center of) an axes is present at the 
     specified grid location. If so, that axes is returned. Otherwise

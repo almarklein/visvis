@@ -6,6 +6,7 @@ import visvis as vv
 
 def callLater(delay, callable, *args, **kwargs):
     """ callLater(delay, callable, *args, **kwargs)
+    
     Call a callable after a specified delay (in seconds), 
     with the specified arguments and keyword-arguments. 
     
@@ -14,6 +15,7 @@ def callLater(delay, callable, *args, **kwargs):
     processed.
     
     See also vv.Event
+    
     """
     calltime = time.time() + delay
     vv.events._callLater_callables[calltime]= (callable, args, kwargs)

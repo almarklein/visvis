@@ -6,7 +6,9 @@ import visvis as vv
 
 def gcf():
     """ gcf()
+    
     Get the current figure. 
+    
     """
     
     if not BaseFigure._figures:

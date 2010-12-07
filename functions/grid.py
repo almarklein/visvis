@@ -23,6 +23,7 @@ def grid(*args, **kwargs):
     to False.
     
     Also see surf()
+    
     """
     
     m = vv.surf(*args, **kwargs)

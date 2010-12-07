@@ -5,9 +5,11 @@ import visvis as vv
 
 def close(fig):
     """ close(fig)
+    
     fig can be a Figure object or an integer representing the id of the
     figure to close. Note that for the first case, you migh also call
     fig.Destroy()
+    
     """
     
     if isinstance(fig, int):

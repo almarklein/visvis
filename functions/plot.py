@@ -46,6 +46,7 @@ def plot(data1, data2=None, data3=None,
     If axesAdjust==True, this function will call axes.SetLimits(), set
     the camera type to 2D when plotting 2D data and to 3D when plotting
     3D data. If daspectAuto has not been set yet, it is set to True.
+    
     """
     
     # create a dict from the properties and combine with kwargs

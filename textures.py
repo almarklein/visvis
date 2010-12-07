@@ -63,9 +63,13 @@ climCorrection = { 'uint8':2**8, 'int8':2**7, 'uint16':2**16, 'int16':2**15,
 
 
 def loadShaders():
-    """ load shading code from the files in the resource dir.
-    Returns two dicts with the vertex and fragment shaders, 
-    respectively. """
+    """ loadShaders()
+    
+    load shading code from the files in the resource dir.
+    Returns two dicts with the vertex and fragment shaders, respectively. 
+    
+    """
+    
     path = getResourceDir()
     vshaders = {}
     fshaders = {}
@@ -96,12 +100,14 @@ vshaders, fshaders = loadShaders()
 
 # todo: also make CG shaders, they say on the web they are more predictable.
 class GlslProgram:
-    """ GLSL program
+    """ GlslProgram()
+    
     A class representing a GLSL (OpenGL Shading Language) program.
     It provides an easy interface for adding vertex and fragment shaders
     and setting variables used in them.
     Note: On systems that do not support shading, this class will go in
     invalid mode.
+    
     """
     
     def __init__(self):
@@ -120,7 +126,8 @@ class GlslProgram:
             self._usable = False
     
     def IsUsable(self):
-        """ Returns whether the program is usable. """ 
+        """ Returns whether the program is usable. 
+        """ 
         return self._usable
     
     def _IsCompiled(self):
@@ -131,7 +138,8 @@ class GlslProgram:
     
     
     def Enable(self):
-        """ Start using the program. """
+        """ Start using the program. 
+        """
         if not self._usable:
             return
         
@@ -145,7 +153,8 @@ class GlslProgram:
     
     
     def Disable(self):
-        """ Stop using the program. """
+        """ Stop using the program. 
+        """
         if not self._usable:
             return
         gla.glUseProgramObjectARB(0)
@@ -235,10 +244,13 @@ class GlslProgram:
     
     
     def SetUniformf(self, varname, values):
-        """ A uniform is a parameter for shading code.
+        """ SetUniformf(varname, values)
+        
+        A uniform is a parameter for shading code.
         Set the parameters right after enabling the program.
         values should be a list of up to four floats ( which 
         are converted to float32).
+        
         """
         if not self._IsCompiled():
             return
@@ -261,10 +273,13 @@ class GlslProgram:
     
     
     def SetUniformi(self, varname, values):
-        """ A uniform is a parameter for shading code.
+        """ SetUniformi(varname, values)
+        
+        A uniform is a parameter for shading code.
         Set the parameters right after enabling the program.
         values should be a list of up to four ints ( which 
         are converted to int).
+        
         """
         if not self._IsCompiled():
             return
@@ -308,14 +323,19 @@ class GlslProgram:
     
     
     def _PrintInfoLog(self, glObject, preamble=""):
-        """ Print the info log. """
+        """ Print the info log. 
+        """
         log = gla.glGetInfoLogARB(glObject)
         if log:
             print preamble, log            
     
     
     def DestroyGl(self):
-        """ Clear the program. """
+        """ DestroyGl()
+        
+        Clear the program. 
+        
+        """
         # clear OpenGL stuff
         if not self._usable:
             return
@@ -336,10 +356,14 @@ class GlslProgram:
 
 
 def makePowerOfTwo(data, ndim):
-    """ If necessary, pad the data with zeros, to make the shape 
+    """ makePowerOfTwo(data, ndim)
+    
+    If necessary, pad the data with zeros, to make the shape 
     a power of two. If it already is shaped ok, the original data
     is returned.
+    
     Use this function for systems with OpenGl < 2.0. 
+    
     """
     def nearestN(n1):
         n2 = 2
@@ -370,9 +394,14 @@ def makePowerOfTwo(data, ndim):
         raise ValueError("Cannot downsample data of this dimension.")
     return data2
 
+
 def downSample(data, ndim):
-    """ Downsample the data. Peforming a simple form of smoothing to prevent
-    aliasing. """
+    """ downSample(data, ndim)
+    
+    Downsample the data. Peforming a simple form of smoothing to prevent
+    aliasing. 
+    
+    """
     if ndim==1:
         data2 = 0.4 * data
         data2[1:] += 0.3*data[:-1] 
@@ -400,8 +429,10 @@ def downSample(data, ndim):
 
 
 def minmax(data):
-    """ minmax(data) -> (min, max)
+    """ minmax(data)
+    
     Get the min and max of the data, ignoring inf and nan.
+    
     """
     
     # Check for inf and nan
@@ -428,12 +459,14 @@ class TextureObject(object):
     and specifies whether this is a 1D, 2D or 3D texture.
     
     Exposed methods:
-    - Enable() call be for using
-    - Disable() call after using
-    - SetData() update the data    
-    - DestroyGl() remove only the texture from OpenGl memory.
-    - Destroy() remove textures and reference to data.
+      * Enable() call be for using
+      * Disable() call after using
+      * SetData() update the data    
+      * DestroyGl() remove only the texture from OpenGl memory.
+      * Destroy() remove textures and reference to data.
+        
     Note: this is not a Wobject nor a Wibject.
+    
     """
     
     # One could argue to use polymorphism to implement 3 classes: one for 
@@ -488,8 +521,10 @@ class TextureObject(object):
     
     def Enable(self, texUnit=0):
         """ Enable(texUnit)
+        
         Enable (bind) the texture, using the given texture unit (max 9).
         If necessary, will upload/update the texture in OpenGl memory now.
+        
         """ 
         
         # Did we fail uploading texture last time?
@@ -525,8 +560,10 @@ class TextureObject(object):
     
     def Disable(self):
         """ Disable()
+        
         Disable the texture. It's safe to call this, even if the texture
         was not enabled.
+        
         """
         
         # No need to disable. Also, if disabled because system does not
@@ -549,8 +586,10 @@ class TextureObject(object):
    
     def SetData(self, data):
         """ SetData(data)
+        
         Set the data to display. If possible, will update the data in the
         existing texture (is possible if of the same shape).
+        
         """
         
         # check data
@@ -792,8 +831,10 @@ class TextureObject(object):
     
     def DestroyGl(self):
         """ DestroyGl()
+        
         Removes the texture from OpenGl memory. The internal reference
         to the original data is kept though.
+        
         """
         try:
             if self._texId > 0:
@@ -805,7 +846,9 @@ class TextureObject(object):
     
     def Destroy(self):
         """ Destroy()
+        
         Really destroy data. 
+        
         """  
         # remove OpenGl bits      
         self.DestroyGl()
@@ -820,8 +863,10 @@ class TextureObject(object):
 
 class Colormap(TextureObject):
     """ Colormap()
+    
     A colormap represents a table of colours to map
     grayscale data.
+    
     """
     
     # Note that the OpenGL imaging subset also implements a colormap,
@@ -836,7 +881,8 @@ class Colormap(TextureObject):
     
     
     def _UploadTexture(self, data, *args):
-        """ Overloaded version to upload the texture. """
+        """ Overloaded version to upload the texture. 
+        """
         
         # let the original class do the work
         TextureObject._UploadTexture(self, data, *args)
@@ -850,23 +896,26 @@ class Colormap(TextureObject):
     
     def GetMap(self):
         """ GetMap()
+        
         Get the current texture map, as last set with SetMap().
+        
         """
         return self._current
     
     
     def GetData(self):
         """ GetData()
+        
         Get the full colormap as a 256x4 numpy array.
+        
         """
         return self._dataRef
     
     
     def SetMap(self, *args):
-        """ SetMap(self, *args))
-        Set the colormap data. 
+        """ SetMap(*args)
         
-        The method accepts several arguments:
+        Set the colormap data. This method accepts several arguments:
         
         A list/tuple of tuples where each tuple represents a RGB or RGBA color.
         
@@ -979,11 +1028,14 @@ class Colormap(TextureObject):
 
 
 class TextureObjectToVisualize(TextureObject):
-    """ A texture object aimed more towards visualization. 
+    """ TextureObjectToVisualize(ndim, data, interpolate=False)
+    
+    A texture object aimed towards visualization. 
     This is what is actually used in Texture2D and Texture3D objects.
     It has no propererties, but some private attributes
     which are set by the real interface (the Texture*D objects).
     Basically, it handles the color limits.
+    
     """
     
     def __init__(self, ndim, data, interpolate=False):
@@ -1113,7 +1165,9 @@ class TextureObjectToVisualize(TextureObject):
 
 class BaseTexture(Wobject):
     """ BaseTexture(parent, data)
+    
     Base texture class for visvis 2D and 3D textures. 
+    
     """
     
     def __init__(self, parent, data):
@@ -1144,10 +1198,14 @@ class BaseTexture(Wobject):
     @DrawAfter
     def SetData(self, data):
         """ SetData(data)
+        
         (Re)Set the data to display. If the data has the same shape
         as the data currently displayed, it can be updated very
-        efficiently. If the data is an anisotripic array (vv.Aarray)
+        efficiently. 
+        
+        If the data is an anisotripic array (vv.Aarray)
         the sampling and origin are (re-)applied.
+        
         """ 
         
         # set data to texture
@@ -1174,9 +1232,11 @@ class BaseTexture(Wobject):
     
     def Refresh(self):
         """ Refresh()
+        
         Refresh the data. If the numpy array was changed, calling this 
         function will re-upload the data to OpenGl, making the change
         visible. This can be done efficiently.
+        
         """
         data = self._texture1._dataRef
         if data is not None:
@@ -1211,7 +1271,8 @@ class BaseTexture(Wobject):
     @PropWithDraw
     def interpolate():
         """ Get/Set whether to interpolate the image when zooming in 
-        (using linear interpolation). """
+        (using linear interpolation). 
+        """
         def fget(self):
             return self._texture1._interpolate
         def fset(self, value):
@@ -1258,7 +1319,7 @@ class BaseTexture(Wobject):
     
     @DrawAfter
     def SetClim(self, *minmax):
-        """ SetClim(self, *minmax)
+        """ SetClim(min, max)
         
         Set the contrast limits. Different than the property clim, this
         re-uploads the texture using different transfer functions. You should
@@ -1291,11 +1352,13 @@ class BaseTexture(Wobject):
 
 class Texture2D(BaseTexture):
     """ Texture2D(parent, data)
+    
     A data type that represents structured data in
     two dimensions (an image). Supports grayscale, RGB, 
     and RGBA images.
     
     Texture2D objects can be created with the function vv.imshow().
+    
     """
     
     def __init__(self, parent, data):
@@ -1406,7 +1469,8 @@ class Texture2D(BaseTexture):
     def _DrawQuads(self):
         """ Draw the quads of the texture. 
         This is done in a seperate method to reuse code in 
-        OnDraw() and OnDrawShape(). """        
+        OnDraw() and OnDrawShape(). 
+        """        
         if not self._texture1._shape:
             return        
         
@@ -1425,8 +1489,7 @@ class Texture2D(BaseTexture):
     
     
     def _GetLimits(self):
-        """ _GetLimits()
-        Get the limits in world coordinates between which the object exists.
+        """ Get the limits in world coordinates between which the object exists.
         """
         
         # Obtain untransformed coords 
@@ -1486,6 +1549,7 @@ class Texture3D(BaseTexture):
     power of 2. The mip renderer is the 'easiest' for most systems to render.
     
     Texture3D objects can be created with the function vv.volshow().
+    
     """
     
     def __init__(self, parent, data, renderStyle='mip'):
@@ -1650,7 +1714,8 @@ class Texture3D(BaseTexture):
     def _DrawQuads(self):
         """ Draw the quads of the texture. 
         This is done in a seperate method to reuse code in 
-        OnDraw() and OnDrawShape(). """        
+        OnDraw() and OnDrawShape(). 
+        """        
         
         # Get axes
         axes = self.GetAxes()
@@ -1694,8 +1759,7 @@ class Texture3D(BaseTexture):
     
     
     def _GetLimits(self):
-        """ _GetLimits()
-        Get the limits in world coordinates between which the object exists.
+        """ Get the limits in world coordinates between which the object exists.
         """
         
         # Obtain untransformed coords 
@@ -1754,8 +1818,10 @@ class Texture3D(BaseTexture):
 
 class MultiTexture3D(Texture3D):
     """ MultiTexture3D(parent, data1, data2)
+    
     This is an example of what multi-texturing would look like
     in Visvis. Not tested.
+    
     """
     
     def __init__(self, parent, data1, data2):
@@ -1767,8 +1833,7 @@ class MultiTexture3D(Texture3D):
     
     
     def OnDraw(self, fast=False):
-        """ Draw the texture.
-        """
+        # Draw the texture.
         
         # enable textures
         self._texture1.Enable(0)
@@ -1832,7 +1897,7 @@ class MultiTexture3D(Texture3D):
 
 
     def OnDestroyGl(self):
-        """ Clean up OpenGl resources. """
+        # Clean up OpenGl resources.
         
         # remove texture from opengl memory
         self._texture1.DestroyGl()
@@ -1847,8 +1912,7 @@ class MultiTexture3D(Texture3D):
     
     
     def OnDestroy(self):
-        """ Clean up any resources. """
-        # clean up thorougly
+        # Clean up any resources.
         self._texture1.Destroy()
         self._texture2.Destroy()
         if hasattr(self, '_colormap'):

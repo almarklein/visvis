@@ -5,9 +5,11 @@ import visvis as vv
 
 def movieShow(images, clim=None, duration=0.1, axesAdjust=True, axes=None):
     """ movieShow(images, duration=0.1)
+    
     Show the images in the given list as a movie. 
     The actual duration can differ from the given duration, depending
     on the performance of your system.
+    
     """
     
     # Get axes

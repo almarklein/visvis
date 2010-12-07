@@ -19,6 +19,7 @@ def solidCone(translation=None, scaling=None, direction=None, rotation=None,
     number of subdivisions along its axis. If N or M is smaller than 8, 
     flat shading is used instead of smooth shading. With N=4, a pyramid
     is obtained.
+    
     """
     
     # Note that the number of vertices around the axis is N+1. This

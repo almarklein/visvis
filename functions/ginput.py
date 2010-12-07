@@ -6,9 +6,11 @@ from visvis.pypoints import Point, Pointset
 import time
 
 class GinputHelper(object):
-    """
+    """ GinputHelper()
+    
     Helper class for ginput function.
     Keeps track of things.
+    
     """
     
     def __init__(self):
@@ -98,6 +100,7 @@ def ginput(N=0, axes=None, ms='+', **kwargs):
     If no axes is given, the current axes is used. 
     Any other keyword arguments (as well as the ms arg) are passed to plot 
     to show the selected points and the lines between them.
+    
     """
     
     # Get axes

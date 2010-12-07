@@ -22,7 +22,6 @@ All wibjects are inserted in this namespace, thereby providing
 the user with a list of all wibjects. All wibjects are also
 inserted in the root visvis namespace.
 
-
 """
 
 from base import Wibject, Box

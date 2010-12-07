@@ -7,7 +7,9 @@ from visvis.core import BaseFigure
 
 def figure(nr=None):
     """ figure(nr=None)
+    
     Create a new figure or return the figure with the asociated nr. 
+    
     """
     
     # check if backends are loaded

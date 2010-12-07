@@ -6,11 +6,13 @@ import visvis as vv
 
 class Bars3D(vv.Wobject):
     """ Bars3D(parent)
+    
     The Bars3D class represents a bar chart. It has a few methods to
     change the appearance of the bars.
     
     This class is a container for a series of Mesh objects created using 
     solidBox.
+    
     """
     
     @vv.misc.Property

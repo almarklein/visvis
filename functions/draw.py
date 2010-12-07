@@ -5,9 +5,11 @@ import visvis as vv
 
 def draw(figure=None, fast=False):
     """ draw(figure=None, fast=False)
+    
     Makes the given figure (or the current figure if None) draw itself.
     If fast is True, some wobjects can draw itself faster at reduced
     quality.
+    
     """ 
     
     # Get figure

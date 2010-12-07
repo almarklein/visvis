@@ -29,6 +29,7 @@ def imshow(im, clim=None, aa=1, interpolate=False, cm=None,
     If axesAdjust==True, this function will call axes.SetLimits(), set
     the camera type to 2D, and make axes.daspect[1] negative (i.e. flip 
     the y-axis). If daspectAuto has not been set yet, it is set to False.
+    
     """
     
     # get axes

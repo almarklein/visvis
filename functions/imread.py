@@ -10,9 +10,12 @@ try:
 except ImportError:
     PIL = None
 
+
 def imread(filename):
     """ imread(filename) 
+    
     Read image from disk, requires PIL. 
+    
     """
     
     if PIL is None:

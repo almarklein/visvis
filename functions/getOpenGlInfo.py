@@ -5,11 +5,13 @@ import visvis as vv
 
 def getOpenGlInfo():
     """ getOpenGlInfo()
+    
     Get information about the OpenGl version on this system. 
     Returned is a tuple (version, vendor, renderer, extensions) 
     
     A figure is created and removed to create an openGl context if
     this is necessary.
+    
     """
     
     # Open figure first. On Windows we can try obtaining the information,

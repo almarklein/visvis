@@ -55,6 +55,7 @@ def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
     
     Create a model of a teapot (a teapotahedron) with its bottom at the
     origin. Returns an OrientableMesh instance.
+    
     """
     
     # Decode vertex data

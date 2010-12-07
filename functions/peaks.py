@@ -22,8 +22,10 @@ if False:
 
 def peaks():
     """ peaks()
+    
     Returs a 2D map of z-values that represent an example landscape with
     Gaussian blobs. 
+    
     """
     
     # Decode z data
