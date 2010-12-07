@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ This example illustrates how to draw lines in an axis,
 for instance for creating annotations.
 """

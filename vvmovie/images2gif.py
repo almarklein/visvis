@@ -1,5 +1,5 @@
-#   Copyright (c) 2010, Almar Klein
-#   All rights reserved.
+# -*- coding: utf-8 -*-
+#   Copyright (c) 2010, Almar Klein, Ant1, Marius van Voorden
 #
 #   This code is subject to the (new) BSD license:
 #
@@ -49,7 +49,7 @@ This code is based on gifmaker (in the scripts folder of the source
 distribution of PIL)
 
 Some implementation details are ased on gif file structure as provided
-by wikipedia
+by wikipedia.
 
 """
 

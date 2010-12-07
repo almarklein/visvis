@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ This example shows all mesh objects that can be created out of the box.
 It also shows the different techniques to apply color to the meshes using
 plain color, colormaps and texture.
