@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ This example illustrate different ways to shade mesh objects and
 shows an example with lighting. Two light sources are created and 
 the diffuse reflection of the objects is varied.

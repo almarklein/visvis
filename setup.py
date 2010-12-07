@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
+#
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
+
 description = 'An object oriented approach to visualization of 1D to 4D data.'
 long_description = """
 Visvis is a pure Python library for visualization of 1D to 4D
@@ -22,7 +28,7 @@ setup(
     version = __version__,
     author = 'Almar Klein',
     author_email = 'almar.klein at gmail',
-    license = 'LGPL',
+    license = 'BSD',
     
     url = 'http://code.google.com/p/visvis/',
     download_url = 'http://code.google.com/p/visvis/downloads/list',    

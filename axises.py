@@ -1,27 +1,8 @@
-#   This file is part of VISVIS.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2010, Almar Klein
 #
-#   VISVIS is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU Lesser General Public License as
-#   published by the Free Software Foundation, either version 3 of
-#   the License, or (at your option) any later version.
-#
-#   VISVIS is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU Lesser General Public License for more details.
-#
-#   You should have received a copy of the GNU Lesser General Public
-#   License along with this program.  If not, see
-#   <http://www.gnu.org/licenses/>.
-#
-#   Copyright (C) 2010 Almar Klein
-#
-#   Many thanks to Keith Smith for implementing the polar plot axis.
-#   Not only is it a great thing that Visvis can be used for polar 
-#   plotting, Keiths requirements and ideas have led to quite a few
-#   changes in the Axis and Axes classes. For example, the Axes and
-#   Axis classes are now clearly separated with the properties defined
-#   at the right place.
+# Visvis is distributed under the terms of the (new) BSD License.
+# The full license can be found in 'license.txt'.
 
 """ Module axises
 
