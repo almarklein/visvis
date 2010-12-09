@@ -9,8 +9,14 @@ import visvis as vv
 def title(text, axes=None):
     """ title(text, axes=None)
     
-    Show a title over the given or current axes. 
-    Remove the title by suplying an empty string. 
+    Show title above axes. Remove title by suplying an empty string. 
+    
+    Parameters
+    ----------
+    text : string
+        The text to display.
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
     
     """
     

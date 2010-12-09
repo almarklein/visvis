@@ -40,18 +40,74 @@ def _SetLimitsAfterDraw(event):
     fig.Draw()
 
     
-def polarplot(data1, data2=None,  inRadians=False,
+def polarplot(data1, data2=None, inRadians=False,
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k',
             alpha=1, axesAdjust=True, axes=None, **kwargs):
     """ polarplot(data1, data2=None, inRadians=False,
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k',
             alpha=1, axesAdjust=True, axes=None):
     
-    Plot 2D polar data. polarplot uses a polar axis to draw a polar grid, 
-    and has some specialized methods for adjusting the polar plot.
-    Access these via vv.gca().axis.
+    Plot 2D polar data, using a polar axis to draw a polar grid. 
     
-    These include:    
+    Usage
+    -----
+      * plot(Y, ...) plots a 1D polar signal.
+      * plot(X, Y, ...) also supplies angular coordinates
+      * plot(P, ...) plots using a Point or Pointset instance
+    
+    Further arguments
+    -----------------
+    (The longer names for the line properties can also be used)    
+    lw : scalar
+        lineWidth. The width of the line. If zero, no line is drawn.
+    mw : scalar
+        markerWidth. The width of the marker. If zero, no marker is drawn.
+    mew : scalar
+        markerEdgeWidth. The width of the edge of the marker.    
+    lc : 3-element tuple or char
+        lineColor. The color of the line. A tuple should represent the RGB
+        values between 0 and 1. If a char is given it must be
+        one of 'rgbmcywk', for reg, green, blue, magenta, cyan, yellow, 
+        white, black, respectively.
+    mc : 3-element tuple or char
+        markerColor. The color of the marker. See lineColor.
+    mec : 3-element tuple or char
+        markerEdgeColor. The color of the edge of the marker.    
+    ls : string
+        lineStyle. The style of the line. (See below)
+    ms : string
+        markerStyle. The style of the marker. (See below)
+    axesAdjust : bool
+        If axesAdjust==True, this function will call axes.SetLimits(), and set
+        the camera type to 2D. 
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
+    
+    Line styles
+    -----------
+      * Solid line: '-'
+      * Dotted line: ':'
+      * Dashed line: '--'
+      * Dash-dot line: '-.' or '.-'
+      * A line that is drawn between each pair of points: '+'
+      * No line: '' or None.
+    
+    Marker styles
+    -------------
+      * Plus: '+'
+      * Cross: 'x'
+      * Square: 's'
+      * Diamond: 'd'
+      * Triangle (pointing up, down, left, right): '^', 'v', '<', '>'
+      * Pentagram star: 'p' or '*'
+      * Hexgram: 'h'
+      * Point/cirle: 'o' or '.'
+      * No marker: '' or None
+    
+    Polar axis
+    ----------
+    This polar axis has a few specialized methods for adjusting the polar
+    plot. Access these via vv.gca().axis.    
       * SetLimits(thetaRange, radialRange)
       * thetaRange, radialRange = GetLimits()
       * angularRefPos: Get and Set methods for the relative screen
@@ -60,14 +116,11 @@ def polarplot(data1, data2=None,  inRadians=False,
       * isCW: Get and Set methods for the sense of rotation CCW or
         CW. This method takes/returns a bool (True if the default CW).
     
-    Usage:
+    Interaction
+    -----------
       * Drag mouse up/down to translate radial axis.    
       * Drag mouse left/right to rotate angular ref position.    
       * Drag mouse + shift key up/down to rescale radial axis (min R fixed).
-    
-    If axesAdjust==True, this function will call axes.SetLimits() and set
-    the camera type to 2D. If daspectAuto has not been set yet, it is set
-    to True.
     
     """
 

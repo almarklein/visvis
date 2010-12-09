@@ -12,7 +12,15 @@ def axis(command, axes=None):
     Convenience function to set axis properties. Note that all functionality
     can also be applied via the properties of the Axis object.
     
-    Possible string commands:      
+    Parameters
+    ----------
+    command : string
+        The setting command to apply. See below.
+    axes : Axes instance
+        The axes to apply the setting to. Uses the current axes by default. 
+    
+    Possible string commands
+    ------------------------
       * off: hide the axis (Axes.axis.visible = False)
       * on: show the axis (Axes.axis.visible = True)
       * equal: make a circle be displayed circular (Axes.daspectAuto = False)

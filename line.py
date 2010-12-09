@@ -338,27 +338,6 @@ class Line(Wobject):
     
     Line objects can be created with the function vv.plot().
     
-    There are several linestyles that can be used:
-      * -  a solid line
-      * :   a dotted line
-      * --  a dashed line
-      * -.  a dashdot line
-      * .-  dito
-      * +   draws a line between each pair of points (handy for visualizing
-            for example vectore fields)
-    If None, '' or False is given no line is drawn.
-    
-    There are several marker styles that can be used:
-      * `+`  a plus
-      * `x`  a cross
-      * `s`  a square
-      * `d`  a diamond
-      * `^v<>` an up-, down-, left- or rightpointing triangle
-      * `*` or `p`  a (pentagram star)
-      * `h`  a hexagram
-      * `o` or `.`  a point/circle
-    If None, '', or False is given, no marker is drawn.
-    
     Performance tips
     ----------------
     The s, o (and .) styles can be drawn using standard
@@ -440,13 +419,12 @@ class Line(Wobject):
     @PropWithDraw
     def ls():
         """ Get/Set the lineStyle: the style of the line.
-          * -   a solid line
-          * :   a dotted line
-          * --  a dashed line
-          * -.  a dashdot line
-          * .-  dito
-          * +   draws a line between each pair of points
-        If None, '' or False is given no line is drawn. 
+          * Solid line: '-'
+          * Dotted line: ':'
+          * Dashed line: '--'
+          * Dash-dot line: '-.' or '.-'
+          * A line that is drawn between each pair of points: '+'
+          * No line: '' or None.
         """
         def fget(self):
             return self._ls
@@ -485,15 +463,15 @@ class Line(Wobject):
     @PropWithDraw
     def ms():
         """ Get/Set the markerStyle: the style of the marker.
-          * +       : a plus
-          * x       : a cross
-          * s       : a square
-          * d       : a diamond
-          * ^v<>    : an up-, down-, left- or rightpointing triangle
-          * * or p  : a (pentagram star)
-          * h       : a hexagram
-          * o or .  : a point/circle
-        If None, '', or False is given, no marker is drawn.
+          * Plus: '+'
+          * Cross: 'x'
+          * Square: 's'
+          * Diamond: 'd'
+          * Triangle (pointing up, down, left, right): '^', 'v', '<', '>'
+          * Pentagram star: 'p' or '*'
+          * Hexgram: 'h'
+          * Point/cirle: 'o' or '.'
+          * No marker: '' or None
         """
         def fget(self):
             return self._ms

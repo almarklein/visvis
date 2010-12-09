@@ -17,7 +17,7 @@ except ImportError:
 def imread(filename):
     """ imread(filename) 
     
-    Read image from disk, requires PIL. 
+    Read image from a file, requires PIL. 
     
     """
     

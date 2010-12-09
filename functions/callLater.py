@@ -13,9 +13,14 @@ def callLater(delay, callable, *args, **kwargs):
     Call a callable after a specified delay (in seconds), 
     with the specified arguments and keyword-arguments. 
     
-    If delay = 0, the callable is called right after the current processing
-    has returned to the main loop, before any other visvis events are 
-    processed.
+    Parameters
+    ----------
+    delay : scalar
+        The delay in seconds. If zero, the callable is called right 
+        after the current processing has returned to the main loop, 
+        before any other visvis events are processed.
+    callable : a callable object
+        The callback that is called when the delay has passed.
     
     See also vv.Event
     

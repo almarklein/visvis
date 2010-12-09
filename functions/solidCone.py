@@ -18,10 +18,32 @@ def solidCone(translation=None, scaling=None, direction=None, rotation=None,
     Creates a solid cone with quad faces and its base at the origin.
     Returns an OrientableMesh instance.
     
-    N is the number of subdivisions around its axis. M is the
-    number of subdivisions along its axis. If N or M is smaller than 8, 
-    flat shading is used instead of smooth shading. With N=4, a pyramid
-    is obtained.
+    Parameters
+    ----------
+    Note that translation, scaling, and direction can also be given
+    using a Point instance.
+    translation : (dx, dy, dz), optional
+        The translation in world units of the created world object.
+    scaling: (sx, sy, sz), optional
+        The scaling in world units of the created world object.
+    direction: (nx, ny, nz), optional
+        Normal vector that indicates the direction of the created world object.
+    rotation: scalar, optional
+        The anle (in degrees) to rotate the created world object around its
+        direction vector.
+    N : int
+        The number of subdivisions around its axis. If smaller
+        than 8, flat shading is used instead of smooth shading. 
+        With N=4, a pyramid is obtained.
+    M : int
+        The number of subdivisions along its axis. If smaller
+        than 8, flat shading is used instead of smooth shading. 
+    axesAdjust : bool
+        If True, this function will call axes.SetLimits(), and set
+        the camera type to 3D. If daspectAuto has not been set yet, 
+        it is set to False.
+    axes : Axes instance
+        Display the bars in the given axes, or the current axes if not given.
     
     """
     

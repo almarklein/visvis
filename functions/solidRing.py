@@ -19,10 +19,33 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
     Creates a solid ring with quad faces oriented at the origin. 
     Returns an OrientableMesh instance.
     
-    The tickness is represented as a fraction of the radius. N is the 
-    number of faces along the ring, M is the number of faces around the 
-    tube that makes up the ring. If N or M is smaller than 8, flat shading
-    is used instead of smooth shading. 
+    Parameters
+    ----------
+    Note that translation, scaling, and direction can also be given
+    using a Point instance.
+    translation : (dx, dy, dz), optional
+        The translation in world units of the created world object.
+    scaling: (sx, sy, sz), optional
+        The scaling in world units of the created world object.
+    direction: (nx, ny, nz), optional
+        Normal vector that indicates the direction of the created world object.
+    rotation: scalar, optional
+        The anle (in degrees) to rotate the created world object around its
+        direction vector.
+    thickness : scalar
+        The tickness of the ring, represented as a fraction of the radius.
+    N : int
+        The number of subdivisions around its axis. If smaller
+        than 8, flat shading is used instead of smooth shading. 
+    M : int
+        The number of subdivisions along its axis. If smaller
+        than 8, flat shading is used instead of smooth shading. 
+    axesAdjust : bool
+        If True, this function will call axes.SetLimits(), and set
+        the camera type to 3D. If daspectAuto has not been set yet, 
+        it is set to False.
+    axes : Axes instance
+        Display the bars in the given axes, or the current axes if not given.
     
     """
     

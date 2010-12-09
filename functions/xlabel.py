@@ -9,8 +9,15 @@ import visvis as vv
 def xlabel(text, axes=None):
     """ xlabel(text, axes=None)
     
-    Set the xlabel of the given or current axes. 
-    Note: you can also use "axes.axis.xLabel = text".
+    Set the xlabel of an axes. 
+    Note that you can also use "axes.axis.xLabel = text".
+    
+    Parameters
+    ----------
+    text : string
+        The text to display.
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
     
     """
     if axes is None:
