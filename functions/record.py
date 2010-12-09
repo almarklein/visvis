@@ -16,7 +16,8 @@ import numpy as np
 class Recorder:
     """ Recorder(object)
     
-    Recorder class that makes snapshots right after each draw event.
+    Recorder class that makes snapshots right after each draw event. Object
+    should be an Axes, AxesContainer or Figure.
     
     It is then possible to export the movie to SWF, GIF, AVI, or a series
     of images.

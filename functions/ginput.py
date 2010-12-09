@@ -94,15 +94,23 @@ ginputHelper = GinputHelper()
 def ginput(N=0, axes=None, ms='+', **kwargs):
     """ ginput(N=0, axes=None, ms='+', **kwargs)
     
-    Graphical input: select N number of points with the mouse, or If N=0, 
-    will keep capturing until the user stops it. Returns a 2D pointset.
+    Graphical input: select N number of points with the mouse. 
+    Returns a 2D pointset.
     
-    The capturing always stops when enter is pressed or the mouse is double
-    clicked. In the latter case a final point is added.
+    Parameters
+    ----------
+    N : int
+        The maximum number of points to capture. If N=0, will keep capturing
+        until the user stops it. The capturing always stops when enter is
+        pressed or the mouse is double clicked. In the latter case a final
+        point is added.
+    axes : Axes instance
+        The axes to capture the points in, or the current axes if not given.
+    ms : markerStyle
+        The marker style to use for the points. See plot.
     
-    If no axes is given, the current axes is used. 
-    Any other keyword arguments (as well as the ms arg) are passed to plot 
-    to show the selected points and the lines between them.
+    Any other keyword arguments are passed to plot to show the selected
+    points and the lines between them.
     
     """
     

@@ -39,27 +39,55 @@ def plot(data1, data2=None, data3=None,
       * plot(X, Y, Z, ...) also supplies z coordinates
       * plot(P, ...) plots using a Point or Pointset instance
     
-    Keyword arguments
+    Further arguments
     -----------------
-    (The longer names for the line properties can also be used)
+    (The longer names for the line properties can also be used)    
     lw : scalar
-        lineWidth
+        lineWidth. The width of the line. If zero, no line is drawn.
+    mw : scalar
+        markerWidth. The width of the marker. If zero, no marker is drawn.
+    mew : scalar
+        markerEdgeWidth. The width of the edge of the marker.    
     lc : 3-element tuple or char
-        lineColor. char must be in 'rgbmcywk'
-    ls : char
-        aa
-      * lineWidth: lw
-      * lineColor: lc
-      * lineStyle: ls
-      * markerWidth: mw
-      * markerColor: mc
-      * markerStyle: ms
-      * markerEdgeWidth: mew
-      * markerEdgeColor: mec
+        lineColor. The color of the line. A tuple should represent the RGB
+        values between 0 and 1. If a char is given it must be
+        one of 'rgbmcywk', for reg, green, blue, magenta, cyan, yellow, 
+        white, black, respectively.
+    mc : 3-element tuple or char
+        markerColor. The color of the marker. See lineColor.
+    mec : 3-element tuple or char
+        markerEdgeColor. The color of the edge of the marker.    
+    ls : string
+        lineStyle. The style of the line. (See below)
+    ms : string
+        markerStyle. The style of the marker. (See below)
+    axesAdjust : bool
+        If axesAdjust==True, this function will call axes.SetLimits(), set
+        the camera type to 2D when plotting 2D data and to 3D when plotting
+        3D data. If daspectAuto has not been set yet, it is set to True.
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
     
-    If axesAdjust==True, this function will call axes.SetLimits(), set
-    the camera type to 2D when plotting 2D data and to 3D when plotting
-    3D data. If daspectAuto has not been set yet, it is set to True.
+    Line styles
+    -----------
+      * Solid line: '-'
+      * Dotted line: ':'
+      * Dashed line: '--'
+      * Dash-dot line: '-.' or '.-'
+      * A line that is drawn between each pair of points: '+'
+      * No line: '' or None.
+    
+    Marker styles
+    -------------
+      * Plus: '+'
+      * Cross: 'x'
+      * Square: 's'
+      * Diamond: 'd'
+      * Triangle (pointing up, down, left, right): '^', 'v', '<', '>'
+      * Pentagram star: 'p' or '*'
+      * Hexgram: 'h'
+      * Point/cirle: 'o' or '.'
+      * No marker: '' or None
     
     """
     

@@ -100,13 +100,25 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
     used to change the appearance of the bars (such as lighting properties
     and color).
     
-    bar3(H, ...) creates bars of specified height.
-    bar3(X, H, ...) also supply their x-coordinates
-    bar3(X, Y, H, ...) supply both x- and y-coordinates
+    Usage
+    -----
+      * bar3(H, ...) creates bars of specified height.
+      * bar3(X, H, ...) also supply their x-coordinates
+      * bar3(X, Y, H, ...) supply both x- and y-coordinates
     
-    If axesAdjust==True, this function will call axes.SetLimits(), set
-    the camera type to 2D when plotting 2D data and to 3D when plotting
-    3D data. If daspectAuto has not been set yet, it is set to True.
+    Parameters
+    ----------
+    args : data
+        Height, x coordinates and y coordinates.
+    width : scalar
+        The width of the bars.
+    axesAdjust : bool
+        If True, this function will call axes.SetLimits(), and set
+        the camera type to 3D. If daspectAuto has not been set yet, 
+        it is set to False.
+    axes : Axes instance
+        Display the bars in the given axes, or the current axes if not given.
+    
     """
     
     # Pre check

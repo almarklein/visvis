@@ -10,8 +10,23 @@ def movieShow(images, clim=None, duration=0.1, axesAdjust=True, axes=None):
     """ movieShow(images, duration=0.1)
     
     Show the images in the given list as a movie. 
-    The actual duration can differ from the given duration, depending
-    on the performance of your system.
+    
+    Parameters
+    ----------
+    images : list
+        The 2D images (can be color images) that the movie consists of.
+    clim : (min, max)
+        The color limits to apply. See imshow.
+    duration : scalar
+        The duration (in seconds) of each frame. The real duration can
+        differ from the given duration, depending on the performance of
+        your system.
+    axesAdjust : bool
+        If axesAdjust==True, this function will call axes.SetLimits(), set
+        the camera type to 2D, and make axes.daspect[1] negative (i.e. flip 
+        the y-axis). If daspectAuto has not been set yet, it is set to False.
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
     
     """
     

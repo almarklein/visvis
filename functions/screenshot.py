@@ -25,16 +25,34 @@ def getCardinalSplineCoefs(t, tension=0.0):
 def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
     """ screenshot(filename, ob=None sf=2, bg=None)
     
-    Uses vv.getframe(ob) to obtain the image in the figure or axes. 
-    That image is interpolated with the given scale factor (sf) using 
-    high quality bicubic interpolation. Then vv.imwrite(filename, ..)
-    is used to store the resulting image to a file.
+    Make a screenshot and store it to a file, using cubic interpolation
+    to increase the resolution (and quality) of the image.
+    
+    Parameters
+    ----------
+    filename : string
+        The name of the file to store the screenshot to. If filename is None, 
+        the interpolated image is returned as a numpy array.
+    ob : Axes, AxesContainer, or Figure
+        The object to take the screenshot of. The AxesContainer can be
+        obtained using vv.gca().parent. It can be usefull to take a 
+        screeshot of an axes including thickmarks and labels.
+    sf : integer
+        The scale factor. The image is increased in size with this factor,
+        using a high quality interpolation method. A factor of 2 or 3
+        is recommended; the image quality does not improve with higher
+        factors. If using a sf larger than 1, the image is best saved in
+        the jpg format.
+    bg : 3-element tuple or char
+        The color of the background. If bg is given, ob.bgcolor is set to
+        bg before the frame is captured.
     
     Notes
     -----
-      * If bg is given, ob.bgcolor is set to bg before the frame is captured.
-      * If filename is None, the interpolated image is returned as a numpy array.
-      * If using a sf larger than 1, the image is best saved in the jpg format.
+    Uses vv.getframe(ob) to obtain the image in the figure or axes. 
+    That image is interpolated with the given scale factor (sf) using 
+    bicubic interpolation. Then  vv.imwrite(filename, ..) is used to 
+    store the resulting image to a file.
     
     Rationale
     ---------

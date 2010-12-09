@@ -75,7 +75,8 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     General parameters
     ------------------
     filename : string
-       The name of the file to write the image to.
+       The name of the file to write the image to. For a series of images,
+        the `*` wildcard can be used.
     images : list
         Should be a list consisting of PIL images or numpy arrays. 
         The latter should be between 0 and 255 for integer types, 
@@ -177,10 +178,20 @@ def movieRead(filename, asNumpy=True, **kwargs):
     """ movieRead(filename, asNumpy=True)
     
     Read the movie from GIF, SWF, AVI (or MPG), or a series of images (PNG,
-    JPG,TIF,BMP). Returns a list of numpy arrays, or, if asNumpy is false, 
-    a list if PIL images.
+    JPG,TIF,BMP). 
     
-    Notice: reading AVI requires the "ffmpeg" application:
+    Parameters
+    ----------
+    filename : string
+        The name of the file that contains the movie. For a series of images,
+        the `*` wildcard can be used.
+    asNumpy : bool
+        If True, returns a list of numpy arrays. Otherwise return 
+        a list if PIL images.
+    
+    Notes
+    ------
+    Reading AVI requires the "ffmpeg" application:
       * Most linux users can install it using their package manager
       * There is a windows installer on the visvis website
     

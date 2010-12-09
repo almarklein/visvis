@@ -1306,7 +1306,7 @@ class BaseTexture(Wobject):
     
     
     @DrawAfter
-    def SetClim(self, *minmax):
+    def SetClim(self, *mima):
         """ SetClim(min, max)
         
         Set the contrast limits. Different than the property clim, this
@@ -1316,20 +1316,20 @@ class BaseTexture(Wobject):
         time at all).
         
         """
-        if len(minmax)==0:
+        if len(mima)==0:
             # set default values
             data = self._texture1._dataRef
             if data is None:
                 return 
-            minmax = minmax(data)
+            mima = minmax(data)
         
-        elif len(minmax)==1:
+        elif len(mima)==1:
             # a range was given
-            minmax = minmax[0]
+            mima = mima[0]
             
         # Set climref and clim
-        self._texture1._climRef.Set(minmax[0], minmax[1])
-        self._texture1._clim.Set(minmax[0], minmax[1])
+        self._texture1._climRef.Set(mima[0], mima[1])
+        self._texture1._clim.Set(mima[0], mima[1])
         
         # Signal update, on next draw, it is uploaded again, using
         # the newly set climref.

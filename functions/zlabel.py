@@ -9,8 +9,15 @@ import visvis as vv
 def zlabel(text, axes=None):
     """ zlabel(text, axes=None)
     
-    Set the zlabel of the given or current axes. 
-    Note: you can also use "axes.axis.zLabel = text".
+    Set the zlabel of an axes. 
+    Note that you can also use "axes.axis.zLabel = text".
+    
+    Parameters
+    ----------
+    text : string
+        The text to display.
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
     
     """
     if axes is None:

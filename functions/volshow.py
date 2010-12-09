@@ -14,13 +14,26 @@ def volshow(vol, clim=None, renderStyle='mip', cm=None,
     
     Display a 3D image (a volume) and returns the Texture3D object.
     
-    The default renderStyle is MIP. If the volume is an Anisotropic Array
-    (points.Aaray), the appropriate scale and translate transformations
-    are applied.
-    
-    If axesAdjust==True, this function will call axes.SetLimits(), and set
-    the camera type to 3D. If daspectAuto has not been set yet, it is set 
-    to False.
+    Parameters
+    ----------
+    vol : numpy array
+        The 3D image to visualize. Can be grayscale, RGB, or RGBA.
+        If the volume is an anisotropic array (vv.Aaray), the appropriate
+        scale and translate transformations are applied.
+    clim : 2-element tuple
+        The color limits to scale the intensities of the image. If not given,
+        the im.min() and im.max() are used (neglecting nan and inf).
+    renderStyle : {'mip', 'iso', 'ray'}
+        The render style to use. Maximum intensity projection (default), 
+        isosurface rendering (using lighting), raycasting.
+    cm : Colormap
+        Set the colormap to apply in case the volume is grayscale.
+    axesAdjust : bool
+        If axesAdjust==True, this function will call axes.SetLimits(), and set
+        the camera type to 3D. If daspectAuto has not been set yet, it is
+        set to False.
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
     
     """
     

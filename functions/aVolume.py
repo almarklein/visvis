@@ -22,10 +22,16 @@ class BarDescription:
 def aVolume(N=5, size=64):
     """ aVolume(N=5, size=64)
     
-    Creates a volume (3D image) with random bars. There shall be N bars for
-    each dimension. The returned numpy array has values between 0 and 1.
-    
+    Creates a volume (3D image) with random bars. 
+    The returned numpy array has values between 0 and 1.
     Intended for quick illustration and test purposes.
+    
+    Parameters
+    ----------
+    N : int
+        The number of bars for each dimension.
+    size : int
+        The size of the volume (for each dimension).
     
     """
     

@@ -59,6 +59,26 @@ def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
     Create a model of a teapot (a teapotahedron) with its bottom at the
     origin. Returns an OrientableMesh instance.
     
+    Parameters
+    ----------
+    Note that translation, scaling, and direction can also be given
+    using a Point instance.
+    translation : (dx, dy, dz), optional
+        The translation in world units of the created world object.
+    scaling: (sx, sy, sz), optional
+        The scaling in world units of the created world object.
+    direction: (nx, ny, nz), optional
+        Normal vector that indicates the direction of the created world object.
+    rotation: scalar, optional
+        The anle (in degrees) to rotate the created world object around its
+        direction vector.
+    axesAdjust : bool
+        If True, this function will call axes.SetLimits(), and set
+        the camera type to 3D. If daspectAuto has not been set yet, 
+        it is set to False.
+    axes : Axes instance
+        Display the bars in the given axes, or the current axes if not given.
+    
     """
     
     # Decode vertex data

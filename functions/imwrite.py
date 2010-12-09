@@ -14,7 +14,7 @@ except ImportError:
 def imwrite(filename, image):
     """ imwrite(filename, image)
     
-    Write image to disk, requires PIL. 
+    Write image to file, requires PIL. 
     
     For floating point images, 0 is considered black and 1 is white.
     For integer types, 0 is considered black and 255 is white.

@@ -14,18 +14,26 @@ import time
 def surf(*args, **kwargs):
     """ surf(..., axesAdjust=True, axes=None)
     
-    Shaded surface plot. Can be called using several ways:
-     * surf(Z) - create a surface using the given image with z coordinates.
-     * surf(Z, C) - also supply a texture image to map.
-     * surf(X, Y, Z) - give x, y and z coordinates.
-     * surf(X, Y, Z, C) - also supply a texture image to map.
+    Shaded surface plot. 
     
-    if c is a 2D image, it should match the dimensions of z. If it is a 3D
-    image, the image is mapped to the mesh and may be of any size. 
+    Usage
+    -----
+      * surf(Z) - create a surface using the given image with z coordinates.
+      * surf(Z, C) - also supply a texture image to map.
+      * surf(X, Y, Z) - give x, y and z coordinates.
+      * surf(X, Y, Z, C) - also supply a texture image to map.
     
-    If axesAdjust==True, this function will call axes.SetLimits(), and set
-    the camera type to 3D. If daspectAuto has not been set yet, it is set 
-    to False.
+    If C is a 2D image, it should match the dimensions of z. If it is an Nx3
+    array it specifies the color for each vertex.
+    
+    Keyword arguments
+    -----------------
+    axesAdjust : bool
+        If axesAdjust==True, this function will call axes.SetLimits(), and set
+        the camera type to 3D. If daspectAuto has not been set yet,
+        it is set to False.
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
     
     Also see grid()
     

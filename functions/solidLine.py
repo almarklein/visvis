@@ -12,8 +12,26 @@ from visvis.processing import lineToMesh
 def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):
     """ solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None)
     
-    Creates a solid line in 3D space. pp can be a Pointset.
-    Radius can also specify the radius for each point.
+    Creates a solid line in 3D space. 
+    
+    Parameters
+    ----------
+    Note that translation, scaling, and direction can also be given
+    using a Point instance.
+    pp : Pointset
+        The sequence of points of which the line consists.
+    radius : scalar or sequence
+        The radius of the line to create. If a sequence if given, it 
+        specifies the radius for each point in pp.
+    N : int
+        The number of subdivisions around its centerline. If smaller
+        than 8, flat shading is used instead of smooth shading. 
+    axesAdjust : bool
+        If True, this function will call axes.SetLimits(), and set
+        the camera type to 3D. If daspectAuto has not been set yet, 
+        it is set to False.
+    axes : Axes instance
+        Display the bars in the given axes, or the current axes if not given.
     
     """
     

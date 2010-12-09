@@ -9,8 +9,15 @@ import visvis as vv
 def ylabel(text, axes=None):
     """ ylabel(text, axes=None)
     
-    Set the ylabel of the given or current axes. 
-    Note: you can also use "axes.axis.yLabel = text".
+    Set the ylabel of an axes. 
+    Note that you can also use "axes.axis.yLabel = text".
+    
+    Parameters
+    ----------
+    text : string
+        The text to display.
+    axes : Axes instance
+        Display the image in this axes, or the current axes if not given.
     
     """
     if axes is None:
