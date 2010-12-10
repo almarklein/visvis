@@ -44,6 +44,10 @@ a.axis.xLabel = 'face- and edgeshading'
 a.axis.yTicks = [str(float(j)/ndiffuse) for j in range(ndiffuse)]
 a.axis.yLabel = 'diffuse reflection'
 
+# Set back bg
+a.bgcolor = 'k'
+a.axis.axisColor = 'w'
+
 # Enter mainloop
 app = vv.use()
 app.Run()
