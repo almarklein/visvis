@@ -43,7 +43,7 @@ For more help, see ...
 
 """
 
-__version__  = '1.3.1' 
+__version__  = '1.4' 
 
 import os, sys, time
 
