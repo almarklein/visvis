@@ -9,7 +9,11 @@ import visvis as vv
 def gca():
     """ gca() 
     
-    Get the current axes in the current figure.
+    Get the current axes in the current figure. If there is
+    no axes, an Axes instance is created. To make an axes current, 
+    use Axes.MakeCurrent().
+    
+    See also gcf(), Figure.MakeCurrent(), Figure.currentAxes
     
     """
     f = vv.gcf()

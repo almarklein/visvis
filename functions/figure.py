@@ -12,6 +12,7 @@ def figure(nr=None):
     """ figure(nr=None)
     
     Create a new figure or return the figure with the asociated nr. 
+    The returned figure will be the new current figure.
     
     """
     

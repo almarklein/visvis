@@ -7,7 +7,7 @@
 import visvis as vv
 
 def grid(*args, **kwargs):
-    """ grid(..., axesAdjust=True, axes=None)
+    """ grid(*args, axesAdjust=True, axes=None)
     
     Create a wireframe parametric surface. 
     
@@ -18,10 +18,8 @@ def grid(*args, **kwargs):
       * grid(x, y, z) - give x, y and z coordinates.
       * grid(x, y, z, c) - also supply a texture image to map.
     
-    Parameters
-    ----------
-    args : data
-        Coordinates and texture data. See Usage.
+    Keyword arguments
+    -----------------
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
         the camera type to 3D. If daspectAuto has not been set yet, 
@@ -31,11 +29,10 @@ def grid(*args, **kwargs):
     
     Notes
     -----
-    This function should not be confused with the axis grid, see the 
-    Axis.showGrid property.
-    
-    This function is know in Matlab as mesh(), but to avoid confusion
-    with the vv.Mesh class, it is called grid() in visvis.
+      * This function should not be confused with the axis grid, see the 
+        Axis.showGrid property.
+      * This function is know in Matlab as mesh(), but to avoid confusion
+        with the vv.Mesh class, it is called grid() in visvis.
     
     Also see surf() and the solid*() methods.
     

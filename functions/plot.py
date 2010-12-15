@@ -39,7 +39,7 @@ def plot(data1, data2=None, data3=None,
       * plot(X, Y, Z, ...) also supplies z coordinates
       * plot(P, ...) plots using a Point or Pointset instance
     
-    Further arguments
+    Keyword arguments
     -----------------
     (The longer names for the line properties can also be used)    
     lw : scalar

@@ -413,7 +413,17 @@ class BaseFigure(base.Wibject):
                 value = ''
                 self._SetTitle("Figure "+str(self.nr))
             self._title = value
-            
+    
+    
+    def MakeCurrent(self):
+        """ MakeCurrent()
+        
+        Make this the current figure. 
+        Equivalent to "vv.figure(fig.nr)".
+        
+        """
+        BaseFigure._currentNr = self.nr
+    
     
     @PropWithDraw
     def currentAxes():
@@ -1005,7 +1015,7 @@ class Axes(base.Wibject):
     
     An Axes instance represents the scene with a local coordinate system 
     in which wobjects can be drawn. It has various properties to influence 
-    the appearance of the scene, such as aspect ration and lighting. 
+    the appearance of the scene, such as aspect ratio and lighting. 
     
     To set the appearance of the axis (the thing that indicates x, y and z), 
     use the properties of the Axis instance. For example:
@@ -1100,15 +1110,27 @@ class Axes(base.Wibject):
         as hints to set the camera view. For the 3D camear, they determine
         where the axis is drawn.
         
+        Returns a 3-element tuple of visvis.Range objects.
+        
+        Parameters
+        ----------
+        rangeX : (min, max), optional
+            The range for the x dimension.
+        rangeY : (min, max), optional
+            The range for the y dimension.
+        rangeZ : (min, max), optional
+            The range for the z dimension.
+        margin : scalar
+            Represents the fraction of the range to add for the
+            ranges that are automatically obtained (default 2%).
+        
+        Notes
+        -----
         Each range can be None, a 2 element iterable, or a visvis.Range 
         object. If a range is None, the range is automatically obtained
         from the wobjects currently in the scene. To set the range that
         will fit all wobjects, simply use "SetLimits()"
         
-        The margin represents the fraction of the range to add for the
-        ranges that are automatically obtained (default 2%).
-        
-        Returns a 3-element tuple of visvis.Range objects.
         """
         
         # Check margin
@@ -1340,8 +1362,13 @@ class Axes(base.Wibject):
     
     @property
     def axis(self):
-        """ Get the axis object. A new instance is created if it
-        does not yet exist.
+        """ Get the axis object associated with this axes. 
+        A new instance is created if it does not yet exist. This object
+        can be used to change the appearance of the axis (tickmarks, labels,
+        grid, etc.).
+        
+        See also the [[cls_BaseAxis Axis class]].
+        
         """
         axis = None
         # Find object in root
@@ -1355,7 +1382,9 @@ class Axes(base.Wibject):
     
     @PropWithDraw
     def axisType():
-        """ Get/Set the axis type to use. Currently supported are:
+        """ Get/Set the axis type to use. 
+        
+        Currently supported are:
           * 'cartesian' - a normal axis (default)
           * 'polar' - a polar axis.
         """        
@@ -1384,7 +1413,9 @@ class Axes(base.Wibject):
     
     @PropWithDraw
     def cameraType():
-        """ Get/Set the camera type to use. Currently supported are:
+        """ Get/Set the camera type to use. 
+        
+        Currently supported are:
           * '2d' - a two dimensional camera that looks down the z-dimension.
           * '3d' - a three dimensional camera.
           * 'fly' - a camera like a flight sim. Not recommended.
@@ -1419,9 +1450,12 @@ class Axes(base.Wibject):
     @PropWithDraw
     def daspect():
         """ Get/Set the data aspect ratio as a three element tuple. 
+        
         A two element tuple can also be given (then z is assumed 1).
         Values can be negative, in which case the corresponding dimension
-        is flipped. Note that if daspectAuto is True, only the sign of the
+        is flipped. 
+        
+        Note that if daspectAuto is True, only the sign of the
         daspect is taken into account.
         """
         def fget(self):            
@@ -1447,6 +1481,7 @@ class Axes(base.Wibject):
     @PropWithDraw
     def daspectAuto():
         """ Get/Set whether to scale the dimensions independently.
+        
         If True, the dimensions are scaled independently, and only the sign
         of the axpect ratio is taken into account. If False, the dimensions
         have the scale specified by the daspect property.
@@ -1496,7 +1531,7 @@ class Axes(base.Wibject):
         """ Get/Set whether to use a buffer; after drawing, a screenshot
         of the result is obtained and stored. When the axes needs to
         be redrawn, but has not changed, the buffer can be used to 
-        draw the contentx at great speed. 
+        draw the contents at great speed (default True).
         """
         def fget(self):
             return self._useBuffer
@@ -1772,11 +1807,19 @@ class Axes(base.Wibject):
     
     
     def _OnMouseDown(self, event):
-        # make current axes
+        self.MakeCurrent()
+    
+    def MakeCurrent(self):
+        """ MakeCurrent()
+        
+        Make this the current axes. Also makes the containing figure
+        the current figure.
+        
+        """
         f = self.GetFigure()
         if f:
             f.currentAxes = self
-
+            f.MakeCurrent()
 
 
 class Legend(simpleWibjects.DraggableBox):

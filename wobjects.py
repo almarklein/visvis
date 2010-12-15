@@ -28,6 +28,26 @@ class MotionDataContainer(Wobject):
     The data are simply stored as the wobject's children, and are
     made visible one at a time.
     
+    Example
+    -------
+    # read image
+    ims = [vv.imread('lena.png')]
+
+    # make list of images: decrease red channel in subsequent images
+    for i in range(9):
+        im = ims[i].copy()
+        im[:,:,0] = im[:,:,0]*0.9
+        ims.append(im)
+
+    # create figure, axes, and data container object
+    a = vv.gca()
+    m = vv.MotionDataContainer(a)
+
+    # create textures, loading them into opengl memory, and insert into container.
+    for im in ims:
+        t = vv.imshow(im)
+        t.parent = m
+    
     """
     
     def __init__(self, parent, interval=100):

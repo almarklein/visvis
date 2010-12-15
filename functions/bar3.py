@@ -106,10 +106,8 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
       * bar3(X, H, ...) also supply their x-coordinates
       * bar3(X, Y, H, ...) supply both x- and y-coordinates
     
-    Parameters
-    ----------
-    args : data
-        Height, x coordinates and y coordinates.
+    Keyword arguments
+    -----------------
     width : scalar
         The width of the bars.
     axesAdjust : bool
