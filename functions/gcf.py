@@ -10,7 +10,11 @@ import visvis as vv
 def gcf():
     """ gcf()
     
-    Get the current figure. 
+    Get the current figure. If there is no figure yet, figure() is
+    called to create one. To make a figure current, 
+    use Figure.MakeCurrent().
+    
+    See also gca()
     
     """
     

@@ -125,18 +125,15 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     
     Notes on compression and limitations
     ------------------------------------
-    GIF: Requires PIL. Animated GIF applies a color-table of maximal
-    256 colors and applies poor compression. It's widely applicable though. 
-    
-    SWF: Provides lossless storage of movie frames with good (ZLIB) 
-    compression. Reading of SWF files is limited to images stored using
-    ZLIB compression. Requires no external libraries.
-    
-    AVI: Requires ffmpeg. Provides excelent mpeg4 (or any other supported
-    by ffmpeg) compression. Not intended for reading very large movies.
-    
-    IMS: Requires PIL. Quality depends on the used image type. Use png for  
-    lossless compression and jpg otherwise.
+      * GIF: Requires PIL. Animated GIF applies a color-table of maximal
+        256 colors and applies poor compression. It's widely applicable though.
+      * SWF: Provides lossless storage of movie frames with good (ZLIB) 
+        compression. Reading of SWF files is limited to images stored using
+        ZLIB compression. Requires no external libraries.    
+      * AVI: Requires ffmpeg. Provides excelent mpeg4 (or any other supported
+        by ffmpeg) compression. Not intended for reading very large movies.
+      * IMS: Requires PIL. Quality depends on the used image type. Use png for  
+        lossless compression and jpg otherwise.
     
     """
     

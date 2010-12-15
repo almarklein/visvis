@@ -1563,7 +1563,7 @@ class Aarray(np.ndarray):
     
     
     def get_end(self):
-        """ get_end(()
+        """ get_end()
         
         Get the end of the array expressed in world coordinates. 
         

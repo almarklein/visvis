@@ -43,7 +43,7 @@ def _SetLimitsAfterDraw(event):
 def polarplot(data1, data2=None, inRadians=False,
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k',
             alpha=1, axesAdjust=True, axes=None, **kwargs):
-    """ polarplot(data1, data2=None, inRadians=False,
+    """ polarplot(*args, inRadians=False,
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k',
             alpha=1, axesAdjust=True, axes=None):
     
@@ -55,7 +55,7 @@ def polarplot(data1, data2=None, inRadians=False,
       * plot(X, Y, ...) also supplies angular coordinates
       * plot(P, ...) plots using a Point or Pointset instance
     
-    Further arguments
+    Keyword arguments
     -----------------
     (The longer names for the line properties can also be used)    
     lw : scalar
