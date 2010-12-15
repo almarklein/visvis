@@ -27,8 +27,8 @@ def use(backendName=None):
     Note: the backend can be changed even when figures are created with
     another backend, but this is not recommended.
     
-    Embedding example (qt4)
-    -----------------------
+    Example embedding in Qt4
+    ------------------------
     # Near the end of the script:
     
     # Get app instance and create native app
