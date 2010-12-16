@@ -32,7 +32,7 @@ setup(
     
     url = 'http://code.google.com/p/visvis/',
     download_url = 'http://code.google.com/p/visvis/downloads/list',    
-    keywords = "visualization OpenGl medical imaging 3D plotting",
+    keywords = "visualization OpenGl medical imaging 3D plotting numpy",
     description = description,
     long_description = long_description,
     
@@ -41,7 +41,7 @@ setup(
     requires = ['numpy', 'pyOpenGl'],
     
     packages = ['visvis', 'visvis.functions', 'visvis.backends', 
-                'visvis.processing', 'visvis.points'],
+                'visvis.processing', 'visvis.vvmovie'],
     package_dir = {'visvis': '.'},
     package_data = {'visvis': [ 'examples/*.py', 'visvisResources/*']},
     zip_safe = False, # I want examples to work
