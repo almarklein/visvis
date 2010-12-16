@@ -32,3 +32,7 @@ a.daspect = 1,1,-1
 a.xLabel = 'x'
 a.yLabel = 'y'
 a.zLabel = 'z'
+
+# Enter main loop
+app = vv.use()
+app.Run()

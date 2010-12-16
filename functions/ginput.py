@@ -144,5 +144,4 @@ def ginput(N=0, axes=None, ms='+', **kwargs):
 
 
 if __name__ == '__main__':
-#     app = vv.use('wx')
     print vv.ginput(3)

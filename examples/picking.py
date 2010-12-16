@@ -39,13 +39,11 @@ def entering(event):
     if hasattr(event.owner, 'lc'):
         event.owner.picker_lc = event.owner.lc
         event.owner.lc = 'y'
-        f.Draw()
 
 def leaving(event):
     print "Leaving", event.x,event.y, event.owner
     if hasattr(event.owner, 'picker_lc'):
         event.owner.lc = event.owner.picker_lc
-        f.Draw()
 
 for ob in [f,a,b1,b2, l1, l2]:#, t1]:
     ob.hitTest = True # otherwise we cannot detect them

@@ -139,7 +139,7 @@ class GLWidget(fltk.Fl_Gl_Window):
             if (97 <= key <= 122) and fltk.Fl.event_shift():
                 key -= 32                
             try:
-                print chr(key)
+                return key, chr(key)
             except ValueError:
                 return key, ''
     

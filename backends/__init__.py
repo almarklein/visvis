@@ -144,7 +144,10 @@ def _loadBackend(name):
             module = imp.load_source(modNameFull, modFileName)
         globals()[modName] = module
     except Exception, why:
-        print 'Error importing %s backend:' % name, why
+        if not isFrozen():
+            # Only show if not frozen. If frozen, it can easily happen that
+            # the GUI toolkit is available, but the visvis backend is not.
+            print 'Error importing %s backend:' % name, why
         return False
     
     # Do some tests
