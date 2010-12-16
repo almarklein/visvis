@@ -41,6 +41,5 @@ def title(text, axes=None):
 
 
 if __name__=='__main__':
-    vv.use('wx')
     a = vv.gca()
     vv.title('test title')

@@ -52,6 +52,5 @@ a2.axis.yLabel = 'y-axis'
 a2.axis.zLabel = 'z-axis'
 
 # Enter main loop
-fig.Draw() # Post a draw event (to update labels and mesh settings)
 app = vv.use() # let visvis chose a backend for me
 app.Run()

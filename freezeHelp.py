@@ -39,7 +39,8 @@ def getIncludes(backendName):
     Get a list of includes to extend the 'includes' list
     with of py2exe or bbfreeze. The list contains:
       * the module of the specified backend 
-      * all the functionnames, which are dynamically loaded and therefore not included by default.
+      * all the functionnames, which are dynamically loaded and therefore
+        not included by default.
       * opengl stuff
     
     """
@@ -73,9 +74,32 @@ def getIncludes(backendName):
         name = 'OpenGL.GLU.'+name
         if name in sys.modules:        
             includes.append(name)
-    if os.name == 'nt':
+    if sys.platform.startswith('win'):
         includes.append("OpenGL.platform.win32")
     
     # done
     return includes
 
+def getExcludes(backendName):
+    """ getExcludes(backendName)
+    
+    Get a list of excludes. If using the 'wx' backend, you don't
+    want all the qt4 libaries.
+    
+    backendName is the name of the backend which you do want to use.
+    
+    """
+    
+    # init
+    excludes = []
+    
+    # Neglect qt4
+    if 'qt4' != backendName:
+        excludes.extend(["sip", "PyQt4", "PyQt4.QtCore", "PyQt4.QtGui"])
+    
+    # Neglect wx
+    if 'wx' != backendName:
+        excludes.extend(["wx"])
+    
+    # done
+    return excludes
