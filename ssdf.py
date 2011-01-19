@@ -127,6 +127,60 @@ else:
     basestring = str
     simplestr = str
 
+# To store other classes
+PYTHON_CLASS_NAME = '_CLASS_NAME_'
+
+
+## Registering classes
+
+# Global dict with registered classes
+_registered_classes = {}
+
+
+def isCompatibleClass(cls):
+    """ isCompatibleClass(cls)
+    
+    Returns True if the given class is SSDF-compatible.
+    
+    """
+    return not isIncompatibleClass(cls)
+
+
+def isIncompatibleClass(cls):    
+    """ isIncompatibleClass(cls)
+    
+    Returns a string giving the reason why the given class 
+    if not SSDF-compatible. If the class is compatible, this 
+    function returns None.
+    
+    """
+    if not hasattr(cls, '__to_ssdf__'):
+        return 'class does not have __to_ssdf__ method'
+    if not hasattr(cls, '__from_ssdf__'):
+        return 'class does not have __from_ssdf__ classmethod'
+    if not isinstance(cls, type):
+        return 'class is not a type (does not inherit object on Python 2.x)'
+
+
+def register_class(*args):
+    """ register_class(class1, class2, class3, ...)
+    
+    Register one or more classes. Registered classes can be saved and 
+    restored from ssdf. 
+    
+    A class needs to implement two methods to qualify for registration:
+      * A method __to_ssdf__() that returns a ssdf.Stuct
+      * A classmethod __from_ssdf__(s) that accepts an ssdf.Struct and creates
+        an instance of that class.
+    
+    """
+    for cls in args:
+        incomp = isIncompatibleClass(cls)
+        
+        if incomp:
+            raise ValueError('Cannot register class %s: %s.' % (cls.__name__, incomp))
+        else:
+            _registered_classes[cls.__name__] = cls
 
 
 ## The class
@@ -496,6 +550,16 @@ def _toString(name, value, indent):
     if value is None:
         lineObject.line += "Null"
     
+    # User specific 
+    elif isCompatibleClass(value.__class__):
+        
+        # Create struct
+        s = value.__to_ssdf__()        
+        s[PYTHON_CLASS_NAME] = value.__class__.__name__
+        
+        # Make string
+        lineObject = _toString(name, s, indent)
+    
     # Struct
     elif isinstance(value, (Struct, dict)):            
         lineObject.line += "dict:"
@@ -508,7 +572,8 @@ def _toString(name, value, indent):
             # We have the key, go get the value!
             val = value[key]
             # Skip methods, or anything else we can call
-            if hasattr(val,'__call__'): # py3.x does not have function callable
+            if hasattr(val,'__call__') and not hasattr(val, '__to_ssdf__'): 
+                # Note: py3.x does not have function callable
                 continue
             # Add!
             tmp = _toString(key, val, indent+2)
@@ -631,7 +696,8 @@ def _fromString(lineObject):
     elif line.startswith('Null') or line.startswith('None'):
         return name, None
     
-    elif line.startswith('dict:'):
+    elif line.startswith('dict:'):        
+        # Create struct
         value = Struct()
         for child in lineObject.children:
             key, val = _fromString(child)
@@ -640,6 +706,14 @@ def _fromString(lineObject):
             else:
                 tmp = child.linenr
                 print("SSDF Warning: unnamed element in dict on line %i."%tmp)
+        # Make class instance?
+        if PYTHON_CLASS_NAME in value:
+            className = value[PYTHON_CLASS_NAME]
+            if className in _registered_classes:
+                value = _registered_classes[className].__from_ssdf__(value)
+            else:
+                print("SSDF Warning: class %s not registered." % className)
+        # Return
         return name, value
     
     elif line.startswith('list:'):
