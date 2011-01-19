@@ -59,6 +59,9 @@ def imshow(im, clim=None, aa=1, interpolate=False, cm=None,
     # Check data
     if not isinstance(im, np.ndarray):
         raise ValueError('imshow expects an image as a numpy array.')
+    elif im.size==0:
+        raise ValueError('imshow cannot draw arrays with zero elements.')
+    #
     if im.ndim==2 or im.ndim==3 and im.shape[-1] in [1,3,4]:
         pass
     else:

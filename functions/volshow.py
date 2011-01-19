@@ -44,6 +44,9 @@ def volshow(vol, clim=None, renderStyle='mip', cm=None,
      # Check data
     if not isinstance(vol, np.ndarray):
         raise ValueError('volshow expects an image as a numpy array.')
+    elif vol.size==0:
+        raise ValueError('volshow cannot draw arrays with zero elements.')
+    #
     if vol.ndim==3 or vol.ndim==4 and vol.shape[-1] in [1,3,4]:
         pass
     else:

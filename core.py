@@ -847,9 +847,10 @@ class BaseFigure(base.Wibject):
         gl.glViewport(0, 0, w, h)
         
         # set camera
+        # Flip up down because we want y=0 to be on top.
         gl.glMatrixMode(gl.GL_PROJECTION)        
         gl.glLoadIdentity()        
-        ortho( 0, w, h, 0)
+        ortho( 0, w, h-1, -1)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
@@ -948,7 +949,7 @@ class BaseFigure(base.Wibject):
             ev.Fire()
 
 
-class AxesContainer(base.Wibject):
+class AxesContainer(base.Box):
     """ AxesContainer(parent)
     
     A simple container wibject class to contain one Axes instance.
@@ -980,8 +981,15 @@ class AxesContainer(base.Wibject):
         if not isinstance(parent, BaseFigure):
             raise Exception("The given parent for an AxesContainer " +
                             "should be a Figure.")
-        base.Wibject.__init__(self, parent, *args, **kwargs)
+        
+        # Init box
+        base.Box.__init__(self, parent, *args, **kwargs)
+        
+        # Init position
         self.position = 0,0,1,1
+        
+        # Set edgewidth to 0
+        self._edgeWidth = 0
     
     
     def GetAxes(self):
@@ -1005,6 +1013,7 @@ class AxesContainer(base.Wibject):
         """
         axes = self.GetAxes()
         if axes:
+            self.OnDraw()
             base.Wibject._DrawTree(self, *args, **kwargs)
         else:
             self.Destroy()

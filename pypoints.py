@@ -1100,7 +1100,7 @@ class Pointset(BasePoints):
         
         # remove all points (backwards!)
         indices = sorted( [i for i in I] )
-        for i in reverserd(indices):
+        for i in reversed(indices):
             del self[i]
     
     

@@ -319,8 +319,17 @@ def newFigure():
     # Make sure there is a native app
     app.Create()
     
-    # Create figure
-    frame = FigureFrame(None, -1, "Figure", size=(560, 420))
+    # Create frame
+    refSize = (560, 420)
+    frame = FigureFrame(None, -1, "Figure", size=refSize)
+    
+    # Correct size. The given size includes the window manager's frame
+    size = frame.GetClientSizeTuple()
+    w = refSize[0] + (refSize[0] - size[0])
+    h = refSize[1] + (refSize[1] - size[1])
+    frame.SetSize((w,h))
+    
+    # Inser figure
     figure = Figure(frame)
     
     # Set icon
