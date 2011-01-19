@@ -1411,7 +1411,11 @@ class Box(Wibject):
     def OnDraw(self, fast=False):
         
         # get dimensions        
-        w,h = self.position.size
+        w, h = self.position.size
+        
+        # Get positions
+        x1, x2 = 0, w-1
+        y1, y2 = 0, h-1
         
         # draw plane
         if self._bgcolor:        
@@ -1419,10 +1423,10 @@ class Box(Wibject):
             gl.glColor(clr[0], clr[1], clr[2], 1.0)            
             #
             gl.glBegin(gl.GL_POLYGON)
-            gl.glVertex2f(0,0)
-            gl.glVertex2f(0,h)
-            gl.glVertex2f(w,h)
-            gl.glVertex2f(w,0)
+            gl.glVertex2f(x1,y1)
+            gl.glVertex2f(x1,y2)
+            gl.glVertex2f(x2,y2)
+            gl.glVertex2f(x2,y1)
             gl.glEnd()
         
         # prepare                
@@ -1435,10 +1439,10 @@ class Box(Wibject):
             gl.glLineWidth(self.edgeWidth)
             #
             gl.glBegin(gl.GL_LINE_LOOP)
-            gl.glVertex2f(0,0)
-            gl.glVertex2f(0,h)
-            gl.glVertex2f(w,h)
-            gl.glVertex2f(w,0)
+            gl.glVertex2f(x1,y1)
+            gl.glVertex2f(x1,y2)
+            gl.glVertex2f(x2,y2)
+            gl.glVertex2f(x2,y1)
             gl.glEnd()
         
         # clean up        

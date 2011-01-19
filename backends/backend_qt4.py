@@ -255,9 +255,11 @@ class Figure(BaseFigure):
             self._widget.update()
     
     def _ProcessGuiEvents(self):
-        app = QtGui.QApplication.instance()
-        app.flush()
-        app.processEvents()
+        app.ProcessEvents()
+#         app = QtGui.QApplication.instance()
+#         app.flush()
+#         app.processEvents()
+    
     
     def _Close(self, widget):
         if widget is None:

@@ -85,8 +85,6 @@ def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
     
     # Get object to set background of
     bgob = ob
-    if isinstance(ob, vv.core.AxesContainer):
-        bgob = ob.GetAxes()
     
     # Set background
     if bg and fig:
