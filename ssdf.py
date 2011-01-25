@@ -185,6 +185,26 @@ def register_class(*args):
 
 ## The class
 
+def isSsdfStruct(object):
+    """ isSsdfStruct(object)
+    
+    Returns whether the given object is an ssdf struct. 
+    
+    Rather than using isinstance, this function checks the 
+    class name and the module name in which it is defined. 
+    That way, this function returns True also when the struct
+    is from another ssdf module (for example in a subpackage).
+    
+    """
+    
+    # Get class name of dict
+    c = object.__class__
+    dictClassName = '%s.%s' % (c.__module__, c.__name__)
+    
+    # Check
+    return dictClassName.endswith('ssdf.Struct')
+
+
 class Struct(object):
     """ Struct(dictionary=None) 
     
@@ -210,7 +230,9 @@ class Struct(object):
         if a_dict is None:
             return
         
-        elif not isinstance(a_dict, (Struct, dict)):
+        
+        
+        if not isinstance(a_dict, (Struct, dict)) and not isSsdfStruct(a_dict):
             tmp = "Struct can only be initialized with a Struct or a dict."
             raise ValueError(tmp)
         else:
@@ -406,8 +428,8 @@ def update(filename, struct_object, appName='ssdf.py', newline='\n'):
     # Insert stuff
     def insert(ob1,ob2):
         for name in ob2:
-            if ( name in ob1 and isinstance(ob1[name],Struct) and 
-                                 isinstance(ob2[name],Struct) ):
+            if ( name in ob1 and isSsdfStruct(ob1[name]) and 
+                                 isSsdfStruct(ob2[name]) ):
                 insert(ob1[name], ob2[name])
             else:
                 ob1[name] = ob2[name]
@@ -561,7 +583,7 @@ def _toString(name, value, indent):
         lineObject = _toString(name, s, indent)
     
     # Struct
-    elif isinstance(value, (Struct, dict)):            
+    elif isinstance(value, dict) or isSsdfStruct(value):            
         lineObject.line += "dict:"
         
         # Process children        
