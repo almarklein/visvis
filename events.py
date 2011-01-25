@@ -255,6 +255,8 @@ class MouseEvent(BaseEvent):
                 axes = owner.GetAxes()
                 if not axes:
                     return
+                if not hasattr(axes, '_cameras'):
+                    axes = None # For example a legend
             
             if hasattr(owner, 'position'):
                 # A Wibject: use relative coordinates if not a figure
