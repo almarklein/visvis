@@ -580,9 +580,9 @@ class Wibject(BaseObject):
         # get posision in screen coordinates
         pos = self.position
         # apply
-        gl.glTranslatef(pos.left,pos.top,0.0)
+        gl.glTranslatef(pos.left, pos.top,0.0)
 
-
+    
     def OnDrawShape(self, clr):
         # Implementation of the OnDrawShape method.
         gl.glColor(clr[0], clr[1], clr[2], 1.0)
@@ -644,13 +644,11 @@ class Wobject(BaseObject):
         """
         par = self.parent
         if par is None:
-            return None# raise TypeError("Cannot find axes!")
+            return None
         while not isinstance(par, Wibject):            
             par = par.parent
             if par is None:
                 return None
-                #tmp = "Cannot find axes, error in Wobject/Wibject tree!"
-                #raise TypeError(tmp)
         return par
     
     
@@ -1413,12 +1411,12 @@ class Box(Wibject):
         # get dimensions        
         w, h = self.position.size
         
-        # Get positions
-        x1, x2 = 0, w-1
-        y1, y2 = 0, h-1
-        
         # draw plane
         if self._bgcolor:        
+            # Get positions 
+            x1, x2 = 0, w
+            y1, y2 = 0, h
+            # Set color
             clr = self._GetBgcolorToDraw()
             gl.glColor(clr[0], clr[1], clr[2], 1.0)            
             #
@@ -1434,6 +1432,12 @@ class Box(Wibject):
         
         # draw edges        
         if self.edgeWidth and self.edgeColor:
+            
+            # Get positions
+            # Draw edges on top of the first and last pixel
+            x1, x2 = 0.5, w-0.5
+            y1, y2 = 0.5, h-0.5
+            # Set color and line width
             clr = self.edgeColor
             gl.glColor(clr[0], clr[1], clr[2], 1.0)
             gl.glLineWidth(self.edgeWidth)

@@ -838,27 +838,29 @@ class BaseFigure(base.Wibject):
         # drawn (via _DrawTree) in the same viewport.
         for child in self._children:
             if isinstance(child, (Axes, AxesContainer) ):
+                self._PrepateForFlatDrawing(w, h)
                 child._DrawTree(mode, pickerHelper)
         
-        ## Draw more
-        
-        # prepare for flat drawing
+        # Draw other children
+        self._PrepateForFlatDrawing(w, h)
+        for child in self._children:
+            if not isinstance(child, (Axes, AxesContainer)):
+                child._DrawTree(mode, pickerHelper)
+
+    
+    def _PrepateForFlatDrawing(self, w, h):
+        # Set viewport
         gl.glDisable(gl.GL_DEPTH_TEST)
         gl.glViewport(0, 0, w, h)
         
         # set camera
         # Flip up down because we want y=0 to be on top.
         gl.glMatrixMode(gl.GL_PROJECTION)        
-        gl.glLoadIdentity()        
-        ortho( 0, w, h-1, -1)
+        gl.glLoadIdentity()
+        ortho(0, w, h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
-        
-        # draw other children
-        for child in self._children:
-            if not isinstance(child, (Axes, AxesContainer)):
-                child._DrawTree(mode, pickerHelper)
-
+    
     
     def _PassOnKeyDownEvent(self, event):
         
@@ -988,9 +990,9 @@ class AxesContainer(base.Box):
         # Init position
         self.position = 0,0,1,1
         
-        # Set edgewidth to 0
-        self._edgeWidth = 0
-    
+        # Set properties
+        self.edgeWidth = 0
+        self.bgcolor = None
     
     def GetAxes(self):
         """ GetAxes()
@@ -1005,16 +1007,16 @@ class AxesContainer(base.Box):
         return None
     
     
-    def _DrawTree(self, *args, **kwargs):
-        """ _DrawTree(*args, **kwargs)
+    def _DrawTree(self, mode, *args, **kwargs):
+        """ _DrawTree(mode, *args, **kwargs)
         
         Pass on, but Destroy itself if axes is gone. 
         
         """
         axes = self.GetAxes()
         if axes:
-            self.OnDraw()
-            base.Wibject._DrawTree(self, *args, **kwargs)
+            # Draw normally
+            base.Wibject._DrawTree(self, mode, *args, **kwargs)
         else:
             self.Destroy()
     

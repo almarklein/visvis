@@ -428,7 +428,9 @@ class BaseText(object):
             return self._color
         def fset(self, value):
             value = getColor(value,'setting textColor')
-            self.Draw()
+            if value != self._color:
+                self._color = value
+                self.Draw()
     
     
     @Property
