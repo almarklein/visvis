@@ -96,9 +96,20 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     nq : integer
         If nonzero, applies the NeuQuant quantization algorithm to create
         the color palette. This algorithm is superior, but slower than
-        the standard PIL algorithm. The value of nq is the quality 
+        the standard PIL algorithm. The value of nq is the quality
         parameter. 1 represents the best quality. 10 is in general a
         good tradeoff between quality and speed.
+    subRectangles : False, True, or a list of 2-element tuples
+        Whether to use sub-rectangles. If True, the minimal rectangle that
+        is required to update each frame is automatically detected. This
+        can give significant reductions in file size, particularly if only
+        a part of the image changes. One can also give a list of x-y 
+        coordinates if you want to do the cropping yourself.
+    dispose : int
+        How to dispose each frame. 1 means that each frame is to be left
+        in place. 2 means the background color should be restored after
+        each frame. 3 means the decoder should restore the previous frame.
+        If subRectangles==False, the default is 2, otherwise it is True.
     
     Special AVI/MPEG parameters
     ---------------------------
@@ -126,7 +137,9 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     Notes on compression and limitations
     ------------------------------------
       * GIF: Requires PIL. Animated GIF applies a color-table of maximal
-        256 colors and applies poor compression. It's widely applicable though.
+        256 colors. It's widely applicable though. Reading back GIF images
+        can be problematic due to the applied color reductions and because
+        of problems with PIL.
       * SWF: Provides lossless storage of movie frames with good (ZLIB) 
         compression. Reading of SWF files is limited to images stored using
         ZLIB compression. Requires no external libraries.    
