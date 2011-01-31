@@ -13,6 +13,8 @@ def combineMeshes(meshes):
     Given a list of mesh objects, produces a combined mesh.
     
     """
+    if not meshes:
+        raise ValueError('No meshes or empty meshes given')
     
     # Check mesh simularity
     vpf = 0
@@ -38,7 +40,7 @@ def combineMeshes(meshes):
             hasColors = hasColors and (mesh._colors is not None)
             hasTexcords = hasTexcords and (mesh._texcords is not None)            
     
-    # Combine vertices
+    # Combine vertices    
     vertices = np.concatenate( [m._vertices for m in meshes] )
     
     # Combine faces
