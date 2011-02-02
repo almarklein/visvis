@@ -814,6 +814,9 @@ class TextureObject(object):
             else:
                 raise ValueError("Cannot create 3D texture, data of invalid shape.")
         
+        else:
+            raise ValueError("Cannot create a texture with these dimensions.")
+        
         return iformat, format
     
     
@@ -1616,7 +1619,7 @@ class Texture3D(BaseTexture):
             self._program1.SetUniformi('colormap', [1])
             
             # set uniforms: parameters
-            shape = self._texture1._shape # as in opengl
+            shape = self._texture1._shape[:3] # as in opengl
             self._program1.SetUniformf('shape',reversed(list(shape)) )
             ran = self._texture1._climRef.range
             if ran==0:
@@ -1765,7 +1768,10 @@ class Texture3D(BaseTexture):
         """ Get/Set the render style to render the volumetric data:
           * mip: maximum intensity projection
           * iso: isosurface rendering
-          * rays: ray casting (tip: use the ColormapEditor wibject to control transparancy)
+          * rays: ray casting (tip: use the ColormapEditor wibject to 
+            control transparancy)
+          * colormip: mip render with color (RGB or RGBA) data
+          * coloriso: iso render for color data
         If drawing takes really long, your system renders in software
         mode. Try rendering data that is shaped with a power of two. This 
         helps on some cards.
@@ -1785,6 +1791,9 @@ class Texture3D(BaseTexture):
             elif style in ['iso', 'isosurface']:
                 self._renderStyle = 'isosurface'
                 self._program1.SetFragmentShader(fshaders['isosurface'])
+            elif style in ['coloriso', 'colorisosurface']:
+                self._renderStyle = 'colorisosurface'
+                self._program1.SetFragmentShader(fshaders['colorisosurface'])
             elif style in ['ray', 'rays', 'raycasting']:
                 self._renderStyle = 'raycasting'
                 self._program1.SetFragmentShader(fshaders['raycasting'])
