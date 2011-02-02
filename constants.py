@@ -9,6 +9,8 @@ Module constants
 
 """
 
+# (The keys values are the same as for wx, but this is arbitrary.)
+
 KEY_SHIFT = 17
 KEY_ALT = 18
 KEY_CONTROL = 19
@@ -20,3 +22,4 @@ KEY_DOWN = 317
 KEY_PAGEUP = 366
 KEY_PAGEDOWN = 367
 KEY_ESCAPE = 27
+KEY_DELETE = 127

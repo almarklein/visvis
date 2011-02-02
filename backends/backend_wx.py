@@ -34,7 +34,8 @@ KEYMAP = {  wx.WXK_SHIFT: constants.KEY_SHIFT,
             wx.WXK_PAGEUP: constants.KEY_PAGEUP,
             wx.WXK_PAGEDOWN: constants.KEY_PAGEDOWN,
             wx.WXK_RETURN: constants.KEY_ENTER,
-            wx.WXK_ESCAPE: constants.KEY_ESCAPE
+            wx.WXK_ESCAPE: constants.KEY_ESCAPE,
+            wx.WXK_DELETE: constants.KEY_DELETE
             }
 
 

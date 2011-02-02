@@ -27,6 +27,7 @@ KEYMAP = {  fltk.FL_SHIFT: constants.KEY_SHIFT,
             fltk.FL_Down: constants.KEY_DOWN,
             fltk.FL_Page_Up: constants.KEY_PAGEUP,
             fltk.FL_Page_Down: constants.KEY_PAGEDOWN,
+            fltk.FL_Delete: constants.KEY_DELETE
             }
 
 class GLWidget(fltk.Fl_Gl_Window):

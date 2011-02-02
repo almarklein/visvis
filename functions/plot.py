@@ -99,7 +99,6 @@ def plot(data1, data2=None, data3=None,
         if not i in kwargs:
             kwargs[i] = tmp[i]
     
-    
     # init dimension variable
     camDim = 0
     

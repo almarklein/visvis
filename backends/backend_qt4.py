@@ -43,6 +43,7 @@ KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
             QtCore.Qt.Key_Enter: constants.KEY_ENTER,
             QtCore.Qt.Key_Return: constants.KEY_ENTER,
             QtCore.Qt.Key_Escape: constants.KEY_ESCAPE,
+            QtCore.Qt.Key_Delete: constants.KEY_DELETE
             }
 
 
@@ -130,7 +131,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         ev.Fire()
     
     def _ProcessKey(self,event):
-        """ evaluates the keycode of wx, and transform to visvis key.
+        """ evaluates the keycode of qt, and transform to visvis key.
         """
         key = event.key()
         # special cases for shift control and alt -> map to 17 18 19
