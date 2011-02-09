@@ -41,9 +41,6 @@ class GLWidget(fltk.Fl_Gl_Window):
         
         # Callback when closed
         self.callback(self.OnClose)
-        
-        # Keep visvis up to date
-        fltk.Fl.add_timeout(0.01,self.OnTimerFire)
     
     
     def handle(self, event):
@@ -153,12 +150,7 @@ class GLWidget(fltk.Fl_Gl_Window):
     
     def OnFocus(self, event):
         BaseFigure._currentNr = self.figure.nr
-        
-    
-    def OnTimerFire(self, event=None):
-        events.processVisvisEvents()
-        fltk.Fl.add_timeout(0.01,self.OnTimerFire)
-    
+
 
 class Figure(BaseFigure):
     """ This is the fltk implementation of the figure class.
@@ -170,6 +162,10 @@ class Figure(BaseFigure):
     """
     
     def __init__(self, *args, **kwargs):
+        
+        # Make sure there is a native app and the timer is started 
+        # (also when embedded)
+        app.Create()
         
         # create widget
         self._widget = GLWidget(self, *args, **kwargs)
@@ -227,9 +223,6 @@ def newFigure():
     """ Create a window with a figure widget.
     """
     
-    # Make sure there is a native app
-    app.Create()
-    
     # Create figure
     figure = Figure(560, 420, "Figure")    
     figure._widget.size_range(100,100,0,0,0,0)
@@ -244,19 +237,48 @@ def newFigure():
 
 
 
+class VisvisEventsTimer:
+    """ Timer that can be started and stopped.
+    """
+    def __init__(self):
+        self._running = False
+    def Start(self):
+        if not self._running:
+            self._running = True
+            self._PostOneShot()
+    def Stop(self):
+        self._running = False
+    def _PostOneShot(self):
+        fltk.Fl.add_timeout(0.01, self._Fire)
+    def _Fire(self):
+        if self._running:
+            events.processVisvisEvents()
+            self._PostOneShot() # Repost
+
+
 class App(events.App):
-    """ Application class to wrap the fltk application in a simple class
-    with a simple interface.     
+    """ App()
+    
+    Application class to wrap the GUI applications in a class
+    with a simple interface that is the same for all backends.
+    
+    This is the fltk implementation.
+    
     """
     
+    def __init__(self):
+        # Init timer
+        self._timer = VisvisEventsTimer()
+    
     def _GetNativeApp(self):
+        self._timer.Start()
         return fltk.Fl
     
-    def ProcessEvents(self):
+    def _ProcessEvents(self):
         app = self._GetNativeApp()
         app.wait(0) 
     
-    def Run(self):
+    def _Run(self):
         app = self._GetNativeApp()
         if hasattr(app, '_in_event_loop') and app._in_event_loop:
             pass # Already in event loop
