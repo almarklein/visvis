@@ -297,7 +297,6 @@ class App(events.App):
         # or an application may produce error when closed
         QtGui._qApp = app
         # Start timer
-        print 'starting timer'
         self._timer.start()
         # Return
         return app
