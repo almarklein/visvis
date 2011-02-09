@@ -82,12 +82,6 @@ class GLWidget(GLCanvas):
         # if lost, tough luck (thus the comment)
         #self.Bind(wx.EVT_MOUSE_CAPTURE_LOST, self.OnMouseUp)
         
-        # create timer to enable timers in visvis
-        self._timer = wx.Timer(self)
-        self._timer.Start(10, True)
-        self.Bind(wx.EVT_TIMER, self.OnUpdateTimer)
-        
-        
         # onpaint is called when shown is called by figure() function.
         
 
@@ -210,10 +204,6 @@ class GLWidget(GLCanvas):
     
     def OnEraseBackground(self, event):
         pass # This prevents flicker on Windows
-    
-    def OnUpdateTimer(self, event):
-        events.processVisvisEvents()
-        self._timer.Start() # restart (with same timeout)
 
 
 class Figure(BaseFigure):
@@ -226,6 +216,10 @@ class Figure(BaseFigure):
     """
     
     def __init__(self, parent, *args, **kwargs):
+        
+        # Make sure there is a native app and the timer is started 
+        # (also when embedded)
+        app.Create()
         
         # create widget
         self._widget = GLWidget(self, parent, *args, **kwargs)
@@ -317,7 +311,8 @@ def newFigure():
     """ Create a window with a figure widget.
     """
     
-    # Make sure there is a native app
+    # Make sure there is a native app. Need here too, because we need to
+    # create the figure frame first
     app.Create()
     
     # Create frame
@@ -349,10 +344,24 @@ def newFigure():
     return figure
 
 
+class VisvisEventsTimer(wx.Timer):
+    def Notify(self):
+        events.processVisvisEvents()
+
+
 class App(events.App):
-    """ Application class to wrap the wx.App instance in a simple class
-    with a simple interface.     
+    """ App()
+    
+    Application class to wrap the GUI applications in a class
+    with a simple interface that is the same for all backends.
+    
+    This is the wxPython implementation.
+    
     """
+    
+    def __init__(self):
+        # Timer to enable timers in visvis. Should be created AFTER the app
+        self._timer = None
     
     def _GetNativeApp(self):
         # Get native app in save way
@@ -360,10 +369,14 @@ class App(events.App):
         # Store so it won't be deleted, but not on a visvis object,
         # or an application may produce error when closed
         wx.app_instance = app
+        # Start timer
+        if self._timer is None:
+            self._timer = VisvisEventsTimer()
+            self._timer.Start(10, False)
         # Return
         return app
     
-    def ProcessEvents(self):
+    def _ProcessEvents(self):
         
         # Get app
         app = self._GetNativeApp()
@@ -380,7 +393,7 @@ class App(events.App):
         # Set back the original
         wx.EventLoop.SetActive(old)  
     
-    def Run(self):
+    def _Run(self):
         app = self._GetNativeApp()
         if hasattr(app, '_in_event_loop') and app._in_event_loop:
             pass # Already in event loop

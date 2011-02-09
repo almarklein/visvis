@@ -73,16 +73,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         # enable getting keyboard focus
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setFocus() # make the widget have focus...
-        
-        # Create low level timer
-        self._timer = QtCore.QBasicTimer()
-        self._timer.start(10,self)
-
     
-    def timerEvent(self, event):       
-        
-        # Process visvis events
-        events.processVisvisEvents()
     
     def mousePressEvent(self, event):
         but = 0
@@ -192,12 +183,6 @@ class GLWidget(QtOpenGL.QGLWidget):
 #         self.resize(w-1,h)
 #         self.resize(w,h)
     
-    def timerUpdate(self):
-        """ Enable timers in visvis.
-        """        
-        events.processVisvisEvents()        
-        self._timer.start(10)
-
 
 class Figure(BaseFigure):
     """ This is the Qt4 implementation of the figure class.
@@ -212,6 +197,10 @@ class Figure(BaseFigure):
         
         # keep same documentation
         self.__doc__ = BaseFigure.__doc__
+        
+        # Make sure there is a native app and the timer is started 
+        # (also when embedded)
+        app.Create()
         
         # create widget
         self._widget = GLWidget(self, parent, *args, **kwargs)
@@ -273,9 +262,6 @@ def newFigure():
     """ function that produces a new Figure object, the widget
     in a window. """
     
-    # Make sure there is a native app
-    app.Create()
-    
     # Create figure
     fig = Figure(None)
     fig._widget.show() # In Gnome better to show before resize
@@ -286,10 +272,23 @@ def newFigure():
     return fig
 
 
+
 class App(events.App):
-    """ Application class to wrap the QtGui.QApplication instance
-    in a simple class with a simple interface.     
+    """ App()
+    
+    Application class to wrap the GUI applications in a class
+    with a simple interface that is the same for all backends.
+    
+    This is the Qt4 implementation.
+    
     """
+    
+    def __init__(self):
+        # Instantiate timer
+        self._timer = QtCore.QTimer()
+        self._timer.setInterval(10)
+        self._timer.setSingleShot(False)
+        self._timer.timeout.connect(events.processVisvisEvents)
     
     def _GetNativeApp(self):
         # Get native app in save way
@@ -297,15 +296,18 @@ class App(events.App):
         # Store so it won't be deleted, but not on a visvis object,
         # or an application may produce error when closed
         QtGui._qApp = app
+        # Start timer
+        print 'starting timer'
+        self._timer.start()
         # Return
         return app
     
-    def ProcessEvents(self):
+    def _ProcessEvents(self):
         app = self._GetNativeApp()
         app.flush()
         app.processEvents()
     
-    def Run(self):
+    def _Run(self):
         app = self._GetNativeApp()
         if hasattr(app, '_in_event_loop') and app._in_event_loop:
             pass # Already in event loop

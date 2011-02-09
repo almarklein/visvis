@@ -469,7 +469,7 @@ def processVisvisEvents():
 class Timer(BaseEvent):
     """ Timer(owner, interval=1000, oneshot=True) 
     
-    Time class. You can bind callbacks to the timer. The timer is 
+    Timer class. You can bind callbacks to the timer. The timer is 
     fired when it runs out of time. You can do one-shot runs and 
     continuous runs.
     
@@ -593,8 +593,8 @@ class Timer(BaseEvent):
 class App:
     """ App()
     
-    Application class to wrap the GUI applications in a simple class
-    with a simple interface.     
+    Application class to wrap the GUI applications in a class
+    with a simple interface that is the same for all backends.
     
     This class should be implemented such that multiple instances can
     be created, and still wrap the same single GUI application instance.
@@ -611,11 +611,39 @@ class App:
         # Make sure the app exists
         self._GetNativeApp()
     
+    
+    def ProcessEvents(self):
+        """ ProcessEvents()
+        
+        Process all pending GUI events. This should be done regularly 
+        to keep the visualization interactive and to keep the visvis 
+        event system running. 
+        
+        When using IPython or IEP with the right settings, GUI events
+        will be processed automatically. However, in a running script, 
+        this is not the case; be then regularly calling this method,
+        the figures will stay responsive.
+        
+        """
+        self._ProcessEvents()
+    
+    
+    def Run(self):
+        """ Run()
+        
+        Enter the native GUI event loop. 
+        
+        """
+        self._Run()
+    
+    
+    # Implement these methods. Be using this redirection scheme, we keep 
+    # the documentation intact.
     def _GetNativeApp(self):
         raise NotImplemented()
     
-    def ProcessEvents(self):
+    def _ProcessEvents(self):
         raise NotImplemented()
     
-    def Run(self):
+    def _Run(self):
         raise NotImplemented()

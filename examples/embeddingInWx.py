@@ -41,7 +41,8 @@ class MainWindow(wx.Frame):
     def _Plot(self, event):
         
         # Make sure our figure is the active one
-        vv.figure(self.fig.nr)
+        # If only one figure, this is not necessary.
+        #vv.figure(self.fig.nr)
         
         # Clear it
         vv.clf()
@@ -49,7 +50,7 @@ class MainWindow(wx.Frame):
         # Plot
         vv.plot([1,2,3,1,6])
         vv.legend(['this is a line'])        
-        self.fig.DrawNow()
+        #self.fig.DrawNow()
     
 
 # Two ways to create the application and start the main loop
