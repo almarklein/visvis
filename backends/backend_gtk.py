@@ -194,17 +194,25 @@ class Figure(BaseFigure):
                 window.set_title(title)
     
     def _SetPosition(self, x, y, w, h):
-        """Set the position of the widget."""
+        """Set the position and size of the widget.  If it is embedded,
+        ignore the x and y coordinates."""
         if not self._destroyed:
             self._widget.set_size_request(w, h)
-            # todo: also specify position
             self._widget.queue_resize()
+            window = self._widget.parent
+            if isinstance(window, gtk.Window):
+                window.move(x, y)
+                window.resize(w, h)
     
     def _GetPosition(self):
         """Get the widget's position."""
         if not self._destroyed:
             alloc = self._widget.allocation
-            return alloc.x, alloc.y, alloc.width, alloc.height
+            x, y = alloc.x, alloc.y
+            window = self._widget.parent
+            if isinstance(window, gtk.Window):
+                x, y = window.get_position()
+            return x, y, alloc.width, alloc.height
     
     def _Close(self, widget):
         """Close the widget."""
@@ -241,6 +249,7 @@ def newFigure():
     
     window.add(figure._widget)
     figure._widget.set_size_request(560, 420)
+    window.set_geometry_hints(min_width=100, min_height=100)
     window.show_all()
     
     window.connect('delete-event', figure._widget._on_delete_event)
