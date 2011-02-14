@@ -11,8 +11,8 @@ try:
 except ImportError:
     PIL = None
 
-def imwrite(filename, image):
-    """ imwrite(filename, image)
+def imwrite(filename, image, format=None):
+    """ imwrite(filename, image, format)
     
     Write image (numpy array) to file, requires PIL. 
     
@@ -50,4 +50,4 @@ def imwrite(filename, image):
     
     # write image
     pim = PIL.Image.fromarray(image)
-    pim.save(filename)
+    pim.save(filename, format)
