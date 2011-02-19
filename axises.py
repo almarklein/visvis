@@ -416,6 +416,8 @@ class BaseAxis(base.Wobject):
         # Indices of the base corners for each dimension.
         # The order is very important, don't mess it up...
         self._cornerIndicesPerDirection = [ [0,2,6,3], [3,5,1,0], [0,1,4,2] ]
+        # And the indices of the corresponding pair corners
+        self._cornerPairIndicesPerDirection = [ [1,4,7,5], [6,7,4,2], [3,5,7,6] ]
         
         # Dicts to be able to optimally reuse text objects; creating new
         # text objects or changing the text takes a relatively large amount
@@ -1212,9 +1214,8 @@ class CartesianAxis3D(BaseAxis):
             for i in range(4):
                 if self._showBox or i in [i0, i1, i2]:
                 #if self._showBox or i ==i0: # for a real minimalistic axis
-                    corner = corners4_s[i]
-                    pps.append(corner)
-                    pps.append(corner+vector_s)
+                    pps.append(corners4_s[i])
+                    pps.append(corners8_s[self._cornerPairIndicesPerDirection[d][i]])
             
             # Get ticks stuff
             tickValues = ticksPerDim[d] # can be None
