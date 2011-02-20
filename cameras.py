@@ -598,6 +598,7 @@ class ThreeDCamera(BaseCamera):
         self.ref_az = self.view_az
         self.ref_el = self.view_el
         self.ref_ro = self.view_ro
+        self.ref_fov = self.view_fov
         #
         self.ref_loc = self.view_loc
         self.ref_zoomx = self.view_zoomx 
@@ -682,9 +683,24 @@ class ThreeDCamera(BaseCamera):
                 self.view_az -= 360
             if self.view_el < -90:
                 self.view_el = -90
-            while self.view_el > 90:
+            if self.view_el > 90:
                 self.view_el = 90
             #print self.view_az, self.view_el
+        
+        elif self.shiftIsDown and self.ref_but==2:
+            # Change FoV
+            
+            # get normailized delta value
+            d_fov = float(self.ref_mloc[1] - mloc[1]) / self.axes.position.height
+            
+            # apply
+            self.view_fov = self.ref_fov + d_fov * 90
+            
+            # keep from being too big or negative
+            if self.view_fov > 179:
+                self.view_fov = 179
+            elif self.view_fov < 0:
+                self.view_fov = 0
         
         elif self.ref_but==2:
             # zoom
