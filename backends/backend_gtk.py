@@ -50,7 +50,7 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
         self.set_property('can-focus', True)
         
         self.figure = figure
-         
+        
         # Configure OpenGL framebuffer.
         # Try to get a double-buffered framebuffer configuration,
         # if not successful then try to get a single-buffered one.
@@ -85,7 +85,7 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
     def _on_delete_event(self, *args):
         if self.figure:
             self.figure.Destroy()
-        return True # Let figure.Destoy() call this destroy?
+        return True # Let figure.Destoy() destroy this widget
     
     def _on_motion_notify_event(self, widget, event):
         if event.is_hint:
@@ -159,8 +159,6 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
 class Figure(BaseFigure):
     
     def __init__(self, *args, **kw):
-        # todo: Allow docking the canvas in another gtk widget, need parent for that?
-        
         # Make sure there is a native app and the timer is started 
         # (also when embedded)
         app.Create()
@@ -180,14 +178,9 @@ class Figure(BaseFigure):
             self._widget.swap_buffers()
     
     def _RedrawGui(self):
-        """???"""
+        """Make the widget redraw itself."""
         if self._widget:
-            # Should we actually draw, or just mark everything dirty?
             self._widget.queue_draw()
-    
-#    def _PostDrawRequest(self):
-#        """Called to request a redraw."""
-#        pass
     
     def _ProcessGuiEvents(self):
         """Process all events in queue."""
@@ -201,18 +194,25 @@ class Figure(BaseFigure):
                 window.set_title(title)
     
     def _SetPosition(self, x, y, w, h):
-        """Set the position of the widget."""
+        """Set the position and size of the widget.  If it is embedded,
+        ignore the x and y coordinates."""
         if not self._destroyed:
-            #print "Set Position"
             self._widget.set_size_request(w, h)
-            # todo: also specify position
             self._widget.queue_resize()
+            window = self._widget.parent
+            if isinstance(window, gtk.Window):
+                window.move(x, y)
+                window.resize(w, h)
     
     def _GetPosition(self):
         """Get the widget's position."""
         if not self._destroyed:
             alloc = self._widget.allocation
-            return alloc.x, alloc.y, alloc.width, alloc.height
+            x, y = alloc.x, alloc.y
+            window = self._widget.parent
+            if isinstance(window, gtk.Window):
+                x, y = window.get_position()
+            return x, y, alloc.width, alloc.height
     
     def _Close(self, widget):
         """Close the widget."""
@@ -223,9 +223,6 @@ class Figure(BaseFigure):
             window.destroy()
         else:
             widget.destroy()
-        # If only this window remains, then quit as we close it.
-        #if len(gtk.window_list_toplevels()) == 1:
-        #    gtk.main_quit()
         
         # If no more figures, quit
         if len(BaseFigure._figures) == 0:
@@ -252,6 +249,7 @@ def newFigure():
     
     window.add(figure._widget)
     figure._widget.set_size_request(560, 420)
+    window.set_geometry_hints(min_width=100, min_height=100)
     window.show_all()
     
     window.connect('delete-event', figure._widget._on_delete_event)
@@ -265,20 +263,27 @@ def newFigure():
 class VisvisEventsTimer:
     """ Timer that can be started and stopped.
     """
+    
     def __init__(self):
         self._running = False
+    
     def Start(self):
         if not self._running:
             self._running = True
             self._PostTimeout()
+    
     def Stop(self):
         self._running = False
+    
     def _PostTimeout(self):
         gobject.timeout_add(10, self._Fire)
+    
     def _Fire(self):
         if self._running:
             events.processVisvisEvents()
             return True # So called again.
+        else:
+            return False # Stop timer.
 
 
 class App(events.App):
@@ -302,7 +307,6 @@ class App(events.App):
         self._timer.Start()
         
         # Prevent quiting when used interactively
-        # todo: this is what it does right?
         if not hasattr(gtk, 'vv_do_quit'):
             gtk.vv_do_quit = False
         
@@ -318,16 +322,14 @@ class App(events.App):
         """Enter GTK mainloop."""
         self._GetNativeApp()
         
-        if gtk.main_level() > 0:
-            pass # Already in mainloop.
-        else:
+        if gtk.main_level() == 0:
+            # We need to start the mainloop.  This means we will also
+            # have to kill the mainloop when the last figure is closed.
             gtk.vv_do_quit = True
             gtk.main()
     
-    # todo: doesn't gtk do this automatically when there are no more
-    # top level windows, like the other toolkits?
     def Quit(self):
-        if gtk.vv_do_quit:
+        if gtk.vv_do_quit: # We started the mainloop, so we better kill it.
             gtk.main_quit()
 
 app = App()

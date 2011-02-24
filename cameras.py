@@ -457,6 +457,7 @@ class ThreeDCamera(BaseCamera):
         self.view_az = -10.0 # azimuth
         self.view_el = 30.0 # elevation
         self.view_ro = 0.0 # roll
+        self.view_fov = 0.0 # field of view - if 0, use ortho view
         self.view_zoomx = 100.0
         self.view_zoomy = 100.0
         self.view_loc = 0,0,0
@@ -499,6 +500,7 @@ class ThreeDCamera(BaseCamera):
         s.azimuth = self.view_az
         s.elevation = self.view_el
         s.roll = self.view_ro
+        s.fov = self.view_fov
         return s
     
     
@@ -514,6 +516,7 @@ class ThreeDCamera(BaseCamera):
         self.view_az = s.azimuth
         self.view_el = s.elevation
         self.view_ro = s.roll
+        self.view_fov = s.fov
     
     
     def Reset(self, event=None):
@@ -526,6 +529,7 @@ class ThreeDCamera(BaseCamera):
         self.view_az = -10.0
         self.view_el = 30.0
         self.view_ro = 0.0 
+        self.view_fov = 0.0
         
         # get window size
         w,h = self.axes.position.size
@@ -594,6 +598,7 @@ class ThreeDCamera(BaseCamera):
         self.ref_az = self.view_az
         self.ref_el = self.view_el
         self.ref_ro = self.view_ro
+        self.ref_fov = self.view_fov
         #
         self.ref_loc = self.view_loc
         self.ref_zoomx = self.view_zoomx 
@@ -678,9 +683,24 @@ class ThreeDCamera(BaseCamera):
                 self.view_az -= 360
             if self.view_el < -90:
                 self.view_el = -90
-            while self.view_el > 90:
+            if self.view_el > 90:
                 self.view_el = 90
             #print self.view_az, self.view_el
+        
+        elif self.shiftIsDown and self.ref_but==2:
+            # Change FoV
+            
+            # get normailized delta value
+            d_fov = float(self.ref_mloc[1] - mloc[1]) / self.axes.position.height
+            
+            # apply
+            self.view_fov = self.ref_fov + d_fov * 90
+            
+            # keep from being too big or negative
+            if self.view_fov > 179:
+                self.view_fov = 179
+            elif self.view_fov < 0:
+                self.view_fov = 0
         
         elif self.ref_but==2:
             # zoom
@@ -741,7 +761,14 @@ class ThreeDCamera(BaseCamera):
         
         # 4. Define part that we view. Remember, we're looking down the
         # z-axis. We zoom here.                
-        ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
+        if self.view_fov == 0:
+            ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
+        else:
+            # Figure distance to center in order to have correct FoV and fy.
+            d = fy / (2 * math.tan(math.radians(self.view_fov)/2))
+            val = math.sqrt(getDepthValue())
+            glu.gluPerspective(self.view_fov, fx/fy, d/val, d*val)
+            gl.glTranslate(0, 0, -d)
         
         # Prepare for models
         gl.glMatrixMode(gl.GL_MODELVIEW)
