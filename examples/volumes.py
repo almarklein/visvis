@@ -6,10 +6,11 @@ app = vv.use()
 vv.clf()
 
 # create volume
-vol = np.zeros((128,128,128), dtype=np.float32)
-vol[50:70,80:90, 10:100] = 0.2
-vol[50:70,10:100,80:90] = 0.5
-vol[10:100,50:70,80:90] = 1
+# vol = np.zeros((128,128,128), dtype=np.float32)
+# vol[50:70,80:90, 10:100] = 0.2
+# vol[50:70,10:100,80:90] = 0.5
+# vol[10:100,50:70,80:90] = 1
+vol = vv.aVolume()
 
 # set labels
 vv.xlabel('x axis')

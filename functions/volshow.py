@@ -7,12 +7,15 @@
 import visvis as vv
 import numpy as np
 
-def volshow(vol, clim=None, renderStyle='mip', cm=None, 
-            axesAdjust=True, axes=None):
-    """ volshow(vol, clim=None, renderStyle='mip', cm=CM_GRAY, 
-                axesAdjust=True, axes=None)
+def volshow(*args, **kwargs):
+    """ volshow(vol, clim=None, cm=CM_GRAY, axesAdjust=True, axes=None)
     
-    Display a 3D image (a volume) and returns the Texture3D object.
+    Display a 3D image (a volume). 
+    
+    This is a convenience function that calls either volshow3() or 
+    volshow2(). If the current system supports it (OpenGL version >= 2.0), 
+    displays a 3D  rendering (volshow3). Otherwise shows three slices 
+    that can be moved interactively (volshow2). 
     
     Parameters
     ----------
@@ -23,9 +26,6 @@ def volshow(vol, clim=None, renderStyle='mip', cm=None,
     clim : 2-element tuple
         The color limits to scale the intensities of the image. If not given,
         the im.min() and im.max() are used (neglecting nan and inf).
-    renderStyle : {'mip', 'iso', 'ray'}
-        The render style to use. Maximum intensity projection (default), 
-        isosurface rendering (using lighting), raycasting.
     cm : Colormap
         Set the colormap to apply in case the volume is grayscale.
     axesAdjust : bool
@@ -35,51 +35,22 @@ def volshow(vol, clim=None, renderStyle='mip', cm=None,
     axes : Axes instance
         Display the image in this axes, or the current axes if not given.
     
+    Any other keyword arguments are passed to either volshow2() or volshow3().
+    
     """
     
-    # get axes
-    if axes is None:
-        axes = vv.gca()
+    # Make sure that a figure exists
+    vv.gcf()
     
-     # Check data
-    if not isinstance(vol, np.ndarray):
-        raise ValueError('volshow expects an image as a numpy array.')
-    elif vol.size==0:
-        raise ValueError('volshow cannot draw arrays with zero elements.')
-    #
-    if vol.ndim==3 or vol.ndim==4 and vol.shape[-1] in [1,3,4]:
-        pass
+    # Test and run
+    if vv.misc.getOpenGlCapable(3.0):
+        return vv.volshow3(*args, **kwargs)
     else:
-        raise ValueError('volshow expects a 3D image as a numpy array.')
-    
-    # create texture
-    t = vv.Texture3D(axes, vol, renderStyle)
-    
-    # set clim
-    if isinstance(clim,list):
-        clim = tuple(clim)
-    if isinstance(clim, tuple):
-        t.SetClim(clim)
-    
-    # set colormap
-    if cm is not None:
-        t.colormap = cm
-    
-    # adjust axes
-    if axesAdjust:
-        if axes.daspectAuto is None:
-            axes.daspectAuto = False
-        axes.cameraType = '3d'
-        axes.SetLimits()
-    
-    # done
-    axes.Draw()
-    return t
+        return vv.volshow2(*args, **kwargs)
 
 
 if __name__ == "__main__":
-    import numpy as np
-    vol = np.zeros((128,128,128), dtype=np.uint8)
-    vol[40:-20,10:-5,:] = 50
-    vol[30:50,:,40:70] += 100
-    volshow(vol)
+    import visvis as vv
+    vol = vv.aVolume()
+    vol[:30,:30,:30] += 0.3
+    t = volshow(vol)
