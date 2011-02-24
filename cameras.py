@@ -210,8 +210,12 @@ class TwoDCamera(BaseCamera):
     The default camera for viewing 2D data. 
     
     This camera uses orthografic projection and basically looks
-    down the z-axis from inifinitly far away. Using the mouse one 
-    can zoom and pan the data.
+    down the z-axis from inifinitly far away. 
+    
+    Interaction
+    -----------
+      * Hold down the LMB and then move the mouse to pan.
+      * Hold down the RMB and then move the mouse to zoom.
     
     """
     
@@ -438,16 +442,31 @@ class TwoDCamera(BaseCamera):
         # Do this first because otherwise the translation is not in world 
         # coordinates.
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], 0.0)
-    
+
+
+# todo: VOV: properly setting which axis has ticks, the tick spacing, and which axes to show when showBox is False.
 
 class ThreeDCamera(BaseCamera):
     """ ThreeDCamera(*axes)
     
     The ThreeDCamera camera is a camera to visualise 3D data. 
     
-    It uses orthographic projection, so it is like looking at your data from
-    outer space. In contrast to the 2D camera, the camera can be 
-    rotated around the data to look at it from different angles.
+    In contrast to the 2D camera, this camera can be rotated around
+    the data to look at it from different angles. By default the 
+    field of view of this camera is set to 0, corresponding to an 
+    orthografic projection. If the field of view is larger than 0,
+    projective projection is applied.    
+    
+    
+    Interaction
+    -----------
+      * Hold down the LMB and then move the mouse to change the azimuth 
+        and elivation (i.e. rotate around the scene).
+      * Hold down the RMB and then move the mouse to zoom.
+      * Hold down SHIFT + LMB and then move to pan.
+      * Hold down SHIFT + RMB and then move to change the vield of view.
+      * Hold down CONTROL + LMB and then move to rotate the whole scene 
+        around the axis of the camera.
     
     """
     
@@ -469,6 +488,7 @@ class ThreeDCamera(BaseCamera):
         self.ref_az = 0         # angles when clicked
         self.ref_el = 0
         self.ref_ro = 0
+        self.ref_fov = 0
         self.ref_zoomx = 0      # zoom factors when clicked
         self.ref_zoomy = 0
         

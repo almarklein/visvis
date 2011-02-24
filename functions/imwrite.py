@@ -12,9 +12,20 @@ except ImportError:
     PIL = None
 
 def imwrite(filename, image, format=None):
-    """ imwrite(filename, image, format)
+    """ imwrite(filename, image, format=None)
     
     Write image (numpy array) to file, requires PIL. 
+    
+    Parameters
+    ----------
+    filename : string
+        The name of the file to store the screenshot to. If filename is None, 
+        the interpolated image is returned as a numpy array.
+    image : numpy array
+        The image to write.
+    format : string
+        The format for the image to be saved in. If not given, the
+        format is deduced from the filename.
     
     Notes
     -----
