@@ -47,7 +47,7 @@ def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
         The color of the background. If bg is given, ob.bgcolor is set to
         bg before the frame is captured.
     format : string
-        The format for the screenshot to be saved in.  If not given, the
+        The format for the screenshot to be saved in. If not given, the
         format is deduced from the filename.
     
     Notes
