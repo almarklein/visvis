@@ -22,8 +22,8 @@ def getCardinalSplineCoefs(t, tension=0.0):
     return c
 
 
-def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
-    """ screenshot(filename, ob=None sf=2, bg=None)
+def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
+    """ screenshot(filename, ob=None sf=2, bg=None, format=None)
     
     Make a screenshot and store it to a file, using cubic interpolation
     to increase the resolution (and quality) of the image.
@@ -46,6 +46,9 @@ def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
     bg : 3-element tuple or char
         The color of the background. If bg is given, ob.bgcolor is set to
         bg before the frame is captured.
+    format : string
+        The format for the screenshot to be saved in.  If not given, the
+        format is deduced from the filename.
     
     Notes
     -----
@@ -162,7 +165,7 @@ def screenshot(filename, ob=None, sf=2, bg=None, tension=-0.25):
     
     # Store image to file
     if filename is not None:
-        vv.imwrite(filename, im3)
+        vv.imwrite(filename, im3, format)
     else:
         return im3
         
