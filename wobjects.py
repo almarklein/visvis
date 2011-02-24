@@ -15,7 +15,7 @@ inserted in the root visvis namespace.
 from base import Wobject
 from textRender import Text
 from line import Line
-from textures import Texture2D, Texture3D
+from textures import Texture2D, Texture3D, SliceTexture, SliceTextureProxy
 from polygonalModeling import Mesh, OrientableMesh
 
 class MotionDataContainer(Wobject):

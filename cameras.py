@@ -819,6 +819,7 @@ class ThreeDCamera(BaseCamera):
     
 
 # todo: use quaternions to fly it?
+# todo: better init
 class FlyCamera(ThreeDCamera):
     """ FlyCamera(*axes)
     

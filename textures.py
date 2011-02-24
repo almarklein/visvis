@@ -20,22 +20,20 @@ name of any of the available fragment shaders.
 """
 
 import OpenGL.GL as gl
-import OpenGL.GL.ARB.shader_objects as gla
 import OpenGL.GLU as glu
 
 import numpy as np
 import math, time, os
 
 from misc import getResourceDir, getOpenGlCapable, Range, OpenGLError
-from misc import Property, PropWithDraw, DrawAfter
+from misc import Property, PropWithDraw, DrawAfter, getColor
 from events import *
 from base import Wobject
 from misc import Transform_Translate, Transform_Scale, Transform_Rotate
+from shaders import vshaders, fshaders, GlslProgram
 
-from pypoints import Pointset, Aarray, is_Aarray
+from pypoints import Point, Pointset, Aarray, is_Aarray
 
-# Variable for debugging / developing to display shader info logs always.
-alwaysShowShaderInfoLog = False
 
 dtypes = {  'uint8':gl.GL_UNSIGNED_BYTE,    'int8':gl.GL_BYTE,
             'uint16':gl.GL_UNSIGNED_SHORT,  'int16':gl.GL_SHORT, 
@@ -49,298 +47,6 @@ climCorrection = { 'uint8':2**8, 'int8':2**7, 'uint16':2**16, 'int16':2**15,
                    'uint32':2**32, 'int32':2**31, 'float32':1, 'float64':1,
                    'bool':2**8}
 
-
-def loadShaders():
-    """ loadShaders()
-    
-    load shading code from the files in the resource dir.
-    Returns two dicts with the vertex and fragment shaders, respectively. 
-    
-    """
-    
-    path = getResourceDir()
-    vshaders = {}
-    fshaders = {}
-    for filename in os.listdir(path):
-        
-        # only glsl files
-        if not filename.endswith('.glsl'):
-            continue
-        
-        # read code
-        f = open( os.path.join(path, filename) )
-        tekst = f.read()
-        f.close()
-        
-        # insert into this namespace
-        if filename.endswith('.vertex.glsl'):
-            varname = filename[:-12].lower()
-            vshaders[varname] = tekst
-        elif filename.endswith('.fragment.glsl'):
-            varname = filename[:-14].lower()
-            fshaders[varname] = tekst
-    
-    return vshaders, fshaders
-
-# load shaders
-vshaders, fshaders = loadShaders()
-
-
-# todo: also make CG shaders, they say on the web they are more predictable.
-class GlslProgram:
-    """ GlslProgram()
-    
-    A class representing a GLSL (OpenGL Shading Language) program.
-    It provides an easy interface for adding vertex and fragment shaders
-    and setting variables used in them.
-    Note: On systems that do not support shading, this class will go in
-    invalid mode.
-    
-    """
-    
-    def __init__(self):
-        # ids
-        self._programId = 0
-        self._shaderIds = []
-        
-        # code for the shaders        
-        self._fragmentCode = ''
-        self._vertexCode = ''
-        
-        # is usable?
-        self._usable = True
-        if not getOpenGlCapable('2.0',
-            'anti-aliasing, the clim property, colormaps and 3D rendering'):
-            self._usable = False
-    
-    def IsUsable(self):
-        """ Returns whether the program is usable. 
-        """ 
-        return self._usable
-    
-    def _IsCompiled(self):
-        if not self._usable:
-            return False
-        else:
-            return ( self._programId>0 and gl.glIsProgram(self._programId) )
-    
-    
-    def Enable(self):
-        """ Start using the program. 
-        """
-        if not self._usable:
-            return
-        
-        if (self._fragmentCode or self._vertexCode) and not self._IsCompiled():
-            self._CreateProgramAndShaders()
-        
-        if self._IsCompiled():
-            gla.glUseProgramObjectARB(self._programId)
-        else:
-            gla.glUseProgramObjectARB(0)
-    
-    
-    def Disable(self):
-        """ Stop using the program. 
-        """
-        if not self._usable:
-            return
-        gla.glUseProgramObjectARB(0)
-    
-    
-    def SetVertexShader(self, code):
-        """ Create a vertex shader from code and attach to the program.
-        """
-        self._vertexCode = code
-        self.DestroyGl()
-
-
-    def SetFragmentShader(self, code):
-        """ Create a fragment shader from code and attach to the program.
-        """
-        self._fragmentCode = code
-        self.DestroyGl()
-    
-    
-    def SetVertexShaderFromFile(self, path):
-        try:
-            f = open(path, 'r')
-            code = f.rad()
-            f.close()
-        except Exception, why:
-            print "Could not create shader: ", why            
-        self.SetVertexShader(code)
-    
-    
-    def SetFagmentShaderFromFile(self, path):
-        try:
-            f = open(path, 'r')
-            code = f.read()
-            f.close()            
-        except Exception, why:
-            print "Could not create shader: ", why            
-        self.SetFragmentShader(code)
-   
-    
-    def _CreateProgramAndShaders(self):
-        # clear any old programs and shaders
-        
-        if self._programId < 0:
-            return
-        
-        # clear to be sure
-        self.DestroyGl()
-        
-        if not self._fragmentCode and not self._vertexCode:
-            self._programId = -1  # don't make a shader object
-            return
-        
-        try:
-            # create program object
-            self._programId = gla.glCreateProgramObjectARB()
-            
-            # the two shaders
-            codes = [self._fragmentCode, self._vertexCode]
-            types = [gl.GL_FRAGMENT_SHADER, gl.GL_VERTEX_SHADER]
-            for code, type in zip(codes, types):
-                # only attach shaders that do something
-                if not code:
-                    continue
-                
-                # create shader object            
-                myshader = gla.glCreateShaderObjectARB(type)
-                self._shaderIds.append(myshader)
-                
-                # set its source            
-                gla.glShaderSourceARB(myshader, [code])
-                
-                # compile shading code
-                gla.glCompileShaderARB(myshader)
-                
-                # If it went well, attach!
-                if not self._CheckForErrors(myshader, True, False):
-                    gla.glAttachObjectARB(self._programId, myshader)
-            
-            # link shader and check for errors
-            gla.glLinkProgramARB(self._programId)
-            if self._CheckForErrors(self._programId, False, True):
-                self._programId = -1
-        
-        except Exception, why:
-            self._programId = -1
-            print "Unable to initialize shader code.", why
-    
-    
-    def SetUniformf(self, varname, values):
-        """ SetUniformf(varname, values)
-        
-        A uniform is a parameter for shading code.
-        Set the parameters right after enabling the program.
-        values should be a list of up to four floats ( which 
-        are converted to float32).
-        
-        """
-        if not self._IsCompiled():
-            return
-        
-        # convert to floats
-        values = [float(v) for v in values]
-        
-        # get loc
-        loc = gla.glGetUniformLocationARB(self._programId, varname)        
-        
-        # set values
-        if len(values) == 1:
-            gl.glUniform1f(loc, values[0])
-        elif len(values) == 2:
-            gl.glUniform2f(loc, values[0], values[1])            
-        elif len(values) == 3:
-            gl.glUniform3f(loc, values[0], values[1], values[2])
-        elif len(values) == 4:
-            gl.glUniform4f(loc, values[0], values[1], values[2], values[3])
-    
-    
-    def SetUniformi(self, varname, values):
-        """ SetUniformi(varname, values)
-        
-        A uniform is a parameter for shading code.
-        Set the parameters right after enabling the program.
-        values should be a list of up to four ints ( which 
-        are converted to int).
-        
-        """
-        if not self._IsCompiled():
-            return
-        
-        # convert to floats
-        values = [int(v) for v in values]
-        
-        # get loc
-        loc = gla.glGetUniformLocationARB(self._programId, varname)        
-        
-        # set values
-        if len(values) == 1:
-            gla.glUniform1iARB(loc, values[0])
-        elif len(values) == 2:
-            gl.glUniform2iARB(loc, values[0], values[1])            
-        elif len(values) == 3:
-            gl.glUniform3iARB(loc, values[0], values[1], values[2])
-        elif len(values) == 4:
-            gl.glUniform4iARB(loc, values[0], values[1], values[2], values[3])
-    
-    
-    def _CheckForErrors(self, glObject, checkCompile=True, checkLink=True):
-        """ Check for errors in compiling and linking the given shader.
-        Prints the info log if there's an error.
-        Returns True if an error was found.
-        """         
-        if checkCompile:
-            ok = gl.glGetShaderiv(glObject, gl.GL_COMPILE_STATUS)
-            if not ok:
-                self._PrintInfoLog(glObject, "Error compiling shading code:")
-                return True
-            elif alwaysShowShaderInfoLog:
-                self._PrintInfoLog(glObject, "Compile info log:")
-        if checkLink:
-            ok = gl.glGetProgramiv(glObject, gl.GL_LINK_STATUS)
-            if not ok:
-                self._PrintInfoLog(glObject, "Error linking shading code:")
-                return True
-            elif alwaysShowShaderInfoLog:
-                self._PrintInfoLog(glObject, "Link info log:")
-    
-    
-    def _PrintInfoLog(self, glObject, preamble=""):
-        """ Print the info log. 
-        """
-        log = gla.glGetInfoLogARB(glObject)
-        if log:
-            print preamble, log            
-    
-    
-    def DestroyGl(self):
-        """ DestroyGl()
-        
-        Clear the program. 
-        
-        """
-        # clear OpenGL stuff
-        if not self._usable:
-            return
-        if self._programId>0:
-            try: gla.glDeleteObjectARB(self._programId)
-            except Exception: pass
-        for shaderId in self._shaderIds:
-            try:  gla.glDeleteObjectARB(shaderId)
-            except Exception: pass
-        # reset
-        self._programId = 0
-        self._shaderIds[:] = []
-    
-    
-    def __del__(self):
-        " You never know when this is called."
-        self.DestroyGl()
 
 
 def makePowerOfTwo(data, ndim):
@@ -1200,18 +906,13 @@ class BaseTexture(Wobject):
         """ 
         
         # set data to texture
-        self._texture1.SetData(data)
+        self._SetData(data)
         
         # if Aarray, edit scaling and transform
         if is_Aarray(data):
             if hasattr(data,'_sampling') and hasattr(data,'_origin'):
-                if isinstance(self, Texture2D):
-                    self._trafo_scale.sx = data.sampling[1]
-                    self._trafo_scale.sy = data.sampling[0]
-                    #
-                    self._trafo_trans.dx = data.origin[1]
-                    self._trafo_trans.dy = data.origin[0]
-                elif isinstance(self, Texture3D):        
+                if data.ndim >= 3 and data.shape[2] > 4:
+                    # Three dimensional
                     self._trafo_scale.sx = data.sampling[2]
                     self._trafo_scale.sy = data.sampling[1]
                     self._trafo_scale.sz = data.sampling[0]
@@ -1219,6 +920,33 @@ class BaseTexture(Wobject):
                     self._trafo_trans.dx = data.origin[2]
                     self._trafo_trans.dy = data.origin[1]
                     self._trafo_trans.dz = data.origin[0]
+                else:
+                    # Two dimensional
+                    self._trafo_scale.sx = data.sampling[1]
+                    self._trafo_scale.sy = data.sampling[0]
+                    #
+                    self._trafo_trans.dx = data.origin[1]
+                    self._trafo_trans.dy = data.origin[0]
+    
+    
+    def _SetData(self, data):
+        """ _SetData(data)
+        
+        Give reference to the raw data. For internal use. Inheriting 
+        classes can override this to store data in their own way and
+        update the OpenGL textures accordingly.
+        
+        """
+        self._texture1.SetData(data)
+    
+    
+    def _GetData(self):
+        """ _GetData()
+        
+        Get a reference to the raw data. For internal use. Can return None.
+        
+        """
+        return self._texture1._dataRef
     
     
     def Refresh(self):
@@ -1229,7 +957,7 @@ class BaseTexture(Wobject):
         visible. This can be done efficiently.
         
         """
-        data = self._texture1._dataRef
+        data = self._GetData()
         if data is not None:
             self.SetData(data)
    
@@ -1321,7 +1049,7 @@ class BaseTexture(Wobject):
         """
         if len(mima)==0:
             # set default values
-            data = self._texture1._dataRef
+            data = self._GetData()
             if data is None:
                 return 
             mima = minmax(data)
@@ -1360,7 +1088,7 @@ class Texture2D(BaseTexture):
         self.SetData(data)
         
         # init antialiasing
-        self._aa = 0
+        self.aa = 0
     
     
     def _CreateGaussianKernel(self):
@@ -1915,3 +1643,466 @@ class MultiTexture3D(Texture3D):
         if hasattr(self, '_colormap'):
             self._colormap.Destroy()
 
+
+
+class SliceTexture(BaseTexture):
+    """ SliceTexture
+    
+    A slice texture is a 2D texture of a 3D data volume. It enables 
+    visualizing 3D data without the need for glsl renderering (and can
+    therefore be used on older systems.
+    
+    """
+    
+    def __init__(self, parent, data, axis=0, index=0):
+        BaseTexture.__init__(self, parent, data)
+        
+        # Init parameters
+        self._axis = axis
+        self._index = index
+        
+        # create texture and set data  (data to textureToV. only for min/max)
+        self._texture1 = TextureObjectToVisualize(2, data)
+        self.SetData(data)
+        
+        # init interpolation
+        self._texture1._interpolate = True 
+        
+        # Init shader for colormap use
+        self._program1.SetFragmentShader(fshaders['aa0'])
+        
+        # For edge
+        self._edgeColor = None
+        self._edgeColor2 = getColor('g')
+        self._edgeWidth = 3.0
+        
+        # For interaction
+        self._interact_over = False
+        self._interact_down = False
+        self._screenVec = None
+        self._refPos = (0,0)
+        self._refIndex = 0
+        #
+        self.hitTest = True
+        #
+        self.eventEnter.Bind(self._OnMouseEnter)
+        self.eventLeave.Bind(self._OnMouseLeave)
+        self.eventMouseDown.Bind(self._OnMouseDown)
+        self.eventMouseUp.Bind(self._OnMouseUp)
+        self.eventMotion.Bind(self._OnMouseMotion)
+    
+    
+    def _SetData(self, data):
+        """ _SetData(data)
+        
+        Give reference to the raw data. For internal use. Inheriting 
+        classes can override this to store data in their own way and
+        update the OpenGL textures accordingly.
+        
+        """
+        
+        # Store data
+        self._dataRef3D = data
+        
+        # Slice it
+        i = self._index
+        if self._axis == 0:
+            slice = self._dataRef3D[i]
+        elif self._axis == 1:
+            slice = self._dataRef3D[:,i]
+        elif self._axis == 2:
+            slice = self._dataRef3D[:,:,i]
+        
+        # Update texture
+        self._texture1.SetData(slice)
+    
+    
+    def _GetData(self):
+        """ _GetData()
+        
+        Get a reference to the raw data. For internal use.
+        
+        """
+        return self._dataRef3D
+    
+    
+    def _GetLimits(self):
+        """ Get the limits in world coordinates between which the object exists.
+        """
+        
+        # Obtain untransformed coords 
+        shape = self._dataRef3D.shape
+        x1, x2 = -0.5, shape[2]-0.5
+        y1, y2 = -0.5, shape[1]-0.5
+        z1, z2 = -0.5, shape[0]-0.5
+        
+        # There we are
+        return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
+    
+    
+    def OnDestroy(self):
+        # Clear normaly, and also remove reference to data
+        BaseTexture.OnDestroy(self)
+        self._dataRef3D = None
+    
+    
+    def OnDrawShape(self, clr):
+        # Implementation of the OnDrawShape method.
+        gl.glColor(clr[0], clr[1], clr[2], 1.0)        
+        self._DrawQuads()
+    
+    
+    def OnDraw(self, fast=False):
+        # Draw the texture.
+        
+        # set color to white, otherwise with no shading, there is odd scaling
+        gl.glColor3f(1.0,1.0,1.0)
+        
+        # draw texture also from beneeth
+        #gl.glCullFace(gl.GL_FRONT_AND_BACK)
+        
+        # enable texture
+        self._texture1.Enable(0)
+        
+        # _texture._shape is a good indicator of a valid texture
+        if not self._texture1._shape:
+            return
+        
+        # fragment shader on
+        if self._program1.IsUsable():
+            self._program1.Enable()
+            # textures        
+            self._program1.SetUniformi('texture', [0])        
+            self._colormap.Enable(1)
+            self._program1.SetUniformi('colormap', [1])
+            # uniform variables
+            shape = self._texture1._shape # how it is in opengl
+            k = 1,0,0,0  # self._CreateGaussianKernel()
+            self._program1.SetUniformf('kernel', k)
+            self._program1.SetUniformf('dx', [1.0/shape[0]])
+            self._program1.SetUniformf('dy', [1.0/shape[1]])
+            self._program1.SetUniformf('scaleBias', self._texture1._ScaleBias_get())
+            self._program1.SetUniformi('applyColormap', [len(shape)==2])
+        
+        # do the drawing!
+        self._DrawQuads()
+        gl.glFlush()
+        
+        # clean up
+        self._texture1.Disable()
+        self._colormap.Disable()
+        self._program1.Disable()
+        
+        # Draw outline?
+        clr = self._edgeColor
+        if self._interact_down or self._interact_over:
+            clr = self._edgeColor2
+        if clr:
+           self._DrawQuads(clr)
+        
+        # Get screen vector?
+        if self._screenVec is None:
+            pos1 = [int(s/2) for s in self._dataRef3D.shape]
+            pos2 = [s for s in pos1]
+            pos2[self._axis] += 1
+            #
+            screen1 = glu.gluProject(pos1[2], pos1[1], pos1[0])
+            screen2 = glu.gluProject(pos2[2], pos2[1], pos2[0])
+            #
+            self._screenVec = screen2[0]-screen1[0], screen1[1]-screen2[1]
+    
+    
+    def _DrawQuads(self, clr=None):
+        """ Draw the quads of the texture. 
+        This is done in a seperate method to reuse code in 
+        OnDraw() and OnDrawShape(). 
+        """        
+        if not self._texture1._shape:
+            return        
+        
+        # The -0.5 offset is to center pixels/voxels. This works correctly
+        # for anisotropic data.
+        x1, x2 = -0.5, self._dataRef3D.shape[2]-0.5
+        y2, y1 = -0.5, self._dataRef3D.shape[1]-0.5
+        z2, z1 = -0.5, self._dataRef3D.shape[0]-0.5
+        
+        # Calculate quads
+        i = self._index
+        if self._axis == 0:
+            quads = [   (x1, y2, i),
+                        (x2, y2, i),
+                        (x2, y1, i),
+                        (x1, y1, i),    ]
+        elif self._axis == 1:
+            quads = [   (x1, i, z2),
+                        (x2, i, z2),
+                        (x2, i, z1),
+                        (x1, i, z1),    ]
+        elif self._axis == 2:
+            quads = [   (i, y2, z2),
+                        (i, y1, z2),
+                        (i, y1, z1),
+                        (i, y2, z1),    ]
+        
+        if clr:
+            # Draw lines
+            gl.glColor(clr[0], clr[1], clr[2], 1.0)
+            gl.glLineWidth(self._edgeWidth)
+            gl.glBegin(gl.GL_LINE_STRIP)
+            for i in [0,1,2,3,0]:
+                gl.glVertex3d(*quads[i])
+            gl.glEnd()
+        else:
+            # Draw texture
+            gl.glBegin(gl.GL_QUADS)
+            gl.glTexCoord2f(0,0); gl.glVertex3d(*quads[0])
+            gl.glTexCoord2f(1,0); gl.glVertex3d(*quads[1])
+            gl.glTexCoord2f(1,1); gl.glVertex3d(*quads[2])
+            gl.glTexCoord2f(0,1); gl.glVertex3d(*quads[3])
+            gl.glEnd()
+    
+    
+    ## Interaction
+    
+    def _OnMouseEnter(self, event):
+        self._interact_over = True
+        self.Draw()
+    
+    def _OnMouseLeave(self, event):
+        self._interact_over = False
+        self.Draw()
+    
+    def _OnMouseDown(self, event):
+        
+        if event.button == 1:
+            
+            # Signal that its down
+            self._interact_down = True
+            
+            # Make the screen vector be calculated on the next draw
+            self._screenVec = None
+            
+            # Store position and index for reference
+            self._refPos = event.x, event.y
+            self._refIndex = self._index
+            
+            # Redraw
+            self.Draw()
+            
+            # Handle the event
+            return True
+    
+    
+    def _OnMouseUp(self, event):
+        self._interact_down = False
+        self.Draw()
+    
+    def _OnMouseMotion(self, event):
+        
+        # Handle or pass?
+        if not (self._interact_down and self._screenVec):
+            return
+        
+        # Get vector relative to reference position
+        refPos = Point(self._refPos)
+        pos = Point(event.x, event.y)
+        vec = pos - refPos
+        
+        # Length of reference vector, and its normalized version
+        screenVec = Point(self._screenVec)
+        L = screenVec.norm()
+        V = screenVec.normalize()
+        
+        # Number of indexes to change
+        n = vec.dot(V) / L
+        
+        # Apply!        
+        self.index = int(self._refIndex + n)
+    
+    
+    ## Properties
+    
+    
+    @PropWithDraw 
+    def index():
+        """ The index of the slice in the volume to display.
+        """
+        def fget(self):
+            return self._index
+        def fset(self, value):
+            # Check value
+            if value < 0:
+                value = 0
+            maxIndex = self._dataRef3D.shape[self._axis] - 1
+            if value > maxIndex:
+                value = maxIndex
+            # Set and update
+            self._index = value
+            self._SetData(self._dataRef3D)
+    
+    
+    @PropWithDraw 
+    def axis():
+        """ The axis of the slice in the volume to display.
+        """
+        def fget(self):
+            return self._axis
+        def fset(self, value):
+            # Check value
+            if value < 0 or value >= 3:
+                raise ValueError('Invalid axis.')
+            # Set and update index (can now be out of bounds.
+            self._axis = value
+            self.index = self.index
+    
+    
+    @PropWithDraw 
+    def edgeColor():
+        """ The color of the edge of the slice (can be None).
+        """
+        def fget(self):
+            return self._edgeColor
+        def fset(self, value):
+            self._edgeColor = getColor(value)
+    
+    
+    @PropWithDraw 
+    def edgeColor2():
+        """ The color of the edge of the slice when interacting.
+        """
+        def fget(self):
+            return self._edgeColor2
+        def fset(self, value):
+            self._edgeColor2 = getColor(value)
+
+
+class SliceTextureProxy(Wobject):
+    """ SliceTextureProxy(*sliceTextures)
+    
+    A proxi class for multiple SliceTexture instances. By making them
+    children of an instance of this class, their properties can be 
+    changed simultaneously.
+    
+    This makes it possible to call volshow() and stay agnostic of how
+    the volume is vizualized (using a 3D render, or with 3 slice 
+    textures); all public texture-specific methods and properties are
+    transferred to all children automatically.
+    
+    """
+    
+    
+    def SetData(self, *args, **kwargs):
+        for s in self.children:
+            s.SetData(*args, **kwargs)
+    
+    def Refresh(self, *args, **kwargs):
+        for s in self.children:
+            s.Refresh(*args, **kwargs)
+    
+    def SetClim(self, *args, **kwargs):
+        for s in self.children:
+            s.SetClim(*args, **kwargs)
+    
+    @Property 
+    def renderStyle():
+        """ renderStyle is not available for SliceTextures. This 
+        property is implemented to be able to produce a warning when
+        it is used.
+        """
+        def fget(self):
+            return 'None'
+        def fset(self, value):
+            print 'Warning: SliceTexture instances have no renderStyle.'
+    
+    @Property 
+    def isoThreshold():
+        """ isoThreshold is not available for SliceTextures. This 
+        property is implemented to be able to produce a warning when
+        it is used.
+        """
+        def fget(self):
+            return 0.0
+        def fset(self, value):
+            print 'Warning: SliceTexture instances have no isoThreshold.'
+    
+    @Property 
+    def clim():
+        """ Get/Set the contrast limits. For a gray colormap, clim.min 
+        is black, clim.max is white.
+        """
+        def fget(self):
+            return self.children[0].clim
+        def fset(self, value):
+            for s in self.children:
+                s.clim = value
+    
+    @Property 
+    def interpolate():
+        """ Get/Set whether to interpolate the image when zooming in 
+        (using linear interpolation). 
+        """
+        def fget(self):
+            return self.children[0].interpolate
+        def fset(self, value):
+            for s in self.children:
+                s.interpolate = value
+    
+    @Property 
+    def colormap():
+        """  Get/Set the colormap. The argument must be a tuple/list of 
+        iterables with each element having 3 or 4 values. The argument may
+        also be a Nx3 or Nx4 numpy array. In all cases the data is resampled
+        to create a 256x4 array. To specify a mapping for each color 
+        seperately, supply a dict with names R,G,B,A, where each value
+        is a list with 2-element tuples.
+        
+        Visvis defines a number of standard colormaps in the global visvis
+        namespace: CM_AUTUMN, CM_BONE, CM_COOL, CM_COPPER, CM_GRAY, CM_HOT, 
+        CM_HSV, CM_JET, CM_PINK, CM_SPRING, CM_SUMMER, CM_WINTER. 
+        A dict of name-colormap pairs is also available as vv.cm.colormaps.
+        """
+        def fget(self):
+            return self.children[0].colormap
+        def fset(self, value):
+            for s in self.children:
+                s.colormap = value
+    
+    @Property 
+    def index():
+        """ The index of the slice in the volume to display.
+        """
+        def fget(self):
+            return self.children[0].index
+        def fset(self, value):
+            for s in self.children:
+                s.index = value
+    
+    @Property 
+    def axis():
+        """ The axis of the slice in the volume to display.
+        """
+        def fget(self):
+            return self.children[0].axis
+        def fset(self, value):
+            for s in self.children:
+                s.axis = value
+    
+    @Property 
+    def edgeColor():
+        """ The color of the edge of the slice (can be None).
+        """
+        def fget(self):
+            return self.children[0].edgeColor
+        def fset(self, value):
+            for s in self.children:
+                s.edgeColor = value
+    
+    @Property 
+    def edgeColor2():
+        """ The color of the edge of the slice when interacting.
+        """
+        def fget(self):
+            return self.children[0].edgeColor2
+        def fset(self, value):
+            for s in self.children:
+                s.edgeColor2 = value
