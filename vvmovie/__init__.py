@@ -98,18 +98,20 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
         the color palette. This algorithm is superior, but slower than
         the standard PIL algorithm. The value of nq is the quality
         parameter. 1 represents the best quality. 10 is in general a
-        good tradeoff between quality and speed.
+        good tradeoff between quality and speed. When using this option, 
+        better results are usually obtained when subRectangles is False.
     subRectangles : False, True, or a list of 2-element tuples
         Whether to use sub-rectangles. If True, the minimal rectangle that
         is required to update each frame is automatically detected. This
         can give significant reductions in file size, particularly if only
         a part of the image changes. One can also give a list of x-y 
-        coordinates if you want to do the cropping yourself.
+        coordinates if you want to do the cropping yourself. The default
+        is True.
     dispose : int
         How to dispose each frame. 1 means that each frame is to be left
         in place. 2 means the background color should be restored after
         each frame. 3 means the decoder should restore the previous frame.
-        If subRectangles==False, the default is 2, otherwise it is True.
+        If subRectangles==False, the default is 2, otherwise it is 1.
     
     Special AVI/MPEG parameters
     ---------------------------
