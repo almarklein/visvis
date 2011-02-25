@@ -18,4 +18,4 @@ def colorbar(axes=None):
     if axes is None:
         axes = vv.gca()
     
-    return vv.cm.Colorbar(axes)
+    return vv.Colorbar(axes)

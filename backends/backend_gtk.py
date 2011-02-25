@@ -4,7 +4,7 @@
 import os, sys
 
 from visvis import BaseFigure, events, constants
-from visvis.misc import getResourceDir
+from visvis.core.misc import getResourceDir
 
 import gtk
 import gtk.gtkgl

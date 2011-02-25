@@ -164,7 +164,7 @@ class GifWriter:
         
         Used for the local color table properties per image.
         Otherwise global color table applies to all frames irrespective of
-        whether additional colours comes in play that require a redefined
+        whether additional colors comes in play that require a redefined
         palette. Still a maximum of 256 color per frame, obviously.
         
         Written by Ant1 on 2010-08-22

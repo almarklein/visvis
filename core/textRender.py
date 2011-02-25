@@ -4,10 +4,12 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
+
 """ Module textRender
 
 For rendering text in visvis.
-Produces a wibject and a wobject: Label and Text,
+
+Defines a wibject and a wobject: Label and Text,
 which are both able to produce a single line of text
 oriented at a certain angle.
 
@@ -61,23 +63,22 @@ one can always look up its unicode value and use that instead.
 
 """
 
-
-import os
-import ssdf
-from pypoints import Point, Pointset
-
 import OpenGL.GL as gl
 import OpenGL.GLU as glu
+
+import os
 import numpy as np
 
-from textures import TextureObject
-from base import Wobject, Wibject, Box
-from misc import Property, PropWithDraw, DrawAfter 
-from misc import getResourceDir, getColor
-from cameras import depthToZ
-
-class TextException(Exception):
-    pass
+from visvis import ssdf
+from visvis.pypoints import Point, Pointset
+#
+from visvis.core.baseTexture import TextureObject
+from visvis.core.base import Wobject, Wibject
+from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+from visvis.core.misc import getResourceDir, getColor
+#
+from visvis.core.cameras import depthToZ
+from visvis.core.baseWibjects import Box
 
 
 escapes = {

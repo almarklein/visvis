@@ -29,7 +29,7 @@ This module should ...
     mouseDoubleClick, mouseMove via the figure's _GenerateMouseEvent() method,
     that will fire the events of the appropriate wibjects and wobjects.
 
-The BaseFigure class is defined in visvis.core. In the comments it is
+The BaseFigure class is defined in visvis.core.baseFigure. In the comments it is
 shown what methods need to be overloaded and what events need to be
 transfered. There is a wiki page on implementing a backend, and a text
 file in the source. Also look at the already implemented backends!
@@ -54,7 +54,7 @@ The backend is chosen/selected as follows:
 import os, sys
 import imp
 import visvis
-from visvis.misc import isFrozen
+from visvis.core.misc import isFrozen
 
 # The order in which to try loading a backend
 backendOrder = ['qt4', 'wx', 'gtk', 'fltk'] # I'd love to put tk in this list

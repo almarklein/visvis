@@ -21,10 +21,13 @@ models were designed to be as consistent as possible.
 import OpenGL.GL as gl
 import OpenGL.GLU as glu
 
-from misc import *
-from events import Timer
 import math
-import ssdf
+
+from visvis import ssdf
+from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+from visvis.core.misc import Range
+from visvis.core.events import Timer
+
 
 # Global to store depth Bits
 depthBits = [0]
@@ -444,7 +447,7 @@ class TwoDCamera(BaseCamera):
         gl.glTranslate(-self.view_loc[0], -self.view_loc[1], 0.0)
 
 
-# todo: VOV: properly setting which axis has ticks, the tick spacing, and which axes to show when showBox is False.
+# todo: FOV: properly setting which axis has ticks, the tick spacing, and which axes to show when showBox is False.
 
 class ThreeDCamera(BaseCamera):
     """ ThreeDCamera(*axes)

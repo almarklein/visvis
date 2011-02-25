@@ -5,7 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import numpy as np
-from unwindFaces import unwindFaces
+from visvis.processing.unwindFaces import unwindFaces
 
 def calculateFlatNormals(mesh):
     """ calculateFlatNormals(mesh)

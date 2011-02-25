@@ -36,7 +36,7 @@ flash presentations. For writing AVI or MPEG you really need a c/c++
 library, and allthough the filesize is then very small, the quality is 
 sometimes not adequate. Besides I'd like to be independant of yet another 
 package. I tried writing animated gif using PIL (which is widely available), 
-but the quality is so poor because it only allows for 256 different colours.
+but the quality is so poor because it only allows for 256 different colors.
 [EDIT: thanks to Ant1, now the quality of animated gif isn't so bad!]
 I also looked into MNG and APNG, two standards similar to the PNG stanard.
 Both standards promise exactly what I need. However, hardly any application
@@ -47,7 +47,7 @@ documented. This is the result: a pure python module to create an SWF file
 that shows a series of images. The images are stored using the DEFLATE
 algorithm (same as PNG and ZIP and which is included in the standard Python
 distribution). As this compression algorithm is much more effective than 
-that used in GIF images, we obtain better quality (24 bit colours + alpha
+that used in GIF images, we obtain better quality (24 bit colors + alpha
 channel) while still producesing smaller files (a test showed ~75%).
 Although SWF also allows for JPEG compression, doing so would probably 
 require a third party library (because encoding JPEG is much harder).

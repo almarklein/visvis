@@ -5,7 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-from visvis.core import Axes, AxesContainer
+from visvis import Axes, AxesContainer
 
 
 

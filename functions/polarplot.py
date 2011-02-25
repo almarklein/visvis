@@ -10,8 +10,8 @@ import numpy as np
 import visvis as vv
 
 from visvis.pypoints import Point, Pointset, is_Point, is_Pointset
-from visvis.line import PolarLine
-from visvis.misc import Range
+from visvis import PolarLine
+from visvis import Range
 
 
 def makeArray(data):

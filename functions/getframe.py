@@ -28,7 +28,7 @@ def getframe(ob):
     # establish rectangle to sample
     if isinstance(ob, vv.BaseFigure):
         x,y,w,h = 0, 0, ob.position.w, ob.position.h
-    elif isinstance(ob, vv.core.AxesContainer):
+    elif isinstance(ob, vv.AxesContainer):
         x,y = ob.position.absTopLeft
         w,h = ob.position.size
         y = ob.GetFigure().position.h - (y+h)

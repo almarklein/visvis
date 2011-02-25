@@ -5,7 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import visvis.backends as backends
-from visvis.core import BaseFigure
+from visvis import BaseFigure
 
 
 def figure(nr=None):

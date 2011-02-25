@@ -45,31 +45,21 @@ For more help, see ...
 
 __version__  = '1.4' 
 
-import os, sys, time
+# Loose sub-modules and sub-packages
+from visvis.pypoints import Point, Pointset, Aarray, Quaternion
+from visvis import ssdf
+from visvis import vvmovie
 
-from constants import *
-from events import Timer
-from misc import Range
-from misc import (Transform_Translate, Transform_Scale, Transform_Rotate)
-import vvmovie
+# The core
+from visvis.core import *
 
-from polygonalModeling import BaseMesh
-from pypoints import Point, Pointset, Aarray, Quaternion
+# The wibjects and wobjects
+from visvis.wibjects import *
+from visvis.wobjects import *
 
-import cm
-L = locals()
-for key in cm.colormaps:
-  key2 = 'CM_' + key.upper()
-  L[key2] = cm.colormaps[key]
-del L, key
+# Expose some more classes
+from visvis.wobjects.polygonalModeling import BaseMesh
 
-from wibjects import *
-from wobjects import *
-
-# do this last
+# Do this last
 import backends
-
 from functions import *
-
-# clean up namespace (dont clear modules, that only leads to weird bugs)
-del os, sys, time

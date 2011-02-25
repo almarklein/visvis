@@ -6,11 +6,7 @@
 
 """ Module base
 
-Defines the Wibject and Wobject classes, the Position class (for 
-the wibjects) and a few related basic classes.
-
-More specific datatypes (like Line and Texture)
-are defined in seperate modules.
+Defines the Wibject and Wobject classes, and the Position class.
 
 """
 
@@ -22,19 +18,19 @@ import numpy as np
 import math, time
 import weakref
 
-from misc import Property, PropWithDraw, DrawAfter 
-from misc import Range, OpenGLError, Transform_Base
-from misc import Transform_Translate, Transform_Scale, Transform_Rotate
-from misc import getColor
-import events
+from visvis.core import misc
+from visvis.core.misc import (Transform_Base, Transform_Translate, 
+                                    Transform_Scale, Transform_Rotate)
+from visvis.core import events
+from visvis.pypoints import Point, Pointset, Quaternion, is_Point
 
-from pypoints import Point, Pointset, Quaternion, is_Point
 
 # Define draw modes
 DRAW_NORMAL = 1     # draw normally.
 DRAW_FAST = 2       # draw like normal, but faster (while interacting)
 DRAW_SHAPE = 3      # draw the spape of the object in the given color
 DRAW_SCREEN = 4     # for wobjects to draw in screen coordinates
+
 
 class BaseObject(object):
     """ BaseObject(parent)
@@ -320,7 +316,7 @@ class BaseObject(object):
         """
         pass 
     
-    @PropWithDraw
+    @misc.PropWithDraw
     def visible():
         """ Get/Set whether the object should be drawn or not. 
         If set to False, the hittest is also not performed. 
@@ -330,7 +326,7 @@ class BaseObject(object):
         def fset(self, value):
             self._visible = bool(value)
     
-    @Property
+    @misc.Property
     def hitTest():
         """ Get/Set whether mouse events are generated for this object.
         """
@@ -340,7 +336,7 @@ class BaseObject(object):
             self._hitTest = bool(value)
     
     
-    @PropWithDraw
+    @misc.PropWithDraw
     def parent():
         """ Get/Set the parent of this object. Use this to change the
         tree structure of your visualization objects (for example move a line
@@ -544,7 +540,7 @@ class Wibject(BaseObject):
         return self._eventPosition
     
     
-    @PropWithDraw
+    @misc.PropWithDraw
     def position():
         """ Get/Set the position of this wibject. Setting can be done
         by supplying either a 2-element tuple or list to only change
@@ -559,14 +555,14 @@ class Wibject(BaseObject):
             self._position.Set(value)
     
     
-    @PropWithDraw
+    @misc.PropWithDraw
     def bgcolor():
         """ Get/Set the background color of the wibject. 
         """
         def fget(self):
             return self._bgcolor
         def fset(self, value):
-            self._bgcolor = getColor(value, 'setting bgcolor')
+            self._bgcolor = misc.getColor(value, 'setting bgcolor')
     
     
     def _Transform(self):
@@ -734,9 +730,9 @@ class Wobject(BaseObject):
             pp[i] = p
         
         # Return limits
-        xlim = Range( pp[:,0].min(), pp[:,0].max() )
-        ylim = Range( pp[:,1].min(), pp[:,1].max() )
-        zlim = Range( pp[:,2].min(), pp[:,2].max() )
+        xlim = misc.Range( pp[:,0].min(), pp[:,0].max() )
+        ylim = misc.Range( pp[:,1].min(), pp[:,1].max() )
+        zlim = misc.Range( pp[:,2].min(), pp[:,2].max() )
         return xlim, ylim, zlim
     
     
@@ -754,155 +750,6 @@ class Wobject(BaseObject):
             elif isinstance(t, Transform_Rotate):
                 gl.glRotate(t.angle, t.ax, t.ay, t.az)
 
-
-# todo: is this the best way to allow users to orient their objects,
-# or might there be other ways?
-class OrientationForWobjects_mixClass(object):
-    """ OrientationForWobjects_mixClass()
-    
-    This class can be mixed with a wobject class to enable easy 
-    orientation of the objects in space. It makes use of the 
-    tranformation list that each wobject has. 
-    
-    The functionality provided by this class is not made part of the
-    Wobject class because it does not make sense for all kind of wobjects
-    (for example lines and images). The OrientableMesh is a class that
-    inherits from this class.
-    
-    """
-    
-    def __init__(self):
-        
-        # Set current and reference direction (default up)
-        self._refDirection = Point(0,0,1)
-        self._direction = Point(0,0,1)
-        
-        # Create transformations
-        self._scaleTransform = Transform_Scale()
-        self._translateTransform = Transform_Translate()
-        self._rotateTransform = Transform_Rotate()
-        self._directionTransform = Transform_Rotate()
-        
-        # Append transformations to THE list
-        self.transformations.append(self._translateTransform)
-        self.transformations.append(self._directionTransform)
-        self.transformations.append(self._rotateTransform)
-        self.transformations.append(self._scaleTransform)
-        
-        
-    
-    
-    @PropWithDraw
-    def scaling():
-        """ Get/Set the scaling of the object. Can be set using
-        a 3-element tuple, a 3D point, or a scalar. The getter always
-        returns a Point.
-        """
-        def fget(self):
-            s = self._scaleTransform
-            return Point(s.sx, s.sy, s.sz)
-        def fset(self, value):
-            if isinstance(value, (float, int)):
-                self._scaleTransform.sx = float(value)
-                self._scaleTransform.sy = float(value)
-                self._scaleTransform.sz = float(value)
-            if isinstance(value, (list, tuple)) and len(value) == 3:                
-                self._scaleTransform.sx = float(value[0])
-                self._scaleTransform.sy = float(value[1])
-                self._scaleTransform.sz = float(value[2])
-            elif is_Point(value) and value.ndim == 3:
-                self._scaleTransform.sx = value.x
-                self._scaleTransform.sy = value.y
-                self._scaleTransform.sz = value.z
-            else:
-                raise ValueError('Scaling should be a scalar, 3D Point, or 3-element tuple.')
-    
-    
-    @PropWithDraw
-    def translation():
-        """ Get/Set the transaltion of the object. Can be set using
-        a 3-element tuple or a 3D point. The getter always returns
-        a Point.
-        """
-        def fget(self):
-            d = self._translateTransform
-            return Point(d.dx, d.dy, d.dz)
-        def fset(self, value):
-            if isinstance(value, (list, tuple)) and len(value) == 3:                
-                self._translateTransform.dx = value[0]
-                self._translateTransform.dy = value[1]
-                self._translateTransform.dz = value[2]
-            elif is_Point(value) and value.ndim == 3:
-                self._translateTransform.dx = value.x
-                self._translateTransform.dy = value.y
-                self._translateTransform.dz = value.z
-            else:
-                raise ValueError('Translation should be a 3D Point or 3-element tuple.')
-    
-    
-    @PropWithDraw
-    def direction():
-        """ Get/Set the direction (i.e. orientation) of the object. Can 
-        be set using a 3-element tuple or a 3D point. The getter always 
-        returns a Point. 
-        """
-        def fget(self):
-            return self._direction.copy()
-        def fset(self, value):
-            # Store direction
-            if isinstance(value, (list, tuple)) and len(value) == 3:
-                self._direction = Point(*tuple(value))
-            elif is_Point(value) and value.ndim == 3:
-                self._direction = value
-            else:
-                raise ValueError('Direction should be a 3D Point or 3-element tuple.')
-            
-            # Normalize
-            if self._direction.norm()==0:
-                raise ValueError('Direction vector must have a non-zero length.')            
-            self._direction = self._direction.normalize()
-            
-            # Create ref point
-            refPoint = self._refDirection
-            
-            # Convert to rotation. The cross product of two vectors results
-            # in a vector normal to both vectors. This is the axis of rotation
-            # over which the minimal rotation is achieved.
-            axis = self._direction.cross(refPoint)
-            if axis.norm() < 0.1:
-                if self._direction.z > 0:
-                    # No rotation
-                    self._directionTransform.ax = 0.0
-                    self._directionTransform.ay = 0.0
-                    self._directionTransform.az = 1.0
-                    self._directionTransform.angle = 0.0
-                else:
-                    # Flipped
-                    self._directionTransform.ax = 1.0
-                    self._directionTransform.ay = 0.0
-                    self._directionTransform.az = 0.0
-                    self._directionTransform.angle = np.pi
-            else:
-                axis = axis.normalize()
-                angle = -refPoint.angle(self._direction)
-                self._directionTransform.ax = axis.x
-                self._directionTransform.ay = axis.y
-                self._directionTransform.az = axis.z
-                self._directionTransform.angle = angle * 180 / np.pi
-    
-    
-    @PropWithDraw
-    def rotation():
-        """ Get/Set the rotation of the object (in degrees, around its 
-        direction vector).
-        """
-        def fget(self):
-            return self._rotateTransform.angle
-        def fset(self, value):
-            self._rotateTransform.angle = float(value)
-
-
-## Help classes
 
 class Position(object):
     """ Position(x,y,w,h, wibject_instance)
@@ -1118,7 +965,7 @@ class Position(object):
     
     ## For getting and setting
     
-    @DrawAfter
+    @misc.DrawAfter
     def Set(self, *args):
         """ Set(*args)
         
@@ -1146,7 +993,7 @@ class Position(object):
         self._Update()
     
     
-    @DrawAfter
+    @misc.DrawAfter
     def Correct(self, dx=0, dy=0, dw=0, dh=0):
         """ Correct(dx=0, dy=0, dw=0, dh=0)
         
@@ -1203,7 +1050,7 @@ class Position(object):
             owner.Draw()
     
     
-    @PropWithDraw
+    @misc.PropWithDraw
     def x():
         """ Get/Set the x-element of the position. This value can be 
         an integer value or a float expressing the x-position as a fraction 
@@ -1215,7 +1062,7 @@ class Position(object):
             self._x = value
             self._Update()
     
-    @PropWithDraw
+    @misc.PropWithDraw
     def y():
         """ Get/Set the y-element of the position. This value can be 
         an integer value or a float expressing the y-position as a fraction 
@@ -1227,7 +1074,7 @@ class Position(object):
             self._y = value
             self._Update()
     
-    @PropWithDraw
+    @misc.PropWithDraw
     def w():
         """ Get/Set the w-element of the position. This value can be 
         an integer value or a float expressing the width as a fraction 
@@ -1240,7 +1087,7 @@ class Position(object):
             self._w = value
             self._Update()
     
-    @PropWithDraw
+    @misc.PropWithDraw
     def h():
         """ Get/Set the h-element of the position. This value can be 
         an integer value or a float expressing the height as a fraction 
@@ -1363,92 +1210,3 @@ class Position(object):
         """
         tmp = self._absolute
         return tmp[0] + tmp[2], tmp[1] + tmp[3]
-
-
-
-## More simple wibjects and wobjects
-# box must be defined here as it is used by textRender.Label
-    
-class Box(Wibject):
-    """ Box(parent)
-    
-    A simple, multi-purpose, rectangle object.
-    It implements functionality to draw itself. Most wibjects will
-    actually inherit from Box, rather than from Wibject.
-    
-    """
-    
-    def __init__(self, parent):
-        Wibject.__init__(self, parent)
-        self._edgeColor = (0,0,0)
-        self._edgeWidth = 1.0
-    
-    @PropWithDraw
-    def edgeColor():
-        """ Get/Set the edge color of the wibject. 
-        """
-        def fget(self):
-            return self._edgeColor
-        def fset(self, value):
-            self._edgeColor = getColor(value, 'setting edgeColor')
-    
-    @PropWithDraw
-    def edgeWidth():
-        """ Get/Set the edge width of the wibject. 
-        """
-        def fget(self):
-            return self._edgeWidth
-        def fset(self, value):            
-            self._edgeWidth = float(value)
-    
-    def _GetBgcolorToDraw(self):
-        """ Can be overloaded to indicate mouse over in buttons.         
-        """
-        return self._bgcolor
-    
-    def OnDraw(self, fast=False):
-        
-        # get dimensions        
-        w, h = self.position.size
-        
-        # draw plane
-        if self._bgcolor:        
-            # Get positions 
-            x1, x2 = 0, w
-            y1, y2 = 0, h
-            # Set color
-            clr = self._GetBgcolorToDraw()
-            gl.glColor(clr[0], clr[1], clr[2], 1.0)            
-            #
-            gl.glBegin(gl.GL_POLYGON)
-            gl.glVertex2f(x1,y1)
-            gl.glVertex2f(x1,y2)
-            gl.glVertex2f(x2,y2)
-            gl.glVertex2f(x2,y1)
-            gl.glEnd()
-        
-        # prepare                
-        gl.glDisable(gl.GL_LINE_SMOOTH)
-        
-        # draw edges        
-        if self.edgeWidth and self.edgeColor:
-            
-            # Get positions
-            # Draw edges on top of the first and last pixel
-            x1, x2 = 0.5, w-0.5
-            y1, y2 = 0.5, h-0.5
-            # Set color and line width
-            clr = self.edgeColor
-            gl.glColor(clr[0], clr[1], clr[2], 1.0)
-            gl.glLineWidth(self.edgeWidth)
-            #
-            gl.glBegin(gl.GL_LINE_LOOP)
-            gl.glVertex2f(x1,y1)
-            gl.glVertex2f(x1,y2)
-            gl.glVertex2f(x2,y2)
-            gl.glVertex2f(x2,y1)
-            gl.glEnd()
-        
-        # clean up        
-        gl.glEnable(gl.GL_LINE_SMOOTH)
-        

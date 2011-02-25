@@ -4,19 +4,14 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Module wobjects
+""" Module motion
 
-All wobjects are inserted in this namespace, thereby providing
-the user with a list of all wobjects. All wobjects are also
-inserted in the root visvis namespace.
+Defines the class to create animated data.
 
 """
 
-from base import Wobject
-from textRender import Text
-from line import Line
-from textures import Texture2D, Texture3D, SliceTexture, SliceTextureProxy
-from polygonalModeling import Mesh, OrientableMesh
+from visvis import Wobject, Timer
+
 
 class MotionDataContainer(Wobject):
     """ MotionDataContainer(parent, interval=100)
@@ -54,7 +49,7 @@ class MotionDataContainer(Wobject):
         Wobject.__init__(self,parent)    
         
         # setup timer        
-        from events import Timer
+        
         self._timer = Timer(self, interval, False)
         self._timer.Bind(self._Next)
         self._timer.Start()
@@ -90,4 +85,3 @@ class MotionDataContainer(Wobject):
         
         # show it!        
         a.Draw()
-

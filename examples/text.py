@@ -15,8 +15,8 @@ a.SetLimits((0,8), (-1,10))
 
 # Create text inside the axes
 vv.Text(a, 'These are texts living in the scene:', 1, 3)
-vv.Text(a, 'Text can be made \b{bold} \beasily!', 1, 2)
-vv.Text(a, 'Text can be made \i{italic} \ieasily!', 1, 1)
+vv.Text(a, 'Text can be made \b{bold} easil\by!', 1, 2)
+vv.Text(a, 'Text can be made \i{italic} easil\iy!', 1, 1)
 
 # Create text labels
 label0 = vv.Label(a, 'These are texts in widget coordinates:')

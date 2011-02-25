@@ -5,7 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import numpy as np
-from visvis.polygonalModeling import BaseMesh
+from visvis.wobjects.polygonalModeling import BaseMesh
 
 def combineMeshes(meshes):
     """ combineMeshes(meshes)

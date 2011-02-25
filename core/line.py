@@ -12,6 +12,8 @@ with markers. It is the object created with the plot() function.
 The lines are drawn simply with OpenGL lines. The markers are drawn
 with OpenGl points if possible, and using sprites otherwise.
 
+Since this is such a fundamental part of visvis, and it's uses by 
+for example the Legend class, this module is part of the core.
 
 """
 
@@ -22,11 +24,10 @@ import OpenGL.GLU as glu
 import numpy as np
 import math, time, os
 
-from pypoints import Point, Pointset
-
-from misc import Property, PropWithDraw, DrawAfter 
-from misc import Range, OpenGLError, getColor, getOpenGlCapable
-from base import Wobject
+from visvis.pypoints import Point, Pointset
+from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+from visvis.core.misc import Range, getColor, getOpenGlCapable
+from visvis.core.base import Wobject
 
 
 # int('1010101010101010',2)  int('1100110011001100',2)

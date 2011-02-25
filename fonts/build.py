@@ -6,7 +6,7 @@
 
 
 import os, sys
-import ssdf
+from visvis import ssdf
 
 # vv.imwrite('d:/almar/projects/ims/test0.png', vv.getframe(vv.gcf()))
 fontGenApp = r'"C:\Program Files (x86)\BMFontGen\bmfontgen.exe"'
