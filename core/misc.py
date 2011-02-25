@@ -18,11 +18,11 @@ visvis modules.
 import sys, os, time
 import OpenGL.GL as gl
 
-class OpenGLError(Exception):
-    pass
+
+## For info about OpenGL version
 
 
-# get opengl version
+# To store openGl info
 _glInfo = [None]*4
 
 def getOpenGlInfo():
@@ -79,6 +79,9 @@ def getOpenGlCapable(version, what=None):
         return False
 
 
+## Decorators
+
+
 def Property(function):
     """ Property(function)
     
@@ -107,6 +110,7 @@ def Property(function):
     
     # Done
     return property(**func_locals)
+
 
 def PropWithDraw(function):
     """ PropWithDraw(function)
@@ -160,6 +164,10 @@ def DrawAfter(function):
             self.Draw()
     newFunc.__doc__ = function.__doc__
     return newFunc
+
+
+## The range class
+
 
 class Range(object):
     """ Range(min=0, max=0)
@@ -270,10 +278,16 @@ class Transform_Rotate(Transform_Base):
 
 ## Colour stuff
 
-# Define colours (I see a nice mix of UK and US english here :( )
-colours = { 'k':(0,0,0), 'w':(1,1,1), 'r':(1,0,0), 'g':(0,1,0), 'b':(0,0,1),
-            'c':(0,1,1), 'y':(1,1,0), 'm':(1,0,1) }
-
+# Define named colors
+colorDict = {}
+colorDict['black']  = colorDict['k'] = (0,0,0)
+colorDict['white']  = colorDict['w'] = (1,1,1)
+colorDict['red']    = colorDict['r'] = (1,0,0)
+colorDict['green']  = colorDict['g'] = (0,1,0)
+colorDict['blue']   = colorDict['b'] = (0,0,1)
+colorDict['cyan']   = colorDict['c'] = (0,1,1)
+colorDict['yellow'] = colorDict['y'] = (1,1,0)
+colorDict['magenta']= colorDict['m'] = (1,0,1)
 
 def getColor(value, descr='getColor'):
     """ getColor(value, descr='getColor')
@@ -289,7 +303,7 @@ def getColor(value, descr='getColor'):
         if value not in 'rgbycmkw':
             tmp = "string color must be one of 'rgbycmkw' !"
         else:
-            value = colours[value]
+            value = colorDict[value]
     elif isinstance(value, (list, tuple)):
         if len(value) != 3:
             tmp = "tuple color must be length 3!"                
@@ -302,7 +316,7 @@ def getColor(value, descr='getColor'):
     return value
 
 
-## some functions 
+## More functions ...
 
 def isFrozen():
     """ isFrozen
@@ -312,7 +326,6 @@ def isFrozen():
     the executable name to start the application.
     
     """
-    import os
     ex = os.path.split(sys.executable)[1]
     ex = os.path.splitext(ex)[0]
     if ex.lower().startswith('python'):
@@ -331,7 +344,9 @@ def getResourceDir():
         path =  os.path.abspath( os.path.dirname(sys.executable) )
     else:
         path = os.path.abspath( os.path.dirname(__file__) )
+        path = os.path.split(path)[0]
     return os.path.join(path, 'visvisResources')
 
 # Set __file__ absolute when loading
 __file__ = os.path.abspath(__file__)
+

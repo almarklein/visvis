@@ -25,6 +25,6 @@ t = vv.volshow(vol, renderStyle='mip')
 # This is unfortunately (as far as I know) not possible to detect. 
 # It might help if your data is shaped a power of 2.
 
-vv.cm.ColormapEditor(vv.gca())
+vv.ColormapEditor(vv.gca())
 
 app.Run()

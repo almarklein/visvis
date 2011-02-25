@@ -17,7 +17,7 @@
 import os
 
 from visvis import BaseFigure, events, constants
-from visvis.misc import getResourceDir
+from visvis.core.misc import getResourceDir
 from visvis import guisupport
 
 import wx

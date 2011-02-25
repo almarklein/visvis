@@ -13,7 +13,7 @@ import zlib, base64
 
 if False:
     # Get data (exported from Matlab)
-    import ssdf
+    from visvis import ssdf
     db = ssdf.load('d:/almar/projects/peaks.ssdf')
     data = db.z.astype(np.float32)
     

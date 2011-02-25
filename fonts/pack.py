@@ -34,7 +34,7 @@ for instance "mono_r.xml", "mono_i-0.png".
 # The info is in an xml file but I chose to parse it line by line, 
 # and hope the xml file is always produced one line per char.
 
-import ssdf
+from visvis import ssdf
 import Image
 import numpy as np
 import os

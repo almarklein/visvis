@@ -15,7 +15,7 @@ import os, sys, time
 import OpenGL.GL as gl
 import OpenGL.GL.ARB.shader_objects as gla
 
-from misc import getResourceDir, getOpenGlCapable, Range, OpenGLError
+from visvis.core.misc import getResourceDir, getOpenGlCapable
 
 # Variable for debugging / developing to display shader info logs always.
 alwaysShowShaderInfoLog = False
@@ -57,7 +57,7 @@ def loadShaders():
 vshaders, fshaders = loadShaders()
 
 
-# todo: also make CG shaders, they say on the web they are more predictable.
+# todo: also make CG shaders? they say on the web they are more predictable.
 class GlslProgram:
     """ GlslProgram()
     

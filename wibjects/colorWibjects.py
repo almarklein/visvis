@@ -4,28 +4,29 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Module cm
+""" Module colorWibjects
 
-Provides functionality, wibjects and other helper classes to provide
-colormaps in visvis.
-
-Also provides the default colormaps.
+Implements a few widgets to interactively change color properties of textures.
 
 """
 
 import OpenGL.GL as gl
+
 import numpy as np
-
-from misc import Property
-from base import Box
-from textures import Colormap
-from textRender import Label, Text
-from core import BaseFigure, Axes
-from simpleWibjects import RadioButton, DraggableBox, RangeSlider
-import axises
-
-from pypoints import Point, Pointset
 import weakref
+
+from visvis.pypoints import Point, Pointset
+from visvis.core.misc import Property
+from visvis import Colormap
+#
+from visvis import Box, DraggableBox
+from visvis import Label, Text
+from visvis import BaseFigure, Axes
+from visvis.core.axises import GetTicks
+#
+from visvis.wibjects.buttons import RadioButton
+from visvis.wibjects.sliders import RangeSlider
+
 
 
 class ClimEditor(DraggableBox):
@@ -715,8 +716,7 @@ class Colorbar(Box):
                 xoffset, yoffset = 5, -8
             
             # Get tickmarks
-            import core
-            ticks, ticksPos, ticksText = axises.GetTicks(p0, p1, mapable.clim)
+            ticks, ticksPos, ticksText = GetTicks(p0, p1, mapable.clim)
             
             newLabelPool = {}
             linePieces = Pointset(2)
@@ -756,29 +756,3 @@ class Colorbar(Box):
         gl.glEnable(gl.GL_LINE_SMOOTH)
         
     
-## Create Build-in colormaps
-# Note: hsv should interpolate in HSV colorspace, so it not really correct.
-
-colormaps = {}
-
-colormaps['gray'] = [(0,0,0), (1,1,1)]
-colormaps['cool'] = [(0,1,1), (1,0,1)]
-colormaps['hot'] = [(0,0,0), (1,0,0), (1,1,0), (1,1,1)]
-colormaps['bone'] = [(0,0,0), (0.333, 0.333, 0.444), (0.666, 0.777, 0.777), (1,1,1)]
-colormaps['copper'] = [(0,0,0), (1,0.7,0.5)]
-colormaps['pink'] = [(0.1,0,0), (0.75,0.5,0.5), (0.9,0.9,0.7), (1,1,1)]
-
-colormaps['spring'] = [(1,0,1), (1,1,0)]
-colormaps['summer'] = [(0,0.5,0.4), (1,1,0.4)]
-colormaps['autumn'] = [(1,0,0), (1,1,0)]
-colormaps['winter'] = [(0,0,1), (0,1,0.5)]
-
-colormaps['jet'] = [(0,0,0.5), (0,0,1), (0,0.5,1), (0,1,1), (0.5,1,0.5), 
-                    (1,1,0), (1,0.5,0), (1,0,0), (0.5,0,0)]
-colormaps['hsv'] = [(1,0,0), (1,1,0), (0,1,0), (0,1,1),(0,0,1), (1,0,1), (1,0,0)]
-
-## Medical colormaps
-c1, c2 = 1200 / 4096.0, 1550 / 4096.0
-colormaps['ct1'] = {    'red': [(0,0), (c2,1), (1,0)], 
-                        'green': [(0,0), (c1,0), (c2,1)],
-                        'blue': [(0,0), (c1,0), (c2,1), (1,0) ]}

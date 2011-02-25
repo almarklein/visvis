@@ -1,23 +1,4 @@
-# -*- coding: utf-8 -*-
-# Copyright (c) 2010, Almar Klein
-#
-# Visvis is distributed under the terms of the (new) BSD License.
-# The full license can be found in 'license.txt'.
-
-""" Module wibjects
-
-All wibjects are inserted in this namespace, thereby providing
-the user with a list of all wibjects. All wibjects are also
-inserted in the root visvis namespace.
-
-"""
-
-from base import Wibject, Box
-from textRender import Label
-from core import Axes, BaseFigure
-from simpleWibjects import (PushButton, ToggleButton, RadioButton, 
-        DraggableBox, Slider, RangeSlider)
-from cm import Colorbar, ColormapEditor, ClimEditor
+from visvis import Label
 
 class Title(Label):
     """ Title(axes, text)
@@ -56,4 +37,3 @@ class Title(Label):
         if axes:
             dy = 20
             axes.position.Correct(0, -dy, 0, dy) 
-

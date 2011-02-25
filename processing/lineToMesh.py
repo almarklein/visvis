@@ -6,7 +6,7 @@
 
 import numpy as np
 from visvis.pypoints import Point, Pointset
-from visvis.polygonalModeling import BaseMesh
+from visvis.wobjects.polygonalModeling import BaseMesh
 
 def getSpanVectors(normal, c, d):
     """ getSpanVectors(normal, prevA, prevB) -> (a,b)

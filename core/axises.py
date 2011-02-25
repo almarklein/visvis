@@ -15,19 +15,24 @@ with the axis() function.
 
 """
 
+# todo: split in multiple modules axis_base axis_2d, axis_3d, axis_polar
+
 import OpenGL.GL as gl
 import OpenGL.GLU as glu
 
 import numpy as np
-from pypoints import Pointset, Point
 import math
 
-import base
-from textRender import Text
-from line import lineStyles, PolarLine
-from cameras import depthToZ, TwoDCamera
-from misc import Range, getColor
-from misc import Property, PropWithDraw, DrawAfter 
+from visvis.pypoints import Pointset, Point
+#
+from visvis.core import base
+from visvis.core.misc import Range, getColor
+from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+#
+from visvis.core.textRender import Text
+from visvis.core.line import lineStyles, PolarLine
+from visvis.core.cameras import depthToZ, TwoDCamera
+
 
 # A note about tick labels. We format these such that the width of the ticks
 # never becomes larger than 10 characters (including sign bit).
@@ -2103,5 +2108,5 @@ class PolarAxis2D(BaseAxis):
                     self._sense = -1.0
                 self.Draw()
             else:
-                raise Exception("isCW can only be assigned \
-                                 by a bool (True or False)")
+                raise Exception("isCW can only be assigned " +
+                                "by a bool (True or False)")
