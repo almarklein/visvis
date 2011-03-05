@@ -219,12 +219,15 @@ class Figure(BaseFigure):
         if widget is None:
             widget = self._widget
         window = widget.parent
+        # The destroy() method causes IPython to emit on error on my system
+        # the first time it happens (almar)
         if isinstance(window, gtk.Window):
             window.destroy()
         else:
             widget.destroy()
         
         # If no more figures, quit
+        # If in script-mode, we nicely quit. If in interactive mode, we won't.
         if len(BaseFigure._figures) == 0:
             app.Quit()
 
@@ -255,8 +258,7 @@ def newFigure():
     window.connect('delete-event', figure._widget._on_delete_event)
     
     # Initialize OpenGl
-    #figure.DrawNow() # DrawNow causes hang in IPython
-    figure._widget._on_expose_event()
+    figure.DrawNow()
     return figure
 
 
@@ -315,9 +317,11 @@ class App(events.App):
     
     def _ProcessEvents(self):
         """Process GTK events."""
+        gtk.gdk.threads_enter() # enter/leave prevents IPython -gthread to hang
         while gtk.events_pending():
             gtk.main_iteration(False)
-
+        gtk.gdk.threads_leave()
+    
     def _Run(self):
         """Enter GTK mainloop."""
         self._GetNativeApp()
