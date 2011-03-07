@@ -21,22 +21,22 @@ from visvis.core.light import _testColor, _getColor
 from visvis.wobjects.textures import TextureObjectToVisualize 
 
 
-def check3dArray(value):
-    """ check3dArray(value)
+def checkDimsOfArray(value, *ndims):
+    """ checkDimsOfArray(value)
     
     Check the shape of vertex/color/texcord data. 
     Always returns a numpy array. 
     
     """
     if isinstance(value, np.ndarray):
-        if not (value.ndim == 2 and value.shape[1] == 3):
+        if not (value.ndim == 2 and value.shape[1] in ndims):
             raise ValueError()
         if value.dtype == np.float32:
             return value
         else:
             return value.astype(np.float32)
     elif is_Pointset(value):
-        if not value.ndim==3:
+        if value.ndim not in ndims:
             raise ValueError()
         return value.data
     else:
@@ -83,7 +83,7 @@ class BaseMesh(object):
         
         """
         try:
-            self._vertices = check3dArray(vertices)
+            self._vertices = checkDimsOfArray(vertices, 3)
         except ValueError:
             raise ValueError("Vertices should represent an array of 3D vertices.")
     
@@ -97,9 +97,9 @@ class BaseMesh(object):
         """
         if normals is not None:
             try:
-                self._normals = check3dArray(normals)
+                self._normals = checkDimsOfArray(normals, 3)
             except ValueError:
-                raise ValueError("Normals should represent an array of 3D vertices.")
+                raise ValueError("Normals should represent an array of 3D vectors.")
         else:
             self._normals = None
     
@@ -123,9 +123,9 @@ class BaseMesh(object):
                 colors = (colors.astype(np.float32) - mi) / (ma-mi)
             # Check shape
             try:
-                self._colors = check3dArray(colors)
+                self._colors = checkDimsOfArray(colors, 3, 4)
             except ValueError:
-                raise ValueError("Colors should represent an array of 3D vertices.")
+                raise ValueError("Colors should represent an array of colors (RGB or RGBA).")
         else:
             self._colors = None
     
@@ -253,7 +253,8 @@ class Mesh(Wobject, BaseMesh):
         inferred from this array. Faces should be of uint8, uint16 or
         uint32 (if it is not, the data is converted to uint32).
     Colors : (optional) Nx3 or Nx4 numpy array
-        The ambient and diffuse color for each vertex. 
+        The ambient and diffuse color for each vertex. If both colors and
+        texcords are given, the texcords are ignored.
     Texcords : (optional) numpy array
         Used to map a 2D texture or 1D texture (a colormap) to the
         mesh. The texture color is multiplied after the ambient and diffuse
@@ -639,6 +640,7 @@ class Mesh(Wobject, BaseMesh):
         gl.glVertexPointerf(self._vertices)
         
         # Prepare colors (if available)
+        useTexCords = False
         if self._colors is not None:
             gl.glEnable(gl.GL_COLOR_MATERIAL)
             gl.glColorMaterial(gl.GL_FRONT_AND_BACK, gl.GL_AMBIENT_AND_DIFFUSE)
@@ -647,7 +649,8 @@ class Mesh(Wobject, BaseMesh):
         
         
         # Prepate texture coordinates (if available)
-        if self._texcords is not None:
+        elif self._texcords is not None:
+            useTexCords = True
             if (self._texcords.ndim == 2) and (self._texture is not None):
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointerf(self._texcords)
@@ -712,7 +715,7 @@ class Mesh(Wobject, BaseMesh):
         
         # Clean up
         gl.glFlush()
-        if self._texcords is not None:
+        if useTexCords:
             self._colormap.Disable()
             if self._texture:
                 self._texture.Disable()
