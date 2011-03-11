@@ -13,8 +13,12 @@ uniform sampler1D colormap;
 // for window level and window width
 uniform vec2 scaleBias;
 
+// the dimensions of the data, to determine stepsize
+uniform vec3 shape;
+
 // varying calculated by vertex shader
 varying vec3 ray;
+varying vec4 vertexPosition; // The vertex position in world coordinates
 
 
 float d2P(vec3 p, vec3 d, vec4 P)
@@ -78,6 +82,7 @@ void main()
     // Init. Remember that we made sure that the total range of the data is 
     // mapped between 0 and 1 (also for signed data types).
     float maxval = 0.0;
+    float maxi = 0.0;
     
     // Cast ray. For some reason the inner loop is not iterated the whole
     // way for large datasets. Thus this ugly hack. If you know how to do
@@ -95,11 +100,15 @@ void main()
             float val = texture3D( texture, loc )[0];        
             float r = float(val>maxval);
             maxval = (1.0-r)*maxval + r*val;
+            maxi = (1.0-r)*maxi + r*float(i);
             
             // Sample value (with if statements).
             //float val = texture3D( texture, loc )[0];
-            //if (val>maxval)            
+            //if (val>maxval) 
+            //{           
             //    maxval = val;
+            //    maxi = float(i);
+            //}
         }
     }
     
@@ -114,6 +123,16 @@ void main()
     if (gl_FragColor.a < 0.1)
         discard;
     
-    // Apply a depth? No, does only really make sence for the iso renderer.
-    //gl_FragDepth = 2.0
+    // set depth value
+    if (1)
+    {
+        // Calculate end position in world coordinates
+        vec4 position2 = vertexPosition;
+        position2.xyz += ray*shape*float(maxi);
+        // Project to device coordinates and set fragment depth
+        vec4 iproj = gl_ModelViewProjectionMatrix * position2;
+        iproj.z /= iproj.w;
+        gl_FragDepth = (iproj.z+1.0)/2.0;
+    }
+    
 }

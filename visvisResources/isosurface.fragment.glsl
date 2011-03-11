@@ -24,6 +24,7 @@ uniform vec3 shape;
 varying vec3 ray;
 varying vec3 L; // light direction
 varying vec3 V; // view direction
+varying vec4 vertexPosition; // The vertex position in world coordinates
 
 // threshold
 uniform float th;
@@ -147,14 +148,21 @@ void main()
                 str = pow( max(dot(H,N),0.0), shininess);
                 gl_FragColor += str * specularRefl * gl_LightSource[0].specular;
                 
+                // Calculate end position in world coordinates
+                vec4 position2 = vertexPosition;
+                position2.xyz += ray*shape*float(i);
+                // Project to device coordinates and set fragment depth
+                vec4 iproj = gl_ModelViewProjectionMatrix * position2;
+                iproj.z /= iproj.w;
+                gl_FragDepth = (iproj.z+1.0)/2.0;
+                
+                // Done
                 return;
             }
         
         }
     }
     discard;
-    // apply a depth?
-    //gl_FragDepth = 2.0
 }
 
 

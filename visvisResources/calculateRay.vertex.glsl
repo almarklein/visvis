@@ -12,9 +12,10 @@ uniform vec3 shape;
 uniform float stepRatio;
 
 // varyings to pass to fragment shader
-varying vec3 ray;
-varying vec3 L;
-varying vec3 V;
+varying vec3 ray; // the direction to cast the rays in
+varying vec3 L; // The 0th light source direction
+varying vec3 V; // The View direction
+varying vec4 vertexPosition; // The vertex position in world coordinates
 
 void main()
 {    
@@ -22,6 +23,10 @@ void main()
     // First of all, set position.
     // (We need to do this because this shader replaces the original shader.)
     gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+    
+    // Store position of vertex too, so the fragment shader can calculate
+    // the depth
+    vertexPosition = gl_Vertex.xyzw;
     
     // Store texture coordinate (also a default thing).
     gl_TexCoord[0].xyz = gl_MultiTexCoord0.xyz;
