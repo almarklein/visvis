@@ -593,11 +593,11 @@ class Timer(BaseEvent):
 class App:
     """ App()
     
-    Application class to wrap the GUI applications in a class
-    with a simple interface that is the same for all backends.
+    The App class wraps a GUI backend  with a simple interface that is 
+    the same for all backends. It can be used to start the GUI toolkit's 
+    main-loop, or process all pending events.
     
-    This class should be implemented such that multiple instances can
-    be created, and still wrap the same single GUI application instance.
+    To obtain an instance of this class, the user should call vv.use().
     
     """
     
