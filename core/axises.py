@@ -700,7 +700,7 @@ class BaseAxis(base.Wobject):
     
     ## Methods for drawing
 
-    def OnDraw(self):
+    def OnDraw(self, ppc_pps_ppg=None):
         
         # Get axes and return if there is none,
         # or if it doesn't want to show an axis.
@@ -708,57 +708,49 @@ class BaseAxis(base.Wobject):
         if not axes:
             return
         
-        # Calculate lines and labels
-        try:
-            ppc, pps, ppg = self._CreateLinesAndLabels(axes)
-        except Exception:
-            self.Destroy() # So the error message does not repeat itself
-            raise
+        # Calculate lines and labels (or get from argument)
+        if ppc_pps_ppg:
+            ppc, pps, ppg = ppc_pps_ppg
+        else:
+            try:
+                ppc, pps, ppg = self._CreateLinesAndLabels(axes)
+            except Exception:
+                self.Destroy() # So the error message does not repeat itself
+                raise
         
         # Store lines to be drawn in screen coordinates
         self._pps = pps
         
-        
         # Prepare for drawing lines
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glVertexPointerf(ppc.data)
+        clr = self._axisColor
+        gl.glColor(clr[0], clr[1], clr[2])
+        gl.glLineWidth(self._lineWidth)
         
         # Draw lines
-        clr = self._axisColor
-        gl.glColor(clr[0], clr[1], clr[2])
-        gl.glLineWidth(self._lineWidth)
         if len(ppc):
+            gl.glVertexPointerf(ppc.data)
             gl.glDrawArrays(gl.GL_LINES, 0, len(ppc))
         
-        # Clean up
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        
-        
-        # Prepare for drawing grid
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glVertexPointerf(ppg.data)
-        
-        # Set stipple pattern
-        if not self.gridLineStyle in lineStyles:
-            stipple = False
-        else:
-            stipple = lineStyles[self.gridLineStyle]
-        if stipple:
-            gl.glEnable(gl.GL_LINE_STIPPLE)
-            gl.glLineStipple(1, stipple)
-        
         # Draw gridlines
-        clr = self._axisColor
-        gl.glColor(clr[0], clr[1], clr[2])
-        gl.glLineWidth(self._lineWidth)
         if len(ppg):
+            # Set stipple pattern
+            if not self.gridLineStyle in lineStyles:
+                stipple = False
+            else:
+                stipple = lineStyles[self.gridLineStyle]
+            if stipple:
+                gl.glEnable(gl.GL_LINE_STIPPLE)
+                gl.glLineStipple(1, stipple)
+            # Draw using array
+            gl.glVertexPointerf(ppg.data)
             gl.glDrawArrays(gl.GL_LINES, 0, len(ppg))
         
         # Clean up
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glDisable(gl.GL_LINE_STIPPLE)
-
-
+    
+    
     def OnDrawScreen(self):
         # Actually draw the axis
         
@@ -1858,43 +1850,56 @@ class PolarAxis2D(BaseAxis):
     
     
     def OnDraw(self):
+        
+        # Get axes
         axes = self.GetAxes()
-        s = axes.camera.GetViewParams()
-        if s.loc[0] != s.loc[1] != 0:
-            s.loc = 0, 0, 0
-            axes.camera.SetViewParams(s)
-        BaseAxis.OnDraw(self)
-        self.RescalePolarData()
-        # draw background
+        if not axes:
+            return
+        
+        # Calculate lines and labels
+        try:
+            ppc, pps, ppg = self._CreateLinesAndLabels(axes)
+        except Exception:
+            self.Destroy() # So the error message does not repeat itself
+            raise
+        
+        # Draw background and lines
         if self.ppb and self.ppr:
+            
+            # Set view params
+            s = axes.camera.GetViewParams()
+            if s.loc[0] != s.loc[1] != 0:
+                s.loc = 0, 0, 0
+                axes.camera.SetViewParams(s)
+            
+            # Prepare data for polar coordinates
+            self.RescalePolarData()
+            
+            # Prepare for drawing lines and background
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+            gl.glDisable(gl.GL_DEPTH_TEST)
+            
+            # Draw polygon background
             clr = 1, 1, 1
             gl.glColor3f(clr[0], clr[1], clr[2])
-
-            # Prepare for drawing lines
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
             gl.glVertexPointerf(self.ppb.data)
-
-            # Draw lines and polygon background
-            if len(self.ppb):
-                gl.glDrawArrays(gl.GL_POLYGON, 0, len(self.ppb))
-            gl.glEnable(gl.GL_DEPTH_TEST)
-            # Clean up
-            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-
-            # Prepare for drawing lines
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+            gl.glDrawArrays(gl.GL_POLYGON, 0, len(self.ppb))
+            
+            # Draw lines
+            clr = self._axisColor
+            gl.glColor(clr[0], clr[1], clr[2])
+            gl.glLineWidth(self._lineWidth)
             gl.glVertexPointerf(self.ppr.data)
-
-            # Draw lines and polygon background
-            if len(self.ppb):
-                axes = self.GetAxes()
-                clr = self._axisColor
-                gl.glColor(clr[0], clr[1], clr[2])
-                gl.glLineWidth(self._lineWidth)
-                gl.glDrawArrays(gl.GL_LINE_LOOP, 0, len(self.ppr))
-            gl.glEnable(gl.GL_DEPTH_TEST)
+            gl.glDrawArrays(gl.GL_LINE_LOOP, 0, len(self.ppr))
+            
             # Clean up
+            gl.glFlush()
+            gl.glEnable(gl.GL_DEPTH_TEST)
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        
+        
+        # Draw axes lines and text etc.
+        BaseAxis.OnDraw(self, (ppc, pps, ppg))
     
     
     def OnKeyDown(self, event):
