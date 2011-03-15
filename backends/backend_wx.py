@@ -79,6 +79,9 @@ class GLWidget(GLCanvas):
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
         root.Bind(wx.EVT_ACTIVATE, self.OnActivate) # Note root
         
+        # Needs to focus to catch key events
+        self.SetFocus()
+        
         # if lost, tough luck (thus the comment)
         #self.Bind(wx.EVT_MOUSE_CAPTURE_LOST, self.OnMouseUp)
         
