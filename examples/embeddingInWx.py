@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """ 
-This example illustrate embedding a visvis figure in an application.
-This examples uses wxPython, but the same constructions work for
-pyQt or any other backend.
+This example illustrates embedding a visvis figure in a wx application.
 """
 
 import wx
@@ -14,8 +12,8 @@ app = vv.use('wx')
 
 
 class MainWindow(wx.Frame):
-    def __init__(self, *args, **kwargs):
-        wx.Frame.__init__(self, *args, **kwargs)
+    def __init__(self):
+        wx.Frame.__init__(self, None, -1, "Embedding in WX", size=(560, 420))
         
         # Make a panel with a button
         self.panel = wx.Panel(self)
@@ -36,6 +34,9 @@ class MainWindow(wx.Frame):
         self.SetSizer(self.sizer)
         self.SetAutoLayout(True)
         self.Layout()   
+        
+        # Finish
+        self.Show()
     
     
     def _Plot(self, event):
@@ -56,22 +57,12 @@ class MainWindow(wx.Frame):
 # Two ways to create the application and start the main loop
 if True:
     # The visvis way. Will run in interactive mode when used in IEP or IPython.
-    
-    # Create native app
     app.Create()
-    # Create window
-    m = MainWindow(None, -1, "Figure", size=(560, 420))
-    m.Show()
-    # Run main loop
+    m = MainWindow()
     app.Run()
 
 else:
     # The native way.
-    
-    # Create native app
-    wxApp = wx.PySimpleApp()
-    # Create window
-    m = MainWindow(None, -1, "Figure", size=(560, 420))
-    m.Show()
-    # Run main loop
+    wxApp = wx.PySimpleApp()    
+    m = MainWindow()
     wxApp.MainLoop()

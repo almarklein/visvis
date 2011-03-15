@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """ 
-This example illustrate embedding a visvis figure in an application.
-This examples uses wxPython, but the same constructions work for
-pyQt or any other backend.
+This example illustrates embedding a visvis figure in a Qt application.
 """
 
 from PyQt4 import QtGui, QtCore
@@ -34,6 +32,11 @@ class MainWindow(QtGui.QWidget):
         
         # Apply sizers        
         self.setLayout(self.sizer)
+        
+        # Finish
+        self.resize(560, 420)
+        self.setWindowTitle('Embedding in Qt')
+        self.show()
     
     
     def _Plot(self):
@@ -54,24 +57,12 @@ class MainWindow(QtGui.QWidget):
 # Two ways to create the application and start the main loop
 if True:
     # The visvis way. Will run in interactive mode when used in IEP or IPython.
-    
-    # Create native app
     app.Create()
-    # Create window
     m = MainWindow()
-    m.resize(560, 420)
-    m.show()
-    # Run main loop
     app.Run()
 
 else:
     # The native way.
-    
-    # Create native app
-    qtApp = QtGui.QApplication([''])
-    # Create window
+    qtApp = QtGui.QApplication([''])    
     m = MainWindow()
-    m.resize(560, 420)
-    m.show()
-    # Run main loop
     qtApp.exec_()
