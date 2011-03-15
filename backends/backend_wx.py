@@ -121,11 +121,10 @@ class GLWidget(GLCanvas):
         self.figure._GenerateMouseEvent('double', x, y, but)
     
     def OnMotion(self, event):
-        # update position
-        x,y = event.GetPosition()
-        self.figure._mousepos = x,y
-        # poduce event
-        self.figure._GenerateMouseEvent('motion', x, y, 0)
+        if self.figure:
+            # poduce event
+            x,y = event.GetPosition()
+            self.figure._GenerateMouseEvent('motion', x, y, 0)
     
     def OnKeyDown(self, event):
         key, text = self._ProcessKey(event)

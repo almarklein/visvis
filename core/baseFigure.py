@@ -292,7 +292,6 @@ class BaseFigure(_BaseFigure):
     # - Overload the methods below.
     # - Make sure Draw() is called on each paint request.
     # - Pass the events on and keep visvis timers running.
-    # - Keep ._mousePos up to date.
     
     def _SetCurrent(self):
         """ _SetCurrent()
@@ -308,15 +307,6 @@ class BaseFigure(_BaseFigure):
         
         Swap the memory and screen buffer such that
         what we rendered appears on the screen.
-        
-        """
-        raise NotImplemented()
-    
-    def _PostDrawRequest(self):
-        """ _PostDrawRequest()
-        
-        Via this method, visvis can request a redraw when something has
-        changed, for example when zooming.
         
         """
         raise NotImplemented()
@@ -342,18 +332,32 @@ class BaseFigure(_BaseFigure):
         raise NotImplemented()
     
     def _SetPosition(self, x, y, w, h):
-        """ Set the position of the widget. 
-        """        
+        """ _SetPosition(x, y, w, h)
+        
+        Set the position of the widget. The x and y represent the
+        screen coordinates when the figure is a toplevel widget. 
+        
+        For embedded applications they represent the position within
+        the parent widget.
+        
+        """
         raise NotImplemented()
     
     def _GetPosition(self):
-        """ Get the position of the widget. 
+        """ _GetPosition()
+        
+        Get the position of the widget. The result must be a 
+        four-element tuple (x,y,w,h).
+        
         """        
         raise NotImplemented()
     
     
     def _Close(self):
-        """ Close the widget, also calls Destroy(). 
+        """ _Close()
+        
+        Close the widget, also calls Destroy(). 
+        
         """
         raise NotImplemented()
     
@@ -882,6 +886,9 @@ class BaseFigure(_BaseFigure):
         events = []
         
         if eventName.count("motion") or eventName.count("move"):
+            
+            # Set current mouse pos, so that it's up to date
+            self._mousepos = absx, absy
             
             # also get new version of items under the mouse           
             items2 = self._pickerHelper.GetItemsUnderMouse(self)

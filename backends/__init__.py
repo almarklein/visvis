@@ -19,30 +19,27 @@ This module should ...
 2.  ... contain a function called "newFigure". This function should generate 
     a window with a single Figure widget in it, and return the Figure 
     Object.
-3.  Contain a class called "App" (inherited from visvis.events.App) that
-    implements a method "Run" that enters the GUI toolkit's mainloop, and
-    a method "ProcessEvents" that processes the GUI toolkits events.
-4.  ... call visvis.Timer._TestAllTimers() on a regular basis (every 10 ms
-    or so). To enable timer events.
+3.  Contain a class called "App" (inherited from vv.events.App) that
+    implements the methods "_GetNativeApp", "_ProcessEvents" and "_Run".
+    An instance of this class called "app" should be in the module namespace.
+4.  ... call vv.events.processVisvisEvents on a regular basis (every 10 ms
+    or so). To keep visvis' own event system running.
 5.  ... pass through the events enter, leaver, keydown, keyup, resize, close
     via visvis' event system. Pass through events mouseDown, mouseUp, 
     mouseDoubleClick, mouseMove via the figure's _GenerateMouseEvent() method,
     that will fire the events of the appropriate wibjects and wobjects.
 
-The BaseFigure class is defined in visvis.core.baseFigure. In the comments it is
-shown what methods need to be overloaded and what events need to be
-transfered. There is a wiki page on implementing a backend, and a text
-file in the source. Also look at the already implemented backends!
+There is a wiki page about implementing backend:
+http://code.google.com/p/visvis/wiki/Creating_a_backend
+Also look at the already implemented backends!
 
 The backend is chosen/selected as follows:
-- A user can call vv.use() to load a specific backend and obtain an 
+- A user can call vv.use() to load a specific backend and obtain the 
   App instance.
 - When a figure is created it is checked whether a backend is already
   selected. If not, one is selected automatically; it tries loading the
   backends in the order that is defined in the variable "backendOrder" 
   in this file. 
-
-
 
 """
 

@@ -101,9 +101,6 @@ class GLWidget(QtOpenGL.QGLWidget):
     
     def mouseMoveEvent(self, event):
         if self.figure:
-            # update position
-            point = event.pos()
-            self.figure._mousepos = ( point.x(), point.y() )
             # fire event        
             self.figure._GenerateMouseEvent('motion', event.x(), event.y())
     
