@@ -68,6 +68,12 @@ class BaseMesh(object):
             raise ValueError('VerticesPerFace should be 3 or 4.')
         
         # Set all things (checks are performed in set methods)
+        self._vertices = None
+        self._normals = None
+        self._faces = None
+        self._colors = None
+        self._texcords = None
+        #
         self.SetVertices(vertices)
         self.SetNormals(normals)
         self.SetFaces(faces)
@@ -101,7 +107,7 @@ class BaseMesh(object):
             except ValueError:
                 raise ValueError("Normals should represent an array of 3D vectors.")
         else:
-            self._normals = None
+            self._normals = None # User explicitly wants to disable normals
     
     
     @DrawAfter
@@ -127,7 +133,7 @@ class BaseMesh(object):
             except ValueError:
                 raise ValueError("Colors should represent an array of colors (RGB or RGBA).")
         else:
-            self._colors = None
+            self._colors = None # User explicitly wants to disable colors
     
     
     @DrawAfter
@@ -162,7 +168,7 @@ class BaseMesh(object):
                 raise ValueError("Texture coordinates must be a numpy array or Pointset.")
         
         else:
-            self._texcords = None
+            self._texcords = None # User explicitly wants to disable texcoords
     
     
     @DrawAfter
@@ -203,7 +209,7 @@ class BaseMesh(object):
                 if self._faces.max() >= len(self._vertices):
                     raise ValueError("Face data references non-existing vertices.")
         else:
-            self._faces = None
+            self._faces = None # User explicitly wants to disable faces
     
     
     def _GetFaces(self):
