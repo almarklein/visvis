@@ -63,7 +63,7 @@ class OrientationForWobjects_mixClass(object):
                 self._scaleTransform.sx = float(value)
                 self._scaleTransform.sy = float(value)
                 self._scaleTransform.sz = float(value)
-            if isinstance(value, (list, tuple)) and len(value) == 3:                
+            elif isinstance(value, (list, tuple)) and len(value) == 3:                
                 self._scaleTransform.sx = float(value[0])
                 self._scaleTransform.sy = float(value[1])
                 self._scaleTransform.sz = float(value[2])
