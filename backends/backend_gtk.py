@@ -92,8 +92,8 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
             x, y, state = event.window.get_pointer()
         else:
             x, y, state = event.x, event.y, event.state
-        self.figure._mousepos = x, y
-        self.figure._GenerateMouseEvent('motion', x, y, 0)
+        if self.figure:
+            self.figure._GenerateMouseEvent('motion', x, y, 0)
     
     def _on_button_event(self, widget, event):
         button = {1:1, 3:2}.get(event.button, 0)

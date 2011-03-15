@@ -103,10 +103,8 @@ class GLWidget(fltk.Fl_Gl_Window):
     
     
     def OnMotion(self, event):
-        # update position
-        x, y = fltk.Fl.event_x(), fltk.Fl.event_y()
-        self.figure._mousepos = x, y
         # prepare and fire event
+        x, y = fltk.Fl.event_x(), fltk.Fl.event_y()
         self.figure._GenerateMouseEvent('motion', x, y, 0)
     
     def OnKeyDown(self, event):
