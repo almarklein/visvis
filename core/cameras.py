@@ -31,6 +31,9 @@ from visvis.core.events import Timer
 
 # Global to store depth Bits
 depthBits = [0]
+# Trig functions in degrees
+sind = lambda q: math.sin(q*math.pi/180)
+cosd = lambda q: math.cos(q*math.pi/180)
 
 def getDepthValue():
     """ Get the depth value.
@@ -653,19 +656,17 @@ class ThreeDCamera(BaseCamera):
             refloc = self.ScreenToWorld(self.ref_mloc)
             loc = self.ScreenToWorld(mloc)
             
-            # calculate distance and normalize
+            # calculate distance and undo aspect ratio adjustment from ScreenToWorld
             ar = self.axes.daspect
-            distance = refloc[0] - loc[0]            
-            distance *= ar[0] # normalize
+            distx = (refloc[0] - loc[0]) * ar[0]
+            distz = (refloc[1]-loc[1]) * ar[1]
             
             # calculate translation
-            rad_az = self.view_az * math.pi / 180.0            
-            dx = distance * math.cos( rad_az ) / ar[0]
-            dy = distance * math.sin( rad_az ) / ar[1]
-            
-            # in the z- direction its easier
-            # normalize for y-aspect and correct of z-aspect
-            dz = (refloc[1]-loc[1]) * ar[1] / ar[2]
+            sro, saz, sel = map(sind, (self.view_ro, self.view_az, self.view_el))
+            cro, caz, cel = map(cosd, (self.view_ro, self.view_az, self.view_el))
+            dx = (distx * (cro * caz + sro * sel * saz) + distz * (sro * caz - cro * sel * saz))/ar[0]
+            dy = (distx * (cro * saz - sro * sel * caz) + distz * (sro * saz + cro * sel * caz))/ar[1]
+            dz = (-distx * sro * cel + distz * cro * cel)/ar[2]
             
             # apply
             self.view_loc = ( self.ref_loc[0] + dx ,  self.ref_loc[1] + dy , 
