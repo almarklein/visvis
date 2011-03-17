@@ -34,6 +34,20 @@ KEYMAP = {  gtk.keysyms.Shift_L: constants.KEY_SHIFT,
             gtk.keysyms.Delete: constants.KEY_DELETE,
             }
 
+def modifiers(event):
+    """Convert the GTK state into a tuple of active modifier keys."""
+    if not hasattr(event, 'state'):
+        return ()
+    
+    mods = ()
+    if event.state & gtk.gdk.SHIFT_MASK:
+        mods += constants.KEY_SHIFT,
+    if event.state & gtk.gdk.CONTROL_MASK:
+        mods += constants.KEY_CONTROL,
+    if event.state & gtk.gdk.MOD1_MASK:
+        mods += constants.KEY_ALT,
+    return mods
+
 class GlCanvas(gtk.gtkgl.DrawingArea):
     
     def __init__(self, figure, *args, **kw):
@@ -93,20 +107,20 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
         else:
             x, y, state = event.x, event.y, event.state
         if self.figure:
-            self.figure._GenerateMouseEvent('motion', x, y, 0)
+            self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers(event))
     
     def _on_button_event(self, widget, event):
         button = {1:1, 3:2}.get(event.button, 0)
-        self.figure._GenerateMouseEvent(MOUSEMAP[event.type], event.x, event.y, button)
+        self.figure._GenerateMouseEvent(MOUSEMAP[event.type], event.x, event.y, button, modifiers(event))
     
     def _on_key_press_event(self, widget, event):
         ev = self.figure.eventKeyDown
-        ev.Set(KEYMAP.get(event.keyval, event.keyval), event.string)
+        ev.Set(KEYMAP.get(event.keyval, event.keyval), event.string, modifiers(event))
         ev.Fire()
     
     def _on_key_release_event(self, widget, event):
         ev = self.figure.eventKeyUp
-        ev.Set(KEYMAP.get(event.keyval, event.keyval), event.string)
+        ev.Set(KEYMAP.get(event.keyval, event.keyval), event.string, modifiers(event))
         ev.Fire()
     
     def _on_enter_notify_event(self, widget, event):
