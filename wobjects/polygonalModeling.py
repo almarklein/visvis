@@ -22,25 +22,34 @@ from visvis.wobjects.textures import TextureObjectToVisualize
 
 
 def checkDimsOfArray(value, *ndims):
-    """ checkDimsOfArray(value)
+    """ checkDimsOfArray(value, *ndims)
     
-    Check the shape of vertex/color/texcord data. 
-    Always returns a numpy array. 
+    Coerce value into a numpy array of size NxM, where M is in ndims.
+    If 0 is in ndims, a 1D array is allowed.  Return a numpy array or
+    raise a ValueError.
     
     """
-    if isinstance(value, np.ndarray):
-        if not (value.ndim == 2 and value.shape[1] in ndims):
-            raise ValueError()
-        if value.dtype == np.float32:
-            return value
-        else:
-            return value.astype(np.float32)
-    elif is_Pointset(value):
+    # Check if is Pointset with correct dimensionality
+    if is_Pointset(value):
         if value.ndim not in ndims:
             raise ValueError()
         return value.data
-    else:
+    
+    # Try to coerce to numpy array; raise ValueError if anything goes wrong
+    if not isinstance(value, np.ndarray):
+        try:
+            value = np.array(value, dtype=np.float32)
+        except Error:
+            raise ValueError()
+    
+    # value is guaranteed to be a numpy array here; check dimensionality
+    if not ((value.ndim == 2 and value.shape[1] in ndims) or 
+            (value.ndim == 1 and 0 in ndims)):
         raise ValueError()
+    if value.dtype == np.float32:
+        return value
+    else:
+        return value.astype(np.float32)
 
 
 class BaseMesh(object):
