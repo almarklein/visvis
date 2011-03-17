@@ -87,16 +87,18 @@ class BaseEvent:
         # users should not change type, owner or handlers.       
         self._owner = weakref.ref(owner)
         self._handlers = []
+        self._modifiers = ()
     
     
-    def Set(self):
-        """ Set() 
+    def Set(self, modifiers=()):
+        """ Set(modifiers) 
         
         Set the event properties before firing it. In the base event
-        there are not properties to set.
+        the only property is the modifiers state, a tuple of the 
+        modifier keys currently pressed.
         
         """
-        pass
+        self._modifiers = modifiers
     
     
     @property
@@ -111,6 +113,13 @@ class BaseEvent:
         """ The type (__class__) of this event. 
         """
         return self.__class__
+    
+    
+    @property
+    def modifiers(self):
+        """ The modifier keys active when the event occurs.
+        """
+        return self._modifiers
     
     
     def Bind(self, func):
@@ -223,12 +232,14 @@ class MouseEvent(BaseEvent):
         self._but = 0
     
     
-    def Set(self, absx, absy, but):
+    def Set(self, absx, absy, but, modifiers=()):
         """ Set(absx, absy, but)
         
         Set the event properties before firing it. 
         
         """
+        
+        BaseEvent.Set(self, modifiers)
         
         # Set properties we can alway set
         self._absx = absx
@@ -340,12 +351,13 @@ class KeyEvent(BaseEvent):
         self._key = 0
         self._text = ''
     
-    def Set(self, key, text=''):
+    def Set(self, key, text='', modifiers=()):
         """ Set(key, text='')
         
         Set the event properties before firing it. 
         
         """
+        BaseEvent.Set(self, modifiers)
         self._key = key
         self._text = text
     

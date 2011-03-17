@@ -871,7 +871,7 @@ class BaseFigure(_BaseFigure):
             ev.Fire()
     
     
-    def _GenerateMouseEvent(self, eventName, absx, absy, button=0):
+    def _GenerateMouseEvent(self, eventName, absx, absy, button=0, modifiers=()):
         """ _GenerateMouseEvent(eventName, x, y, button=0)
         
         For the backend to generate mouse events. 
@@ -935,5 +935,5 @@ class BaseFigure(_BaseFigure):
         
         # Fire events
         for item,ev in events:
-            ev.Set(absx, absy, button)
+            ev.Set(absx, absy, button, modifiers)
             ev.Fire()

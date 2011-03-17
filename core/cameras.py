@@ -27,6 +27,7 @@ from visvis import ssdf
 from visvis.core.misc import Property, PropWithDraw, DrawAfter 
 from visvis.core.misc import Range
 from visvis.core.events import Timer
+import constants
 
 
 # Global to store depth Bits
@@ -498,10 +499,6 @@ class ThreeDCamera(BaseCamera):
         self.ref_zoomx = 0      # zoom factors when clicked
         self.ref_zoomy = 0
         
-        # detect shift
-        self.shiftIsDown = False
-        self.controlIsDown = False
-        
         # Bind to events
         for axes in self.axeses:
             axes.eventKeyDown.Bind(self.OnKeyDown)
@@ -601,25 +598,7 @@ class ThreeDCamera(BaseCamera):
         BaseCamera.Reset(self)
     
     
-    def OnKeyDown(self, event):
-        if event.key ==17 and self.ref_but==0:
-            self.shiftIsDown = True
-        elif event.key == 19 and self.ref_but==0:
-            self.controlIsDown = True
-
-    def OnKeyUp(self, event):
-        self.shiftIsDown = False
-        self.controlIsDown = False
-        self.ref_but = 0 # in case the mouse was also down
-    
-    
-    def OnMouseDown(self, event):
-        
-        # store mouse position and button
-        self.ref_mloc = event.x, event.y
-        self.ref_but = event.button
-        self.ref_axes = event.owner
-        
+    def SetRef(self):
         # store current view parameters
         self.ref_az = self.view_az
         self.ref_el = self.view_el
@@ -629,6 +608,26 @@ class ThreeDCamera(BaseCamera):
         self.ref_loc = self.view_loc
         self.ref_zoomx = self.view_zoomx 
         self.ref_zoomy = self.view_zoomy 
+    
+    
+    def OnKeyDown(self, event):
+        # store mouse position and button
+        self.ref_mloc = event.owner.mousepos
+        self.SetRef()
+
+    def OnKeyUp(self, event):
+        self.ref_mloc = event.owner.mousepos
+        self.SetRef()
+    
+    
+    def OnMouseDown(self, event):
+        
+        # store mouse position and button
+        self.ref_mloc = event.x, event.y
+        self.ref_but = event.button
+        self.ref_axes = event.owner
+        
+        self.SetRef()
 
    
     def OnMouseUp(self, event):        
@@ -649,7 +648,7 @@ class ThreeDCamera(BaseCamera):
         # get loc (as the event comes from the figure, not the axes)
         mloc = event.owner.mousepos
             
-        if self.shiftIsDown and self.ref_but==1:
+        if constants.KEY_SHIFT in event.modifiers and self.ref_but==1:
             # translate
             
             # get locations and convert to world coordinates
@@ -672,7 +671,7 @@ class ThreeDCamera(BaseCamera):
             self.view_loc = ( self.ref_loc[0] + dx ,  self.ref_loc[1] + dy , 
                 self.ref_loc[2] + dz )
         
-        elif self.controlIsDown and self.ref_but==1:
+        elif constants.KEY_CONTROL in event.modifiers and self.ref_but==1:
             # Roll
             
             # get normalized delta values
@@ -711,7 +710,7 @@ class ThreeDCamera(BaseCamera):
                 self.view_el = 90
             #print self.view_az, self.view_el
         
-        elif self.shiftIsDown and self.ref_but==2:
+        elif constants.KEY_SHIFT in event.modifiers and self.ref_but==2:
             # Change FoV
             
             # get normailized delta value
