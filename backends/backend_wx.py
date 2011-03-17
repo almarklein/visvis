@@ -39,6 +39,18 @@ KEYMAP = {  wx.WXK_SHIFT: constants.KEY_SHIFT,
             }
 
 
+def modifiers(event):
+    """Convert the WX modifier state into a tuple of active modifier keys."""
+    mod = ()
+    if event.ShiftDown():
+        mod += constants.KEY_SHIFT,
+    if event.CmdDown():
+        mod += constants.KEY_CONTROL,
+    if event.AltDown():
+        mod += constants.KEY_ALT,
+    return mod
+
+
 class GLWidget(GLCanvas):
     """ Implementation of the WX GLCanvas, which passes a number of
     events to the Figure object that wraps it.
@@ -91,7 +103,7 @@ class GLWidget(GLCanvas):
     def OnLeftDown(self, event):
         x,y = event.GetPosition()
         self.CaptureMouse() # make sure to capture release outside
-        self.figure._GenerateMouseEvent('down', x, y, 1)
+        self.figure._GenerateMouseEvent('down', x, y, 1, modifiers(event))
 
     def OnLeftUp(self, event):
         x,y = event.GetPosition()
@@ -99,12 +111,12 @@ class GLWidget(GLCanvas):
             self.ReleaseMouse()
         except:
             pass
-        self.figure._GenerateMouseEvent('up', x, y, 1)
+        self.figure._GenerateMouseEvent('up', x, y, 1, modifiers(event))
 
     def OnRightDown(self, event):
         x,y = event.GetPosition()
         self.CaptureMouse() # make sure to capture release outside
-        self.figure._GenerateMouseEvent('down', x, y, 2)
+        self.figure._GenerateMouseEvent('down', x, y, 2, modifiers(event))
 
     def OnRightUp(self, event):
         x,y = event.GetPosition()  
@@ -112,7 +124,7 @@ class GLWidget(GLCanvas):
             self.ReleaseMouse()
         except:
             pass        
-        self.figure._GenerateMouseEvent('up', x, y, 2)
+        self.figure._GenerateMouseEvent('up', x, y, 2, modifiers(event))
     
     def OnDoubleClick(self, event):
         but = 0
@@ -121,24 +133,24 @@ class GLWidget(GLCanvas):
             but = 1            
         elif event.RightDClick():
             but = 2
-        self.figure._GenerateMouseEvent('double', x, y, but)
+        self.figure._GenerateMouseEvent('double', x, y, but, modifiers(event))
     
     def OnMotion(self, event):
         if self.figure:
             # poduce event
             x,y = event.GetPosition()
-            self.figure._GenerateMouseEvent('motion', x, y, 0)
+            self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers(event))
     
     def OnKeyDown(self, event):
         key, text = self._ProcessKey(event)
         ev = self.figure.eventKeyDown
-        ev.Set(key, text)
+        ev.Set(key, text, modifiers(event))
         ev.Fire()
     
     def OnKeyUp(self, event):        
         key, text = self._ProcessKey(event)        
         ev = self.figure.eventKeyUp
-        ev.Set(key, text)
+        ev.Set(key, text, modifiers(event))
         ev.Fire()
     
     def _ProcessKey(self,event):
