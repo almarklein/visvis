@@ -47,6 +47,19 @@ KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
             }
 
 
+def modifiers(event):
+    """Convert the QT modifier state into a tuple of active modifier keys."""
+    mod = ()
+    qtmod = event.modifiers()
+    if QtCore.Qt.ShiftModifier & qtmod:
+        mod += constants.KEY_SHIFT,
+    if QtCore.Qt.ControlModifier & qtmod:
+        mod += constants.KEY_CONTROL,
+    if QtCore.Qt.AltModifier & qtmod:
+        mod += constants.KEY_ALT,
+    return mod
+
+
 class GLWidget(QtOpenGL.QGLWidget):
     """ An OpenGL widget inheriting from PyQt4.QtOpenGL.QGLWidget
     to pass events in the right way to the wrapping Figure class.
@@ -81,7 +94,8 @@ class GLWidget(QtOpenGL.QGLWidget):
             but = 1
         elif event.button() == QtCore.Qt.RightButton:
             but = 2
-        self.figure._GenerateMouseEvent('down', event.x(), event.y(), but)
+        x, y = event.x(), event.y()
+        self.figure._GenerateMouseEvent('down', x, y, but, modifiers(event))
     
     def mouseReleaseEvent(self, event):
         but = 0
@@ -89,7 +103,8 @@ class GLWidget(QtOpenGL.QGLWidget):
             but = 1
         elif event.button() == QtCore.Qt.RightButton:
             but = 2
-        self.figure._GenerateMouseEvent('up', event.x(), event.y(), but)
+        x, y = event.x(), event.y()
+        self.figure._GenerateMouseEvent('up', x, y, but, modifiers(event))
     
     def mouseDoubleClickEvent(self, event):
         but = 0
@@ -97,25 +112,27 @@ class GLWidget(QtOpenGL.QGLWidget):
             but = 1
         elif event.button() == QtCore.Qt.RightButton:
             but = 2
-        self.figure._GenerateMouseEvent('double', event.x(), event.y(), but)
+        x, y = event.x(), event.y()
+        self.figure._GenerateMouseEvent('double', x, y, but, modifiers(event))
     
     def mouseMoveEvent(self, event):
         if self.figure:
-            # fire event        
-            self.figure._GenerateMouseEvent('motion', event.x(), event.y())
+            # fire event   
+            x, y = event.x(), event.y()
+            self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers(event))
     
     def keyPressEvent(self, event):
         ev = self.figure.eventKeyDown        
         key = self._ProcessKey(event)
         text = str(event.text())
-        ev.Set(key, text)
+        ev.Set(key, text, modifiers(event))
         ev.Fire() 
     
     def keyReleaseEvent(self, event):
         ev = self.figure.eventKeyUp
         key = self._ProcessKey(event)
         text = str(event.text())
-        ev.Set(key, text)
+        ev.Set(key, text, modifiers(event))
         ev.Fire()
     
     def _ProcessKey(self,event):
