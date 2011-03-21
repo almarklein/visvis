@@ -803,7 +803,7 @@ def _fromString(lineObject):
         line = line.replace('\\\\','0x07') # temp
         
         # Find string using a regular expression
-        m = re.search("'.*?[^.\\\\]'|''", line)
+        m = re.search("'.*?[^\\\\]'|''", line)
         if not m:
             print("SSDF Warning: string not ended correctly on line %i."%linenr)
             return name, None
