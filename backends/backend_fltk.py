@@ -30,6 +30,20 @@ KEYMAP = {  fltk.FL_SHIFT: constants.KEY_SHIFT,
             fltk.FL_Delete: constants.KEY_DELETE
             }
 
+
+def modifiers():
+    """Convert the fltk modifier state into a tuple of active modifier keys."""
+    mod = ()
+    fltkmod = fltk.Fl.event_state()
+    if fltk.FL_SHIFT & fltkmod:
+        mod += constants.KEY_SHIFT,
+    if fltk.FL_CTRL & fltkmod:
+        mod += constants.KEY_CONTROL,
+    if fltk.FL_ALT & fltkmod:
+        mod += constants.KEY_ALT,
+    return mod
+
+
 class GLWidget(fltk.Fl_Gl_Window):
     """ Implementation of the GL_window, which passes a number of
     events to the Figure object that wraps it.
@@ -54,17 +68,17 @@ class GLWidget(fltk.Fl_Gl_Window):
         if event == fltk.FL_PUSH:
             x, y = fltk.Fl.event_x(), fltk.Fl.event_y()
             but = buttons[fltk.Fl.event_button()]
-            self.figure._GenerateMouseEvent('down', x, y, but)
+            self.figure._GenerateMouseEvent('down', x, y, but, modifiers())
         
         elif event == fltk.FL_RELEASE:            
             x, y = fltk.Fl.event_x(), fltk.Fl.event_y()
             but = buttons[fltk.Fl.event_button()]
             if fltk.Fl.event_clicks() == 1:
                 # double click                
-                self.figure._GenerateMouseEvent('double', x, y, but)
+                self.figure._GenerateMouseEvent('double', x, y, but, modifiers())
             else:
                 # normal release                
-                self.figure._GenerateMouseEvent('up', x, y, but)            
+                self.figure._GenerateMouseEvent('up', x, y, but, modifiers())
         
         elif event in [fltk.FL_MOVE, fltk.FL_DRAG]:
             w,h = self.w(), self.h()
@@ -105,18 +119,18 @@ class GLWidget(fltk.Fl_Gl_Window):
     def OnMotion(self, event):
         # prepare and fire event
         x, y = fltk.Fl.event_x(), fltk.Fl.event_y()
-        self.figure._GenerateMouseEvent('motion', x, y, 0)
+        self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers())
     
     def OnKeyDown(self, event):
         key, text = self._ProcessKey()
         ev = self.figure.eventKeyDown
-        ev.Set(key, text)
+        ev.Set(key, text, modifiers())
         ev.Fire()
     
     def OnKeyUp(self, event):        
         key, text = self._ProcessKey()        
         ev = self.figure.eventKeyUp
-        ev.Set(key, text)
+        ev.Set(key, text, modifiers())
         ev.Fire()
     
     def _ProcessKey(self):
