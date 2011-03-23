@@ -17,7 +17,7 @@ import OpenGL.GL as gl
 
 from visvis.pypoints import Point, Pointset, is_Point, is_Pointset
 from visvis.core.misc import Property, PropWithDraw, DrawAfter
-from visvis import Wobject, Colormap, OrientationForWobjects_mixClass
+from visvis import Wobject, Colormapable, OrientationForWobjects_mixClass
 from visvis.core.light import _testColor, _getColor
 from visvis.wobjects.textures import TextureObjectToVisualize 
 
@@ -386,7 +386,7 @@ class BaseMesh(object):
 # Import here, because they may require BaseMesh
 import visvis.processing as processing
 
-class Mesh(Wobject, BaseMesh):
+class Mesh(Wobject, BaseMesh, Colormapable):
     """ Mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3)
     
     A mesh is a generic object to visualize a 3D object made up of 
@@ -439,7 +439,7 @@ class Mesh(Wobject, BaseMesh):
         self._flatNormals = None
         
         # Create colormap and init texture
-        self._colormap = Colormap()
+        Colormapable.__init__(self)
         self._texture = None
         
         # Material properties
@@ -672,23 +672,13 @@ class Mesh(Wobject, BaseMesh):
         else:
             self._texture = None
     
-    
-    @PropWithDraw
-    def colormap():
-        """ Get/Set the colormap. The argument must be a tuple/list of 
-        iterables with each element having 3 or 4 values. The argument may
-        also be a Nx3 or Nx4 numpy array. In all cases the data is resampled
-        to create a 256x4 array.
-        
-        Visvis defines a number of standard colormaps in the global visvis
-        namespace: CM_AUTUMN, CM_BONE, CM_COOL, CM_COPPER, CM_GRAY, CM_HOT, 
-        CM_HSV, CM_JET, CM_PINK, CM_SPRING, CM_SUMMER, CM_WINTER. 
-        A dict of name-colormap pairs is also available as vv.colormaps.
-        """
-        def fget(self):
-            return self._colormap.GetMap()
-        def fset(self, value):
-            self._colormap.SetMap(value)
+#     def _clim():
+#         """ Apply color limits to data if it is colormap data.
+#         """
+#         def fget(self):
+#             return self._texture1._clim
+#         def fset(self, value):
+#             self._texture1._clim = value
     
     
     ## Method implementations to function as a proper wobject

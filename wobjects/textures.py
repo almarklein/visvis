@@ -27,7 +27,7 @@ import math, time, os
 
 from visvis.pypoints import Point, Pointset, Aarray, is_Aarray
 #
-from visvis import Range, Wobject
+from visvis import Range, Wobject, Colormapable
 from visvis.core.misc import Property, PropWithDraw, DrawAfter, getColor
 from visvis.core.misc import Transform_Translate, Transform_Scale, Transform_Rotate
 from visvis.core.shaders import vshaders, fshaders, GlslProgram
@@ -200,7 +200,7 @@ class TextureObjectToVisualize(TextureObject):
         return scale, bias
 
 
-class BaseTexture(Wobject):
+class BaseTexture(Wobject, Colormapable):
     """ BaseTexture(parent, data)
     
     Base texture class for visvis 2D and 3D textures. 
@@ -215,12 +215,10 @@ class BaseTexture(Wobject):
         
         # Instantiate as wobject (after making "sure" this texture can be ok)
         Wobject.__init__(self, parent)
+        Colormapable.__init__(self)
         
         # create texture (remember, this is an abstract class)
         self._texture1 = None
-        
-        # create colormap
-        self._colormap = Colormap()
         
         # create glsl program for this texture...
         self._program1 = program =  GlslProgram()
@@ -344,35 +342,12 @@ class BaseTexture(Wobject):
             gl.glTexParameteri(texType, gl.GL_TEXTURE_MAG_FILTER, tmp)
     
     
-    @PropWithDraw
-    def colormap():
-        """ Get/Set the colormap. The argument must be a tuple/list of 
-        iterables with each element having 3 or 4 values. The argument may
-        also be a Nx3 or Nx4 numpy array. In all cases the data is resampled
-        to create a 256x4 array. To specify a mapping for each color 
-        seperately, supply a dict with names R,G,B,A, where each value
-        is a list with 2-element tuples.
-        
-        Visvis defines a number of standard colormaps in the global visvis
-        namespace: CM_AUTUMN, CM_BONE, CM_COOL, CM_COPPER, CM_GRAY, CM_HOT, 
-        CM_HSV, CM_JET, CM_PINK, CM_SPRING, CM_SUMMER, CM_WINTER. 
-        A dict of name-colormap pairs is also available as vv.colormaps.
-        """
-        def fget(self):
-            return self._colormap.GetMap()
-        def fset(self, value):
-            self._colormap.SetMap(value)
-    
-    @PropWithDraw
-    def clim():
-        """ Get/Set the contrast limits. For a gray colormap, clim.min 
-        is black, clim.max is white.
+    def _clim():
+        """ Make the clim property use the _clim property of texture1
         """
         def fget(self):
             return self._texture1._clim
         def fset(self, value):
-            if not isinstance(value, Range):
-                value = Range(value)
             self._texture1._clim = value
     
     

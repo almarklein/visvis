@@ -17,7 +17,7 @@ import weakref
 
 from visvis.pypoints import Point, Pointset
 from visvis.core.misc import Property
-from visvis import Colormap
+from visvis import Colormapable
 #
 from visvis import Box, DraggableBox
 from visvis import Label, Text
@@ -28,8 +28,78 @@ from visvis.wibjects.buttons import RadioButton
 from visvis.wibjects.sliders import RangeSlider
 
 
+class BaseMapableEditor(DraggableBox):
+    """ BaseMapableEditor(parent)
+    
+    Base class for widgets that are used to edit the mapable properties
+    of objects: colormap and clim.
+    
+    """
+    
+    def __init__(self, parent):
+        DraggableBox.__init__(self, parent)
+        
+        # Objects to map
+        self._mapables = []
+    
+    
+    def GetMapables(self):
+        """ GetMapables()
+        
+        Get a list of mappable objects that was given earlier using
+        SetMapables. If an axes or figure was given, all eligable 
+        objects are queried from their children.
+        
+        """
+        
+        # Remove dead refs
+        self._mapables = [ref for ref in self._mapables if ref() is not None]
+        
+        # Get the actual mapable objects
+        mapables = []
+        for arg in self._mapables:
+            # Get real ref
+            arg = arg()
+            if isinstance(arg, (BaseFigure, Axes)):
+                mapables.extend(arg.FindObjects(Colormapable))
+            elif isinstance(arg, Colormapable):
+                mapables.append(arg)
+        
+        # Done
+        return mapables
+    
+    
+    def SetMapables(self, *args):
+        """ SetMapables(mapable1, mapable2, mapable3, etc.)
+        
+        Set the mapables to take into account. A mapable is any
+        wibject or wobject that inherits from Colormapable (and can
+        be recognized by having a colormap and clim property).
+        
+        The argument may also be a list or tuple of objects, or an Axes 
+        or Figure instance, in which case all mapable children are used.
+        If args is not given, the parent is used.
+        
+        """
+        
+        # Parse input
+        if not args:
+            args = [self.parent]
+        elif len(args)==1 and hasattr(args[0], '__len__'):
+            args = args[0]
+        if not args:
+            return
+        
+        # Get the weak refs to the actual wobjects
+        self._mapables = []
+        for arg in args:
+            if isinstance(arg, (BaseFigure,Axes)) or hasattr(arg, '_colormap'):
+                self._mapables.append( weakref.ref(arg) )
+            else:
+                print 'Warning object is not mappable: ', arg 
 
-class ClimEditor(DraggableBox):
+
+class ClimEditor(BaseMapableEditor):
     """ CLimEditor(parent, *args)
     
     A wibject to edit the clim property of textures (thereby setting
@@ -42,7 +112,7 @@ class ClimEditor(DraggableBox):
     """
     
     def __init__(self, parent, *args):
-        DraggableBox.__init__(self, parent)
+        BaseMapableEditor.__init__(self, parent)
         
         # init size
         self.position.w = 300
@@ -61,6 +131,7 @@ class ClimEditor(DraggableBox):
         
         # Set mappables
         self.SetMapables(*args)
+        self._InitFromMapables()
     
     
     @property
@@ -72,40 +143,19 @@ class ClimEditor(DraggableBox):
     def _UpdateFull(self, event):
         for mappable in self.GetMapables():
             ra = self._slider.range
-            mappable.SetClim(ra.min, ra.max)
+            if hasattr(mappable, 'SetClim'):
+                mappable.SetClim(ra.min, ra.max)
+            else:
+                mappable.clim = ra.min, ra.max
     
     
-    def SetMapables(self, *args):
-        """ SetMapables(mapable1, mapable2, mapable3, etc.)
-        
-        Set the mapables to apply the clim to. A mapable is any
-        wibject or wobject that has a clim property and a SetClim method.
-        
-        The argument may also be a list or tuple of objects, or an Axes 
-        or Figure instance, in which case the tree is searched for eligable
-        objects each time the colormap is updated. If args is not given, 
-        the parent is used.
+    def _InitFromMapables(self):
+        """ _InitFromMapables()
         
         The clim of the last mapable obtained by GetMapables is used
         to initialize the editor (if possible).
+        
         """
-        
-        # Parse input
-        if not args:
-            args = [self.parent]
-        elif len(args)==1 and hasattr(args[0], '__len__'):
-            args = args[0]
-        if not args:
-            return
-        
-        # Get the weak refs to the actual wobjects
-        self._mapables = []
-        for arg in args:
-            if isinstance(arg, (BaseFigure,Axes)) or (
-                hasattr(arg, 'clim') and hasattr(arg, 'SetClim')):
-                self._mapables.append( weakref.ref(arg) )
-            else:
-                print 'Warning object is not mappable: ', arg 
         
         # Get the last one and obtain its limits
         mappables = self.GetMapables()
@@ -114,40 +164,9 @@ class ClimEditor(DraggableBox):
             data = mappables[-1]._texture1._dataRef
             self._slider.fullRange = data.min(), data.max()
             self._slider.range = mappables[-1].clim
-    
-    
-    def GetMapables(self):
-        """ GetMapables()
-        
-        Get a list of the objects to apply the colormap to. If an axes or 
-        figure was given, all eligable objects are queried from their 
-        children.
-        
-        """
-        
-        # Remove dead refs
-        self._mapables = [ref for ref in self._mapables if ref() is not None]
-        
-        # Get the actual mapable objects
-        mapables = []
-        for arg in self._mapables:
-            # Get real ref
-            arg = arg()
-            if isinstance(arg, (BaseFigure, Axes)):
-                tmp1 = arg.FindObjects('SetClim')
-                tmp2 = arg.FindObjects('clim')
-                mapables.extend(set.intersection(set(tmp1), set(tmp2)))
-            elif hasattr(arg, 'clim') and hasattr(arg, 'SetClim'):
-                mapables.append( arg )
-            else:
-                pass # We checked during SetMapables() method.
-        
-        # Done
-        return mapables
 
 
-
-class ColormapEditor(DraggableBox):
+class ColormapEditor(BaseMapableEditor):
     """ ColormapEditor(parent *args)
     
     A wibject to edit colormaps. 
@@ -159,7 +178,7 @@ class ColormapEditor(DraggableBox):
     """
     
     def __init__(self, parent, *args):
-        DraggableBox.__init__(self, parent)
+        BaseMapableEditor.__init__(self, parent)
         
         # init size
         self.position.w = 300
@@ -196,6 +215,7 @@ class ColormapEditor(DraggableBox):
         
         # Set mappables
         self.SetMapables(*args)
+        self._InitFromMapables()
     
     
     def _OnDown(self, event):
@@ -253,119 +273,69 @@ class ColormapEditor(DraggableBox):
         self._nodeWidget._OnUp()
     
     
-    def SetMapables(self, *args):
-        """ SetMapables(mapable1, mapable2, mapable3, etc.)
-        
-        Set the mapables to apply the colormap to. A mapable is any
-        wibject or wobject that has a _colormap attribute. 
-        
-        The argument may also be a list or tuple of objects, or an Axes 
-        or Figure instance, in which case the tree is searched for eligable
-        objects each time the colormap is updated. If args is not given, 
-        the parent is used.
+    def _InitFromMapables(self):
+        """ _InitFromMapables()
         
         The colormap of the last mapable obtained by GetMapables is used
-        to set the nodes in the wibject (if possible).
+        to initialize the editor (if possible).
         
         """
         
-        # Parse input
-        if not args:
-            args = [self.parent]
-        elif len(args)==1 and hasattr(args[0], '__len__'):
-            args = args[0]
-        if not args:
+        # Get the last mappable and obtain its colormap
+        mappables = self.GetMapables()
+        if not mappables:
+            return        
+        cmap = mappables[-1]._colormap
+        if not cmap:
             return
         
-        # Get the weak refs to the actual wobjects
-        self._mapables = []
-        for arg in args:
-            if isinstance(arg, (BaseFigure,Axes)) or hasattr(arg, '_colormap'):
-                self._mapables.append( weakref.ref(arg) )
-            else:
-                print 'Warning object is not mappable: ', arg 
+        # Get node data
+        nodeData = cmap.GetMap()
         
-        # Get the last one and obtain its colormap
-        mappables = self.GetMapables()
-        if mappables:
-            cmap = mappables[-1]._colormap
-            if cmap:
-                nodeData = cmap.GetMap()
+        # Can we make nodes of it?
+        if isinstance(nodeData, list):
+            
+            # Obtain position
+            tt = np.linspace(0,1,len(nodeData))
+            
+            # Clear nodes
+            for i in range(4):
+                self._nodeWidget._allNodes[i].clear()
                 
-                # Can we make nodes of it?
-                if isinstance(nodeData, list):
-                    
-                    # Obtain position
-                    tt = np.linspace(0,1,len(nodeData))
-                    
-                    # Clear nodes
-                    for i in range(4):
-                        self._nodeWidget._allNodes[i].clear()
-                        
-                    # Create nodes
-                    for t, node in zip(tt,nodeData):
-                        for i in range(4):
-                            nodes = self._nodeWidget._allNodes[i]
-                            if i< len(node):
-                                nodes.append(t,1-node[i])
-                            else:
-                                nodes.append(t,0)
-                
-                elif isinstance(nodeData, dict):
-                    # Allow several color names
-                    for key in nodeData.keys():
-                        if key.lower() in ['r', 'red']:
-                            nodeData['r'] = nodeData[key]
-                        elif key.lower() in ['g', 'green']:
-                            nodeData['g'] = nodeData[key]
-                        if key.lower() in ['b', 'blue']:
-                            nodeData['b'] = nodeData[key]
-                        if key.lower() in ['a', 'alpha']:
-                            nodeData['a'] = nodeData[key]
-                    
-                    # Create nodes
-                    for i in range(4):
-                        key = 'rgba'[i]
-                        if key in nodeData:
-                            nodes = self._nodeWidget._allNodes[i]
-                            nodes.clear()
-                            for t, val in nodeData[key]:
-                                nodes.append(t,1-val)
-                
-                # Update
-                self._nodeWidget._UpdateFull()
-                
+            # Create nodes
+            for t, node in zip(tt,nodeData):
+                for i in range(4):
+                    nodes = self._nodeWidget._allNodes[i]
+                    if i< len(node):
+                        nodes.append(t,1-node[i])
+                    else:
+                        nodes.append(t,0)
         
+        elif isinstance(nodeData, dict):
+            # Allow several color names
+            for key in nodeData.keys():
+                if key.lower() in ['r', 'red']:
+                    nodeData['r'] = nodeData[key]
+                elif key.lower() in ['g', 'green']:
+                    nodeData['g'] = nodeData[key]
+                if key.lower() in ['b', 'blue']:
+                    nodeData['b'] = nodeData[key]
+                if key.lower() in ['a', 'alpha']:
+                    nodeData['a'] = nodeData[key]
+            
+            # Create nodes
+            for i in range(4):
+                key = 'rgba'[i]
+                if key in nodeData:
+                    nodes = self._nodeWidget._allNodes[i]
+                    nodes.clear()
+                    for t, val in nodeData[key]:
+                        nodes.append(t,1-val)
+        
+        # Update
+        self._nodeWidget._UpdateFull()
+
     
-    def GetMapables(self):
-        """ GetMapables()
-        
-        Get a list of the objects to apply the colormap to. If an axes or 
-        figure was given, all eligable objects are queried from their 
-        children.
-        
-        """
-        
-        # Remove dead refs
-        self._mapables = [ref for ref in self._mapables if ref() is not None]
-        
-        # Get the actual mapable objects
-        mapables = []
-        for arg in self._mapables:
-            # Get real ref
-            arg = arg()
-            if isinstance(arg, (BaseFigure, Axes)):
-                tmp = arg.FindObjects('_colormap')
-                mapables.extend(tmp)
-            elif hasattr(arg, '_colormap'):
-                mapables.append( arg )
-            else:
-                pass # We checked during SetMapables() method.
-        
-        # Done
-        return mapables
-
-
 class CM_NodeWidget(Box):
     """ CM_NodeWidget(parent)
     
@@ -637,7 +607,7 @@ class Colorbar(Box):
         if par is None:
             return
         elif isinstance(par, (BaseFigure, Axes)):
-            mapables = par.FindObjects('_colormap')
+            mapables = par.FindObjects(Colormapable)
         elif isinstance(par, ColormapEditor):
             mapables = par.GetMapables()
         elif isinstance(par, ClimEditor):
@@ -665,7 +635,7 @@ class Colorbar(Box):
         
         
         # draw plane
-        if mapable and isinstance(mapable._colormap, Colormap):
+        if mapable:
             # Use it's colormap texture
             mapable._colormap.Enable()
             # Disable alpha channel (by not blending)
@@ -754,5 +724,3 @@ class Colorbar(Box):
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         # clean up        
         gl.glEnable(gl.GL_LINE_SMOOTH)
-        
-    
