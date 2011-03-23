@@ -691,6 +691,9 @@ class Colormapable(object):
     
     Instances of this class have a colormap propery and a clim property.
     
+    Inheriting classes can overload _GetColormap, _SetColormap, _GetClim,
+    _SetClim to overload the default behavior.
+    
     """
     
     def __init__(self):
@@ -699,7 +702,7 @@ class Colormapable(object):
     
     @PropWithDraw
     def colormap():
-        """ Get/aet the colormap. This can be:
+        """ Get/get the colormap. This can be:
           * A tuple/list of element which each have 3 or 4 values (RGB/RGBA)
           * A Nx3 or Nx4 numpy array
           * A dict with names R,G,B,A, where each value is a list. Each 
@@ -710,9 +713,9 @@ class Colormapable(object):
         vv.colormaps for a dict with all available default colormaps.
         """
         def fget(self):
-            return self._colormap.GetMap()
+            return self._GetColormap()
         def fset(self, value):
-            self._colormap.SetMap(value)
+            self._SetColormap(value)
     
     @PropWithDraw
     def clim():
@@ -720,8 +723,19 @@ class Colormapable(object):
         is black, clim.max is white.
         """
         def fget(self):
-            return self._clim
+            return self._GetClim()
         def fset(self, value):
             if not isinstance(value, Range):
                 value = Range(value)
-            self._clim = value
+            self._SetClim(value)
+    
+    def _GetColormap(self):
+        return self._colormap.GetMap()
+    def _SetColormap(self, value):
+        self._colormap.SetMap(value)
+    
+    def _GetClim(self):
+        return self._clim
+    def _SetClim(self, value):
+        self._clim = value
+    

@@ -286,6 +286,10 @@ class BaseMesh(object):
         
         # Store
         self._values = values
+        
+        # A bit of a hack... reset clim for Mesh class
+        if isinstance(self, Colormapable):
+            self.clim = 0,1
     
     
     @DrawAfter
@@ -462,6 +466,9 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         
         # Save data
         BaseMesh.__init__(self, *args, **kwargs)
+        
+        # Store value2, which are like 'values' but clim-corrected
+        self._values2 = self._values
     
     
     ## Material properties: how the object is lit
@@ -672,13 +679,16 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         else:
             self._texture = None
     
-#     def _clim():
-#         """ Apply color limits to data if it is colormap data.
-#         """
-#         def fget(self):
-#             return self._texture1._clim
-#         def fset(self, value):
-#             self._texture1._clim = value
+    
+    def _GetClim(self):
+        return self._clim
+    def _SetClim(self, value):
+        self._clim = value
+        if self._values is not None:
+            if value.min==0 and value.max==1:
+                self._values2 = self._values
+            else:
+                self._values2 = (self._values - value.min) * (1.0/(value.range))
     
     
     ## Method implementations to function as a proper wobject
@@ -775,22 +785,25 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         # Prepare colormap indices, texture cords or colors (if available)
         useTexCords = False
         if self._values is not None:
-            if self._values.shape[1] == 1:
+            values = self._values
+            if self._values2 is not None:
+                values = self._values2
+            if values.shape[1] == 1:
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-                gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, self._values)
+                gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, values)
                 self._colormap.Enable(0)
-            elif self._values.shape[1] == 2 and self._texture is not None:
+            elif values.shape[1] == 2 and self._texture is not None:
                 useTexCords = True
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-                gl.glTexCoordPointerf(self._values)
+                gl.glTexCoordPointerf(values)
                 self._texture.Enable(0)
-            elif self._values.shape[1] in [3,4]:
+            elif values.shape[1] in [3,4]:
                 useTexCords = True
                 gl.glEnable(gl.GL_COLOR_MATERIAL)
                 gl.glColorMaterial(gl.GL_FRONT_AND_BACK,
                                     gl.GL_AMBIENT_AND_DIFFUSE)
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)
-                gl.glColorPointerf(self._values)
+                gl.glColorPointerf(values)
         
         # Prepare material (ambient and diffuse may be overriden by colors)
         if shading == 'plain':

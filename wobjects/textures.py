@@ -342,13 +342,12 @@ class BaseTexture(Wobject, Colormapable):
             gl.glTexParameteri(texType, gl.GL_TEXTURE_MAG_FILTER, tmp)
     
     
-    def _clim():
-        """ Make the clim property use the _clim property of texture1
-        """
-        def fget(self):
-            return self._texture1._clim
-        def fset(self, value):
-            self._texture1._clim = value
+    # Overload clim private methods so that the clim property
+    # uses the clim of texture1
+    def _GetClim(self):
+        return self._texture1._clim
+    def _SetClim(self, value):
+       self._texture1._clim = value
     
     
     @DrawAfter
