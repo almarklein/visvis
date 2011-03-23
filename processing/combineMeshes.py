@@ -20,8 +20,7 @@ def combineMeshes(meshes):
     vpf = 0
     hasNormals = True
     hasFaces = True
-    hasColors = True
-    hasTexcords = True
+    hasValues = True
     #
     for mesh in meshes:
         if vpf == 0:
@@ -37,8 +36,7 @@ def combineMeshes(meshes):
         if True:
             # Compare always
             hasNormals = hasNormals and (mesh._normals is not None)
-            hasColors = hasColors and (mesh._colors is not None)
-            hasTexcords = hasTexcords and (mesh._texcords is not None)            
+            hasValues = hasValues and (mesh._values is not None)
     
     # Combine vertices    
     vertices = np.concatenate( [m._vertices for m in meshes] )
@@ -58,15 +56,10 @@ def combineMeshes(meshes):
     if hasNormals:
         normals = np.concatenate( [m._normals for m in meshes] )
     
-    # Combine colors
-    colors = None
-    if hasColors:
-        colors = np.concatenate( [m._colors for m in meshes] )
-    
-    # Combine texcords
-    texcords = None
-    if hasTexcords:
-        texcords = np.concatenate( [m._texcords for m in meshes] )
+    # Combine values
+    values = None
+    if hasValues:
+        values = np.concatenate( [m._values for m in meshes] )
     
     # Done
-    return BaseMesh(vertices, normals, faces, colors, texcords, vpf)
+    return BaseMesh(vertices, faces, normals, values, vpf)

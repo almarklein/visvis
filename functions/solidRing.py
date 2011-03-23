@@ -108,8 +108,8 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
         axes = vv.gca()
     
     # Create mesh
-    m = vv.OrientableMesh(axes, vertices, normals, indices, 
-        texcords=texcords, verticesPerFace=4)    
+    m = vv.OrientableMesh(axes, vertices, indices, normals, values=texcords,
+            verticesPerFace=4)    
     #
     if translation is not None:
         m.translation = translation

@@ -228,4 +228,4 @@ def lineToMesh(pp, radius, vertex_num):
     faces.shape = faces.shape[0]/4, 4
     
     # Done!
-    return BaseMesh(vertices, surfaceNormals, faces)
+    return BaseMesh(vertices, faces, surfaceNormals)

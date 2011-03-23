@@ -125,8 +125,8 @@ def plot3D( vuvi,
     # Get axes
     ax = vv.gca()
     
-    ms = vv.Mesh(ax,vxyz, normals=vxyz, faces=meshIndx)
-    ms.SetTexcords(np.reshape(depVal,np.size(depVal)))
+    ms = vv.Mesh(ax, vxyz, faces=meshIndx, normals=vxyz)
+    ms.SetValues(np.reshape(depVal,np.size(depVal)))
     ms.ambient = ambient
     ms.diffuse = diffuse
     ms.colormap = colormap

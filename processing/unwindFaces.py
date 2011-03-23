@@ -10,7 +10,7 @@ def unwindFaces(mesh):
     """ unwindFaces(mesh)
     
     Unwinds the faces to make new versions of the vertices, normals,
-    color and texCords, which are usually larger. The new arrays 
+    values, which are usually larger. The new arrays 
     represent the same surface, but is described without a faces
     array. 
     
@@ -46,31 +46,16 @@ def unwindFaces(mesh):
         mesh._normals = newNormals
         mesh._flatNormals = None
     
-    # Unwind color
-    if mesh._colors is not None:
+    # Unwind values
+    if mesh._values is not None:
         # Get ref and allocate new array
-        colors = mesh._colors
-        newColors = np.zeros((N,3), dtype='float32')
+        values = mesh._values
+        M = values.shape[1]
+        newValues = np.zeros((N,M), dtype='float32')
         for i in range(N):
-            newColors[i,:] = colors[faces[i]]
+            newValues[i,:] = values[faces[i]]
         # Store
-        mesh._colors = newColors
-    
-    # Unwind texcords
-    if mesh._texcords is not None:
-        # Get ref and allocate new array
-        texcords = mesh._texcords
-        if mesh._texcords.ndim==1:
-            newTexcords = np.zeros((N,), dtype='float32')
-            for i in range(N):
-                newTexcords[i] = texcords[faces[i]]
-        else:                    
-            verticesPerFace = mesh._texcords.shape[1]
-            newTexcords = np.zeros((N,verticesPerFace), dtype='float32')
-            for i in range(N):
-                newTexcords[i,:] = texcords[faces[i]]
-        # Store
-        mesh._texcords = newTexcords
+        mesh._values = newValues
     
     # Remove reference to faces
     mesh._faces = None

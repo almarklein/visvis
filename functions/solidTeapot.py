@@ -102,7 +102,7 @@ def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
         axes = vv.gca()
     
     # Create Mesh object
-    m = vv.OrientableMesh(axes, vertices, faces=faces)
+    m = vv.OrientableMesh(axes, vertices, faces)
     #
     if translation is not None:
         m.translation = translation

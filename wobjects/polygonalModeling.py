@@ -11,6 +11,7 @@ It also defines lights and algorithmic for managing polygonal models.
 
 """
 
+import sys
 import numpy as np
 import OpenGL.GL as gl
 
@@ -42,9 +43,12 @@ def checkDimsOfArray(value, *ndims):
         except Error:
             raise ValueError()
     
+    # Allow 1D?
+    if value.ndim==1 and 0 in ndims:
+        value = value.reshape(value.size,1) # reshape gives view on same data
+    
     # value is guaranteed to be a numpy array here; check dimensionality
-    if not ((value.ndim == 2 and value.shape[1] in ndims) or 
-            (value.ndim == 1 and 0 in ndims)):
+    if not value.ndim == 2 and value.shape[1] in ndims:
         raise ValueError()
     if value.dtype == np.float32:
         return value
@@ -53,21 +57,58 @@ def checkDimsOfArray(value, *ndims):
 
 
 class BaseMesh(object):
-    """ BaseMesh(vertices, normals=None, faces=None,
-            colors=None, texcords=None, verticesPerFace=3)
+    """ BaseMesh(vertices, faces=None, normals=None, values=None,
+                                                            verticesPerFace=3)
     
     The BaseMesh class represents a mesh in its pure mathematical
     form (without any visualization properties). Essentially, it
-    serves as a container for the vertices, normals, faces, colors,
-    and texcords.
+    serves as a container for the vertices, normals, faces, and values.
     
     See the Mesh and OrientableMesh classes for representations that
     include visualization properties.
     
+    The old signature may also be used, but will be removed in future versions:
+    BaseMesh(vertices, normals=None, faces=None, normals=None, 
+                                    colors=None, texcords, verticesPerFace=3)
+    
     """
     
-    def __init__(self, vertices, normals=None, faces=None,
-            colors=None, texcords=None, verticesPerFace=3):
+    def __init__(self, *args, **kwargs):
+        
+        # Get arguments
+        if self._test_if_argumens_use_new_style(*args, **kwargs):
+            arguments = self._new_init(*args, **kwargs)
+        else:
+            arguments = self._old_init(*args, **kwargs)
+            try:
+                raise Exception("Mesh signature changed.")
+            except Exception, why:
+                type, value, tb = sys.exc_info()
+                frame = tb.tb_frame
+                del tb
+            print('DeprecationWarning: The Mesh and BaseMesh signature ' +
+                'have been changed. The old signature will be disabled '
+                'in future versions. Where to look:')
+            # Get lineno and fname
+            for iter in range(5):
+                frame = frame.f_back
+                if frame is None:
+                    break
+                fname = frame.f_code.co_filename
+                lineno = frame.f_lineno
+                if 'polygonalModeling' not in fname:
+                    print('line %i in %s' % (lineno, fname))
+                    break
+        vertices, faces, normals, values, verticesPerFace = arguments
+        
+        # Obtain data from other mesh?
+        if isinstance(vertices, BaseMesh):
+            other = vertices
+            vertices = other._vertices
+            faces = other._faces
+            normals = other._normals
+            values = other._values
+            verticesPerFace = other._verticesPerFace
         
         # Set verticesPerFace first (can be reset by faces)
         verticesPerFace = int(verticesPerFace)
@@ -78,16 +119,93 @@ class BaseMesh(object):
         
         # Set all things (checks are performed in set methods)
         self._vertices = None
-        self._normals = None
         self._faces = None
-        self._colors = None
-        self._texcords = None
+        self._normals = None
+        self._values = None
         #
         self.SetVertices(vertices)
-        self.SetNormals(normals)
         self.SetFaces(faces)
-        self.SetColors(colors)
-        self.SetTexcords(texcords)
+        self.SetNormals(normals)
+        self.SetValues(values)
+    
+    
+    def _test_if_argumens_use_new_style(self, *args, **kwargs):
+        """ Returns True if the new style is used, False otherwise.
+        """
+        
+        def getArgAsArrayIfPossible(nr):
+            try:
+                ob = args[nr]
+            except IndexError:
+                return None
+            try:
+                return checkDimsOfArray(ob, 0,1,2,3,4)
+            except Exception:
+                return ob
+        
+        intDtypes = [   np.uint8, np.uint16, np.uint32, 
+                        np.int8, np.int16, np.int32 ]
+        
+        # Get values 
+        vertices = getArgAsArrayIfPossible(0)
+        faces_new = getArgAsArrayIfPossible(1)
+        normals_new = getArgAsArrayIfPossible(2)
+        normals_old, faces_old = faces_new, normals_new
+        
+        # Things we know for sure
+        
+        # Only the new style has 6 args
+        if len(args) == 6:
+            return False
+        
+        # The faces may have a different shape as vertices, normals cannot
+        if faces_new is not None and faces_new.shape != vertices.shape:
+            return True
+        if faces_old is not None and faces_old.shape != vertices.shape:
+            return False
+        
+        # Faces are usually integers (but not necesarily) normals are never
+        if faces_new is not None and faces_new.dtype in intDtypes:
+            return True
+        if faces_old is not None and faces_old.dtype in intDtypes:
+            return False
+        
+        # New style uses values arg, old style uses color and texcords
+        if 'values' in kwargs:
+            return True
+        if 'colors' in kwargs or 'texcords' in kwargs:
+            return False
+        
+        # Things we know pretty sure
+        
+        # The faces are very unlikely to have the same shape as the vertices
+        if normals_new is not None and normals_new.shape == vertices.shape:
+            return True
+        if normals_old is not None and normals_old.shape == vertices.shape:
+            return False
+        
+        # Not sure, assume new style, it will probably not matter
+        return True
+    
+    
+    def _new_init(self, vertices=None, faces=None, normals=None, values=None,
+                                        verticesPerFace=3):
+        
+        # Return
+        return vertices, faces, normals, values, verticesPerFace
+    
+    
+    def _old_init(self, vertices, normals=None, faces=None,
+                            colors=None, texcords=None, verticesPerFace=3):
+        
+        # Set values from colors and texcords
+        if colors is not None:
+            values = colors
+        else:
+            values = texcords
+        
+        # Return args in the new order
+        return vertices, faces, normals, values, verticesPerFace
     
     
     @DrawAfter
@@ -120,64 +238,89 @@ class BaseMesh(object):
     
     
     @DrawAfter
+    def SetValues(self, values):
+        """ SetValues(values)
+        
+        Set the value data for each vertex. This can be given as:
+          * Nx1 array, representing the indices in a colormap
+          * Nx2 array, representing the texture coordinates in a texture
+          * Nx3 array, representing the RGB values at each vertex
+          * Nx4 array, representing the RGBA va;ues at each vertex
+        
+        Use None as an argument to remove the values data.
+        
+        """
+        if values is None:
+            self._values = None # User explicitly wants to disable values
+            return
+        
+        # Make numpy array
+        try:
+            values = checkDimsOfArray(values, 0, 1, 2, 3, 4)
+        except ValueError:
+            raise ValueError("Values should be Nx1, Nx2, Nx3 or Nx4.")
+        
+        if values.shape[1] == 1:
+            # Colormap indices: test data type
+            if values.dtype == np.float32:
+                pass
+            else:
+                values = values.astype(np.float32)
+        
+        elif values.shape[1] == 2:
+            # Texture coordinates: test data type
+            if values.dtype == np.float32:
+                pass
+            else:
+                values = values.astype(np.float32)
+        
+        elif values.shape[1] in [3,4]:
+            # Color: scale color range between 0 and 1
+            if values.dtype in [np.float32, np.float64] and values.max()<1.1:
+                pass
+            elif values.dtype == np.uint8:
+                values = values.astype(np.float32) / 256.0
+            else:
+                mi, ma = values.min(), values.max()
+                values = (values.astype(np.float32) - mi) / (ma-mi)
+        
+        # Store
+        self._values = values
+    
+    
+    @DrawAfter
     def SetColors(self, colors):
         """ SetColors(colors)
+        
+        Deprecated: use SetValues() instead.
         
         Set the color data as a Nx3 numpy array or as a 3D Pointset. 
         Use None as an argument to remove the color data.
         
+        
         """
-        if colors is not None:
-            # Scale
-            if colors.dtype in [np.float32, np.float64] and colors.max()<1.1:
-                pass
-            elif colors.dtype == np.uint8:
-                colors = colors.astype(np.float32) / 256.0
-            else:
-                mi, ma = colors.min(), colors.max()
-                colors = (colors.astype(np.float32) - mi) / (ma-mi)
-            # Check shape
-            try:
-                self._colors = checkDimsOfArray(colors, 3, 4)
-            except ValueError:
-                raise ValueError("Colors should represent an array of colors (RGB or RGBA).")
-        else:
-            self._colors = None # User explicitly wants to disable colors
+        print('DeprecationWarning: The SetColors() and SetTexcords() methods '+
+                'are replaced by setValues(). ' +
+                'The old methods will be removed in future versions.')
+        
+        self.SetValues(colors)
     
     
     @DrawAfter
     def SetTexcords(self, texcords):
         """ SetTexcords(texcords)
         
+        Deprecated: use SetValues() instead.
+        
         Set the texture coordinates as a Nx2 numpy array or as a 2D Pointset.
         Use None as an argument to turn off the texture.
         
         """
-        if texcords is not None:
+        print('DeprecationWarning: The SetColors() and SetTexcords() methods '+
+                'are replaced by setValues(). ' +
+                'The old methods will be removed in future versions.')
         
-            if isinstance(texcords, np.ndarray):
-                # Test dimensions
-                if texcords.ndim == 2 and texcords.shape[1] == 2:
-                    pass # Texture coordinates
-                elif texcords.ndim == 1:
-                    pass # Colormap entries
-                else:
-                    raise ValueError("Texture coordinates must be 2D or 1D.")
-                # Test data type
-                if texcords.dtype == np.float32:
-                    self._texcords = texcords
-                else:
-                    self._texcords = texcords.astype(np.float32)
-            
-            elif is_Pointset(texcords):
-                if not texcords.ndim==2:
-                    raise ValueError("Texture coordinates must be 2D or 1D.")
-                self._texcords = texcords.data
-            else:
-                raise ValueError("Texture coordinates must be a numpy array or Pointset.")
-        
-        else:
-            self._texcords = None # User explicitly wants to disable texcoords
+        self.SetValues(texcords)
     
     
     @DrawAfter
@@ -244,8 +387,7 @@ class BaseMesh(object):
 import visvis.processing as processing
 
 class Mesh(Wobject, BaseMesh):
-    """ Mesh(parent, vertices, normals=None, faces=None, 
-        colors=None, texcords=None, verticesPerFace=3)
+    """ Mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3)
     
     A mesh is a generic object to visualize a 3D object made up of 
     polygons. These polygons can be triangles or quads. The mesh
@@ -254,46 +396,43 @@ class Mesh(Wobject, BaseMesh):
     be set individually for the faces and edges (using the faceColor,
     edgeColor, faceShading and edgeShading properties). 
     
-    A mesh can also be created from another mesh using Mesh(parent, otherMesh).
+    A mesh can also be created from another mesh using Mesh(parent, otherMesh),
+    where otherMesh should be an instance of BaseMesh.
+    
+    The old signature may also be used, but will be removed in future versions:
+    Mesh(vertices, normals=None, faces=None, normals=None, 
+                                    colors=None, texcords, verticesPerFace=3)
     
     Parameters
     ----------
-    Vertices : Nx3 numpy array 
+    vertices : Nx3 numpy array 
         The vertex positions in 3D space.
-    Normals : Nx3 numpy array
-        The vertex normals. If not given, they are calcululated
-        from the vertices.
-    Faces : (optional) numpy array or list of indices
+    faces : (optional) numpy array or list of indices
         Defines the faces. If this array is Nx3 or Nx4, verticesPerFace is
         inferred from this array. Faces should be of uint8, uint16 or
         uint32 (if it is not, the data is converted to uint32).
-    Colors : (optional) Nx3 or Nx4 numpy array
-        The ambient and diffuse color for each vertex. If both colors and
-        texcords are given, the texcords are ignored.
-    Texcords : (optional) numpy array
-        Used to map a 2D texture or 1D texture (a colormap) to the
-        mesh. The texture color is multiplied after the ambient and diffuse
-        lighting calculations, but before calculating the specular component.
-        If texcords is a 1D (size N) array it specifies the color index at each
-        vertex. If texcords is a Nx2 array it represents the 2D texture 
-        coordinates to map an image to the mesh. Use SetTexture() to set 
-        the image, and the colormap property to set the colormap.
+    normals :(optional) Nx3 numpy array
+        The vertex normals. If not given, they are calcululated
+        from the vertices.
+    values : (optional) Nx1, Nx2, Nx3 or Nx4 numpy array
+        The value data for each vertex. If Nx1, they represent the indices
+        in the colormap. If Nx2, they represent the texture coordinates for
+        the texturegiven with SetTexture(). If Nx3 or Nx4 they represent
+        the ambient and diffuse color for each vertex. 
     VerticesPerFace : 3 or 4
         Determines whether the faces are triangles or quads. If faces is
         specified and is 2D, the number of vertices per face is determined
         from that array.
     
-    Colors
-    ------
-    Per vertex color can be supplied in three ways:
-      * explicitly by giving an Nx3 or Nx4 colors array
-      * by supplying 1D texcords which  are looked up in the colormap
-      * by supplying a 2D texcords array and setting a 2D texture image
+    Note on texture mapping
+    -----------------------
+    The texture color is multiplied after the ambient and diffuse
+    lighting calculations, but before calculating the specular component.
     
     """ 
     
-    def __init__(self, parent, vertices, normals=None, faces=None, 
-            colors=None, texcords=None, verticesPerFace=3):
+    
+    def __init__(self, parent, *args, **kwargs):
         Wobject.__init__(self, parent)
         
         # Init flat normals
@@ -321,19 +460,8 @@ class Mesh(Wobject, BaseMesh):
         # What faces to cull
         self._cullFaces = None # gl.GL_BACK (for surf(), None makes most sense)
         
-        # Obtain data from other mesh?
-        if isinstance(vertices, BaseMesh):
-            other = vertices
-            vertices = other._vertices
-            normals = other._normals
-            faces = other._faces
-            colors = other._colors
-            texcords = other._texcords
-            verticesPerFace = other._verticesPerFace
-        
         # Save data
-        BaseMesh.__init__(self, vertices, normals, faces,
-                            colors, texcords, verticesPerFace)
+        BaseMesh.__init__(self, *args, **kwargs)
     
     
     ## Material properties: how the object is lit
@@ -654,27 +782,25 @@ class Mesh(Wobject, BaseMesh):
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(self._vertices)
         
-        # Prepare colors (if available)
+        # Prepare colormap indices, texture cords or colors (if available)
         useTexCords = False
-        if self._colors is not None:
-            gl.glEnable(gl.GL_COLOR_MATERIAL)
-            gl.glColorMaterial(gl.GL_FRONT_AND_BACK, gl.GL_AMBIENT_AND_DIFFUSE)
-            gl.glEnableClientState(gl.GL_COLOR_ARRAY)
-            gl.glColorPointerf(self._colors)
-        
-        
-        # Prepate texture coordinates (if available)
-        elif self._texcords is not None:
-            useTexCords = True
-            if (self._texcords.ndim == 2) and (self._texture is not None):
+        if self._values is not None:
+            if self._values.shape[1] == 1:
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-                gl.glTexCoordPointerf(self._texcords)
-                self._texture.Enable(0)
-            elif self._texcords.ndim == 1:
-                gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-                gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, self._texcords)
+                gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, self._values)
                 self._colormap.Enable(0)
-        
+            elif self._values.shape[1] == 2 and self._texture is not None:
+                useTexCords = True
+                gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+                gl.glTexCoordPointerf(self._values)
+                self._texture.Enable(0)
+            elif self._values.shape[1] in [3,4]:
+                useTexCords = True
+                gl.glEnable(gl.GL_COLOR_MATERIAL)
+                gl.glColorMaterial(gl.GL_FRONT_AND_BACK,
+                                    gl.GL_AMBIENT_AND_DIFFUSE)
+                gl.glEnableClientState(gl.GL_COLOR_ARRAY)
+                gl.glColorPointerf(self._values)
         
         # Prepare material (ambient and diffuse may be overriden by colors)
         if shading == 'plain':
@@ -748,8 +874,8 @@ class Mesh(Wobject, BaseMesh):
 
 
 class OrientableMesh(Mesh, OrientationForWobjects_mixClass):
-    """ OrientableMesh(parent, vertices, normals=None, faces=None, 
-        colors=None, texcords=None, verticesPerFace=3)
+    """ OrientableMesh(vertices, faces=None, normals=None, values=None,
+                                                            verticesPerFace=3)
     
     An OrientableMesh is a generic object to visualize a 3D object made
     up of polygons. OrientableMesh differs from the Mesh class in that 
