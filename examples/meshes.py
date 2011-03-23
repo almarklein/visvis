@@ -42,7 +42,7 @@ pyramid.edgeShading = 'plain'
 
 # Colormap example
 N = cone._vertices.shape[0]
-cone.SetTexcords( np.linspace(0,1,N) )
+cone.SetValues( np.linspace(0,1,N) )
 cone.colormap = vv.CM_JET
 
 # Show title and enter main loop

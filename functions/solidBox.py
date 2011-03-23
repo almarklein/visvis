@@ -80,7 +80,7 @@ def solidBox(translation=None, scaling=None, direction=None, rotation=None,
         axes = vv.gca()
     
     # Create mesh and set orientation
-    m = vv.OrientableMesh(axes,vertices, normals, verticesPerFace=4)
+    m = vv.OrientableMesh(axes, vertices, normals, verticesPerFace=4)
     #
     if translation is not None:
         m.translation = translation

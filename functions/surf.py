@@ -151,8 +151,7 @@ def surf(*args, **kwargs):
         axes = vv.gca()
     
     # Create mesh
-    m = vv.Mesh(axes, vertices, faces=faces, texcords=texcords, 
-        verticesPerFace=4)
+    m = vv.Mesh(axes, vertices, faces, values=texcords, verticesPerFace=4)
     
     # Should we apply a texture?
     if c is not None and c.ndim==3:
