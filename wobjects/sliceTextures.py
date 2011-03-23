@@ -17,7 +17,7 @@ import numpy as np
 import math, time, os
 
 from visvis.pypoints import Point, Pointset, Aarray, is_Aarray
-from visvis import Wobject
+from visvis import Wobject, Colormapable
 from visvis.core.misc import Property, PropWithDraw, DrawAfter, getColor
 from visvis.core.shaders import vshaders, fshaders, GlslProgram
 from visvis.wobjects.textures import BaseTexture, TextureObjectToVisualize
@@ -354,7 +354,7 @@ class SliceTexture(BaseTexture):
             self._edgeColor2 = getColor(value)
 
 
-class SliceTextureProxy(Wobject):
+class SliceTextureProxy(Wobject, Colormapable):
     """ SliceTextureProxy(*sliceTextures)
     
     A proxi class for multiple SliceTexture instances. By making them
@@ -381,6 +381,18 @@ class SliceTextureProxy(Wobject):
         for s in self.children:
             s.SetClim(*args, **kwargs)
     
+    def _GetColormap(self):
+        return self.children[0].colormap
+    def _SetColormap(self, value):
+        for s in self.children:
+            s._SetColormap(value)
+    
+    def _GetClim(self):
+        return self.children[0].clim
+    def _SetClim(self, value):
+       for s in self.children:
+                s._SetClim(value)
+    
     @Property 
     def renderStyle():
         """ renderStyle is not available for SliceTextures. This 
@@ -404,17 +416,6 @@ class SliceTextureProxy(Wobject):
             print 'Warning: SliceTexture instances have no isoThreshold.'
     
     @Property 
-    def clim():
-        """ Get/Set the contrast limits. For a gray colormap, clim.min 
-        is black, clim.max is white.
-        """
-        def fget(self):
-            return self.children[0].clim
-        def fset(self, value):
-            for s in self.children:
-                s.clim = value
-    
-    @Property 
     def interpolate():
         """ Get/Set whether to interpolate the image when zooming in 
         (using linear interpolation). 
@@ -424,26 +425,6 @@ class SliceTextureProxy(Wobject):
         def fset(self, value):
             for s in self.children:
                 s.interpolate = value
-    
-    @Property 
-    def colormap():
-        """  Get/Set the colormap. The argument must be a tuple/list of 
-        iterables with each element having 3 or 4 values. The argument may
-        also be a Nx3 or Nx4 numpy array. In all cases the data is resampled
-        to create a 256x4 array. To specify a mapping for each color 
-        seperately, supply a dict with names R,G,B,A, where each value
-        is a list with 2-element tuples.
-        
-        Visvis defines a number of standard colormaps in the global visvis
-        namespace: CM_AUTUMN, CM_BONE, CM_COOL, CM_COPPER, CM_GRAY, CM_HOT, 
-        CM_HSV, CM_JET, CM_PINK, CM_SPRING, CM_SUMMER, CM_WINTER. 
-        A dict of name-colormap pairs is also available as vv.colormaps.
-        """
-        def fget(self):
-            return self.children[0].colormap
-        def fset(self, value):
-            for s in self.children:
-                s.colormap = value
     
     @Property 
     def index():
