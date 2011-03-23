@@ -31,7 +31,7 @@ from visvis.core.misc import (Range,
         Transform_Base, Transform_Translate, Transform_Rotate, Transform_Scale)
 from visvis.core.events import Timer
 from visvis.core.base import BaseObject, Wibject, Wobject, Position
-from visvis.core.baseTexture import TextureObject, Colormap
+from visvis.core.baseTexture import TextureObject, Colormap, Colormapable
 from visvis.core.shaders import GlslProgram
 
 

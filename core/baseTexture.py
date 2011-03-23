@@ -20,7 +20,7 @@ import OpenGL.GLU as glu
 
 import numpy as np
 
-from visvis.core.misc import getOpenGlCapable 
+from visvis.core.misc import getOpenGlCapable, PropWithDraw, Range
 from visvis.core.base import Wobject 
 
 
@@ -684,3 +684,44 @@ class Colormap(TextureObject):
             # store texture
             #self._data = data2
             self.SetData(data2)
+
+
+class Colormapable(object):
+    """ Mixer class for wobjects that can map scalar data to colors.
+    
+    Instances of this class have a colormap propery and a clim property.
+    
+    """
+    
+    def __init__(self):
+        self._colormap = Colormap()
+        self._clim = Range(0,1)
+    
+    @PropWithDraw
+    def colormap():
+        """ Get/aet the colormap. This can be:
+          * A tuple/list of element which each have 3 or 4 values (RGB/RGBA)
+          * A Nx3 or Nx4 numpy array
+          * A dict with names R,G,B,A, where each value is a list. Each 
+            element in the list is a tuple (index, color-value).
+        
+        Visvis defines a number of standard colormaps named by vv.CM_*. A few
+        examples are CM_GRAY, CM_HOT, CM_JET, CM_SUMMER, CM_CT1. See 
+        vv.colormaps for a dict with all available default colormaps.
+        """
+        def fget(self):
+            return self._colormap.GetMap()
+        def fset(self, value):
+            self._colormap.SetMap(value)
+    
+    @PropWithDraw
+    def clim():
+        """ Get/set the contrast limits. For a gray colormap, clim.min 
+        is black, clim.max is white.
+        """
+        def fget(self):
+            return self._clim
+        def fset(self, value):
+            if not isinstance(value, Range):
+                value = Range(value)
+            self._clim = value

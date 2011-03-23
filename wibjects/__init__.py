@@ -18,5 +18,6 @@ from visvis.core import (  Wibject, BaseFigure, AxesContainer, Axes,
 
 from visvis.wibjects.buttons import PushButton, ToggleButton, RadioButton
 from visvis.wibjects.sliders import BaseSlider, Slider, RangeSlider
-from visvis.wibjects.colorWibjects import Colorbar, ColormapEditor, ClimEditor
+from visvis.wibjects.colorWibjects import (BaseMapableEditor, Colorbar,
+                                    ColormapEditor, ClimEditor)
 from visvis.wibjects.title import Title
