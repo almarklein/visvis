@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010, Robert Schroll
+# Copyright (c) 2011, Robert Schroll
 #
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
@@ -9,9 +9,9 @@ from visvis.wobjects.polygonalModeling import checkDimsOfArray
 import numpy as np
 
 def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
-        colormap=None, texture=None,  axesAdjust=True, axes=None):
+        colormap=None, clim=None, texture=None, axesAdjust=True, axes=None):
     """ mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
-        colormap=None, texture=None, axesAdjust=True, axes=None)
+        colormap=None, clim=None, texture=None, axesAdjust=True, axes=None)
     
     Display a mesh of polygons, either triangles or quads.
     
@@ -32,6 +32,9 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
         Whether the faces are triangle or quads, if not specified in faces.
     colormap : a Colormap
         If values is 1D, the vertex colors are set from this colormap.
+    clim : 2 element array
+        If values is 1D, sets the values to be mapped to the limits of the 
+        colormap.  If None, the min and max of values are used.
     texture : a Texture
         If values is Nx2, the vertex colors are set from this texture.
     axesAdjust : bool
@@ -66,8 +69,13 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
     m = vv.Mesh(axes, vertices, faces, normals, values, verticesPerFace)
     
     # Set colormap or texture
-    if colormap is not None and values is not None and values.shape[1] == 1:
-        m.colormap = colormap
+    if values is not None and values.shape[1] == 1:
+        if colormap is not None:
+            m.colormap = colormap
+        if clim is not None and len(clim) == 2:
+            m.clim = clim
+        else:
+            m.clim = values.min(), values.max()
     elif texture is not None and values is not None and values.shape[1] == 2:
         m.SetTexture(texture)
     
