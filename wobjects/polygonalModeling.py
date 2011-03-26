@@ -789,6 +789,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             if self._values2 is not None:
                 values = self._values2
             if values.shape[1] == 1:
+                useTexCords = True
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, values)
                 self._colormap.Enable(0)
