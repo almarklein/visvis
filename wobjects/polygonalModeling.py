@@ -68,8 +68,8 @@ class BaseMesh(object):
     include visualization properties.
     
     The old signature may also be used, but will be removed in future versions:
-    BaseMesh(vertices, normals=None, faces=None, normals=None, 
-                                    colors=None, texcords, verticesPerFace=3)
+    BaseMesh(vertices, normals=None, faces=None,
+                                colors=None, texcords=None, verticesPerFace=3)
     
     """
     
@@ -154,7 +154,7 @@ class BaseMesh(object):
         
         # Things we know for sure
         
-        # Only the new style has 6 args
+        # Only the old style has 6 args
         if len(args) == 6:
             return False
         
@@ -404,8 +404,8 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     where otherMesh should be an instance of BaseMesh.
     
     The old signature may also be used, but will be removed in future versions:
-    Mesh(vertices, normals=None, faces=None, normals=None, 
-                                    colors=None, texcords, verticesPerFace=3)
+    Mesh(vertices, normals=None, faces=None,
+                                colors=None, texcords=None, verticesPerFace=3)
     
     Parameters
     ----------
@@ -423,7 +423,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         in the colormap. If Nx2, they represent the texture coordinates for
         the texturegiven with SetTexture(). If Nx3 or Nx4 they represent
         the ambient and diffuse color for each vertex. 
-    VerticesPerFace : 3 or 4
+    verticesPerFace : 3 or 4
         Determines whether the faces are triangles or quads. If faces is
         specified and is 2D, the number of vertices per face is determined
         from that array.
