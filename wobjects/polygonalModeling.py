@@ -799,7 +799,6 @@ class Mesh(Wobject, BaseMesh, Colormapable):
                 gl.glTexCoordPointerf(values)
                 self._texture.Enable(0)
             elif values.shape[1] in [3,4]:
-                useTexCords = True
                 gl.glEnable(gl.GL_COLOR_MATERIAL)
                 gl.glColorMaterial(gl.GL_FRONT_AND_BACK,
                                     gl.GL_AMBIENT_AND_DIFFUSE)
