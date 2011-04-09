@@ -66,9 +66,9 @@ class GLWidget(GLCanvas):
         self.figure = figure
         
         # find root window
-        root = self.Parent
-        while root.Parent:
-            root = root.Parent
+        root = self.GetParent()
+        while root.GetParent():
+            root = root.GetParent()
         
         # make bindings for events
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -190,7 +190,7 @@ class GLWidget(GLCanvas):
     def OnClose(self, event):        
         if self.figure:
             self.figure.Destroy()             
-            parent = self.Parent
+            parent = self.GetParent()
             self.Destroy() # Hide and delete window
             # Prevent frame from sticking when there is no wx event loop
             if isinstance(parent, FigureFrame):
@@ -262,7 +262,7 @@ class Figure(BaseFigure):
     def _SetTitle(self, title):
         """ Set the title of the figure... """
         if not self._destroyed:
-            window = self._widget.Parent
+            window = self._widget.GetParent()
             if hasattr(window,'SetTitle'):
                 window.SetTitle(title)
     
@@ -271,8 +271,8 @@ class Figure(BaseFigure):
         # select widget to resize. If it 
         if not self._destroyed:            
             widget = self._widget
-            if isinstance(widget.Parent, FigureFrame):
-                widget = widget.Parent
+            if isinstance(widget.GetParent(), FigureFrame):
+                widget = widget.GetParent()
             # apply
             #widget.SetDimensions(x, y, w, h)
             widget.MoveXY(x,y)
@@ -283,8 +283,8 @@ class Figure(BaseFigure):
         # select widget to resize. If it 
         if not self._destroyed:
             widget = self._widget
-            if isinstance(widget.Parent, FigureFrame):
-                widget = widget.Parent
+            if isinstance(widget.GetParent(), FigureFrame):
+                widget = widget.GetParent()
             # get and return
             #tmp = widget.GetRect()        
             #return tmp.left, tmp.top, tmp.width, tmp.height
@@ -305,10 +305,10 @@ class Figure(BaseFigure):
     def _Close(self, widget):
         if widget is None:
             widget = self._widget
-        if widget and widget.Parent:
+        if widget and widget.GetParent():
             try:
-                widget.Parent.Hide()
-                widget.Parent.Close()
+                widget.GetParent().Hide()
+                widget.GetParent().Close()
             except PyAssertionError:
                 # Prevent "wxEVT_MOUSE_CAPTURE_LOST not being processed" error.
                 pass 
