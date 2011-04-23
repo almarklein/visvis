@@ -143,6 +143,10 @@ class TextureObjectToVisualize(TextureObject):
         # create texture
         TextureObject._UpdateTexture(self, data, *args)
         
+        # Update interpolation
+        tmp = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
+        gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MAG_FILTER, tmp)
+        
         # reset transfer
         self._ScaleBias_afterUpload()
     
@@ -334,13 +338,8 @@ class BaseTexture(Wobject, Colormapable):
             return self._texture1._interpolate
         def fset(self, value):
             self._texture1._interpolate = bool(value)
-            # bind the texture
-            texType = self._texture1._texType            
-            gl.glBindTexture(texType, self._texture1._texId)
-            # set interpolation
-            tmp = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[bool(value)]
-            gl.glTexParameteri(texType, gl.GL_TEXTURE_MAG_FILTER, tmp)
-    
+            # Signal update
+            self._texture1._uploadFlag = abs(self._texture1._uploadFlag)
     
     # Overload clim private methods so that the clim property
     # uses the clim of texture1
