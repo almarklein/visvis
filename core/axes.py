@@ -385,15 +385,15 @@ class Axes(base.Wibject):
     
     
     @DrawAfter
-    def SetView(self, s=None):
+    def SetView(self, s=None, **kw):
         """ SetView(s=None)
         
         Set the camera view using the given structure with camera parameters.
         If s is None, the camera is reset to its initial state.
         
         """
-        if s:
-            self.camera.SetViewParams(s)
+        if s or kw:
+            self.camera.SetViewParams(s, **kw)
         else:
             self.camera.Reset()
     
