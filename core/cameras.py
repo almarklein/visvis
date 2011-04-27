@@ -23,7 +23,6 @@ import OpenGL.GLU as glu
 
 import math
 
-from visvis import ssdf
 from visvis.core.misc import Property, PropWithDraw, DrawAfter 
 from visvis.core.misc import Range
 from visvis.core.events import Timer
@@ -139,6 +138,38 @@ class BaseCamera(object):
         
         # reset
         self.Reset()
+    
+    # Subclasses should set viewparams, a set of (key, attribute_name) pairs
+    # for the values returned by GetViewParams.
+    viewparams = None
+    
+    def GetViewParams(self):
+        """ GetViewParams()
+        
+        Get a dictionary with view parameters. 
+        
+        """
+        return dict([(key, getattr(self, attr)) 
+                     for key, attr in self.__class__.viewparams])
+    
+    def SetViewParams(self, s=None, **kw):
+        """ SetViewParams(s=None, **kw)
+        
+        Set the view, given a dictionary with view parameters.  View parameters
+        may also be passed as keyword/value pairs; these will supersede the same
+        keys in s.
+        
+        """
+        if s is None:
+            s = {}
+        if kw:  # Updating with an empty dict is okay, but this way we can take
+                # arguments that don't have an update method (like ssdf objects).
+            s.update(kw)
+        for key, attr in self.__class__.viewparams:
+            try:
+                setattr(self, attr, s[key])
+            except KeyError:
+                pass
     
     def Reset(self):
         """ Reset()
@@ -256,28 +287,7 @@ class TwoDCamera(BaseCamera):
             axes.eventDoubleClick.Bind( self.Reset)
     
     
-    def GetViewParams(self):
-        """ GetViewParams()
-        
-        Get a structure with view parameters. 
-        
-        """
-        s = ssdf.new()
-        s.loc = self.view_loc
-        s.zoomx = self.view_zoomx
-        s.zoomy = self.view_zoomy
-        return s
-    
-    
-    def SetViewParams(self, s):
-        """ SetViewParams(s)
-        
-        Set the view, given a structure with view parameters. 
-        
-        """
-        self.view_loc = s.loc
-        self.view_zoomx = s.zoomx
-        self.view_zoomy = s.zoomy
+    viewparams = (('loc', 'view_loc'), ('zoomx', 'view_zoomx'), ('zoomy', 'view_zoomy'))
     
     
     def Reset(self, event=None):
@@ -510,36 +520,9 @@ class ThreeDCamera(BaseCamera):
             axes.eventDoubleClick.Bind(self.Reset)
     
     
-    def GetViewParams(self):
-        """ GetViewParams()
-        
-        Get a structure with view parameters. 
-        
-        """
-        s = ssdf.new()
-        s.loc = self.view_loc
-        s.zoomx = self.view_zoomx
-        s.zoomy = self.view_zoomy
-        s.azimuth = self.view_az
-        s.elevation = self.view_el
-        s.roll = self.view_ro
-        s.fov = self.view_fov
-        return s
-    
-    
-    def SetViewParams(self, s):
-        """ SetViewParams(s)
-        
-        Set the view, given a structure with view parameters. 
-        
-        """
-        self.view_loc = s.loc
-        self.view_zoomx = s.zoomx
-        self.view_zoomy = s.zoomy
-        self.view_az = s.azimuth
-        self.view_el = s.elevation
-        self.view_ro = s.roll
-        self.view_fov = s.fov
+    viewparams = (('loc', 'view_loc'), ('zoomx', 'view_zoomx'), ('zoomy', 'view_zoomy'),
+                  ('azimuth', 'view_az'), ('elevation', 'view_el'), ('roll', 'view_ro'),
+                  ('fov', 'view_fov'))
     
     
     def Reset(self, event=None):

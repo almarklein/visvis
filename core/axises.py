@@ -1868,9 +1868,8 @@ class PolarAxis2D(BaseAxis):
             
             # Set view params
             s = axes.camera.GetViewParams()
-            if s.loc[0] != s.loc[1] != 0:
-                s.loc = 0, 0, 0
-                axes.camera.SetViewParams(s)
+            if s['loc'][0] != s['loc'][1] != 0:
+                axes.camera.SetViewParams(loc=(0,0,0))
             
             # Prepare data for polar coordinates
             self.RescalePolarData()
