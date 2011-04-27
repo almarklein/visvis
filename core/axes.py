@@ -375,7 +375,7 @@ class Axes(base.Wibject):
     def GetView(self):
         """ GetView()
         
-        Get a structure with the camera parameters. The parameters are
+        Get a dictionary with the camera parameters. The parameters are
         named so they can be changed in a natural way and fed back using
         SetView(). Note that the parameters can differ for different camera
         types.
@@ -386,10 +386,12 @@ class Axes(base.Wibject):
     
     @DrawAfter
     def SetView(self, s=None, **kw):
-        """ SetView(s=None)
+        """ SetView(s=None, **kw)
         
-        Set the camera view using the given structure with camera parameters.
-        If s is None, the camera is reset to its initial state.
+        Set the camera view using the given dictionary with camera parameters.
+        Camera parameters can also be passed as keyword/value pairs; these will
+        supersede the values of the same key in s.  If neither s nor any keywords
+        are set, the camera is reset to its initial state.
         
         """
         if s or kw:
