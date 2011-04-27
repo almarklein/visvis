@@ -29,6 +29,5 @@ def view(viewparams=None, axes=None, **kw):
     
     if viewparams or kw:
         axes.SetView(viewparams, **kw)
-        axes.Draw()
     else:
         return axes.GetView()

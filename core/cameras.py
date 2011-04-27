@@ -146,21 +146,25 @@ class BaseCamera(object):
     def GetViewParams(self):
         """ GetViewParams()
         
-        Get a structure with view parameters. 
+        Get a dictionary with view parameters. 
         
         """
         return dict([(key, getattr(self, attr)) 
                      for key, attr in self.__class__.viewparams])
     
     def SetViewParams(self, s=None, **kw):
-        """ SetViewParams(s)
+        """ SetViewParams(s=None, **kw)
         
-        Set the view, given a structure with view parameters. 
+        Set the view, given a dictionary with view parameters.  View parameters
+        may also be passed as keyword/value pairs; these will supersede the same
+        keys in s.
         
         """
         if s is None:
             s = {}
-        s.update(kw)
+        if kw:  # Updating with an empty dict is okay, but this way we can take
+                # arguments that don't have an update method (like ssdf objects).
+            s.update(kw)
         for key, attr in self.__class__.viewparams:
             try:
                 setattr(self, attr, s[key])
