@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2011, Almar Klein
+#
+# SSDF is distributed under the terms of the (new) BSD License.
+# See http://www.opensource.org/licenses/bsd-license.php
+
+# This module was first called points.py. In this newer version, PEP8 is
+# followed more strictly, in order to make it easier to adopt by others.
+
 """ Module pypoints
 
 Provides several classes to represent points, pointsets, anisotropic arrays,
@@ -51,35 +59,8 @@ This software distributed under the BSD license.
 
 """
 
-# This module was first called points.py. In this newer version, PEP8 is
-# followed more strictly, in order to make it easier to adopt by others.
-
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-#    * Redistributions of source code must retain the above copyright notice, 
-#      this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the 
-#      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the University of Twente nor the names of its 
-#      contributors may be used to endorse or promote products derived from
-#      this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
 # Set version number
-__version__ = 2.0
+__version__ = 2.1
 
 import numpy as np
 import sys
@@ -150,10 +131,7 @@ def is_Pointset(ob):
 def is_Point_or_Pointset(ob):
     return hasattr(ob, '_is_Point') or hasattr(ob, '_is_Pointset')
 def is_Aarray(ob):
-    # Use name, as it is quite unique anyway, and setting attribute is
-    # not really failsafe
-    return ob.__class__.__name__ == 'Aarray'
-    #return hasattr(ob, '_is_Aarray')
+    return hasattr(ob, '_is_Aarray')
 def is_Quaternion(ob):
     return hasattr(ob, '_is_Quaternion')
 
@@ -598,9 +576,10 @@ class Point(BasePoints):
     
     """
     
+    _is_Point = True
+    
     def __init__(self, *point):
         BasePoints.__init__(self)
-        self.__dict__['_is_'+self.__class__.__name__] = True
         
         if len(point)==0:
             raise ValueError("Cannot create an 'empty' point.")
@@ -779,9 +758,10 @@ class Pointset(BasePoints):
     
     """
     
+    _is_Pointset = True
+    
     def __init__(self, ndim):
         BasePoints.__init__(self)
-        self.__dict__['_is_'+self.__class__.__name__] = True
         
         # init
         data = ndim        
@@ -1267,6 +1247,8 @@ class Aarray(np.ndarray):
     
     """
     
+    _is_Aarray = True
+    
     def __new__(cls, shapeOrArray, sampling=None, origin=None, fill=None, 
                 dtype='float32', **kwargs):
         
@@ -1584,8 +1566,9 @@ class Quaternion(object):
     
     """
     
+    _is_Quaternion = True
+    
     def __init__(self, w=1, x=0, y=0, z=0, normalize=True):
-        self.__dict__['_is_'+self.__class__.__name__] = True
         
         self.w = float(w)
         self.x, self.y, self.z = float(x), float(y), float(z)
