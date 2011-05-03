@@ -16,6 +16,7 @@ visvis modules.
 """
 
 import sys, os, time
+from visvis import ssdf
 import OpenGL.GL as gl
 
 
@@ -346,6 +347,70 @@ def getResourceDir():
         path = os.path.abspath( os.path.dirname(__file__) )
         path = os.path.split(path)[0]
     return os.path.join(path, 'visvisResources')
+
+
+def getAppDataDirDir():
+    """ getAppDataDirDir()
+    
+    Get the directory where visvis can store user-specific data.
+    
+    """
+    # Define user dir and appDataDir
+    userDir = os.path.expanduser('~')    
+    appDataDir = os.path.join(userDir, '.visvis')
+    if sys.platform.startswith('win') and 'APPDATA' in os.environ:
+        appDataDir = os.path.join( os.environ['APPDATA'], 'visvis' )
+    
+    # Make sure it exists
+    if not os.path.isdir(appDataDir):
+        os.mkdir(appDataDir)
+    
+    return appDataDir
+    
+
+
+
+class Settings(object):
+    def __init__(self):
+        
+        # Define settings file name
+        self._fname = os.path.join(getAppDataDirDir(), 'config.ssdf')
+        
+        # Load settings if we can
+        s = ssdf.new()
+        if os.path.exists(self._fname):
+            try:
+                s = ssdf.load(self._fname)
+            except Exception:
+                pass
+        
+        # Store
+        self._s = s
+        
+        # todo: load any default values ans save back in __init__
+        # todo: use the settings in all parts where it applies
+            
+    def _Save(self):
+        ssdf.save(self._fname, self._s)
+    
+    @Property
+    def preferredBackend():
+        def fget(self):
+            if 'backend' in self._s:
+                return self._s.backend
+            else:
+                return 'qt4'
+        def fset(self, value):
+            value = value.lower()
+            if value in ['qt4', 'wx', 'gtk', 'fltk']:
+                self._s.backend = value
+            else:
+                raise ValueError('Invalid backend specified.')
+            self._Save()
+    
+
+# Create settings instance    
+settings = Settings()
 
 # Set __file__ absolute when loading
 __file__ = os.path.abspath(__file__)
