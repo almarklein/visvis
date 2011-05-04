@@ -53,20 +53,27 @@ import imp
 import visvis
 from visvis.core.misc import isFrozen
 
-# The order in which to try loading a backend
-backendOrder = ['qt4', 'wx', 'gtk', 'fltk'] # I'd love to put tk in this list
+# The order in which to try loading a backend (foo is a dummy backend)
+backendOrder = ['qt4', 'wx', 'gtk', 'fltk', 'foo'] # I'd love to put tk in this list
+backendMap = {'qt4':'PyQt4', 'wx':'wx', 'gtk':'gtk', 'fltk':'fltk', 'foo':'foo'}
 
+# Put the preferredBackend in front
+if True:
+    be = visvis.settings.preferredBackend
+    if be in backendOrder:
+        backendOrder.remove(be)
+        backendOrder.insert(0,be)
 
 # Establish preference based on loaded backends modules
 # In this way, in an interactive interpreter the right backend is picked
-backendMap = {'qt4':'PyQt4', 'wx':'wx', 'gtk':'gtk', 'fltk':'fltk'}
-for be in [be for be in reversed(backendOrder)]:
-    # Determine backend module name
-    modName = backendMap[be]
-    # If loaded, move up front
-    if modName in sys.modules:
-        backendOrder.remove(be)
-        backendOrder.insert(0,be)
+if visvis.settings.preferAlreadyLoadedBackend:
+    for be in [be for be in reversed(backendOrder)]:
+        # Determine backend module name
+        modName = backendMap[be]
+        # If loaded, move up front
+        if modName in sys.modules:
+            backendOrder.remove(be)
+            backendOrder.insert(0,be)
 
 
 # Placeholder

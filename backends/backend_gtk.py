@@ -3,6 +3,7 @@
 
 import os, sys
 
+import visvis
 from visvis import BaseFigure, events, constants
 from visvis.core.misc import getResourceDir
 
@@ -265,7 +266,8 @@ def newFigure():
     window.set_reallocate_redraws(True)
     
     window.add(figure._widget)
-    figure._widget.set_size_request(560, 420)
+    size = visvis.settings.figureSize 
+    figure._widget.set_size_request(size[0], size[1])
     window.set_geometry_hints(min_width=100, min_height=100)
     window.show_all()
     

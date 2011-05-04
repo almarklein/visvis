@@ -16,6 +16,7 @@
 
 import os
 
+import visvis
 from visvis import BaseFigure, events, constants
 from visvis.core.misc import getResourceDir
 from visvis import guisupport
@@ -330,7 +331,7 @@ def newFigure():
     app.Create()
     
     # Create frame
-    refSize = (560, 420)
+    refSize = tuple( visvis.settings.figureSize )
     frame = FigureFrame(None, -1, "Figure", size=refSize)
     
     # Correct size. The given size includes the window manager's frame
