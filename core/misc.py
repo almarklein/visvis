@@ -119,7 +119,7 @@ def PropWithDraw(function):
     A property decorator which allows to define fget, fset and fdel
     inside the function.
     
-    Same as Property, but callas self.Draw() when using fset.
+    Same as Property, but calls self.Draw() when using fset.
     
     """
     # Init
@@ -165,6 +165,46 @@ def DrawAfter(function):
             self.Draw()
     newFunc.__doc__ = function.__doc__
     return newFunc
+
+
+def PropertyForSettings(function):
+    """ PropertyForSettings(function)
+    
+    A property decorator that also supplies the function name to the
+    fget and fset function. The fset method also calls _Save()
+    
+    """
+    # Init
+    keys = 'fget', 'fset', 'fdel'
+    func_locals = {'doc':function.__doc__}
+    
+    # Define function to probe the special methods defined in function
+    def probeFunc(frame, event, arg):
+        if event == 'return':
+            locals = frame.f_locals
+            func_locals.update(dict((k,locals.get(k)) for k in keys))
+            sys.settrace(None)
+        return probeFunc
+    
+    # Probe the function (fills func_locals)
+    sys.settrace(probeFunc)
+    function()
+    
+    # Replace fset and fget
+    fset = func_locals.get('fset',None)
+    fget = func_locals.get('fget',None)
+    def fsetWithKey(self, *args):
+        fset(self, function.__name__, *args)
+        self._Save()
+    def fgetWithKey(self, *args):
+        return fget(self, function.__name__)
+    if fset:
+        func_locals['fset'] = fsetWithKey
+    if fget:
+        func_locals['fget'] = fgetWithKey
+    
+    # Done
+    return property(**func_locals)
 
 
 ## The range class
@@ -366,48 +406,132 @@ def getAppDataDirDir():
         os.mkdir(appDataDir)
     
     return appDataDir
-    
-
 
 
 class Settings(object):
+    """ Global settings object.
+    
+    This object can be used to set the visvis settings in an easy way
+    from the Python interpreter. 
+    
+    The settings are stored in a file in the user directory (the filename
+    can be obtained using the _fname attribute). 
+    
+    Note that some settings require visvis to restart.
+    
+    """
     def __init__(self):
         
         # Define settings file name
         self._fname = os.path.join(getAppDataDirDir(), 'config.ssdf')
         
+        # Init settings
+        self._s = ssdf.new()
+        
         # Load settings if we can
-        s = ssdf.new()
         if os.path.exists(self._fname):
             try:
-                s = ssdf.load(self._fname)
+                self._s = ssdf.load(self._fname)
             except Exception:
                 pass
         
-        # Store
-        self._s = s
+        # Update any missing settings to their defaults
+        for key in dir(self):
+            if key.startswith('_'):
+                continue
+            self._s[key] = getattr(self, key)
         
-        # todo: load any default values ans save back in __init__
-        # todo: use the settings in all parts where it applies
-            
+        # Save now so the config file contains all settings
+        self._Save()
+    
     def _Save(self):
         ssdf.save(self._fname, self._s)
+        print 'saving to', self._fname
     
-    @Property
+    @PropertyForSettings
     def preferredBackend():
-        def fget(self):
-            if 'backend' in self._s:
-                return self._s.backend
+        """ The preferred backend GUI toolkit to use 
+        ('qt4', 'wx', 'gtk', 'fltk'). 
+          * If the selected backend is not available, another one is selected.
+          * If preferAlreadyLoadedBackend is True, will prefer a backend that 
+            is already imported.
+          * Requires a restart.
+        """ 
+        def fget(self, key):
+            if key in self._s:
+                return self._s[key]
             else:
-                return 'qt4'
-        def fset(self, value):
+                return 'qt4'  # Default value
+        def fset(self, key, value):
             value = value.lower()
-            if value in ['qt4', 'wx', 'gtk', 'fltk']:
-                self._s.backend = value
+            if value in ['qt4', 'wx', 'gtk', 'fltk', 'foo']:
+                self._s[key] = value
             else:
                 raise ValueError('Invalid backend specified.')
-            self._Save()
     
+    @PropertyForSettings
+    def preferAlreadyLoadedBackend():
+        """ Bool that indicates whether visvis should prefer an already
+        imported backend (even if it's not the preferredBackend). This is
+        usefull in interactive session in for example IEP, Spyder or IPython.
+        Requires a restart.
+        """ 
+        def fget(self, key):
+            if key in self._s:
+                return bool(self._s[key])
+            else:
+                return True  # Default value
+        def fset(self, key, value):
+            self._s[key] = bool(value)
+    
+#     @PropertyForSettings
+#     def defaultInterpolation2D():
+#         """ The default interpolation mode for 2D textures (bool). If False
+#         the pixels are well visible, if True the image looks smoother.
+#         Default is False.
+#         """
+#         def fget(self, key):
+#             if key in self._s:
+#                 return bool(self._s[key])
+#             else:
+#                 return False  # Default value
+#         def fset(self, key, value):
+#             self._s[key] = bool(value)
+    
+    @PropertyForSettings
+    def figureSize():
+        """ The initial size for figure windows. Should be a 2-element
+        tuple or list. Default is (560, 420).
+        """
+        def fget(self, key):
+            if key in self._s:
+                return tuple(self._s[key])
+            else:
+                return (560, 420)  # Default value
+        def fset(self, key, value):
+            if not isinstance(value, (list,tuple)) or len(value) != 2:
+                raise ValueError('Figure size must be a 2-element list or tuple.')
+            value = [int(i) for i in value]
+            self._s[key] = tuple(value)
+    
+    @PropertyForSettings
+    def volshowPreference():
+        """ Whether the volshow() function prefers the volshow2() or volshow3()
+        function. By default visvis prefers volshow3(), but falls back to
+        volshow2() when the OpenGl version is not high enough. Some OpenGl 
+        drivers, however, support volume rendering only in ultra-slow software
+        mode (seen on ATI). In this case, or if you simply prefer volshow2()
+        you can set this setting to '2'.
+        """
+        def fget(self, key):
+            if key in self._s:
+                return self._s[key]
+            else:
+                return 3  # Default value
+        def fset(self, key, value):
+            if value not in [2,3]:
+                raise ValueError('volshowPreference must be 2 or 3.')
+            self._s[key] = int(value)
 
 # Create settings instance    
 settings = Settings()

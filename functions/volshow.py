@@ -43,7 +43,7 @@ def volshow(*args, **kwargs):
     vv.gcf()
     
     # Test and run
-    if vv.misc.getOpenGlCapable(2.0):
+    if vv.settings.volshowPreference==3 and vv.misc.getOpenGlCapable(2.0):
         return vv.volshow3(*args, **kwargs)
     else:
         return vv.volshow2(*args, **kwargs)
