@@ -446,7 +446,6 @@ class Settings(object):
     
     def _Save(self):
         ssdf.save(self._fname, self._s)
-        print 'saving to', self._fname
     
     @PropertyForSettings
     def preferredBackend():
@@ -533,7 +532,7 @@ class Settings(object):
                 raise ValueError('volshowPreference must be 2 or 3.')
             self._s[key] = int(value)
 
-# Create settings instance    
+# Create settings instance, this is what gets inserted in the visvis namespace
 settings = Settings()
 
 # Set __file__ absolute when loading
