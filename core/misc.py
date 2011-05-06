@@ -531,6 +531,39 @@ class Settings(object):
             if value not in [2,3]:
                 raise ValueError('volshowPreference must be 2 or 3.')
             self._s[key] = int(value)
+    
+    @PropertyForSettings
+    def defaultFontName():
+        """ The default font to use. Can be 'mono', 'sans' or 'serif', with 
+        'sans' being the default.
+        """
+        def fget(self, key):
+            if key in self._s:
+                return self._s[key]
+            else:
+                return 'sans'  # Default value
+        def fset(self, key, value):
+            value = value.lower()
+            if value not in ['mono', 'sans', 'serif']:
+                raise ValueError("defaultFontName must be 'mono', 'sans' or 'serif'.")
+            self._s[key] = value
+    
+    @PropertyForSettings
+    def defaultRelativeFontSize():
+        """ The default relativeFontSize of new figures. The relativeFontSize
+        property can be used to scale all text simultenously, as well as
+        increase/decrease the margins availavle for the text. The default is
+        1.0.
+        """
+        def fget(self, key):
+            if key in self._s:
+                return self._s[key]
+            else:
+                return 1.0
+        def fset(self, key, value):
+            self._s[key] = float(value)
+    
+    # todo: more? maybe axes bgcolor and axisColor?
 
 # Create settings instance, this is what gets inserted in the visvis namespace
 settings = Settings()
