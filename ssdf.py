@@ -93,12 +93,21 @@ _INT_TYPES = tuple(_INT_TYPES)
 # Formatters for struct (un)packing
 _SMALL_NUMBER_FMT = '<B'
 _LARGE_NUMBER_FMT = '<Q'
-_TYPE_FMT = '<c'
+_TYPE_FMT = '<B'
 _PARTITION_LEN_FMT = '<I'
 _PARTITION_SIZE = 2**20 # 1 MB
 
 # To store other classes
 _CLASS_NAME = '_CLASS_NAME_'
+
+# Types for binary
+_TYPE_NONE = ord('N')
+_TYPE_INT = ord('I')
+_TYPE_FLOAT = ord('F')
+_TYPE_UNICODE = ord('U')
+_TYPE_ARRAY = ord('A')
+_TYPE_LIST = ord('L')
+_TYPE_DICT = ord('D')
 
 
 # The data types for arrays and how the struct (un)pack formatters.
@@ -377,7 +386,7 @@ def count(object):
     """
     
     n = 1
-    if isinstance(object, (dict, Struct)):
+    if isstruct(object) or isinstance(object, dict):
         for key in object:
             val = object[key]
             n += count(val)
@@ -396,7 +405,7 @@ def copy(object):
     Note that dicts are converted to structs and tuples to lists.
     
     """
-    if isinstance(object, (dict, Struct)):
+    if isstruct(object) or isinstance(object, dict):
         newObject = Struct()
         for key in object:
             val = object[key]
@@ -421,8 +430,8 @@ def _not_equal(ob1, ob2):
     
     """
     
-    if isinstance(ob1, (dict, Struct)):
-        if not isinstance(ob2, (dict, Struct)):
+    if isstruct(ob1) or isinstance(ob1, dict):
+        if not ( isstruct(ob2) or isinstance(ob2, dict) ):
             return '<type does not match>'
         # Test number of elements
         keys1 = [key for key in ob1]
@@ -619,24 +628,13 @@ class _ClassManager:
         
         """
         return cls in manager._registered_classes.values()
-    
-    
-    @classmethod
-    def _get_objects(manager):
-        """ _get_objects()
-        
-        Returns the public objects defined in the module where this manager
-        is also defined. This way, different ssdf modules in the same
-        process will actully use exactly the same classes.
-        
-        """
-        return Struct, isstruct, VirtualArray
+
 
 # Put in this module namespace and in sys module namespace
 # The ClassManager is the latest version
 ClassManager = _ClassManager._register_at_sys()
 register_class = ClassManager.register_class
-
+is_compatible_class = ClassManager.is_compatible_class
 
 
 class Struct(object):
@@ -1066,7 +1064,6 @@ class _SSDFReader:
             # Get type. If no bytes left, we're done
             try:
                 type_id, = struct.unpack(_TYPE_FMT, f.read(1))
-                type_id = type_id.decode('utf-8')
             except StopIteration:
                 break
             
@@ -1152,7 +1149,7 @@ class _SSDFReader:
         fc = _CompressedFile(f)
         
         # Create blocks and build tree
-        root = _BinaryBlock(-1, -1, type='D')
+        root = _BinaryBlock(-1, -1, type=_TYPE_DICT)
         block_gen = self.read_binary_blocks(fc)
         self.build_tree(root, block_gen)
         
@@ -1206,7 +1203,7 @@ class _SSDFWriter:
             listOfLists.append( childList )
         
         # Sort by length
-        if sort:
+        if sort and listOfLists and block._type == _TYPE_DICT:
             listOfLists.sort(key=len)
         
         # Produce flat list
@@ -1229,7 +1226,7 @@ class _SSDFWriter:
         for block in blocks[1:]:
             
             # Write type.
-            f.write(struct.pack(_TYPE_FMT, block._type.encode('utf-8')))
+            f.write(struct.pack(_TYPE_FMT, block._type))
             
             # Write indentation
             f.write_number(block._indent)
@@ -1303,7 +1300,7 @@ class _SSDFWriter:
         root = _BinaryBlock.from_object(-1, bytes(), object)
         
         # Collect blocks and write
-        blocks = self.flatten_tree(root)
+        blocks = self.flatten_tree(root) 
         self.write_binary_blocks(blocks, fc)
         fc.flush()
         
@@ -1323,7 +1320,7 @@ class _SSDFWriter:
         root = _TextBlock.from_object(-1, '', object)
         
         # Collect blocks and convert to lines
-        blocks = self.flatten_tree(root)
+        blocks = self.flatten_tree(root, True)
         lines = self.write_text_blocks(blocks)
         
         # Write to file or return as a string
@@ -1354,7 +1351,7 @@ class _Block:
         self._blocknr = blocknr # for producing usefull read error messages
         
         self._name = name
-        self._type = type # used by binary only        
+        self._type = type # used by binary only (and text-dict)    
         self._data = data # the raw data, bytes or string
         
         self._children = [] # used only by dicts and lists
@@ -1370,7 +1367,9 @@ class _Block:
         if value is None:
             self._from_none()        
         elif ClassManager.is_registered_class(value.__class__):
-            self._from_dict( value.__to_ssdf__() )
+            s = value.__to_ssdf__()
+            s[_CLASS_NAME] = value.__class__.__name__
+            self._from_dict(s)
         elif isinstance(value, _INT_TYPES):
             self._from_int(value)
         elif isinstance(value, _FLOAT_TYPES):
@@ -1406,20 +1405,20 @@ class _BinaryBlock(_Block):
         # Determine what type of object we are dealing with using the
         # type id.
         type = self._type
-        if type=='i':   return self._to_int()
-        elif type=='f': return self._to_float()
-        elif type=='u': return self._to_unicode()
-        elif type=='a': return self._to_array()
-        elif type=='L': return self._to_list()
-        elif type=='D': return self._to_dict()
-        elif type=='n': return self._to_none()
+        if type==_TYPE_INT:   return self._to_int()
+        elif type==_TYPE_FLOAT: return self._to_float()
+        elif type==_TYPE_UNICODE: return self._to_unicode()
+        elif type==_TYPE_ARRAY: return self._to_array()
+        elif type==_TYPE_LIST: return self._to_list()
+        elif type==_TYPE_DICT: return self._to_dict()
+        elif type==_TYPE_NONE: return self._to_none()
         else:
-            print("SSDF: invalid type in block %i." % self._blocknr)
+            print("SSDF: invalid type %s in block %i." % (repr(type), self._blocknr))
             return None
     
     
     def _from_none(self, value=None):
-        self._type = 'n'
+        self._type = _TYPE_NONE
         self._data = bytes()
     
     def _to_none(self):
@@ -1427,7 +1426,7 @@ class _BinaryBlock(_Block):
     
     
     def _from_int(self, value):
-        self._type = 'i'
+        self._type = _TYPE_INT
         self._data = struct.pack('<q', int(value))
     
     def _to_int(self):
@@ -1435,7 +1434,7 @@ class _BinaryBlock(_Block):
     
     
     def _from_float(self, value):
-        self._type = 'f'
+        self._type = _TYPE_FLOAT
         self._data = struct.pack('<d', float(value))
     
     def _to_float(self):
@@ -1443,7 +1442,7 @@ class _BinaryBlock(_Block):
     
     
     def _from_unicode(self, value):
-        self._type = 'u'
+        self._type = _TYPE_UNICODE
         self._data = value.encode('utf-8')
     
     def _to_unicode(self):
@@ -1451,7 +1450,7 @@ class _BinaryBlock(_Block):
     
     
     def _from_array(self, value):
-        self._type = 'a'
+        self._type = _TYPE_ARRAY
         f =_VirtualFile()
         # Write shape and dtype
         f.write_number(value.ndim)
@@ -1485,11 +1484,13 @@ class _BinaryBlock(_Block):
     
     
     def _from_dict(self, value):
-        self._type = 'D'
+        self._type = _TYPE_DICT
         self._data = bytes()
-        
+        # Get keys sorted by name
+        keys = [key for key in value]
+        keys.sort()
         # Process children        
-        for key in value:
+        for key in keys:
             # Skip all the buildin stuff
             if key.startswith("__"):
                 continue
@@ -1514,8 +1515,8 @@ class _BinaryBlock(_Block):
         # Make class instance?
         if _CLASS_NAME in value:
             className = value[_CLASS_NAME]
-            if className in _registered_classes:
-                value = _registered_classes[className].__from_ssdf__(value)
+            if className in ClassManager._registered_classes:
+                value = ClassManager._registered_classes[className].__from_ssdf__(value)
             else:
                 print("SSDF: class %s not registered." % className)
         # Done
@@ -1524,7 +1525,7 @@ class _BinaryBlock(_Block):
     
     
     def _from_list(self, value):
-        self._type = 'L'
+        self._type = _TYPE_LIST
         self._data = bytes()
         
         # Process children
@@ -1644,8 +1645,12 @@ class _TextBlock(_Block):
     
     def _from_dict(self, value):
         self._data = "dict:"
+        self._type = _TYPE_DICT # Specify type, used by writer to sort
+        # Get keys sorted by name
+        keys = [key for key in value]
+        keys.sort()
         # Process children        
-        for key in value:
+        for key in keys:
             # Skip all the buildin stuff
             if key.startswith("__"):
                 continue                
@@ -1670,8 +1675,8 @@ class _TextBlock(_Block):
         # Make class instance?
         if _CLASS_NAME in value:
             className = value[_CLASS_NAME]
-            if className in _registered_classes:
-                value = _registered_classes[className].__from_ssdf__(value)
+            if className in ClassManager._registered_classes:
+                value = ClassManager._registered_classes[className].__from_ssdf__(value)
             else:
                 print("SSDF: class %s not registered." % className)
         # Done
