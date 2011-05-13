@@ -69,6 +69,7 @@ import OpenGL.GLU as glu
 import os
 import numpy as np
 
+import visvis
 from visvis import ssdf
 from visvis.pypoints import Point, Pointset
 #
@@ -317,14 +318,15 @@ class MiniStyle:
 
 
 class BaseText(object):
-    """ BaseText(text='', fontname='sans')
+    """ BaseText(text='', fontname=None)
     
     Base object for the Text wobject and Label wibject.
-    fontname may be 'mono', 'sans', or 'serif'.
+    fontname may be 'mono', 'sans', 'serif' or None, in which case
+    the vv.settings.defaultFontName is used.
     
     """
     
-    def __init__(self, text='', fontname='sans'):   
+    def __init__(self, text='', fontname=None):   
         
         # init drawing data        
         self._texCords = None  # coords in the font texture
@@ -337,6 +339,13 @@ class BaseText(object):
         
         # store text
         self._text = text
+        
+        # Set and check fontname
+        if fontname is None:
+            fontname = visvis.settings.defaultFontName
+        fontname = fontname.lower()
+        if fontname not in ['mono', 'sans', 'serif']:
+            raise ValueError('Invalid font name.')
         
         # more properties
         self._size = 9
@@ -727,14 +736,16 @@ class BaseText(object):
     
     
 class Text(Wobject, BaseText):
-    """ Text(parent, text='', x=0, y=0, z=0, fontname='sans')
+    """ Text(parent, text='', x=0, y=0, z=0, fontname=None)
     
     A wobject representing a string of characters. The text has 
-    a certain position in the scene.
+    a certain position in the scene. The fontname can be
+    'mono', 'sans' or 'serif'. If not given, the vv.settings.defaultFontName
+    is used.
     
     """
     
-    def __init__(self, parent, text='', x=0, y=0, z=0, fontname='sans'):
+    def __init__(self, parent, text='', x=0, y=0, z=0, fontname=None):
         Wobject.__init__(self, parent)
         BaseText.__init__(self, text, fontname)
         
@@ -787,13 +798,15 @@ class Text(Wobject, BaseText):
     
     
 class Label(Box, BaseText):    
-    """ Label(parent, text='', fontname='sans')
+    """ Label(parent, text='', fontname=None)
     
     A wibject (inherits from box) with text inside. 
+    The fontname can be 'mono', 'sans' or 'serif'. If not given, the 
+    vv.settings.defaultFontName is used.
     
     """
     
-    def __init__(self, parent, text='', fontname='sans'):
+    def __init__(self, parent, text='', fontname=None):
         Box.__init__(self, parent)
         BaseText.__init__(self, text, fontname)
         

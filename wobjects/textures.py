@@ -27,6 +27,7 @@ import math, time, os
 
 from visvis.pypoints import Point, Pointset, Aarray, is_Aarray
 #
+import visvis
 from visvis import Range, Wobject, Colormapable
 from visvis.core.misc import Property, PropWithDraw, DrawAfter, getColor
 from visvis.core.misc import Transform_Translate, Transform_Scale, Transform_Rotate
