@@ -18,7 +18,7 @@ from visvis import Box, DraggableBox, Label
 
 
 class PushButton(Label):
-    """ PushButton(parent, text='', fontname='sans')
+    """ PushButton(parent, text='', fontname=None)
     
     A button to click on. It is a label with an edgewidth of 1, in which
     text is horizontally aligned. Plus the hittest is put on by default. 
@@ -79,7 +79,7 @@ class PushButton(Label):
 
 
 class ToggleButton(PushButton):
-    """ ToggleButton(parent, text='', fontname='sans')
+    """ ToggleButton(parent, text='', fontname=None)
     
     Inherits from PushButton. This button can be set on and off by clicking
     on it, or by using it's property "state". The on state is indicated by
@@ -127,7 +127,7 @@ class ToggleButton(PushButton):
 
 
 class RadioButton(ToggleButton):
-    """ RadioButton(parent, text='', fontname='sans')
+    """ RadioButton(parent, text='', fontname=None)
     
     Inherits from ToggleButton. If pressed upon, sets the state of all
     sibling RadioButton instances to False, and its own state to True.

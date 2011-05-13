@@ -25,6 +25,7 @@
 
 import os
 
+import visvis
 from visvis import BaseFigure, events, constants
 from visvis.core.misc import getResourceDir
 from visvis import guisupport
@@ -279,7 +280,8 @@ def newFigure():
     # Create figure
     fig = Figure(None)
     fig._widget.show() # In Gnome better to show before resize
-    fig._widget.resize(560,420)
+    size = visvis.settings.figureSize
+    fig._widget.resize(size[0],size[1])
     
     # Let OpenGl initialize and return
     fig.DrawNow() 

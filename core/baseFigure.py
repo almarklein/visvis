@@ -19,6 +19,7 @@ import OpenGL.GLU as glu
 import time
 import numpy as np
 
+import visvis
 from visvis.pypoints import Point, Pointset
 #
 from visvis.core import base
@@ -221,7 +222,7 @@ class BaseFigure(_BaseFigure):
         
         # To store the fonts used in this figure.
         self._fontManager = FontManager()
-        self._relativeFontSize = 1.0
+        self._relativeFontSize = visvis.settings.defaultRelativeFontSize
         
         # To store the markers used in this figure
         self._markerManager = MarkerManager()

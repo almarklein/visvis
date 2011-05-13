@@ -1017,7 +1017,7 @@ class CartesianAxis2D(BaseAxis):
                     t.text = text
                     t.x, t.y, t.z = p2.x, p2.y, p2.z
                 else:
-                    t = AxisText(self,text, p2.x,p2.y,p2.z, 'sans')
+                    t = AxisText(self,text, p2.x,p2.y,p2.z)
                 # Add to dict
                 newTextDicts[d][tick] = t
                 # Set other properties right
@@ -1075,8 +1075,8 @@ class CartesianAxis2D(BaseAxis):
                 t.text = labels[d]
                 t.x, t.y, t.z = p1.x, p1.y, p1.z
             else:
-                #t = AxisText(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                #t = AxisText(self,labels[d], p1.x,p1.y,p1.z)
+                t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z)
                 t.fontSize=10
             newTextDicts[d][key] = t
             t.halign = 0
@@ -1241,7 +1241,7 @@ class CartesianAxis3D(BaseAxis):
                     t = textDict.pop(tick)
                     t.x, t.y, t.z = p2.x, p2.y, p2.z
                 else:
-                    t = AxisText(self,text, p2.x,p2.y,p2.z, 'sans')
+                    t = AxisText(self,text, p2.x,p2.y,p2.z)
                 # Add to dict
                 newTextDicts[d][tick] = t
                 # Set other properties right
@@ -1286,8 +1286,8 @@ class CartesianAxis3D(BaseAxis):
                 t.text = labels[d]
                 t.x, t.y, t.z = p1.x, p1.y, p1.z
             else:
-                #t = AxisText(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z, 'sans')
+                #t = AxisText(self,labels[d], p1.x,p1.y,p1.z)
+                t = AxisLabel(self,labels[d], p1.x,p1.y,p1.z)
                 t.fontSize=10
             newTextDicts[d][key] = t
             t.halign = 0
@@ -1627,8 +1627,8 @@ class PolarAxis2D(BaseAxis):
                 t.text = labels[d]
                 t.x, t.y, t.z = p1.x, p1.y, p1.z
             else:
-                #t = AxisText(self,labels[d], p1.x,p1.y,p1.z, 'sans')
-                t = AxisLabel(self, labels[d], p1.x, p1.y, p1.z, 'sans')
+                #t = AxisText(self,labels[d], p1.x,p1.y,p1.z)
+                t = AxisLabel(self, labels[d], p1.x, p1.y, p1.z)
                 t.fontSize = 10
             newTextDicts[d][key] = t
             t.halign = 0
@@ -1709,7 +1709,7 @@ class PolarAxis2D(BaseAxis):
                 t = textDict.pop(tick)
                 t.x, t.y, t.z = p2.x, p2.y, p2.z
             else:
-                t = AxisText(self, text, p2.x, p2.y, p2.z, 'sans')
+                t = AxisText(self, text, p2.x, p2.y, p2.z)
             # Add to dict
             newTextDicts[0][tick] = t
             # Set other properties right
@@ -1803,7 +1803,7 @@ class PolarAxis2D(BaseAxis):
                 t = textDict.pop(tickXformed)
                 t.x, t.y, t.z = ptxt.x, ptxt.y, ptxt.z
             else:
-                t = AxisText(self, text, ptxt.x, ptxt.y, ptxt.z, 'sans')
+                t = AxisText(self, text, ptxt.x, ptxt.y, ptxt.z)
             # Add to dict
             #print tick, '=>',text, 'but', t.text
             newTextDicts[qIndx][tickXformed] = t

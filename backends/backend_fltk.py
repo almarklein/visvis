@@ -9,6 +9,7 @@
 
 """
 
+import visvis
 from visvis import BaseFigure, events, constants
 
 import fltk
@@ -236,7 +237,8 @@ def newFigure():
     """
     
     # Create figure
-    figure = Figure(560, 420, "Figure")    
+    size = visvis.settings.figureSize
+    figure = Figure(size[0], size[1], "Figure")    
     figure._widget.size_range(100,100,0,0,0,0)
     figure._widget.show() # Show AFTER canvas is added    
     
