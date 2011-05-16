@@ -131,7 +131,7 @@ def is_Pointset(ob):
 def is_Point_or_Pointset(ob):
     return hasattr(ob, '_is_Point') or hasattr(ob, '_is_Pointset')
 def is_Aarray(ob):
-    return hasattr(ob, '_is_Aarray')
+    return hasattr(ob, '_is_Aarray') or ob.__class__.__name__ == 'Aarray'
 def is_Quaternion(ob):
     return hasattr(ob, '_is_Quaternion')
 
