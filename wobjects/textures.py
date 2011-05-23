@@ -119,14 +119,6 @@ class TextureObjectToVisualize(TextureObject):
         # reset transfer
         self._ScaleBias_afterUpload()
         
-        # should we correct for downsampling?
-        factor = self._dataRef.shape[0] / float(data.shape[0])
-        if factor > 1:
-            self._trafo_scale.sx *= factor 
-            self._trafo_scale.sy *= factor
-            if self._ndim==3:
-                self._trafo_scale.sz *= factor
-        
         # Set clamping. When testing the raycasting, comment these lines!
         if self._ndim==3:
             gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
@@ -467,7 +459,7 @@ class Texture2D(BaseTexture):
         #gl.glCullFace(gl.GL_FRONT_AND_BACK)
         
         # enable texture
-        self._texture1.Enable(0)
+        self._texture1.Enable(0, self._trafo_scale)
         
         # _texture._shape is a good indicator of a valid texture
         if not self._texture1._shape:
@@ -622,7 +614,7 @@ class Texture3D(BaseTexture):
         # Draw the texture.
         
         # enable this texture
-        self._texture1.Enable(0)
+        self._texture1.Enable(0, self._trafo_scale)
         
         # _texture._shape is a good indicator of a valid texture
         if not self._texture1._shape:
@@ -875,7 +867,7 @@ class MultiTexture3D(Texture3D):
         # Draw the texture.
         
         # enable textures
-        self._texture1.Enable(0)
+        self._texture1.Enable(0, self._trafo_scale)
         self._texture2.Enable(0)
         
         # _texture._shape is a good indicator of a valid texture
