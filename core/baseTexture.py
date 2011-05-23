@@ -78,27 +78,47 @@ def downSample(data, ndim):
     aliasing. 
     
     """
+    
     if ndim==1:
-        data2 = 0.4 * data
-        data2[1:] += 0.3*data[:-1] 
-        data2[:-1] += 0.3*data[1:]
-        data2 = data2[::2]
+        # Decimate
+        data2 = data[::2].copy()
+        data2 *= 0.4
+        # Average in x
+        tmp = data[1::2]
+        tmp *= 0.3
+        data2[:tmp.shape[0]] += tmp
+        data2[1:] += tmp[:data2.shape[0]-1]
     elif ndim==2:
-        data2 = 0.4 * data        
-        data2[1:,:] += 0.15*data[:-1,:] 
-        data2[:-1,:] += 0.15*data[1:,:]
-        data2[:,1:] += 0.15*data[:,:-1] 
-        data2[:,:-1] += 0.15*data[:,1:,:]
-        data2 = data2[::2,::2]
+        # Decimate
+        data2 = data[::2,::2].copy()
+        # Average in y
+        tmp = data[1::2,::2]
+        tmp *= 0.15
+        data2[:tmp.shape[0],:] += tmp
+        data2[1:,:] += tmp[:data2.shape[0]-1,:]
+        # Average in x
+        tmp = data[::2,1::2]
+        tmp *= 0.15
+        data2[:,:tmp.shape[1]] += tmp
+        data2[:,1:] += tmp[:,:data2.shape[1]-1]
     elif ndim==3:
-        data2 = 0.4 * data        
-        data2[1:,:,:] += 0.1*data[:-1,:,:] 
-        data2[:-1,:,:] += 0.1*data[1:,:,:]
-        data2[:,1:,:] += 0.1*data[:,:-1,:] 
-        data2[:,:-1,:] += 0.1*data[:,1:,:]
-        data2[:,:,1:] += 0.1*data[:,:,:-1] 
-        data2[:,:,:-1] += 0.1*data[:,:,1:]        
-        data2 = data2[::2,::2,::2]
+        # Decimate
+        data2 = data[::2,::2,::2].copy()
+        # Average in z
+        tmp = data[1::2,::2,::2]
+        tmp *= 0.1
+        data2[:tmp.shape[0],:,:] += tmp
+        data2[1:,:,:] += tmp[:data2.shape[0]-1,:,:]
+        # Average in y
+        tmp = data[::2,1::2,::2]
+        tmp *= 0.1
+        data2[:,:tmp.shape[1],:] += tmp
+        data2[:,1:,:] += tmp[:,:data2.shape[1]-1,:]
+        # Average in x
+        tmp = data[::2,::2,1::2]
+        tmp *= 0.1
+        data2[:,:,:tmp.shape[2]] += tmp
+        data2[:,:,1:] += tmp[:,:,:data2.shape[2]-1]
     else:
         raise ValueError("Cannot downsample data of this dimension.")
     return data2
@@ -163,6 +183,9 @@ class TextureObject(object):
         # Note that the self._shape does not have to be self._dataRef.shape.
         self._dataRef = None
         
+        # Factor to indicate the amount of downsampling
+        self._downsampleFactor = 1.0
+        
         # A flag to indicate that the data in self._dataRef should be uploaded.
         # 1 signifies an update is required.
         # 2 signifies an update is required, with padding zeros.
@@ -175,7 +198,7 @@ class TextureObject(object):
         self._canUse = False
     
     
-    def Enable(self, texUnit=0):
+    def Enable(self, texUnit=0, scaleTrafo=None):
         """ Enable(texUnit)
         
         Enable (bind) the texture, using the given texture unit (max 9).
@@ -195,6 +218,18 @@ class TextureObject(object):
         # If we should upload/update, do that now. (SetData also sets the flag)
         if self._uploadFlag > 0:
             self._SetDataNow()
+            
+            # Should (and can) we correct for downsampling?
+            if scaleTrafo and self._downsampleFactor>1:
+                factor = self._downsampleFactor
+                data = self._dataRef
+                if data.ndim >= 3 and data.shape[2] > 4: # 3D
+                    scaleTrafo.sx = data.sampling[2] * factor
+                    scaleTrafo.sy = data.sampling[1] * factor
+                    scaleTrafo.sz = data.sampling[0] * factor
+                else: # 2D
+                    scaleTrafo.sx = data.sampling[1] * factor
+                    scaleTrafo.sy = data.sampling[0] * factor
         
         # check if ok now
         if not gl.glIsTexture(self._texId):
@@ -349,6 +384,8 @@ class TextureObject(object):
                 if not ok:
                     data = downSample(data, self._ndim)
                     count += 1
+            if count:
+                self._downsampleFactor = 2.0**count
             
             # give warning or error
             if count and not ok:                
