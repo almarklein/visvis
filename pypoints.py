@@ -131,7 +131,7 @@ def is_Pointset(ob):
 def is_Point_or_Pointset(ob):
     return hasattr(ob, '_is_Point') or hasattr(ob, '_is_Pointset')
 def is_Aarray(ob):
-    return hasattr(ob, '_is_Aarray') or ob.__class__.__name__ == 'Aarray'
+    return hasattr(ob, '_is_Aarray')
 def is_Quaternion(ob):
     return hasattr(ob, '_is_Quaternion')
 
@@ -1347,7 +1347,7 @@ class Aarray(np.ndarray):
         
         # Get index always as a tuple and complete
         index2 = [None]*len(self._sampling)
-        if not isinstance(index, tuple):
+        if not isinstance(index, (list,tuple)):
             index2[0] = index
         else:
             for i in range(len(index)):                    
