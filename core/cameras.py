@@ -754,13 +754,22 @@ class ThreeDCamera(BaseCamera):
             
             # apply 
             if self.axes.daspectAuto:
-                # Zooming in pure x (x and y data) goes via daspect.
-                # Zooming in pure y (z data) goes via zoom factor.
+                # Zooming in x and y goes via daspect.
+                # Zooming in z goes via zoom factor.
                 dzoom_x, dzoom_y = math.exp(-factorx), math.exp(factory)
                 daspect = self.ref_daspect
-                daspect = self._SetDaspect(dzoom_x/dzoom_y, 0, 0, daspect)
-                daspect = self._SetDaspect(dzoom_x/dzoom_y, 1, 1, daspect)
-                self.zoom = self.ref_zoom * dzoom_y
+                ar = self.axes.daspect
+                
+                sro, saz, sel = map(sind, (self.view_ro, self.view_az, self.view_el))
+                cro, caz, cel = map(cosd, (self.view_ro, self.view_az, self.view_el))
+                # Motion to right or top should always zoom in, regardless of rotation
+                dx = -factorx * abs(cro * caz + sro * sel * saz) + factory * abs(sro * caz - cro * sel * saz)
+                dy = -factorx * abs(cro * saz - sro * sel * caz) + factory * abs(sro * saz + cro * sel * caz)
+                dz = factorx * abs(sro * cel) + factory * abs(cro * cel)
+                
+                daspect = self._SetDaspect(math.exp(dx-dz), 0, 0, daspect)
+                daspect = self._SetDaspect(math.exp(dy-dz), 1, 1, daspect)
+                self.zoom = self.ref_zoom * math.exp(dz)
             else:
                 self.zoom = self.ref_zoom * math.exp(factory)
         
