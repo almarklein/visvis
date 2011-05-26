@@ -222,7 +222,6 @@ class BaseCamera(object):
         w, h = float(w), float(h) 
         
         # get zoom factor
-#         fx, fy = self.view_zoomx, self.view_zoomy
         fx, fy = 1.0 / self.zoom, 1.0 / self.zoom
         
         # correct zoom factor for window size      
@@ -312,8 +311,6 @@ class TwoDCamera(BaseCamera):
         # view_loc is the coordinate that we center on
         # view_zoomx and view_zoomx is the range of data visualized in
         # each direction
-        self.view_zoomx = 100
-        self.view_zoomy = 100
         self.view_loc = 0,0,0 # we only use the 2D part
         self._fx, self._fy = 0,0
         
@@ -323,8 +320,6 @@ class TwoDCamera(BaseCamera):
         self.ref_loc = 0,0,0    # view_loc when clicked
         self.ref_mloc = 0,0     # mouse location when clicked
         self.ref_but = 0        # mouse button when clicked   
-        self.ref_zoomx = 100.0  # zoom factors when clicked
-        self.ref_zoomy = 100.0        
         self.ref_axes = None
         
         self.ref_zoom = 1.0
@@ -338,7 +333,7 @@ class TwoDCamera(BaseCamera):
             axes.eventDoubleClick.Bind( self.Reset)
     
     
-    viewparams = (('loc', 'view_loc'), ('zoomx', 'view_zoomx'), ('zoomy', 'view_zoomy'))
+    viewparams = (('loc', 'view_loc'), ('zoom', 'zoom'))
     
     
     def Reset(self, event=None):
@@ -354,13 +349,6 @@ class TwoDCamera(BaseCamera):
         
         # get range and translation for x and y   
         rx, ry = self.xlim.range, self.ylim.range
-            
-#         # correct for aspect ratio
-#         if not self.axes.daspectAuto:
-#             ar = self.axes.daspect
-#             rx *= abs( ar[0] )
-#             ry *= abs( ar[1] )
-#         
         
         if not self.axes.daspectAuto:
             # simulate what SetView will do to correct for window size
@@ -373,22 +361,11 @@ class TwoDCamera(BaseCamera):
             # Modify daspect, y is the reference
             daspect = self._SetDaspect(ry/rx, 0, 1)
         
-#         # make equal if required
-#         if not self.axes.daspectAuto:
-#             if rx/ry > 1:
-#                 ry = rx
-#             else:
-#                 rx = ry
-        
         # set zoom factor
         daspect = self.axes.daspect
         zoomx = 1.0 / abs(daspect[0] * rx)
         zoomy = 1.0 / abs(daspect[1] * ry)
         self.zoom = min(zoomx, zoomy)
-    
-#         # apply zoom factors
-#         self.view_zoomx = rx
-#         self.view_zoomy = ry
         
         # set center location -> calls refresh
         BaseCamera.Reset(self)
@@ -403,9 +380,6 @@ class TwoDCamera(BaseCamera):
         
         # store current view parameters        
         self.ref_loc = self.view_loc
-        self.ref_zoomx = self.view_zoomx 
-        self.ref_zoomy = self.view_zoomy 
-        
         self.ref_zoom = self.zoom
         self.ref_daspect = self.axes.daspect
         
@@ -466,14 +440,6 @@ class TwoDCamera(BaseCamera):
             
             else:
                 self.zoom = self.ref_zoom * math.exp(factory)
-                
-#             # apply (use only y-factor if daspect is valid).
-#             if self.axes.daspectAuto:
-#                 self.view_zoomx = self.ref_zoomx * math.exp(factorx)
-#                 self.view_zoomy = self.ref_zoomy * math.exp(-factory)
-#             else:
-#                 self.view_zoomy = self.ref_zoomy * math.exp(-factory)
-#                 self.view_zoomx =  self.view_zoomy
         
         # refresh
         for axes in self.axeses:
@@ -491,16 +457,6 @@ class TwoDCamera(BaseCamera):
         # Calculate viewing range for x and y
         fx = abs( 1.0 / self.zoom )
         fy = abs( 1.0 / self.zoom )
-        
-#         # test zoomfactors
-#         if not self.axes.daspectAuto:
-#             if self.view_zoomx != self.view_zoomy:
-#                 # apply average zoom
-#                 tmp = self.view_zoomx + self.view_zoomy
-#                 self.view_zoomx = self.view_zoomy = tmp / 2.0
-#         
-#         # get zoom
-#         fx, fy = self.view_zoomx, self.view_zoomy
         
         # correct for window size
         if not self.axes.daspectAuto:
@@ -575,9 +531,8 @@ class ThreeDCamera(BaseCamera):
         self.view_el = 30.0 # elevation
         self.view_ro = 0.0 # roll
         self.view_fov = 0.0 # field of view - if 0, use ortho view
-        self.view_zoomx = 100.0
-        self.view_zoomy = 100.0
         self.view_loc = 0,0,0
+        self.zoom = 1.0
         
         # reference variables for when dragging
         self.ref_loc = 0,0,0    # view_loc when clicked
@@ -587,8 +542,7 @@ class ThreeDCamera(BaseCamera):
         self.ref_el = 0
         self.ref_ro = 0
         self.ref_fov = 0
-        self.ref_zoomx = 0      # zoom factors when clicked
-        self.ref_zoomy = 0
+        self.ref_zoom = 0
         
         # Bind to events
         for axes in self.axeses:
@@ -601,7 +555,7 @@ class ThreeDCamera(BaseCamera):
             axes.eventDoubleClick.Bind(self.Reset)
     
     
-    viewparams = (('loc', 'view_loc'), ('zoomx', 'view_zoomx'), ('zoomy', 'view_zoomy'),
+    viewparams = (('loc', 'view_loc'), ('zoom', 'zoom'),
                   ('azimuth', 'view_az'), ('elevation', 'view_el'), ('roll', 'view_ro'),
                   ('fov', 'view_fov'))
     
@@ -624,13 +578,6 @@ class ThreeDCamera(BaseCamera):
         
         # get range and translation for x and y   
         rx, ry, rz = self.xlim.range, self.ylim.range, self.zlim.range
-        
-#         # correct for aspect ratio
-#         if not self.axes.daspectAuto:
-#             ar = self.axes.daspect
-#             rx *= abs( ar[0] )
-#             ry *= abs( ar[1] )
-#             rz *= abs( ar[2] )
         
         if not self.axes.daspectAuto:
             # Correct ranges for window size. Note that the window width
@@ -662,17 +609,6 @@ class ThreeDCamera(BaseCamera):
         zoomz = 1.0 / abs(daspect[2] * rz)
         self.zoom = min(zoomx, zoomy, zoomz) / 1.05  # 5% extra space
         
-#         # make equal if required
-#         if not self.axes.daspectAuto:
-#             if rx/ry > 1:
-#                 ry = rx
-#             else:
-#                 rx = ry
-#         
-#         # apply zoom factors, apply a bit more
-#         self.view_zoomx = rx * 1.05
-#         self.view_zoomy = ry * 1.05
-        
         # set center location -> calls refresh
         BaseCamera.Reset(self)
     
@@ -685,8 +621,6 @@ class ThreeDCamera(BaseCamera):
         self.ref_fov = self.view_fov
         #
         self.ref_loc = self.view_loc
-        self.ref_zoomx = self.view_zoomx 
-        self.ref_zoomy = self.view_zoomy 
         #
         self.ref_zoom = self.zoom
         self.ref_daspect = self.axes.daspect
@@ -829,14 +763,6 @@ class ThreeDCamera(BaseCamera):
                 self.zoom = self.ref_zoom * dzoom_y
             else:
                 self.zoom = self.ref_zoom * math.exp(factory)
-            
-#             # apply (use only y-factor if daspect is valid.
-#             if self.axes.daspectAuto:
-#                 self.view_zoomx = self.ref_zoomx * math.exp(factorx)
-#                 self.view_zoomy = self.ref_zoomy * math.exp(-factory)
-#             else:
-#                 self.view_zoomy = self.ref_zoomy * math.exp(-factory)
-#                 self.view_zoomx = self.view_zoomy
         
         # refresh (fast)
         for axes in self.axeses:
@@ -854,16 +780,6 @@ class ThreeDCamera(BaseCamera):
         # Calculate viewing range for x and y
         fx = abs( 1.0 / self.zoom )
         fy = abs( 1.0 / self.zoom )
-        
-#         # test zoomfactors
-#         if not self.axes.daspectAuto:
-#             if self.view_zoomx != self.view_zoomy:
-#                 # apply average zoom
-#                 tmp = self.view_zoomx + self.view_zoomy
-#                 self.view_zoomx = self.view_zoomy = tmp / 2.0
-#         
-#         # get zoom
-#         fx, fy = self.view_zoomx, self.view_zoomy
         
         # correct for window size        
         if not self.axes.daspectAuto:
