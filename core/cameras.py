@@ -309,11 +309,8 @@ class TwoDCamera(BaseCamera):
         
         # indicate part that we view.
         # view_loc is the coordinate that we center on
-        # view_zoomx and view_zoomx is the range of data visualized in
-        # each direction
         self.view_loc = 0,0,0 # we only use the 2D part
         self._fx, self._fy = 0,0
-        
         self.zoom = 1.0
         
         # reference stuff for interaction

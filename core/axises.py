@@ -1456,21 +1456,10 @@ class PolarAxis2D(BaseAxis):
         # four sets of radial ticks (with same dict key!)
         self._textDicts = [{}, {}, {}, {}, {}]
         
-        # indicate part that we view.
-        # view_loc is the coordinate that we center on
-        # view_zoomx and view_zoomx is the range of data visualized in
-        # each direction
-        self.view_zoomx = 100
-        self.view_zoomy = 100
-        self.view_loc = 0, 0, 0  # we only use the 2D part
-        self._fx, self._fy = 0, 0
-        
         # reference stuff for interaction
         self.ref_loc = 0, 0, 0    # view_loc when clicked
         self.ref_mloc = 0, 0     # mouse location when clicked
         self.ref_but = 0        # mouse button when clicked
-        self.ref_zoomx = 100.0  # zoom factors when clicked
-        self.ref_zoomy = 100.0
         
         self.controlIsDown = False
         self.shiftIsDown = False
