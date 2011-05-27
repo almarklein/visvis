@@ -283,6 +283,13 @@ class BaseCamera(object):
         # todo: set for all axeses, or make daspect a camera property?
         
         return daspect2
+    
+    
+    def _GetNormalizedDaspect(self):
+        
+        daspect = self.axes.daspect
+        length = float(daspect[0]**2 + daspect[1]**2 + daspect[2]**2)**0.5
+        return [d/length for d in daspect]
 
 
 class TwoDCamera(BaseCamera):
@@ -339,6 +346,10 @@ class TwoDCamera(BaseCamera):
         Reset the view.        
         
         """
+        
+        # Only reset if this is currently the camera
+        if self.axes.camera is not self:
+            return
         
         # get window size
         w,h = self.axes.position.size
@@ -531,6 +542,8 @@ class ThreeDCamera(BaseCamera):
         self.view_loc = 0,0,0
         self.zoom = 1.0
         
+        self._windowSizeFactor = None
+        
         # reference variables for when dragging
         self.ref_loc = 0,0,0    # view_loc when clicked
         self.ref_mloc = 0,0     # mouse location when clicked
@@ -543,6 +556,7 @@ class ThreeDCamera(BaseCamera):
         
         # Bind to events
         for axes in self.axeses:
+            axes.eventPosition.Bind(self.OnResize)
             axes.eventKeyDown.Bind(self.OnKeyDown)
             axes.eventKeyUp.Bind(self.OnKeyUp)        
             # 
@@ -550,11 +564,37 @@ class ThreeDCamera(BaseCamera):
             axes.eventMouseUp.Bind(self.OnMouseUp)        
             axes.eventMotion.Bind(self.OnMotion)
             axes.eventDoubleClick.Bind(self.Reset)
+            # Some of these bindings can just as well be done in 
+            # the base camera class
     
     
     viewparams = (('loc', 'view_loc'), ('zoom', 'zoom'),
                   ('azimuth', 'view_az'), ('elevation', 'view_el'), ('roll', 'view_ro'),
                   ('fov', 'view_fov'))
+    
+    
+    def OnResize(self, event):
+        
+        # Get new size factor
+        w,h = self.axes.position.size
+        sizeFactor = float(h) / w
+        
+        # Make it quick if daspect is not in auto-mode
+        if not self.axes.daspectAuto:
+            self._windowSizeFactor = sizeFactor
+            return
+        
+        # Get daspect factor
+        if self._windowSizeFactor:
+            daspectFactor = sizeFactor / self._windowSizeFactor
+        else:
+            daspectFactor = sizeFactor
+        
+        # Set size factor for next time
+        self._windowSizeFactor = sizeFactor
+        
+        # Change daspect
+        self._SetDaspect(daspectFactor, 2, 2)
     
     
     def Reset(self, event=None):
@@ -563,6 +603,11 @@ class ThreeDCamera(BaseCamera):
         Reset the view.
         
         """
+        
+        # Only reset if this is currently the camera
+        if self.axes.camera is not self:
+            return
+        
         # Set angles
         self.view_az = -10.0
         self.view_el = 30.0
@@ -576,7 +621,7 @@ class ThreeDCamera(BaseCamera):
         # get range and translation for x and y   
         rx, ry, rz = self.xlim.range, self.ylim.range, self.zlim.range
         
-        if not self.axes.daspectAuto:
+        if True:
             # Correct ranges for window size. Note that the window width
             # influences the x and y data range, while the height influences
             # the z data range.
@@ -585,26 +630,37 @@ class ThreeDCamera(BaseCamera):
                 ry /= w/h
             else:
                 rz /= h/w
-        else:
-            # Change daspect, z is the reference
-            daspect = self._SetDaspect(rz/rx, 0, 2)
-            daspect = self._SetDaspect(rz/ry, 1, 2)
+        
+        if self.axes.daspectAuto:
+            # Change daspect, x is the reference
+            self._SetDaspect(rx/ry, 1, 0)
+            self._SetDaspect(rx/rz, 2, 0)
+        
+        # Correct for normalized daspect
+        ndaspect = self._GetNormalizedDaspect()
+        rx, ry, rz = rx*ndaspect[0], ry*ndaspect[1], rz*ndaspect[2]
         
         # Below this line x and y represent screen coordinates. In screen x, 
         # only x and y have effect. In screen y, all three dimensions have 
         # effect, because of the elevation and azimuth.
         # The idea of the lines below is to calculate the range on screen
         # when the scene is in a 45 degrees rotated state.
-        tmp = ( rx**2 + ry**2 )**0.5
-        ry = ( 1*(rx**2 + ry**2) + rz**2 )**0.5
-        rx = tmp
+        rxs = ( rx**2 + ry**2 )**0.5
+        rys = ( rx**2 + ry**2 + rz**2 )**0.5
         
+        # Correct again for screen coords
+        if w / h > 1:
+            rxs *= w/h
+            self.zoom = (1/rxs) / 1.04  # 2% extra space
+        else:
+#             rys *= h/w
+            self.zoom = (1/rys) / 1.08 # 10% extra space
         # set zoom factor
-        daspect = self.axes.daspect
-        zoomx = 1.0 / abs(daspect[0] * rx) 
-        zoomy = 1.0 / abs(daspect[1] * ry)
-        zoomz = 1.0 / abs(daspect[2] * rz)
-        self.zoom = min(zoomx, zoomy, zoomz) / 1.05  # 5% extra space
+#         daspect = self.axes.daspect
+#         zoomx = 1.0 / abs(daspect[0] * rx) 
+#         zoomy = 1.0 / abs(daspect[1] * ry)
+#         zoomz = 1.0 / abs(daspect[2] * rz)
+#         self.zoom = min(1/rxs, 1/rys) / 1.05  # 5% extra space
         
         # set center location -> calls refresh
         BaseCamera.Reset(self)
@@ -764,9 +820,11 @@ class ThreeDCamera(BaseCamera):
                 dy = -factorx * abs(cro * saz - sro * sel * caz) + factory * abs(sro * saz + cro * sel * caz)
                 dz = factorx * abs(sro * cel) + factory * abs(cro * cel)
                 
-                daspect = self._SetDaspect(math.exp(dx-dz), 0, 0, daspect)
-                daspect = self._SetDaspect(math.exp(dy-dz), 1, 1, daspect)
-                self.zoom = self.ref_zoom * math.exp(dz)
+                daspect = self._SetDaspect(math.exp(dy-dx), 1, 1, daspect)
+                daspect = self._SetDaspect(math.exp(dz-dx), 2, 2, daspect)
+                
+                #factor = 1.0 / (3*2**0.5)
+                self.zoom = self.ref_zoom * math.exp(factory) * math.exp(factory)
             else:
                 self.zoom = self.ref_zoom * math.exp(factory)
         
@@ -787,8 +845,8 @@ class ThreeDCamera(BaseCamera):
         fx = abs( 1.0 / self.zoom )
         fy = abs( 1.0 / self.zoom )
         
-        # correct for window size        
-        if not self.axes.daspectAuto:
+        # Correct for window size        
+        if True:
             w, h = self.axes.position.size
             w, h = float(w), float(h)        
             if w / h > 1:#self.ylim.range / self.xlim.range:
@@ -829,8 +887,8 @@ class ThreeDCamera(BaseCamera):
         gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
-        daspect = self.axes.daspect        
-        gl.glScale( daspect[0], daspect[1] , daspect[2] )
+        ndaspect = self._GetNormalizedDaspect()    
+        gl.glScale( ndaspect[0], ndaspect[1] , ndaspect[2] )
         
         # 1. Translate to view location. Do this first because otherwise
         # the translation is not in world coordinates.
@@ -910,6 +968,10 @@ class FlyCamera(ThreeDCamera):
         Position the camera at a suitable position from the scene.
         
         """
+        
+        # Only reset if this is currently the camera
+        if self.axes.camera is not self:
+            return
         
         # call the 3D camera reset... It calls Draw(), which is thus called
         # unnecesary, but hell, you dont reset that often...
