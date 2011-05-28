@@ -288,8 +288,7 @@ class BaseCamera(object):
     def _GetNormalizedDaspect(self):
         
         daspect = self.axes.daspect
-        length = float(daspect[0]**2 + daspect[1]**2 + daspect[2]**2)**0.5
-        return [d/length for d in daspect]
+        return [d/daspect[0] for d in daspect]
 
 
 class TwoDCamera(BaseCamera):
@@ -809,9 +808,7 @@ class ThreeDCamera(BaseCamera):
             if self.axes.daspectAuto:
                 # Zooming in x and y goes via daspect.
                 # Zooming in z goes via zoom factor.
-                dzoom_x, dzoom_y = math.exp(-factorx), math.exp(factory)
                 daspect = self.ref_daspect
-                ar = self.axes.daspect
                 
                 sro, saz, sel = map(sind, (self.view_ro, self.view_az, self.view_el))
                 cro, caz, cel = map(cosd, (self.view_ro, self.view_az, self.view_el))
@@ -823,8 +820,7 @@ class ThreeDCamera(BaseCamera):
                 daspect = self._SetDaspect(math.exp(dy-dx), 1, 1, daspect)
                 daspect = self._SetDaspect(math.exp(dz-dx), 2, 2, daspect)
                 
-                #factor = 1.0 / (3*2**0.5)
-                self.zoom = self.ref_zoom * math.exp(factory) * math.exp(factory)
+                self.zoom = self.ref_zoom * math.exp(dx)
             else:
                 self.zoom = self.ref_zoom * math.exp(factory)
         
