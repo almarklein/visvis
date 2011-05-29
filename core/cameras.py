@@ -359,11 +359,11 @@ class TwoDCamera(BaseCamera):
             else:
                 ry /= h/w
         else:
-            # Modify daspect, y is the reference
-            daspect = self._SetDaspect(ry/rx, 0, 1)
+            # Modify daspect, x is the reference
+            daspect = self._SetDaspect(rx/ry, 1, 0)
         
         # set zoom factor
-        daspect = self.axes.daspect
+        daspect = self.axes.daspectNormalized
         zoomx = 1.0 / abs(daspect[0] * rx)
         zoomy = 1.0 / abs(daspect[1] * ry)
         self.zoom = min(zoomx, zoomy)
@@ -436,8 +436,8 @@ class TwoDCamera(BaseCamera):
                 # Zooming in pure x goes via daspect.
                 # Zooming in pure y goes via zoom factor.
                 dzoom_x, dzoom_y = math.exp(-factorx), math.exp(factory)
-                self._SetDaspect(dzoom_x/dzoom_y, 0, 0, self.ref_daspect)
-                self.zoom = self.ref_zoom * dzoom_y
+                self._SetDaspect(dzoom_y/dzoom_x, 1, 1, self.ref_daspect)
+                self.zoom = self.ref_zoom * dzoom_x
             
             else:
                 self.zoom = self.ref_zoom * math.exp(factory)
@@ -488,8 +488,8 @@ class TwoDCamera(BaseCamera):
         gl.glLoadIdentity()
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
-        daspect = self.axes.daspect
-        gl.glScale( daspect[0], daspect[1], daspect[2] )
+        ndaspect = self.axes.daspectNormalized
+        gl.glScale( ndaspect[0], ndaspect[1], ndaspect[2] )
         
         # 1. Translate to view location (coordinate where we look at). 
         # Do this first because otherwise the translation is not in world 
