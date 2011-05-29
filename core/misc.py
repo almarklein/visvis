@@ -160,9 +160,10 @@ def DrawAfter(function):
     
     """
     def newFunc(self, *args, **kwargs):
-        function(self, *args, **kwargs)
+        retval = function(self, *args, **kwargs)
         if hasattr(self, 'Draw'):
             self.Draw()
+        return retval
     newFunc.__doc__ = function.__doc__
     return newFunc
 
