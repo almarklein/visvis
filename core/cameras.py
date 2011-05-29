@@ -341,8 +341,8 @@ class TwoDCamera(BaseCamera):
         """
         
         # Only reset if this is currently the camera
-        if self.axes.camera is not self:
-            return
+        #if self.axes.camera is not self:
+        #    return
         
         # get window size
         w,h = self.axes.position.size
@@ -598,8 +598,8 @@ class ThreeDCamera(BaseCamera):
         """
         
         # Only reset if this is currently the camera
-        if self.axes.camera is not self:
-            return
+        #if self.axes.camera is not self:
+        #    return
         
         # Set angles
         self.view_az = -10.0
@@ -960,8 +960,8 @@ class FlyCamera(ThreeDCamera):
         """
         
         # Only reset if this is currently the camera
-        if self.axes.camera is not self:
-            return
+        #if self.axes.camera is not self:
+        #    return
         
         # call the 3D camera reset... It calls Draw(), which is thus called
         # unnecesary, but hell, you dont reset that often...
