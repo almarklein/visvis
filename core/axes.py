@@ -600,8 +600,10 @@ class Axes(base.Wibject):
     
     @property
     def daspectNormalized(self):
-        """Get the data aspect ratio, normalized such that the x scaling is 1"""
-        return tuple(d/self._daspect[0] for d in self._daspect)
+        """ Get the data aspect ratio, normalized such that the x scaling 
+        is +/- 1.
+        """
+        return tuple(d/abs(self._daspect[0]) for d in self._daspect)
     
     @PropWithDraw
     def daspectAuto():
