@@ -363,9 +363,9 @@ class Axes(base.Wibject):
         cam = self._cameras['2d']
         
         # calculate limits
-        tmp = cam._fx/2 / self.daspect[0]
+        tmp = cam._fx/2 / self.daspectNormalized[0]
         xlim = Range( cam.view_loc[0] - tmp, cam.view_loc[0] + tmp )
-        tmp = cam._fy/2 / self.daspect[1]
+        tmp = cam._fy/2 / self.daspectNormalized[1]
         ylim = Range( cam.view_loc[1] - tmp, cam.view_loc[1] + tmp )
         
         # return
@@ -597,6 +597,11 @@ class Axes(base.Wibject):
                     float(value[1]), float(value[2]))
             else:            
                 raise Exception("daspect should be a length 2 or 3 sequence!")
+    
+    @property
+    def daspectNormalized(self):
+        """Get the data aspect ratio, normalized such that the x scaling is 1"""
+        return tuple(d/self._daspect[0] for d in self._daspect)
     
     @PropWithDraw
     def daspectAuto():
