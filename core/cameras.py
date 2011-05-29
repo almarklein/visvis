@@ -283,12 +283,6 @@ class BaseCamera(object):
         # todo: set for all axeses, or make daspect a camera property?
         
         return daspect2
-    
-    
-    def _GetNormalizedDaspect(self):
-        
-        daspect = self.axes.daspect
-        return [d/daspect[0] for d in daspect]
 
 
 class TwoDCamera(BaseCamera):
@@ -636,7 +630,7 @@ class ThreeDCamera(BaseCamera):
             self._SetDaspect(rx/rz, 2, 0)
         
         # Correct for normalized daspect
-        ndaspect = self._GetNormalizedDaspect()
+        ndaspect = self.axes.daspectNormalized
         rx, ry, rz = rx*ndaspect[0], ry*ndaspect[1], rz*ndaspect[2]
         
         # Below this line x and y represent screen coordinates. In screen x, 
@@ -883,7 +877,7 @@ class ThreeDCamera(BaseCamera):
         gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
-        ndaspect = self._GetNormalizedDaspect()    
+        ndaspect = self.axes.daspectNormalized    
         gl.glScale( ndaspect[0], ndaspect[1] , ndaspect[2] )
         
         # 1. Translate to view location. Do this first because otherwise
