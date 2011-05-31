@@ -630,7 +630,7 @@ class ThreeDCamera(BaseCamera):
         self._view_az = -10.0 # azimuth
         self._view_el = 30.0 # elevation
         self._view_ro = 0.0 # roll
-        self._view_fov = 0.0 # field of view - if 0, use ortho view
+        self._fov = 0.0 # field of view - if 0, use ortho view
         
         # reference variables for when dragging
         self._ref_loc = 0,0,0    # view_loc when clicked
@@ -690,7 +690,7 @@ class ThreeDCamera(BaseCamera):
         self._view_az = -10.0
         self._view_el = 30.0
         self._view_ro = 0.0 
-        self._view_fov = 0.0
+        self._fov = 0.0
         
         # Get window size
         w,h = self.axes.position.size
@@ -740,7 +740,7 @@ class ThreeDCamera(BaseCamera):
         self._ref_az = self._view_az
         self._ref_el = self._view_el
         self._ref_ro = self._view_ro
-        self._ref_fov = self._view_fov
+        self._ref_fov = self._fov
         #
         self._ref_loc = self._view_loc
         #
@@ -857,13 +857,13 @@ class ThreeDCamera(BaseCamera):
             d_fov = float(self._ref_mloc[1] - mloc[1]) / self.axes.position.height
             
             # apply
-            self._view_fov = self._ref_fov + d_fov * 90
+            self._fov = self._ref_fov + d_fov * 90
             
             # keep from being too big or negative
-            if self._view_fov > 179:
-                self._view_fov = 179
-            elif self._view_fov < 0:
-                self._view_fov = 0
+            if self._fov > 179:
+                self._fov = 179
+            elif self._fov < 0:
+                self._fov = 0
         
         elif self._ref_but==2:
             # zoom
@@ -936,13 +936,13 @@ class ThreeDCamera(BaseCamera):
         
         # 4. Define part that we view. Remember, we're looking down the
         # z-axis. We zoom here.                
-        if self._view_fov == 0:
+        if self._fov == 0:
             ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         else:
             # Figure distance to center in order to have correct FoV and fy.
-            d = fy / (2 * math.tan(math.radians(self._view_fov)/2))
+            d = fy / (2 * math.tan(math.radians(self._fov)/2))
             val = math.sqrt(getDepthValue())
-            glu.gluPerspective(self._view_fov, fx/fy, d/val, d*val)
+            glu.gluPerspective(self._fov, fx/fy, d/val, d*val)
             gl.glTranslate(0, 0, -d)
         
         # Prepare for models
