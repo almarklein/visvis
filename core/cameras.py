@@ -81,6 +81,7 @@ def depthToZ(depth):
     val = getDepthValue()
     return val - depth * 2 * val
 
+
 class BaseCamera(object):
     """ BaseCamera(*axes)
     
@@ -189,6 +190,35 @@ class BaseCamera(object):
         return tuple(self._axeses)
     
     
+    @Property
+    def zoom():
+        """ Get/set the current zoom factor.
+        """
+        def fget(self):
+            return self._zoom
+        def fset(self, value):
+            self._zoom = float(value)
+            for ax in self.axeses:
+                ax.Draw()
+    
+    @Property
+    def location():
+        """ Get/set the current viewing location.
+        """
+        def fget(self):
+            return tuple(self._view_loc)
+        def fset(self, value):
+            # Check
+            if isinstance(value, (tuple, list)) and len(value)==3:
+                value = [float(v) for v in value]
+            else:
+                raise ValueError('location must be a 3-element tuple.')
+            # Set
+            self._view_loc = tuple(value)
+            for ax in self.axeses:
+                ax.Draw()
+    
+    
     def SetLimits(self, xlim, ylim, zlim=None):
         """ SetLimits(xlim, ylim, zlim=None)
         
@@ -207,6 +237,7 @@ class BaseCamera(object):
         self.Reset()
     
     
+    # todo: this does not yet work
     def GetViewParams(self):
         """ GetViewParams()
         
@@ -647,6 +678,83 @@ class ThreeDCamera(BaseCamera):
         self._ref_daspect = 1,1,1
     
     
+    @Property
+    def azimuth():
+        """ Get/set the current azimuth angle (rotation around z-axis).
+        This angle is between -180 and 180 degrees.
+        """
+        def fget(self):
+            return self._view_az
+        def fset(self, value):
+            # Set
+            self._view_az = float(value)
+            # keep within bounds            
+            while self._view_az < -180:
+                self._view_az += 360
+            while self._view_az >180:
+                self._view_az -= 360
+            # Draw
+            for ax in self.axeses:
+                ax.Draw()
+    
+    @Property
+    def eleveation():
+        """ Get/set the current elevation angle (rotation with respect to 
+        the x-y plane). This angle is between -90 and 90 degrees.
+        """
+        def fget(self):
+            return self._view_el
+        def fset(self, value):
+            # Set
+            self._view_el = float(value)
+            # keep within bounds            
+            if self._view_el < -90:
+                self._view_el = -90
+            if self._view_el > 90:
+                self._view_el = 90
+            # Draw
+            for ax in self.axeses:
+                ax.Draw()
+    
+    @Property
+    def roll():
+        """ Get/set the current roll angle (rotation around the camera's 
+        viewing axis). This angle is between -90 and 90 degrees.
+        """
+        def fget(self):
+            return self._view_ro
+        def fset(self, value):
+            # Set
+            self._view_ro = float(value)
+            # keep within bounds  
+            if self._view_ro < -90:
+                self._view_ro = -90
+            if self._view_ro > 90:
+                self._view_ro = 90
+            # Draw
+            for ax in self.axeses:
+                ax.Draw()
+    
+    @Property
+    def fov():
+        """ Get/set the current field of view (i.e. camera aperture). 
+        This value is between 0 (orthographic projection) and 180.
+        """
+        def fget(self):
+            return self._fov
+        def fset(self, value):
+            # Set
+            self._fov = float(value)
+            # keep within bounds  
+            if self._fov > 179:
+                self._fov = 179
+            if self._fov < 0:
+                self._fov = 0
+            # Draw
+            for ax in self.axeses:
+                ax.Draw()
+    
+    
     def OnResize(self, event):
         """ OnResize(event)
         
@@ -824,7 +932,7 @@ class ThreeDCamera(BaseCamera):
             # keep within bounds    
             if self._view_ro < -90:
                 self._view_ro = -90
-            while self._view_ro > 90:
+            if self._view_ro > 90:
                 self._view_ro = 90
         
         elif self._ref_but==1:
@@ -1164,7 +1272,7 @@ class FlyCamera(ThreeDCamera):
                 self._view_az -= 360
             if self._view_el < -90:
                 self._view_el = -90
-            while self._view_el > 90:
+            if self._view_el > 90:
                 self._view_el = 90
             #print self._view_az, self._view_el
         
