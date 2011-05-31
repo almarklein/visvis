@@ -26,7 +26,8 @@ from visvis.core.misc import Range, getColor
 from visvis.core import events
 #
 from visvis.core.baseWibjects import Box, DraggableBox
-from visvis.core.cameras import (ortho, depthToZ, TwoDCamera, ThreeDCamera, FlyCamera)
+from visvis.core import cameras
+from visvis.core.cameras import ortho, depthToZ
 from visvis.core.textRender import BaseText, Text, Label
 from visvis.core.line import Line 
 from visvis.core.axises import BaseAxis, CartesianAxis, PolarAxis2D
@@ -189,11 +190,12 @@ class Axes(base.Wibject):
         # varialble to keep track of the position correction to fit labels
         self._xCorr, self._yCorr = 0, 0
         
-        # create cameras and select one
-        self._cameras = {   '2d': TwoDCamera(self), 
-                            '3d': ThreeDCamera(self),                            
-                            'fly': FlyCamera(self)}
-        self.camera = self._cameras['3d']
+        # create cameras and select 3D as the defaule
+        self._cameras = {}
+        self.camera = cameras.TwoDCamera()
+        self.camera = cameras.ThreeDCamera()
+        self.camera = cameras.FlyCamera()
+        self.camera = '3D' # Select
         
         # init the background color of this axes
         self.bgcolor = 1,1,1  # remember that bgcolor is a property
@@ -360,7 +362,7 @@ class Axes(base.Wibject):
         
         """
         # get camera
-        cam = self._cameras['2d']
+        cam = self._cameras['TwoDCamera']
         
         # calculate limits
         tmp = cam._fx/2 / self.daspectNormalized[0]
@@ -455,7 +457,7 @@ class Axes(base.Wibject):
         xCorr, yCorr = 0, 0
         
         # correction should be applied for 2D camera and a valid label
-        if isinstance(self.camera, TwoDCamera):
+        if isinstance(self.camera, cameras.TwoDCamera):
             axis = self.axis
             if isinstance(axis, PolarAxis2D):
                 if axis.visible and axis.xLabel:
@@ -531,6 +533,37 @@ class Axes(base.Wibject):
                 # Add new
                 axisClass(self)
     
+    
+    @PropWithDraw
+    def camera():
+        """ Get/Set the current camera. When setting, one can supply
+        a value as in the 'cameraType' property, or a new camera instance.
+        """
+        def fget(self):
+            return self._camera
+        def fset(self, value):
+            if isinstance(value, (basestring, int)):
+                # Type
+                self.cameraType = value
+            else:
+                # It must be a camera
+                camera = value
+                # Check
+                if not isinstance(camera, cameras.BaseCamera):
+                    raise ValueError('Given argument is not a camera.')
+                # Store camera
+                camType = camera.__class__.__name__
+                oldCamera = self._cameras.get(camType, None)
+                self._cameras[camType] = camera
+                # Register at camera, unregister at old one
+                camera._RegisterAxes(self)
+                if oldCamera:
+                    oldCamera._UnregisterAxes(self)
+                # Make current and set limits
+                self._camera = camera
+                self.SetLimits()
+    
+    
     @PropWithDraw
     def cameraType():
         """ Get/Set the camera type to use. 
@@ -541,19 +574,23 @@ class Axes(base.Wibject):
           * 'fly' - a camera like a flight sim. Not recommended.
         """
         def fget(self):
-            for key in self._cameras:
-                if self._cameras[key] is self.camera:
-                    return key
+            return self._camera._NAMES[0]
+        def fset(self, name):
+            # Case insensitive
+            if isinstance(name, basestring):
+                name = name.lower()
+            # Get camera with that name
+            theCamera = None
+            for camera in self._cameras.values():
+                if name in camera._NAMES:
+                    theCamera = camera
+                    break
+            # Set or raise error
+            if theCamera:
+                self._camera = theCamera
             else:
-                return ''
-        def fset(self, cameraName):        
-            MAP = {'twod': '2d', 'threed':'3d'}
-            cameraName = cameraName.lower()
-            if cameraName in MAP.keys():
-                cameraName = MAP[cameraName]
-            if not self._cameras.has_key(cameraName):
-                raise Exception("Unknown camera type!")
-            self.camera = self._cameras[cameraName]
+                raise ValueError("Unknown camera type!")
+    
     
     @property
     def mousepos(self):
@@ -684,7 +721,7 @@ class Axes(base.Wibject):
         # Clean up.
         base.Wibject.OnDestroy(self)
         self.Clear(True)
-        self.camera = None
+        self._camera = None
         self._cameras = {}
         # container is destroyed as soon as it notices the axes is gone
         # any wibjects are destoyed automatically by the Destroy command.
@@ -822,7 +859,7 @@ class Axes(base.Wibject):
         
         
         # Draw axis if using the 2D camera
-        if isinstance(self.camera, TwoDCamera):
+        if isinstance(self.camera, cameras.TwoDCamera):
             # Let axis object for 2D-camera draw in screen coordinates 
             # in the full viewport.
             # Note that if the buffered screenshot is used and the content
@@ -927,7 +964,7 @@ class Axes(base.Wibject):
             # Note that the axis for the 2d camera needs to draw beyond
             # the viewport of the axes, and is therefore drawn later.
             gl.glEnable(gl.GL_DEPTH_TEST)
-            is2dcam = isinstance(self.camera, TwoDCamera)
+            is2dcam = isinstance(self.camera, cameras.TwoDCamera)
             for item in self._wobjects:
                 if is2dcam and isinstance(item, BaseAxis):
                     continue

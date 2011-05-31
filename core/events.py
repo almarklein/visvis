@@ -282,9 +282,9 @@ class MouseEvent(BaseEvent):
             if axes or hasattr(owner, '_cameras'):
                 # Also give 2D coordinates
                 if axes:
-                    cam = axes._cameras['2d']                    
+                    cam = axes._cameras['TwoDCamera']                    
                 else:
-                    cam = owner._cameras['2d']
+                    cam = owner._cameras['TwoDCamera']
                 if owner.parent: # or screen to world cannot be calculated
                     self._x2d, self._y2d = cam.ScreenToWorld((self._x, self._y))
     

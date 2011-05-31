@@ -81,8 +81,6 @@ def depthToZ(depth):
     val = getDepthValue()
     return val - depth * 2 * val
 
-
-
 class BaseCamera(object):
     """ BaseCamera(*axes)
     
@@ -90,43 +88,103 @@ class BaseCamera(object):
     and the interaction style.
     
     """
+    _NAMES = ()
     
-    def __init__(self, *axes):
+    # Subclasses should set viewparams, a set of (key, attribute_name) pairs
+    # for the values returned by GetViewParams.
+    viewparams = None
+    
+    def __init__(self):
         
-        # store scenes to render in
-        if len(axes)==1 and isinstance(axes[0], (list,tuple)):
-            axes = axes[0]
-        self.axeses = axes
+        # Init list of axeses that this camera applies to
+        self._axeses = []
         
-        # flag for axis
-        self.isTwoD = False
-        
-        # init limits of what to visualize        
+        # Init limits of what to visualize        
         self.xlim = Range(0,1)
         self.ylim = Range(0,1)
         self.zlim = Range(0,1)
         self.view_loc = 0,0,0
-        self.OnInit()
+    
+    
+    def _RegisterAxes(self, axes):
+        """ _RegisterAxes(axes)
+        
+        Method used by the axes to register itself at this camera.
+        
+        """
+        
+        # Make sure it not currently registered
+        self._UnregisterAxes(axes)
+        
+        # Append to list
+        self._axeses.append(axes)
+        
+        # Bind to events
+        axes.eventPosition.Bind(self.OnResize)
+        axes.eventKeyDown.Bind(self.OnKeyDown)
+        axes.eventKeyUp.Bind(self.OnKeyUp)        
+        # 
+        axes.eventMouseDown.Bind(self.OnMouseDown)
+        axes.eventMouseUp.Bind(self.OnMouseUp)        
+        axes.eventMotion.Bind(self.OnMotion)
+        axes.eventDoubleClick.Bind(self.Reset)
+    
+    
+    def _UnregisterAxes(self, axes):
+        """ _UnregisterAxes(axes)
+        
+        Method used by the axes to unregister itself at this camera.
+        
+        """
+        
+        # Remove from list
+        while axes in self._axeses:
+            self._axeses.remove(axes)
+        
+        # Unbind events
+        axes.eventPosition.Unbind(self.OnResize)
+        axes.eventKeyDown.Unbind(self.OnKeyDown)
+        axes.eventKeyUp.Unbind(self.OnKeyUp)        
+        # 
+        axes.eventMouseDown.Unbind(self.OnMouseDown)
+        axes.eventMouseUp.Unbind(self.OnMouseUp)        
+        axes.eventMotion.Unbind(self.OnMotion)
+        axes.eventDoubleClick.Unbind(self.Reset)
+    
+    
+    def OnResize(self, event):
+        pass
+    def OnKeyDown(self, event):
+        pass
+    def OnKeyUp(self, event):
+        pass
+    def OnMouseDown(self, event):
+        pass
+    def OnMouseUp(self, event):
+        pass
+    
     
     @property
     def axes(self):
         """ Get the axes that this camera applies to (or the first axes if
         it applies to multiple axes).
         """
-        return self.axeses[0]
+        if self._axeses:
+            return self._axeses[0]
+        else:
+            return None
     
-    def OnInit(self):
-        """ OnInit()
-        
-        Override this to do more initializing.
-        
+    @property
+    def axeses(self):
+        """ Get a tuple with the axeses that this camera applies to.
         """
-        pass
+        return tuple(self._axeses)
+    
     
     def SetLimits(self, xlim, ylim, zlim=None):
         """ SetLimits(xlim, ylim, zlim=None)
         
-        Set the limits to visualize  
+        Set the data limits of the camera.
         Always set this before rendering!
         This also calls reset to reset the view.
         
@@ -140,9 +198,6 @@ class BaseCamera(object):
         # reset
         self.Reset()
     
-    # Subclasses should set viewparams, a set of (key, attribute_name) pairs
-    # for the values returned by GetViewParams.
-    viewparams = None
     
     def GetViewParams(self):
         """ GetViewParams()
@@ -179,6 +234,7 @@ class BaseCamera(object):
         Overload this in the actual camera models.
         
         """
+        
         # set centre
         rx,ry,rz = self.xlim.range, self.ylim.range, self.zlim.range
         dx,dy,dz = self.xlim.min, self.ylim.min, self.zlim.min
@@ -186,6 +242,7 @@ class BaseCamera(object):
         # refresh
         for axes in self.axeses:
             axes.Draw()
+    
     
     def SetView(self):
         """ SetView()
@@ -195,6 +252,7 @@ class BaseCamera(object):
         
         """
         pass
+    
     
     def ScreenToWorld(self, x_y=None):
         """ ScreenToWorld(x_y=None)
@@ -208,9 +266,6 @@ class BaseCamera(object):
         
         """
         
-        # Get data aspect ratio
-        daspect = self.axes.daspect
-        
         # use current mouse position if none given
         if x_y is None:
             x,y = self.axes.mousepos
@@ -221,21 +276,22 @@ class BaseCamera(object):
         w, h = self.axes.position.size
         w, h = float(w), float(h) 
         
-        # get zoom factor
-        fx, fy = 1.0 / self.zoom, 1.0 / self.zoom
+        # Calculate viewing range for x and y
+        fx = abs( 1.0 / self.zoom )
+        fy = abs( 1.0 / self.zoom )
         
-        # correct zoom factor for window size      
-        if not self.axes.daspectAuto:
-            if w > h:
-                fx *= w/h
-            else:
-                fy *= h/w                
+        # correct zoom factor for window size              
+        if w > h:
+            fx *= w/h
+        else:
+            fy *= h/w                
         
         # determine position in projection. Here is a conversion
         # of the coordinate system... (flip y)
         x, y = (x/w-0.5) * fx, (0.5-y/h) * fy
         
         # scale
+        daspect = self.axes.daspectNormalized
         x, y = x / daspect[0], y / daspect[1]
         
         # translate it
@@ -308,12 +364,12 @@ class TwoDCamera(BaseCamera):
     
     """
     
+    _NAMES = ('2d', 2, '2', 'twod')
     ndim = 2
+    viewparams = (('loc', 'view_loc'), ('zoom', 'zoom'))
     
-    def OnInit(self):
-        
-        # Set flag
-        self.isTwoD = True
+    def __init__(self):
+        BaseCamera.__init__(self)
         
         self._windowSizeFactor = 0
         
@@ -331,17 +387,6 @@ class TwoDCamera(BaseCamera):
         
         self.ref_zoom = 1.0
         self.ref_daspect = [1,1,1]
-        
-        # bind events
-        for axes in self.axeses:
-            axes.eventPosition.Bind(self.OnResize)
-            axes.eventMouseDown.Bind( self.OnMouseDown)        
-            axes.eventMouseUp.Bind( self.OnMouseUp)        
-            axes.eventMotion.Bind( self.OnMotion)
-            axes.eventDoubleClick.Bind( self.Reset)
-    
-    
-    viewparams = (('loc', 'view_loc'), ('zoom', 'zoom'))
     
     
     def OnResize(self, event):
@@ -410,7 +455,7 @@ class TwoDCamera(BaseCamera):
         
         # Correct for normalized daspect
         ndaspect = self.axes.daspectNormalized
-        rx, ry = rx*ndaspect[0], ry*ndaspect[1]
+        rx, ry = abs(rx*ndaspect[0]), abs(ry*ndaspect[1])
         
         # Convert to screen coordinates. (just for clarity and to be 
         # consistent with the 3D camera)
@@ -575,9 +620,14 @@ class ThreeDCamera(BaseCamera):
     
     """
     
+    _NAMES = ('3d', 3, '3', 'threed')
     ndim = 3
+    viewparams = (('loc', 'view_loc'), ('zoom', 'zoom'),
+                  ('azimuth', 'view_az'), ('elevation', 'view_el'), ('roll', 'view_ro'),
+                  ('fov', 'view_fov'))
     
-    def OnInit(self):
+    def __init__(self):
+        BaseCamera.__init__(self)
         
         # camera view params
         self.view_az = -10.0 # azimuth
@@ -598,24 +648,6 @@ class ThreeDCamera(BaseCamera):
         self.ref_ro = 0
         self.ref_fov = 0
         self.ref_zoom = 0
-        
-        # Bind to events
-        for axes in self.axeses:
-            axes.eventPosition.Bind(self.OnResize)
-            axes.eventKeyDown.Bind(self.OnKeyDown)
-            axes.eventKeyUp.Bind(self.OnKeyUp)        
-            # 
-            axes.eventMouseDown.Bind(self.OnMouseDown)
-            axes.eventMouseUp.Bind(self.OnMouseUp)        
-            axes.eventMotion.Bind(self.OnMotion)
-            axes.eventDoubleClick.Bind(self.Reset)
-            # Some of these bindings can just as well be done in 
-            # the base camera class
-    
-    
-    viewparams = (('loc', 'view_loc'), ('zoom', 'zoom'),
-                  ('azimuth', 'view_az'), ('elevation', 'view_el'), ('roll', 'view_ro'),
-                  ('fov', 'view_fov'))
     
     
     def OnResize(self, event):
@@ -686,7 +718,7 @@ class ThreeDCamera(BaseCamera):
         
         # Correct for normalized daspect
         ndaspect = self.axes.daspectNormalized
-        rx, ry, rz = rx*ndaspect[0], ry*ndaspect[1], rz*ndaspect[2]
+        rx, ry, rz = abs(rx*ndaspect[0]), abs(ry*ndaspect[1]), abs(rz*ndaspect[2])
         
         # Convert to screen coordinates. In screen x, only x and y have effect.
         # In screen y, all three dimensions have effect. The idea of the lines
@@ -964,12 +996,14 @@ class FlyCamera(ThreeDCamera):
     
     """
     
+    _NAMES = ['fly', 4]
     ndim = 3
     
     # Note that this camera does not use the MouseMove event but uses
     # a timer to update itself, this is to get the motion smooth.
     
-    def OnInit(self):
+    def __init__(self):
+        ThreeDCamera.__init__(self)
         
         # camera view params
         # view_loc is not the position you look at,
@@ -996,14 +1030,6 @@ class FlyCamera(ThreeDCamera):
         # smoother flying possible.
         self._timer = Timer(self, 50, False)
         self._timer.Bind(self.OnTimer)
-        
-        # Bind to events
-        axes = self.axes
-        axes.eventKeyDown.Bind(self.OnKeyDown)        
-        # 
-        axes.eventMouseDown.Bind(self.OnMouseDown)
-        axes.eventMouseUp.Bind(self.OnMouseUp)
-        axes.eventDoubleClick.Bind(self.Reset)
 
 
     def Reset(self, event=None):
