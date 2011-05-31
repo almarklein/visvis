@@ -411,8 +411,8 @@ class Texture2D(BaseTexture):
         # determine relative kernel size
         w,h = figure.position.size
         cam = axes.camera
-        sx = (1.0 / (axes.daspect[0]*cam.zoom) ) / w
-        sy = (1.0 / (axes.daspect[1]*cam.zoom) ) / h
+        sx = (1.0 / abs(axes.daspectNormalized[0]*cam._zoom) ) / w
+        sy = (1.0 / abs(axes.daspectNormalized[1]*cam._zoom) ) / h
         
         # correct for fact that humans prefer sharpness
         tmp = 0.7
