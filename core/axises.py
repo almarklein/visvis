@@ -906,7 +906,7 @@ class CartesianAxis2D(BaseAxis):
         
         # Get limits
         lims = axes.GetLimits()
-        lims = [lims[0], lims[1], cam.zlim]
+        lims = [lims[0], lims[1], cam._zlim]
         
         # Get labels
         labels = [self.xLabel, self.yLabel]
@@ -1142,7 +1142,7 @@ class CartesianAxis3D(BaseAxis):
         ticksPerDim = [self.xTicks, self.yTicks, self.zTicks]
 
         # Get limits
-        lims = [cam.xlim, cam.ylim, cam.zlim]
+        lims = [cam._xlim, cam._ylim, cam._zlim]
 
         # Get labels
         labels = [self.xLabel, self.yLabel, self.zLabel]
@@ -1519,7 +1519,7 @@ class PolarAxis2D(BaseAxis):
 
         # Get x-y limits  in world coordinates
         lims = axes.GetLimits()
-        lims = [lims[0], lims[1], cam.zlim]
+        lims = [lims[0], lims[1], cam._zlim]
 
         # From current lims calculate the radial axis min and max
 

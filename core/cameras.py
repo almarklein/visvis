@@ -100,10 +100,18 @@ class BaseCamera(object):
         self._axeses = []
         
         # Init limits of what to visualize        
-        self.xlim = Range(0,1)
-        self.ylim = Range(0,1)
-        self.zlim = Range(0,1)
-        self.view_loc = 0,0,0
+        self._xlim = Range(0,1)
+        self._ylim = Range(0,1)
+        self._zlim = Range(0,1)
+        
+        # Init view location
+        self._view_loc = 0,0,0
+        
+        # Init zoom factor
+        self._zoom = 1.0
+        
+        # Variable to keep track of window size during resizing
+        self._windowSizeFactor = 0
     
     
     def _RegisterAxes(self, axes):
@@ -191,9 +199,9 @@ class BaseCamera(object):
         """
         if zlim is None:
             zlim = Range(-1,1)        
-        self.xlim = xlim
-        self.ylim = ylim
-        self.zlim = zlim
+        self._xlim = xlim
+        self._ylim = ylim
+        self._zlim = zlim
         
         # reset
         self.Reset()
@@ -236,9 +244,9 @@ class BaseCamera(object):
         """
         
         # set centre
-        rx,ry,rz = self.xlim.range, self.ylim.range, self.zlim.range
-        dx,dy,dz = self.xlim.min, self.ylim.min, self.zlim.min
-        self.view_loc = rx/2.0 + dx, ry/2.0 + dy, rz/2.0 + dz
+        rx,ry,rz = self._xlim.range, self._ylim.range, self._zlim.range
+        dx,dy,dz = self._xlim.min, self._ylim.min, self._zlim.min
+        self._view_loc = rx/2.0 + dx, ry/2.0 + dy, rz/2.0 + dz
         # refresh
         for axes in self.axeses:
             axes.Draw()
@@ -277,8 +285,8 @@ class BaseCamera(object):
         w, h = float(w), float(h) 
         
         # Calculate viewing range for x and y
-        fx = abs( 1.0 / self.zoom )
-        fy = abs( 1.0 / self.zoom )
+        fx = abs( 1.0 / self._zoom )
+        fy = abs( 1.0 / self._zoom )
         
         # correct zoom factor for window size              
         if w > h:
@@ -295,7 +303,7 @@ class BaseCamera(object):
         x, y = x / daspect[0], y / daspect[1]
         
         # translate it
-        x, y = x + self.view_loc[0], y + self.view_loc[1]
+        x, y = x + self._view_loc[0], y + self._view_loc[1]
         
         #print x, y
         return x,y
@@ -371,22 +379,14 @@ class TwoDCamera(BaseCamera):
     def __init__(self):
         BaseCamera.__init__(self)
         
-        self._windowSizeFactor = 0
-        
-        # indicate part that we view.
-        # view_loc is the coordinate that we center on
-        self.view_loc = 0,0,0 # we only use the 2D part
-        self._fx, self._fy = 0,0
-        self.zoom = 1.0
-        
         # reference stuff for interaction
-        self.ref_loc = 0,0,0    # view_loc when clicked
-        self.ref_mloc = 0,0     # mouse location when clicked
-        self.ref_but = 0        # mouse button when clicked   
-        self.ref_axes = None
-        
-        self.ref_zoom = 1.0
-        self.ref_daspect = [1,1,1]
+        self._ref_loc = 0,0,0    # view_loc when clicked
+        self._ref_mloc = 0,0     # mouse location when clicked
+        self._ref_but = 0        # mouse button when clicked   
+        self._ref_axes = None
+        #
+        self._ref_zoom = 1.0
+        self._ref_daspect = 1,1,1
     
     
     def OnResize(self, event):
@@ -426,7 +426,7 @@ class TwoDCamera(BaseCamera):
         
         # Change daspect and zoom
         self._SetDaspect(daspectFactor, 1, 1)
-        self.zoom *= zoomFactor
+        self._zoom *= zoomFactor
     
     
     def Reset(self, event=None):
@@ -441,7 +441,7 @@ class TwoDCamera(BaseCamera):
         w,h = float(w), float(h)
         
         # Get range and translation for x and y   
-        rx, ry = self.xlim.range, self.ylim.range
+        rx, ry = self._xlim.range, self._ylim.range
         
         # Correct ranges for window size.
         if w / h > 1:
@@ -463,7 +463,7 @@ class TwoDCamera(BaseCamera):
         rys = ry
         
         # Set zoom
-        self.zoom = min(1.0/rxs, 1.0/rys)
+        self._zoom = min(1.0/rxs, 1.0/rys)
         
         # Set center location -> calls refresh
         BaseCamera.Reset(self)
@@ -472,20 +472,20 @@ class TwoDCamera(BaseCamera):
     def OnMouseDown(self, event): 
         
         # store mouse position and button
-        self.ref_mloc = event.x, event.y
-        self.ref_but = event.button
-        self.ref_axes = event.owner
+        self._ref_mloc = event.x, event.y
+        self._ref_but = event.button
+        self._ref_axes = event.owner
         
         # store current view parameters        
-        self.ref_loc = self.view_loc
-        self.ref_zoom = self.zoom
-        self.ref_daspect = self.axes.daspect
+        self._ref_loc = self._view_loc
+        self._ref_zoom = self._zoom
+        self._ref_daspect = self.axes.daspect
         
         #self.ScreenToWorld() # for debugging
 
 
     def OnMouseUp(self, event):
-        self.ref_but = 0
+        self._ref_but = 0
         # Draw without the fast flag      
         for axes in self.axeses:
             axes.Draw()
@@ -493,9 +493,9 @@ class TwoDCamera(BaseCamera):
 
     def OnMotion(self, event):
         
-        if not self.ref_but:
+        if not self._ref_but:
             return
-        if not self.ref_axes is event.owner:
+        if not self._ref_axes is event.owner:
             return
         if not self.axes.camera is self:
             return False
@@ -503,11 +503,11 @@ class TwoDCamera(BaseCamera):
         # get loc (as the event comes from the figure, not the axes)
         mloc = event.owner.mousepos
         
-        if self.ref_but==1:
+        if self._ref_but==1:
             # translate
             
             # get distance and convert to world coordinates
-            refloc = self.ScreenToWorld(self.ref_mloc)
+            refloc = self.ScreenToWorld(self._ref_mloc)
             loc = self.ScreenToWorld(mloc)
             
             # calculate translation
@@ -515,17 +515,17 @@ class TwoDCamera(BaseCamera):
             dy = loc[1] - refloc[1]
             
             # apply
-            self.view_loc = ( self.ref_loc[0] - dx ,  self.ref_loc[1] - dy )
+            self._view_loc = ( self._ref_loc[0] - dx ,  self._ref_loc[1] - dy )
         
-        elif self.ref_but==2:
+        elif self._ref_but==2:
             # zoom
             
             # get movement in x (in pixels) and normalize
-            factorx = float(self.ref_mloc[0] - mloc[0])
+            factorx = float(self._ref_mloc[0] - mloc[0])
             factorx /= self.axes.position.width
             
             # get movement in y (in pixels) and normalize
-            factory = float(self.ref_mloc[1] - mloc[1])
+            factory = float(self._ref_mloc[1] - mloc[1])
             factory /= self.axes.position.height
             
             # apply 
@@ -533,11 +533,11 @@ class TwoDCamera(BaseCamera):
                 # Zooming in pure x goes via daspect.
                 # Zooming in pure y goes via zoom factor.
                 dzoom_x, dzoom_y = math.exp(-factorx), math.exp(factory)
-                self._SetDaspect(dzoom_y/dzoom_x, 1, 1, self.ref_daspect)
-                self.zoom = self.ref_zoom * dzoom_x
+                self._SetDaspect(dzoom_y/dzoom_x, 1, 1, self._ref_daspect)
+                self._zoom = self._ref_zoom * dzoom_x
             
             else:
-                self.zoom = self.ref_zoom * math.exp(factory)
+                self._zoom = self._ref_zoom * math.exp(factory)
         
         # refresh
         for axes in self.axeses:
@@ -553,20 +553,17 @@ class TwoDCamera(BaseCamera):
         """
         
         # Calculate viewing range for x and y
-        fx = abs( 1.0 / self.zoom )
-        fy = abs( 1.0 / self.zoom )
+        fx = abs( 1.0 / self._zoom )
+        fy = abs( 1.0 / self._zoom )
         
         # correct for window size
         if True:
             w, h = self.axes.position.size
             w, h = float(w), float(h)        
-            if w / h > 1:#self.ylim.range / self.xlim.range:
+            if w / h > 1:
                 fx *= w/h
             else:
                 fy *= h/w
-        
-        # store these values
-        self._fx, self._fy = fx, fy
         
         # Init projection view. It will define the whole camera model,
         # so the modelview matrix is really for models only.
@@ -591,7 +588,7 @@ class TwoDCamera(BaseCamera):
         # 1. Translate to view location (coordinate where we look at). 
         # Do this first because otherwise the translation is not in world 
         # coordinates.
-        gl.glTranslate(-self.view_loc[0], -self.view_loc[1], 0.0)
+        gl.glTranslate(-self._view_loc[0], -self._view_loc[1], 0.0)
 
 
 # todo: FOV: properly setting which axis has ticks, the tick spacing, and which axes to show when showBox is False.
@@ -630,24 +627,24 @@ class ThreeDCamera(BaseCamera):
         BaseCamera.__init__(self)
         
         # camera view params
-        self.view_az = -10.0 # azimuth
-        self.view_el = 30.0 # elevation
-        self.view_ro = 0.0 # roll
-        self.view_fov = 0.0 # field of view - if 0, use ortho view
-        self.view_loc = 0,0,0
-        self.zoom = 1.0
-        
-        self._windowSizeFactor = 0
+        self._view_az = -10.0 # azimuth
+        self._view_el = 30.0 # elevation
+        self._view_ro = 0.0 # roll
+        self._view_fov = 0.0 # field of view - if 0, use ortho view
         
         # reference variables for when dragging
-        self.ref_loc = 0,0,0    # view_loc when clicked
-        self.ref_mloc = 0,0     # mouse location when clicked
-        self.ref_but = 0        # mouse button clicked
-        self.ref_az = 0         # angles when clicked
-        self.ref_el = 0
-        self.ref_ro = 0
-        self.ref_fov = 0
-        self.ref_zoom = 0
+        self._ref_loc = 0,0,0    # view_loc when clicked
+        self._ref_mloc = 0,0     # mouse location when clicked
+        self._ref_but = 0        # mouse button clicked
+        self._ref_axes = None
+        #
+        self._ref_az = 0         # angles when clicked
+        self._ref_el = 0
+        self._ref_ro = 0
+        #
+        self._ref_fov = 0
+        self._ref_zoom = 0
+        self._ref_daspect = 1,1,1
     
     
     def OnResize(self, event):
@@ -690,17 +687,17 @@ class ThreeDCamera(BaseCamera):
         """
         
         # Set angles
-        self.view_az = -10.0
-        self.view_el = 30.0
-        self.view_ro = 0.0 
-        self.view_fov = 0.0
+        self._view_az = -10.0
+        self._view_el = 30.0
+        self._view_ro = 0.0 
+        self._view_fov = 0.0
         
         # Get window size
         w,h = self.axes.position.size
         w,h = float(w), float(h)
         
         # Get range and translation for x and y   
-        rx, ry, rz = self.xlim.range, self.ylim.range, self.zlim.range
+        rx, ry, rz = self._xlim.range, self._ylim.range, self._zlim.range
         
         # Correct ranges for window size. Note that the window width
         # influences the x and y data range, while the height influences
@@ -730,9 +727,9 @@ class ThreeDCamera(BaseCamera):
         # Set zoom, depending on screen dimensions
         if w / h > 1:
             rxs *= w/h
-            self.zoom = (1/rxs) / 1.04  # 4% extra space
+            self._zoom = (1/rxs) / 1.04  # 4% extra space
         else:
-            self.zoom = (1/rys) / 1.08 # 8% extra space
+            self._zoom = (1/rys) / 1.08 # 8% extra space
         
         # set center location -> calls refresh
         BaseCamera.Reset(self)
@@ -740,48 +737,48 @@ class ThreeDCamera(BaseCamera):
     
     def SetRef(self):
         # store current view parameters
-        self.ref_az = self.view_az
-        self.ref_el = self.view_el
-        self.ref_ro = self.view_ro
-        self.ref_fov = self.view_fov
+        self._ref_az = self._view_az
+        self._ref_el = self._view_el
+        self._ref_ro = self._view_ro
+        self._ref_fov = self._view_fov
         #
-        self.ref_loc = self.view_loc
+        self._ref_loc = self._view_loc
         #
-        self.ref_zoom = self.zoom
-        self.ref_daspect = self.axes.daspect
+        self._ref_zoom = self._zoom
+        self._ref_daspect = self.axes.daspect
     
     
     def OnKeyDown(self, event):
         # store mouse position and button
-        self.ref_mloc = event.owner.mousepos
+        self._ref_mloc = event.owner.mousepos
         self.SetRef()
 
     def OnKeyUp(self, event):
-        self.ref_mloc = event.owner.mousepos
+        self._ref_mloc = event.owner.mousepos
         self.SetRef()
     
     
     def OnMouseDown(self, event):
         
         # store mouse position and button
-        self.ref_mloc = event.x, event.y
-        self.ref_but = event.button
-        self.ref_axes = event.owner
+        self._ref_mloc = event.x, event.y
+        self._ref_but = event.button
+        self._ref_axes = event.owner
         
         self.SetRef()
 
    
     def OnMouseUp(self, event):        
-        self.ref_but = 0
+        self._ref_but = 0
         for axes in self.axeses:
             axes.Draw()
 
     
     def OnMotion(self, event):
         
-        if not self.ref_but:
+        if not self._ref_but:
             return
-        if not self.ref_axes is event.owner:
+        if not self._ref_axes is event.owner:
             return
         if not self.axes.camera is self:
             return False
@@ -789,11 +786,11 @@ class ThreeDCamera(BaseCamera):
         # get loc (as the event comes from the figure, not the axes)
         mloc = event.owner.mousepos
             
-        if constants.KEY_SHIFT in event.modifiers and self.ref_but==1:
+        if constants.KEY_SHIFT in event.modifiers and self._ref_but==1:
             # translate
             
             # get locations and convert to world coordinates
-            refloc = self.ScreenToWorld(self.ref_mloc)
+            refloc = self.ScreenToWorld(self._ref_mloc)
             loc = self.ScreenToWorld(mloc)
             
             # calculate distance and undo aspect ratio adjustment from ScreenToWorld
@@ -802,8 +799,8 @@ class ThreeDCamera(BaseCamera):
             distz = (refloc[1]-loc[1]) * ar[1]
             
             # calculate translation
-            sro, saz, sel = map(sind, (self.view_ro, self.view_az, self.view_el))
-            cro, caz, cel = map(cosd, (self.view_ro, self.view_az, self.view_el))
+            sro, saz, sel = map(sind, (self._view_ro, self._view_az, self._view_el))
+            cro, caz, cel = map(cosd, (self._view_ro, self._view_az, self._view_el))
             dx = (  distx * (cro * caz + sro * sel * saz) + 
                     distz * (sro * caz - cro * sel * saz) ) / ar[0]
             dy = (  distx * (cro * saz - sro * sel * caz) + 
@@ -811,72 +808,72 @@ class ThreeDCamera(BaseCamera):
             dz = ( -distx * sro * cel + distz * cro * cel) / ar[2]
             
             # apply
-            self.view_loc = ( self.ref_loc[0] + dx ,  self.ref_loc[1] + dy , 
-                self.ref_loc[2] + dz )
+            self._view_loc = ( self._ref_loc[0] + dx ,  self._ref_loc[1] + dy , 
+                self._ref_loc[2] + dz )
         
-        elif constants.KEY_CONTROL in event.modifiers and self.ref_but==1:
+        elif constants.KEY_CONTROL in event.modifiers and self._ref_but==1:
             # Roll
             
             # get normalized delta values
             sze = self.axes.position.size
-            d_ro = float( self.ref_mloc[0] - mloc[0] ) / sze[0]
+            d_ro = float( self._ref_mloc[0] - mloc[0] ) / sze[0]
             
             # change az and el accordingly
-            self.view_ro = self.ref_ro + d_ro * 90.0
+            self._view_ro = self._ref_ro + d_ro * 90.0
             
             # keep within bounds    
-            if self.view_ro < -90:
-                self.view_ro = -90
-            while self.view_ro > 90:
-                self.view_ro = 90
+            if self._view_ro < -90:
+                self._view_ro = -90
+            while self._view_ro > 90:
+                self._view_ro = 90
         
-        elif self.ref_but==1:
+        elif self._ref_but==1:
             # rotate
             
             # get normalized delta values
             sze = self.axes.position.size
-            d_az = float( self.ref_mloc[0] - mloc[0] ) / sze[0]
-            d_el = -float( self.ref_mloc[1] - mloc[1] ) / sze[1]
+            d_az = float( self._ref_mloc[0] - mloc[0] ) / sze[0]
+            d_el = -float( self._ref_mloc[1] - mloc[1] ) / sze[1]
             
             # change az and el accordingly
-            self.view_az = self.ref_az + d_az * 90.0
-            self.view_el = self.ref_el + d_el * 90.0
+            self._view_az = self._ref_az + d_az * 90.0
+            self._view_el = self._ref_el + d_el * 90.0
             
             # keep within bounds            
-            while self.view_az < -180:
-                self.view_az += 360
-            while self.view_az >180:
-                self.view_az -= 360
-            if self.view_el < -90:
-                self.view_el = -90
-            if self.view_el > 90:
-                self.view_el = 90
-            #print self.view_az, self.view_el
+            while self._view_az < -180:
+                self._view_az += 360
+            while self._view_az >180:
+                self._view_az -= 360
+            if self._view_el < -90:
+                self._view_el = -90
+            if self._view_el > 90:
+                self._view_el = 90
+            #print self._view_az, self._view_el
         
-        elif constants.KEY_SHIFT in event.modifiers and self.ref_but==2:
+        elif constants.KEY_SHIFT in event.modifiers and self._ref_but==2:
             # Change FoV
             
             # get normailized delta value
-            d_fov = float(self.ref_mloc[1] - mloc[1]) / self.axes.position.height
+            d_fov = float(self._ref_mloc[1] - mloc[1]) / self.axes.position.height
             
             # apply
-            self.view_fov = self.ref_fov + d_fov * 90
+            self._view_fov = self._ref_fov + d_fov * 90
             
             # keep from being too big or negative
-            if self.view_fov > 179:
-                self.view_fov = 179
-            elif self.view_fov < 0:
-                self.view_fov = 0
+            if self._view_fov > 179:
+                self._view_fov = 179
+            elif self._view_fov < 0:
+                self._view_fov = 0
         
-        elif self.ref_but==2:
+        elif self._ref_but==2:
             # zoom
             
             # get movement in x (in pixels) and normalize
-            factorx = float(self.ref_mloc[0] - mloc[0])
+            factorx = float(self._ref_mloc[0] - mloc[0])
             factorx /= self.axes.position.width
             
             # get movement in y (in pixels) and normalize
-            factory = float(self.ref_mloc[1] - mloc[1])
+            factory = float(self._ref_mloc[1] - mloc[1])
             factory /= self.axes.position.height
             
             # apply 
@@ -885,8 +882,8 @@ class ThreeDCamera(BaseCamera):
                 # Zooming in z goes via zoom factor.
                 
                 # Motion to right or top should always zoom in, regardless of rotation
-                sro, saz, sel = map(sind, (self.view_ro, self.view_az, self.view_el))
-                cro, caz, cel = map(cosd, (self.view_ro, self.view_az, self.view_el))
+                sro, saz, sel = map(sind, (self._view_ro, self._view_az, self._view_el))
+                cro, caz, cel = map(cosd, (self._view_ro, self._view_az, self._view_el))
                 dx = ( -factorx * abs(cro * caz + sro * sel * saz) + 
                         factory * abs(sro * caz - cro * sel * saz) )
                 dy = ( -factorx * abs(cro * saz - sro * sel * caz) + 
@@ -894,15 +891,15 @@ class ThreeDCamera(BaseCamera):
                 dz =    factorx * abs(sro * cel) + factory * abs(cro * cel)
                 
                 # Set sata aspect
-                daspect = self.ref_daspect
+                daspect = self._ref_daspect
                 daspect = self._SetDaspect(math.exp(dy-dx), 1, 1, daspect)
                 daspect = self._SetDaspect(math.exp(dz-dx), 2, 2, daspect)
                 
                 # Set zoom
-                self.zoom = self.ref_zoom * math.exp(dx)
+                self._zoom = self._ref_zoom * math.exp(dx)
             
             else:
-                self.zoom = self.ref_zoom * math.exp(factory)
+                self._zoom = self._ref_zoom * math.exp(factory)
         
         # refresh (fast)
         for axes in self.axeses:
@@ -918,14 +915,14 @@ class ThreeDCamera(BaseCamera):
         """
         
         # Calculate viewing range for x and y
-        fx = abs( 1.0 / self.zoom )
-        fy = abs( 1.0 / self.zoom )
+        fx = abs( 1.0 / self._zoom )
+        fy = abs( 1.0 / self._zoom )
         
         # Correct for window size        
         if True:
             w, h = self.axes.position.size
             w, h = float(w), float(h)        
-            if w / h > 1:#self.ylim.range / self.xlim.range:
+            if w / h > 1:
                 fx *= w/h
             else:
                 fy *= h/w
@@ -939,13 +936,13 @@ class ThreeDCamera(BaseCamera):
         
         # 4. Define part that we view. Remember, we're looking down the
         # z-axis. We zoom here.                
-        if self.view_fov == 0:
+        if self._view_fov == 0:
             ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         else:
             # Figure distance to center in order to have correct FoV and fy.
-            d = fy / (2 * math.tan(math.radians(self.view_fov)/2))
+            d = fy / (2 * math.tan(math.radians(self._view_fov)/2))
             val = math.sqrt(getDepthValue())
-            glu.gluPerspective(self.view_fov, fx/fy, d/val, d*val)
+            glu.gluPerspective(self._view_fov, fx/fy, d/val, d*val)
             gl.glTranslate(0, 0, -d)
         
         # Prepare for models
@@ -958,9 +955,9 @@ class ThreeDCamera(BaseCamera):
                 light._Apply()
         
         # 3. Set viewing angle (this is the only difference with the 2D camera)
-        gl.glRotate(self.view_ro, 0.0, 0.0, 1.0)
-        gl.glRotate(270+self.view_el, 1.0, 0.0, 0.0)
-        gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
+        gl.glRotate(self._view_ro, 0.0, 0.0, 1.0)
+        gl.glRotate(270+self._view_el, 1.0, 0.0, 0.0)
+        gl.glRotate(-self._view_az, 0.0, 0.0, 1.0)
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
         ndaspect = self.axes.daspectNormalized    
@@ -968,7 +965,7 @@ class ThreeDCamera(BaseCamera):
         
         # 1. Translate to view location. Do this first because otherwise
         # the translation is not in world coordinates.
-        gl.glTranslate(-self.view_loc[0], -self.view_loc[1], -self.view_loc[2])
+        gl.glTranslate(-self._view_loc[0], -self._view_loc[1], -self._view_loc[2])
         
         # Set non-camera lights
         for light in self.axes._lights:
@@ -996,7 +993,7 @@ class FlyCamera(ThreeDCamera):
     
     """
     
-    _NAMES = ['fly', 4]
+    _NAMES = ('fly', 4)
     ndim = 3
     
     # Note that this camera does not use the MouseMove event but uses
@@ -1008,22 +1005,21 @@ class FlyCamera(ThreeDCamera):
         # camera view params
         # view_loc is not the position you look at,
         # but the position you ARE at
-        self.view_az = 10.0
-        self.view_el = 30.0
-        self.view_zoomx = 100.0
-        self.view_zoomy = 100.0
-        self.view_loc = 0,0,0 
+        self._view_az = 10.0
+        self._view_el = 30.0
+        self._view_zoomx = 100.0
+        self._view_zoomy = 100.0
         
         # reference variables for when dragging
-        self.ref_loc = 0,0      # view_loc when clicked
-        self.ref_mloc = 0,0     # mouse location clicked
-        self.ref_but = 0        # button clicked
-        self.ref_speed1 = 0     # direction forward
-        self.ref_speed2 = 0     # direction rigth        
-        self.ref_az = 0         # angles when clicked
-        self.ref_el = 0
-        self.ref_zoomx = 0      # zoom factors when clicked
-        self.ref_zoomy = 0
+        self._ref_loc = 0,0      # view_loc when clicked
+        self._ref_mloc = 0,0     # mouse location clicked
+        self._ref_but = 0        # button clicked
+        self._ref_speed1 = 0     # direction forward
+        self._ref_speed2 = 0     # direction rigth        
+        self._ref_az = 0         # angles when clicked
+        self._ref_el = 0
+        self._ref_zoomx = 0      # zoom factors when clicked
+        self._ref_zoomy = 0
         
         # create timer and bind to it. This timer is started when clicked
         # and stopped when the mouse is released. This is to make a 
@@ -1051,16 +1047,16 @@ class FlyCamera(ThreeDCamera):
         ar = self.axes.daspect
         
         # change centre, we move at the minimum x and y, but at a higher z.
-        rx,ry,rz = self.xlim.range, self.ylim.range, self.zlim.range
-        dx,dy,dz = self.xlim.min, self.ylim.min, self.zlim.min        
+        rx,ry,rz = self._xlim.range, self._ylim.range, self._zlim.range
+        dx,dy,dz = self._xlim.min, self._ylim.min, self._zlim.min        
         dd = (rx**2 + ry**2 + rz**2 )**0.5        
         dd *= ar[2]
-        #self.view_loc = rx/2.0+dx+500, ry/2.0+dy+500, rz/2.0/rz-dd
-        self.view_loc = dx, dy, dz + rz/2.0 + dd
+        #self._view_loc = rx/2.0+dx+500, ry/2.0+dy+500, rz/2.0/rz-dd
+        self._view_loc = dx, dy, dz + rz/2.0 + dd
         
         # set angles        
-        self.view_az = -math.atan2(ar[0],ar[1])*180/math.pi
-        self.view_el = 80 # look down
+        self._view_az = -math.atan2(ar[0],ar[1])*180/math.pi
+        self._view_el = 80 # look down
         
         # refresh
         for axes in self.axeses:
@@ -1070,13 +1066,13 @@ class FlyCamera(ThreeDCamera):
     def OnKeyDown(self, event):
         # Detect whether the used wants to set things in motion.
         if event.text == 'w':
-            self.ref_speed1 += 1
+            self._ref_speed1 += 1
         elif event.text == 's':
-            self.ref_speed1 -= 1
+            self._ref_speed1 -= 1
         elif event.text == 'd':
-            self.ref_speed2 += 1
+            self._ref_speed2 += 1
         elif event.text == 'a':
-            self.ref_speed2 -= 1
+            self._ref_speed2 -= 1
    
      
     def Move(self, event=None):
@@ -1085,15 +1081,15 @@ class FlyCamera(ThreeDCamera):
         # get aspect ratio, we need to normalize with it...
         ar = self.axes.daspect
         # calculate distance to travel            
-        rx,ry,rz = self.xlim.range, self.ylim.range, self.zlim.range
+        rx,ry,rz = self._xlim.range, self._ylim.range, self._zlim.range
         distance = dd = (rx**2 + ry**2 + rz**2 )**0.5/200.0
         # express angles in radians
-        rad_az = self.view_az * math.pi / 180.0
-        rad_el = self.view_el * math.pi / 180.0
+        rad_az = self._view_az * math.pi / 180.0
+        rad_el = self._view_el * math.pi / 180.0
         
         # init
         dx=dy=dz = 0.0
-        sp1, sp2 = self.ref_speed1, self.ref_speed2
+        sp1, sp2 = self._ref_speed1, self._ref_speed2
         
         if sp1:
             f = math.cos( -rad_el )
@@ -1105,8 +1101,8 @@ class FlyCamera(ThreeDCamera):
             dy += - sp2 * distance * math.sin( -rad_az ) / ar[1] 
         
         # update location
-        self.view_loc = ( self.view_loc[0] + dx ,  self.view_loc[1] + dy , 
-            self.view_loc[2] + dz )
+        self._view_loc = ( self._view_loc[0] + dx ,  self._view_loc[1] + dy , 
+            self._view_loc[2] + dz )
         
         # refresh is performed by the caller
         
@@ -1115,25 +1111,25 @@ class FlyCamera(ThreeDCamera):
     def OnMouseDown(self, event):
         
         # store mouse position and button
-        self.ref_mloc = event.x, event.y
-        self.ref_but = event.button
-        self.ref_axes = event.owner
+        self._ref_mloc = event.x, event.y
+        self._ref_but = event.button
+        self._ref_axes = event.owner
         
         # store current view parameters
-        self.ref_az = self.view_az
-        self.ref_el = self.view_el
-        self.ref_loc = self.view_loc
-        self.ref_zoomx = self.view_zoomx 
-        self.ref_zoomy = self.view_zoomy 
+        self._ref_az = self._view_az
+        self._ref_el = self._view_el
+        self._ref_loc = self._view_loc
+        self._ref_zoomx = self._view_zoomx 
+        self._ref_zoomy = self._view_zoomy 
         
         # start moving!
-        self.ref_speed1 = 0
-        self.ref_speed2 = 0
+        self._ref_speed1 = 0
+        self._ref_speed2 = 0
         self._timer.Start()
    
     
     def OnMouseUp(self, event):        
-        self.ref_but = 0
+        self._ref_but = 0
         for axes in self.axeses:
             axes.Draw()
         self._timer.Stop()
@@ -1141,7 +1137,7 @@ class FlyCamera(ThreeDCamera):
     
     def OnTimer(self, event):
        
-        if not self.ref_but:
+        if not self._ref_but:
             return
         if not self.axes.camera is self:
             return False
@@ -1149,47 +1145,47 @@ class FlyCamera(ThreeDCamera):
         # get loc (as the event comes from the figure, not the axes)
         mloc = self.axes.mousepos
         
-        if self.ref_but==1:
+        if self._ref_but==1:
             # rotate
             
             # get normalized delta values
             sze = self.axes.position.size
-            d_az = float( self.ref_mloc[0] - mloc[0] ) / sze[0]
-            d_el = -float( self.ref_mloc[1] - mloc[1] ) / sze[1]
+            d_az = float( self._ref_mloc[0] - mloc[0] ) / sze[0]
+            d_el = -float( self._ref_mloc[1] - mloc[1] ) / sze[1]
             
             # change az and el accordingly
-            self.view_az = self.ref_az + d_az * 90.0
-            self.view_el = self.ref_el + d_el * 90.0
+            self._view_az = self._ref_az + d_az * 90.0
+            self._view_el = self._ref_el + d_el * 90.0
             
             # keep within bounds            
-            while self.view_az < -180:
-                self.view_az += 360
-            while self.view_az >180:
-                self.view_az -= 360
-            if self.view_el < -90:
-                self.view_el = -90
-            while self.view_el > 90:
-                self.view_el = 90
-            #print self.view_az, self.view_el
+            while self._view_az < -180:
+                self._view_az += 360
+            while self._view_az >180:
+                self._view_az -= 360
+            if self._view_el < -90:
+                self._view_el = -90
+            while self._view_el > 90:
+                self._view_el = 90
+            #print self._view_az, self._view_el
         
-        elif self.ref_but==2:
+        elif self._ref_but==2:
             # zoom
             
             # get movement in x (in pixels) and normalize
-            factorx = float(self.ref_mloc[0] - mloc[0])
+            factorx = float(self._ref_mloc[0] - mloc[0])
             factorx /= self.axes.position.width
             
             # get movement in y (in pixels) and normalize
-            factory = float(self.ref_mloc[1] - mloc[1])
+            factory = float(self._ref_mloc[1] - mloc[1])
             factory /= self.axes.position.height
             
             # apply (use only y-factor if daspect is valid.
             if self.axes.daspectAuto:
-                self.view_zoomx = self.ref_zoomx * math.exp(factorx)
-                self.view_zoomy = self.ref_zoomy * math.exp(-factory)
+                self._view_zoomx = self._ref_zoomx * math.exp(factorx)
+                self._view_zoomy = self._ref_zoomy * math.exp(-factory)
             else:
-                self.view_zoomy = self.ref_zoomy * math.exp(-factory)
-                self.view_zoomx = self.view_zoomy
+                self._view_zoomy = self._ref_zoomy * math.exp(-factory)
+                self._view_zoomx = self._view_zoomy
         
         # Move and refresh
         self.Move()
@@ -1211,23 +1207,23 @@ class FlyCamera(ThreeDCamera):
         
         # test zoomfactors
         if not self.axes.daspectAuto:
-            if self.view_zoomx != self.view_zoomy:
+            if self._view_zoomx != self._view_zoomy:
                 # apply average zoom
-                tmp = self.view_zoomx + self.view_zoomy
-                self.view_zoomx = self.view_zoomy = tmp / 2.0
-#         if self.view_zoomx < 2:
-#             self.view_zoomx = 2.0
-#         if self.view_zoomy < 2:
-#             self.view_zoomy = 2.0
+                tmp = self._view_zoomx + self._view_zoomy
+                self._view_zoomx = self._view_zoomy = tmp / 2.0
+#         if self._view_zoomx < 2:
+#             self._view_zoomx = 2.0
+#         if self._view_zoomy < 2:
+#             self._view_zoomy = 2.0
         
         # get zoom
-        fx, fy = self.view_zoomx, self.view_zoomy
+        fx, fy = self._view_zoomx, self._view_zoomy
         
         # correct for window size        
         if not self.axes.daspectAuto:
             w, h = self.axes.position.size
             w, h = float(w), float(h)        
-            if w / h > 1:#self.ylim.range / self.xlim.range:
+            if w / h > 1:#self._ylim.range / self._xlim.range:
                 fx *= w/h
             else:
                 fy *= h/w
@@ -1247,8 +1243,8 @@ class FlyCamera(ThreeDCamera):
         #            -100000.0, 100000.0 )
         
         # 3. Set viewing angle (this is the only difference with 2D camera)
-        gl.glRotate(self.view_el-90, 1.0, 0.0, 0.0)        
-        gl.glRotate(-self.view_az, 0.0, 0.0, 1.0)
+        gl.glRotate(self._view_el-90, 1.0, 0.0, 0.0)        
+        gl.glRotate(-self._view_az, 0.0, 0.0, 1.0)
         
         # Prepare for models ...
         gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -1260,6 +1256,6 @@ class FlyCamera(ThreeDCamera):
         
         # 1. Translate to view location. Do this first because otherwise
         # the translation is not in world coordinates.
-        gl.glTranslate(-self.view_loc[0], -self.view_loc[1], -self.view_loc[2])
+        gl.glTranslate(-self._view_loc[0], -self._view_loc[1], -self._view_loc[2])
 
 

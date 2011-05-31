@@ -361,14 +361,26 @@ class Axes(base.Wibject):
         if this is not the currently used camera.
         
         """
+        
         # get camera
         cam = self._cameras['TwoDCamera']
         
+        # Calculate viewing range for x and y
+        fx = abs( 1.0 / cam._zoom )
+        fy = abs( 1.0 / cam._zoom )
+        # correct for window size
+        w, h = self.position.size
+        w, h = float(w), float(h)        
+        if w / h > 1:
+            fx *= w/h
+        else:
+            fy *= h/w
+        
         # calculate limits
-        tmp = cam._fx/2 / self.daspectNormalized[0]
-        xlim = Range( cam.view_loc[0] - tmp, cam.view_loc[0] + tmp )
-        tmp = cam._fy/2 / self.daspectNormalized[1]
-        ylim = Range( cam.view_loc[1] - tmp, cam.view_loc[1] + tmp )
+        tmp = fx/2 / self.daspectNormalized[0]
+        xlim = Range( cam._view_loc[0] - tmp, cam._view_loc[0] + tmp )
+        tmp = fy/2 / self.daspectNormalized[1]
+        ylim = Range( cam._view_loc[1] - tmp, cam._view_loc[1] + tmp )
         
         # return
         return xlim, ylim
