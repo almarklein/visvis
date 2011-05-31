@@ -640,7 +640,7 @@ class Texture3D(BaseTexture):
 #         gl.glPushMatrix()
 #         axes = self.GetAxes()
 #         if axes:
-#             cam=axes._cameras['3d']
+#             cam=axes._cameras['ThreeDCamera']
 #             daspect = axes.daspect
 #             gl.glScale( 1.0/daspect[0], 1.0/daspect[1] , 1.0/daspect[2] )
             

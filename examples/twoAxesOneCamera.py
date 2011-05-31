@@ -20,8 +20,8 @@ a1 = vv.subplot(121)
 a2 = vv.subplot(122)
 
 # Create new camera and attach
-cam = vv.cameras.TwoDCamera(a1,a2)
-a1._cameras['2d'] = a2._cameras['2d'] = cam
+cam = vv.cameras.TwoDCamera()
+a1.camera = a2.camera = cam
 
 # Draw images
 vv.imshow(im1, axes=a1)
