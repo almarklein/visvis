@@ -93,7 +93,7 @@ class BaseCamera(object):
     
     # Subclasses should set viewparams, a set of (key, attribute_name) pairs
     # for the values returned by GetViewParams.
-    viewparams = (('loc', 'location'), ('zoom', 'zoom'))
+    viewparams = (('daspect', 'daspect'), ('loc', 'location'), ('zoom', 'zoom'))
     
     def __init__(self):
         
@@ -191,6 +191,20 @@ class BaseCamera(object):
     
     
     @Property
+    def daspect():
+        """ This property mirrors the daspect property of the first axes. 
+        Setting this propery will set the daspect of all axeses.
+        """
+        def fget(self):
+            if self.axes:
+                return self.axes.daspect
+            else:
+                return None
+        def fset(self, value):
+            for ax in self.axeses:
+                ax.daspect = value # ax.daspect posts a draw
+    
+    @Property
     def zoom():
         """ Get/set the current zoom factor.
         """
@@ -237,7 +251,6 @@ class BaseCamera(object):
         self.Reset()
     
     
-    # todo: this does not yet work
     def GetViewParams(self):
         """ GetViewParams()
         
