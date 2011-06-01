@@ -93,7 +93,7 @@ class BaseCamera(object):
     
     # Subclasses should set viewparams, a set of (key, attribute_name) pairs
     # for the values returned by GetViewParams.
-    viewparams = None
+    viewparams = (('loc', 'location'), ('zoom', 'zoom'))
     
     def __init__(self):
         
@@ -405,7 +405,6 @@ class TwoDCamera(BaseCamera):
     
     _NAMES = ('2d', 2, '2', 'twod')
     ndim = 2
-    viewparams = (('loc', 'view_loc'), ('zoom', 'zoom'))
     
     def __init__(self):
         BaseCamera.__init__(self)
@@ -650,9 +649,8 @@ class ThreeDCamera(BaseCamera):
     
     _NAMES = ('3d', 3, '3', 'threed')
     ndim = 3
-    viewparams = (('loc', 'view_loc'), ('zoom', 'zoom'),
-                  ('azimuth', 'view_az'), ('elevation', 'view_el'), ('roll', 'view_ro'),
-                  ('fov', 'view_fov'))
+    viewparams = BaseCamera.viewparams + (('azimuth', 'azimuth'), 
+                  ('elevation', 'elevation'), ('roll', 'roll'), ('fov', 'fov'))
     
     def __init__(self):
         BaseCamera.__init__(self)
@@ -698,7 +696,7 @@ class ThreeDCamera(BaseCamera):
                 ax.Draw()
     
     @Property
-    def eleveation():
+    def elevation():
         """ Get/set the current elevation angle (rotation with respect to 
         the x-y plane). This angle is between -90 and 90 degrees.
         """
