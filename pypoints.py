@@ -1740,7 +1740,7 @@ class Quaternion(object):
         # Prepare 
         p = Quaternion(0, p.x, p.y, p.z, False) # Do not normalize!
         q1 = self.normalize()
-        q2 = self.inverse()
+        q2 = self.inverse().normalize()
         # Apply rotation
         r = (q1*p)*q2
         # Make point and return        
@@ -1805,7 +1805,7 @@ class Quaternion(object):
             az = self.z / scale
         else:
             # No rotation, so arbitrary axis
-            ax, ay, ax = 1, 0, 0 
+            ax, ay, az = 1, 0, 0 
         
         # Return
         return angle, ax, ay, az
