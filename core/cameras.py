@@ -91,9 +91,9 @@ class BaseCamera(object):
     """
     _NAMES = ()
     
-    # Subclasses should set viewparams, a set of (key, attribute_name) pairs
-    # for the values returned by GetViewParams.
-    viewparams = (('daspect', 'daspect'), ('loc', 'location'), ('zoom', 'zoom'))
+    # Subclasses should set viewparams; the list if attributes that define
+    # the view of the camera.
+    _viewparams = ('daspect', 'loc', 'zoom')
     
     def __init__(self):
         
@@ -216,7 +216,7 @@ class BaseCamera(object):
                 ax.Draw()
     
     @Property
-    def location():
+    def loc():
         """ Get/set the current viewing location.
         """
         def fget(self):
@@ -226,7 +226,7 @@ class BaseCamera(object):
             if isinstance(value, (tuple, list)) and len(value)==3:
                 value = [float(v) for v in value]
             else:
-                raise ValueError('location must be a 3-element tuple.')
+                raise ValueError('loc must be a 3-element tuple.')
             # Set
             self._view_loc = tuple(value)
             for ax in self.axeses:
@@ -257,8 +257,8 @@ class BaseCamera(object):
         Get a dictionary with view parameters. 
         
         """
-        return dict([(key, getattr(self, attr)) 
-                     for key, attr in self.__class__.viewparams])
+        return dict([(key, getattr(self, key)) 
+                     for key in self.__class__._viewparams])
     
     def SetViewParams(self, s=None, **kw):
         """ SetViewParams(s=None, **kw)
@@ -273,9 +273,9 @@ class BaseCamera(object):
         if kw:  # Updating with an empty dict is okay, but this way we can take
                 # arguments that don't have an update method (like ssdf objects).
             s.update(kw)
-        for key, attr in self.__class__.viewparams:
+        for key in self.__class__._viewparams:
             try:
-                setattr(self, attr, s[key])
+                setattr(self, key, s[key])
             except KeyError:
                 pass
     
@@ -558,7 +558,9 @@ class TwoDCamera(BaseCamera):
             dy = loc[1] - refloc[1]
             
             # apply
-            self._view_loc = ( self._ref_loc[0] - dx ,  self._ref_loc[1] - dy )
+            self._view_loc = (  self._ref_loc[0] - dx,  
+                                self._ref_loc[1] - dy,
+                                self._ref_loc[2])
         
         elif self._ref_but==2:
             # zoom
@@ -662,8 +664,7 @@ class ThreeDCamera(BaseCamera):
     
     _NAMES = ('3d', 3, '3', 'threed')
     ndim = 3
-    viewparams = BaseCamera.viewparams + (('azimuth', 'azimuth'), 
-                  ('elevation', 'elevation'), ('roll', 'roll'), ('fov', 'fov'))
+    _viewparams = BaseCamera._viewparams + ('azimuth', 'elevation', 'roll', 'fov')
     
     def __init__(self):
         BaseCamera.__init__(self)
@@ -927,8 +928,9 @@ class ThreeDCamera(BaseCamera):
             dz = ( -distx * sro * cel + distz * cro * cel) / ar[2]
             
             # apply
-            self._view_loc = ( self._ref_loc[0] + dx ,  self._ref_loc[1] + dy , 
-                self._ref_loc[2] + dz )
+            self._view_loc = (  self._ref_loc[0] + dx,  
+                                self._ref_loc[1] + dy, 
+                                self._ref_loc[2] + dz )
         
         elif constants.KEY_CONTROL in event.modifiers and self._ref_but==1:
             # Roll
