@@ -395,9 +395,7 @@ class Axes(base.Wibject):
         types.
         
         """
-        d = self.camera.GetViewParams()
-        d.update(daspect=self.daspect)
-        return d
+        return self.camera.GetViewParams()
     
     
     @DrawAfter
@@ -412,10 +410,6 @@ class Axes(base.Wibject):
         """
         if s or kw:
             self.camera.SetViewParams(s, **kw)
-            if 'daspect' in kw:
-                self.daspect = kw['daspect']
-            elif 'daspect' in s:
-                self.daspect = s['daspect']
         else:
             self.camera.Reset()
     
