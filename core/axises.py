@@ -385,6 +385,41 @@ class BaseAxis(base.Wobject):
     a scene and is a Wibject.
     
     """
+    #  This documentation holds for the 3D axis, the 2D axis is a bit
+    #  simpeler in some aspects.
+    #
+    #  The scene is limits by the camera limits, thus forming a cube
+    #  The axis is drawn on this square.
+    #  The ASCI-art image below illustrates how the corners of this cube
+    #  are numbered.
+    #
+    #  The thicks are drawn along three ridges of the cube. A reference
+    #  corner is selected first, which has a corresponding ridge vector.
+    #
+    #  In orthogonal view, all ridges are parellel, but this is not the
+    #  case in projective view. For each dimension there are 4 ridges to
+    #  consider. Any grid lines are drawn between two ridges. The amount
+    #  of ticks to draw (or minTickDist to be precise) should be determined
+    #  based on the shortest ridge.
+    #
+    #          6 O---------------O 7
+    #           /|              /|
+    #          /               / |
+    #         /  |            /  |
+    #      3 O---------------O 5 |
+    #        |   |           |   |
+    #        | 2 o- - - - - -|- -O 4
+    #        |  /            |  /
+    #        |               | /
+    #        |/              |/
+    #      0 O---------------O 1
+    #
+    #  / \      _
+    #   |       /|
+    #   | z    /        x   
+    #   |     /  y    -----> 
+    #
+    
     
     def __init__(self, parent):
         base.Wobject.__init__(self, parent)
@@ -939,7 +974,7 @@ class CartesianAxis2D(BaseAxis):
             tmp = [tmp[i] for i in [0,1,0,1]]
             corners4_c = [corners8_c[i] for i in tmp]
             corners4_s = [corners8_s[i] for i in tmp]
-
+            
             # Get directional vectors in real coords and screen pixels.
             # Easily calculated since the first _corner elements are
             # 000,100,010,001
@@ -964,13 +999,16 @@ class CartesianAxis2D(BaseAxis):
                     i0 = i
                     bestVal = val
 
-            # Get indices of next corners in line
+            # Get indices of the two next corners on which 
+            # ridges we may draw grid lines
             i1 = self._NextCornerIndex(i0, d, vector_s)
             i2 = self._NextCornerIndex(i1, d, vector_s)
+            
             # Get first corner and grid vectors
             firstCorner = corners4_c[i0]
             gv1 = corners4_c[i1] - corners4_c[i0]
             gv2 = corners4_c[i2] - corners4_c[i1]
+            
             # Get tick vector to indicate tick
             gv1s = corners4_s[i1] - corners4_s[i0]
             #tv = gv1 * (5 / gv1s.norm() )
@@ -1122,6 +1160,29 @@ class CartesianAxis3D(BaseAxis):
 
     """
 
+    def _SelectShortestRidgeVector(self, d, corners8_c, corners8_s):
+        
+        # Get the vectors
+        vectors_c = []
+        vectors_s = []
+        for i in range(4):
+            i1 = self._cornerIndicesPerDirection[d][i]
+            i2 = self._cornerPairIndicesPerDirection[d][i]
+            vectors_c.append( corners8_c[i2] - corners8_c[i1])
+            vectors_s.append( corners8_s[i2] - corners8_s[i1])
+        
+        # Select the smallest vector (in screen coords)
+        smallest_i, smallest_L = 0, 9999999999999999999999999.0
+        for i in range(4):
+            L = vectors_s[i].norm()
+            if L < smallest_L:
+                smallest_i = i
+                smallest_L = L
+        
+        # Return smallest and the vectors
+        return vectors_c[smallest_i], vectors_s[smallest_i], vectors_c, vectors_s
+    
+    
     def _CreateLinesAndLabels(self, axes):
         """ This is the method that calculates where lines should be
         drawn and where labels should be placed.
@@ -1169,38 +1230,46 @@ class CartesianAxis3D(BaseAxis):
         # For each dimension ...
         for d in range(3): # d for dimension/direction
             lim = lims[d]
-
+            
             # Get the four corners that are of interest for this dimension
+            # They represent one of the faces that we might draw in.
             tmp = self._cornerIndicesPerDirection[d]
             corners4_c = [corners8_c[i] for i in tmp]
             corners4_s = [corners8_s[i] for i in tmp]
-
-            # Get directional vectors in real coords and screen pixels.
-            # Easily calculated since the first _corner elements are
-            # 000,100,010,001
-            vector_c = corners8_c[d+1] -corners8_c[0]
-            vector_s = corners8_s[d+1] -corners8_s[0]
-
-            # Calculate tick distance in units
+            
+            # Get directional vectors corresponding to (emanating from)
+            # the four corners.
+            # There are 4 vectors (i.e. cube ridges) and the 
+            # shortest (in screen pixels) is also returned.
+            _vectors = self._SelectShortestRidgeVector(d, corners8_c, corners8_s)
+            vector_c, vector_s, vectors4_c, vectors4_s = _vectors
+            
+            # Calculate tick distance in units (using shortest ridge vector)
             minTickDist = self._minTickDist
             minTickDist *= vector_c.norm() / vector_s.norm()
-
-            # Get index of corner to put ticks at
+            
+            # Get index of corner to put ticks at.
+            # This is determined by chosing the corner which is the lowest
+            # on screen (for x and y), or the most to the left (for z).
             i0 = 0; bestVal = 999999999999999999999999
             for i in range(4):
-                if d==2: val = corners4_s[i].x
-                else: val = corners4_s[i].y
+                if d==2: val = corners4_s[i].x  # chose leftmost corner
+                else: val = corners4_s[i].y  # chose bottommost corner
                 if val < bestVal:
                     i0 = i
                     bestVal = val
-
-            # Get indices of next corners in line
-            i1 = self._NextCornerIndex(i0, d, vector_s)
-            i2 = self._NextCornerIndex(i1, d, vector_s)
+            
+            # Get indices of next corners corresponding to the ridges
+            # between which we may draw grid lines
+            # i0, i1, i2 are all in [0,1,2,3]
+            i1 = self._NextCornerIndex(i0, d, vectors4_s[i0])
+            i2 = self._NextCornerIndex(i1, d, vectors4_s[i0])
+            
             # Get first corner and grid vectors
             firstCorner = corners4_c[i0]
             gv1 = corners4_c[i1] - corners4_c[i0]
             gv2 = corners4_c[i2] - corners4_c[i1]
+            
             # Get tick vector to indicate tick
             gv1s = corners4_s[i1] - corners4_s[i0]
             #tv = gv1 * (5 / gv1s.norm() )
@@ -1211,12 +1280,15 @@ class CartesianAxis3D(BaseAxis):
             for i in range(4):
                 if self._showBox or i in [i0, i1, i2]:
                 #if self._showBox or i ==i0: # for a real minimalistic axis
-                    pps.append(corners4_s[i])
-                    pps.append(corners8_s[self._cornerPairIndicesPerDirection[d][i]])
+                    # Note that we use world coordinates, rather than screen
+                    # as the 2D axis does.
+                    ppc.append(corners4_c[i])
+                    j = self._cornerPairIndicesPerDirection[d][i]
+                    ppc.append(corners8_c[j])
             
             # Get ticks stuff
             tickValues = ticksPerDim[d] # can be None
-            p1, p2 = firstCorner.copy(), firstCorner+vector_c
+            p1, p2 = firstCorner.copy(), firstCorner+vectors4_c[i0]
             tmp = GetTicks(p1,p2, lim, minTickDist, tickValues)
             ticks, ticksPos, ticksText = tmp
             
@@ -1253,13 +1325,13 @@ class CartesianAxis3D(BaseAxis):
                     t.valign = 0
                     t.halign = 1
                 else:
-                    if vector_s.y*vector_s.x >= 0:
+                    if vectors4_s[i0].y*vectors4_s[i0].x >= 0:
                         t.halign = -1
                         t.valign = -1
                     else:
                         t.halign = 1
                         t.valign = -1
-
+            
             # Get gridlines
             if drawGrid[d] or drawMinorGrid[d]:
                 # get more gridlines if required
@@ -1279,7 +1351,7 @@ class CartesianAxis3D(BaseAxis):
             
             # Apply label
             textDict = self._textDicts[d]
-            p1 = corners4_c[i0] + vector_c * 0.5
+            p1 = corners4_c[i0] + vectors4_c[i0] * 0.5
             key = '_label_'
             if key in textDict and textDict[key] in self._children:
                 t = textDict.pop(key)
@@ -1297,7 +1369,7 @@ class CartesianAxis3D(BaseAxis):
                 self._children.remove(t)
                 self._children.append(t)
             # Get vec to calc angle
-            vec = Point(vector_s.x, vector_s.y)
+            vec = Point(vectors4_s[i0].x, vectors4_s[i0].y)
             if vec.x < 0:
                 vec = vec * -1
             t.textAngle = float(vec.angle() * 180/np.pi)
