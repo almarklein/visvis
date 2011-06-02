@@ -23,11 +23,12 @@ import OpenGL.GLU as glu
 
 import math
 
+import visvis as vv
 from visvis.core.misc import Property, PropWithDraw, DrawAfter 
 from visvis.core.misc import Range
 from visvis.core.events import Timer
-import constants
-
+from visvis.core import constants
+from visvis.pypoints import Quaternion, Point
 
 # Global to store depth Bits
 depthBits = [0]
@@ -83,7 +84,7 @@ def depthToZ(depth):
 
 
 class BaseCamera(object):
-    """ BaseCamera(*axes)
+    """ BaseCamera()
     
     Abstract camera class. A camera represents both the camera model
     and the interaction style.
@@ -402,7 +403,7 @@ class BaseCamera(object):
 
 
 class TwoDCamera(BaseCamera):
-    """ TwoDCamera(*axes)
+    """ TwoDCamera()
     
     The default camera for viewing 2D data. 
     
@@ -639,7 +640,7 @@ class TwoDCamera(BaseCamera):
 # todo: FOV: properly setting which axis has ticks, the tick spacing, and which axes to show when showBox is False.
 
 class ThreeDCamera(BaseCamera):
-    """ ThreeDCamera(*axes)
+    """ ThreeDCamera()
     
     The ThreeDCamera camera is a camera to visualise 3D data. 
     
@@ -1094,139 +1095,221 @@ class ThreeDCamera(BaseCamera):
                 light._Apply()
     
 
-# todo: use quaternions to fly it?
-# todo: better init
-class FlyCamera(ThreeDCamera):
-    """ FlyCamera(*axes)
+class FlyCamera(BaseCamera):
+    """ FlyCamera()
     
     The fly camera is a funky camera to visualise 3D data.
     
     Think of the fly camera as a remote controlled vessel with
-    which you fly trough your data, a bit like a flight sim.
-    It uses a perspective projection, by zooming you can change
-    your "lens" from very wide to zoom.
+    which you fly trough your data, like in the classic game 'Descent'.
     
-    Interacting with this camera might need a bit of practice. While 
-    holding the mouse the camera is controllable. Now you can rotate 
-    the camera, zoom, and fly! Pressing W increases the forward speed, 
-    S reduces it. A increases the strafing speed to the left, and D to 
-    the right...
+    Interaction
+    -----------
+    Interacting with this camera might need a bit of practice. Press
+    any of the keys (listed below) to start moving. Move the reverse
+    key to stop moving. Tapping a key twice increases the speed (up
+    to three times the normal speed.
+    
+    Moving:
+      * w,a,s,f keys to move forward, backward, left and right
+      * f and g keys move up and down
+      * Space bar to stop moving. 
+      * Using SHIFT+RMB, the zoom factor can be changed, a higher zoom
+        means smaller motions (i.e. more fine-grained control).
+    
+    Viewing:
+      * Use the mouse to control the pitch and yaw.
+      * The camera auto-rotates to make the bottom of the vessel point down,
+        manual rolling can be performed using q and e.
+      * Using the RMB, one can zoom in, like looking through a binocular. 
+        This will also make you move slightly faster.
     
     """
-    
     _NAMES = ('fly', 4)
     ndim = 3
-    
-    # Note that this camera does not use the MouseMove event but uses
-    # a timer to update itself, this is to get the motion smooth.
+    _viewparams = BaseCamera._viewparams + ('fov', '_rotation1', '_rotation2')
     
     def __init__(self):
-        ThreeDCamera.__init__(self)
+        BaseCamera.__init__(self)
         
-        # camera view params
-        # view_loc is not the position you look at,
+        # Here, view_loc is not the position you look at,
         # but the position you ARE at
-        self._view_az = 10.0
-        self._view_el = 30.0
-        self._view_zoomx = 100.0
-        self._view_zoomy = 100.0
+        
+        self._rotation1 = Quaternion() # The total totation
+        self._rotation2 = Quaternion() # The delta yaw and pitch rotation
+        
+        # Set field of view: how zoomed in the view is
+        self._fov = 90
+        speed_angle = 0.5*self._fov*math.pi/180
+        self._speed_rot = math.sin(speed_angle)
+        self._speed_trans = math.cos(speed_angle)
+        
+        # Motion (-1, 0, 1)
+        self._move_forward = 0 
+        self._move_right = 0
+        self._move_up = 0
+        #
+        self._roll_right = 0
         
         # reference variables for when dragging
-        self._ref_loc = 0,0      # view_loc when clicked
-        self._ref_mloc = 0,0     # mouse location clicked
-        self._ref_but = 0        # button clicked
-        self._ref_speed1 = 0     # direction forward
-        self._ref_speed2 = 0     # direction rigth        
-        self._ref_az = 0         # angles when clicked
-        self._ref_el = 0
-        self._ref_zoomx = 0      # zoom factors when clicked
-        self._ref_zoomy = 0
+        self._ref_loc = 0,0,0    # view_loc when clicked
+        self._ref_mloc = 0,0     # mouse location when clicked
+        self._ref_but = 0        # mouse button clicked
+        self._ref_axes = None
+        #
+        self._ref_fov = 0
+        self._ref_zoom = 0
         
         # create timer and bind to it. This timer is started when clicked
         # and stopped when the mouse is released. This is to make a 
         # smoother flying possible.
-        self._timer = Timer(self, 50, False)
+        self._timer = vv.Timer(self, 50, False)
         self._timer.Bind(self.OnTimer)
-
-
+    
+    @property
+    def _rotation(self):
+        rotation = self._rotation2 * self._rotation1
+        return rotation.normalize()
+    
+    
+    @Property
+    def fov():
+        """ Get/set the current field of view (i.e. camera aperture). 
+        This value is between 10 and 90.
+        """
+        def fget(self):
+            return self._fov
+        def fset(self, value):
+            # Set
+            self._fov = float(value)
+            # keep within bounds  
+            if self._fov > 90:
+                self._fov = 90
+            if self._fov < 10:
+                self._fov = 10
+            # Draw
+            for ax in self.axeses:
+                ax.Draw()
+    
     def Reset(self, event=None):
         """ Reset()
         
-        Position the camera at a suitable position from the scene.
+        Reset the view.
         
         """
         
-        # Only reset if this is currently the camera
-        #if self.axes.camera is not self:
-        #    return
+        # Stop moving
+        self._move_forward = 0
+        self._move_right = 0
+        self._move_up = 0
+        self._roll_right = 0
         
-        # call the 3D camera reset... It calls Draw(), which is thus called
-        # unnecesary, but hell, you dont reset that often...
-        ThreeDCamera.Reset(self)
+        # Set orientation
+        q_ro = Quaternion.create_from_axis_angle(-125*math.pi/180, 0,0,1)
+        q_az = Quaternion.create_from_axis_angle(-45*math.pi/180, 0,1,0)
+        q_el = Quaternion.create_from_axis_angle(45*math.pi/180, 1,0,0)
+        #
+        self._rotation1 = ( q_ro * q_el * q_az ).normalize()
+        self._rotation2 = Quaternion()
+        self._fov = 90.0
+        speed_angle = 0.5*self._fov*math.pi/180
+        self._speed_rot = math.sin(speed_angle)
+        self._speed_trans = math.cos(speed_angle)
         
-        # get aspect ratio
-        ar = self.axes.daspect
+        # Get window size
+        w,h = self.axes.position.size
+        w,h = float(w), float(h)
         
-        # change centre, we move at the minimum x and y, but at a higher z.
-        rx,ry,rz = self._xlim.range, self._ylim.range, self._zlim.range
-        dx,dy,dz = self._xlim.min, self._ylim.min, self._zlim.min        
+        # Get range and translation for x and y   
+        rx, ry, rz = self._xlim.range, self._ylim.range, self._zlim.range
+        
+        # Correct ranges for window size. Note that the window width
+        # influences the x and y data range, while the height influences
+        # the z data range.
+        if w / h > 1:
+            rx /= w/h
+            ry /= w/h
+        else:
+            rz /= h/w
+        
+        # If auto-scale is on, change daspect, x is the reference
+        if self.axes.daspectAuto:
+            self._SetDaspect(rx/ry, 1, 0)
+            self._SetDaspect(rx/rz, 2, 0)
+        
+        # Correct for normalized daspect
+        ndaspect = self.axes.daspectNormalized
+        rx, ry, rz = abs(rx*ndaspect[0]), abs(ry*ndaspect[1]), abs(rz*ndaspect[2])
+        
+        # Do not convert to screen coordinates. This camera does not need
+        # to fit everything on screen, but we need to estimate the scale
+        # of the data in the scene.
+        
+        # Set zoom, depending on data range
+        self._zoom = min(1/rx, 1/ry, 1/rz)
+        
+        # Set initial position to a corner of the scene
+        dx,dy,dz = self._xlim.max, self._ylim.max, self._zlim.max        
         dd = (rx**2 + ry**2 + rz**2 )**0.5        
-        dd *= ar[2]
-        #self._view_loc = rx/2.0+dx+500, ry/2.0+dy+500, rz/2.0/rz-dd
-        self._view_loc = dx, dy, dz + rz/2.0 + dd
+        self._view_loc = dx, dy, dz
         
-        # set angles        
-        self._view_az = -math.atan2(ar[0],ar[1])*180/math.pi
-        self._view_el = 80 # look down
-        
-        # refresh
+        # Refreshw
         for axes in self.axeses:
             axes.Draw()
-        
-        
+    
+    
     def OnKeyDown(self, event):
-        # Detect whether the used wants to set things in motion.
-        if event.text == 'w':
-            self._ref_speed1 += 1
+        
+        # Translation in-plane
+        if event.text == ' ':
+            self._move_forward = 0
+            self._move_right = 0
+            self._move_up = 0
+            self._roll_right = 0
+        elif event.text == 'w':
+            self._move_forward += 1
         elif event.text == 's':
-            self._ref_speed1 -= 1
+            self._move_forward -= 1
         elif event.text == 'd':
-            self._ref_speed2 += 1
+            self._move_right += 1
         elif event.text == 'a':
-            self._ref_speed2 -= 1
-   
-     
-    def Move(self, event=None):
-        # Move the fly -> change its position.
+            self._move_right -= 1
+        # Translation up/down
+        elif event.text == 'f':
+            self._move_up += 1
+        elif event.text == 'c':
+            self._move_up -= 1
+        # Rotation
+        elif event.text == 'e':
+            self._roll_right += 1
+        elif event.text == 'q':
+            self._roll_right -= 1
         
-        # get aspect ratio, we need to normalize with it...
-        ar = self.axes.daspect
-        # calculate distance to travel            
-        rx,ry,rz = self._xlim.range, self._ylim.range, self._zlim.range
-        distance = dd = (rx**2 + ry**2 + rz**2 )**0.5/200.0
-        # express angles in radians
-        rad_az = self._view_az * math.pi / 180.0
-        rad_el = self._view_el * math.pi / 180.0
-        
-        # init
-        dx=dy=dz = 0.0
-        sp1, sp2 = self._ref_speed1, self._ref_speed2
-        
-        if sp1:
-            f = math.cos( -rad_el )
-            dx += sp1 * distance * math.sin( -rad_az ) * f / ar[0]
-            dy += sp1 * distance * math.cos( -rad_az ) * f / ar[1] 
-            dz += sp1 * distance * math.sin( -rad_el ) / ar[2]
-        if sp2:
-            dx +=   sp2 * distance * math.cos( -rad_az ) / ar[0]
-            dy += - sp2 * distance * math.sin( -rad_az ) / ar[1] 
-        
-        # update location
-        self._view_loc = ( self._view_loc[0] + dx ,  self._view_loc[1] + dy , 
-            self._view_loc[2] + dz )
-        
-        # refresh is performed by the caller
-        
+        # Limit values
+        limit = 3
+        if self._move_forward > +limit: self._move_forward = +limit
+        if self._move_forward < -limit: self._move_forward = -limit
+        if self._move_right > +limit: self._move_right = +limit
+        if self._move_right < -limit: self._move_right = -limit
+        if self._move_up > +limit: self._move_up = +limit
+        if self._move_up < -limit: self._move_up = -limit
+        if self._roll_right > +limit: self._roll_right = +limit
+        if self._roll_right < -limit: self._roll_right = -limit
+    
+    
+    def OnKeyUp(self, event):
+        pass
+#         # Translation in-plane
+#         if event.text in ['w', 's']:
+#             self._move_forward = 0
+#         elif event.text in ['a', 'd']:
+#             self._move_right = 0
+#         # Translation up/down
+#         elif event.text in ['f', 'c']:
+#             self._move_up = 0
+#         # Rotation
+#         elif event.text in ['e', 'q']:
+#             self._roll_right = 0
     
     
     def OnMouseDown(self, event):
@@ -1237,31 +1320,36 @@ class FlyCamera(ThreeDCamera):
         self._ref_axes = event.owner
         
         # store current view parameters
-        self._ref_az = self._view_az
-        self._ref_el = self._view_el
         self._ref_loc = self._view_loc
-        self._ref_zoomx = self._view_zoomx 
-        self._ref_zoomy = self._view_zoomy 
-        
-        # start moving!
-        self._ref_speed1 = 0
-        self._ref_speed2 = 0
-        self._timer.Start()
-   
+        self._ref_zoom = self._zoom 
+        self._ref_fov = self._fov
+    
     
     def OnMouseUp(self, event):        
-        self._ref_but = 0
+        
+        # Apply rotation
+        self._rotation1 = ( self._rotation2 * self._rotation1 ).normalize()
+        self._rotation2 = Quaternion()
+        
+        # Set not-motion
+        self._ref_but = 0        
         for axes in self.axeses:
             axes.Draw()
-        self._timer.Stop()
     
     
-    def OnTimer(self, event):
+    def OnMotion(self, event):
        
+        if not self.axes.camera is self:
+            return 
+        elif not self._timer.isRunning:
+            # Make sure the timer runs
+            self._timer.Start()
+        
         if not self._ref_but:
             return
-        if not self.axes.camera is self:
-            return False
+        if not self._ref_axes is event.owner:
+            return
+        
         
         # get loc (as the event comes from the figure, not the axes)
         mloc = self.axes.mousepos
@@ -1274,23 +1362,39 @@ class FlyCamera(ThreeDCamera):
             d_az = float( self._ref_mloc[0] - mloc[0] ) / sze[0]
             d_el = -float( self._ref_mloc[1] - mloc[1] ) / sze[1]
             
-            # change az and el accordingly
-            self._view_az = self._ref_az + d_az * 90.0
-            self._view_el = self._ref_el + d_el * 90.0
+            # Apply gain
+            d_az *= - 0.5 * math.pi# * self._speed_rot
+            d_el *=   0.5 * math.pi#  * self._speed_rot
             
-            # keep within bounds            
-            while self._view_az < -180:
-                self._view_az += 360
-            while self._view_az >180:
-                self._view_az -= 360
-            if self._view_el < -90:
-                self._view_el = -90
-            if self._view_el > 90:
-                self._view_el = 90
-            #print self._view_az, self._view_el
+            # Create temporary quaternions
+            q_az = Quaternion.create_from_axis_angle(d_az, 0,1,0)
+            q_el = Quaternion.create_from_axis_angle(d_el, 1,0,0)
+            
+            # Apply to global quaternion
+            self._rotation2 = ( q_el.normalize() * q_az ).normalize()
         
-        elif self._ref_but==2:
-            # zoom
+        elif not event.modifiers and self._ref_but==2:
+            # zoom --> fov
+            
+            # get normailized delta value
+            d_fov = float(self._ref_mloc[1] - mloc[1]) / self.axes.position.height
+            
+            # apply
+            self._fov = self._ref_fov - d_fov * 90
+            
+            # keep from being too big or negative
+            if self._fov > 90:
+                self._fov = 90 # fully "zoomed out"
+            elif self._fov < 10:
+                self._fov = 10 # fully "zoomed in"
+            
+            # Determine relative speed
+            speed_angle = 0.5*self._fov*math.pi/180
+            self._speed_rot = math.sin(speed_angle)
+            self._speed_trans = math.cos(speed_angle)
+            
+        elif constants.KEY_SHIFT in event.modifiers and self._ref_but==2:
+            # scale / relative speed --> zoom
             
             # get movement in x (in pixels) and normalize
             factorx = float(self._ref_mloc[0] - mloc[0])
@@ -1300,20 +1404,84 @@ class FlyCamera(ThreeDCamera):
             factory = float(self._ref_mloc[1] - mloc[1])
             factory /= self.axes.position.height
             
-            # apply (use only y-factor if daspect is valid.
-            if self.axes.daspectAuto:
-                self._view_zoomx = self._ref_zoomx * math.exp(factorx)
-                self._view_zoomy = self._ref_zoomy * math.exp(-factory)
-            else:
-                self._view_zoomy = self._ref_zoomy * math.exp(-factory)
-                self._view_zoomx = self._view_zoomy
+            # apply 
+            self._zoom = self._ref_zoom * math.exp(factory)
         
-        # Move and refresh
-        self.Move()
+        
+        # Refresh
         for axes in self.axeses:
             axes.Draw(True)
-
-
+    
+    
+    def OnTimer(self, event):
+        
+        # Stop running?
+        if not self.axes.camera is self:
+            self._timer.Stop()
+            return
+        
+        # Get reference points in reference coordinates
+        p0 = Point(0,0,0)
+        pf = Point(0,0,-1) # front
+        pr = Point(1,0,0)  # right
+        pl = Point(-1,0,0)  # left
+        pu = Point(0,1,0)  # up
+        
+        # Get total rotation
+        rotation = self._rotation.inverse()
+        
+        # Transform to real coordinates, correct for daspect
+        ndaspect = self.axes.daspectNormalized
+        dv = Point([1.0/d for d in ndaspect])
+        #
+        pf = rotation.rotate_point(pf).normalize() * dv
+        pr = rotation.rotate_point(pr).normalize() * dv
+        pl = rotation.rotate_point(pl).normalize() * dv
+        pu = rotation.rotate_point(pu).normalize() * dv
+        
+        # Create vectors, use zoom to scale
+        # Create the space in 100 "units"
+        vf = pf * 0.01 * self._speed_trans / self._zoom
+        vr = pr * 0.01 * self._speed_trans / self._zoom
+        vu = pu * 0.01 * self._speed_trans / self._zoom
+        
+        # Use to change position
+        pos = Point(self._view_loc)
+        if self._move_forward:
+            pos =  pos + self._move_forward * vf
+        if self._move_right:
+            pos = pos + self._move_right * vr
+        if self._move_up:
+            pos = pos + self._move_up * vu
+        
+        # Apply position
+        self._view_loc = (pos.x, pos.y, pos.z)
+        
+        if self._roll_right:
+            # Calculate user-controlled roll
+            angle = self._roll_right * 5 * math.pi/180
+            q = Quaternion.create_from_axis_angle(angle, 0,0,1)
+            self._rotation1 = ( q * self._rotation1 ).normalize() 
+        
+        else:
+            # Calculate auto-roll
+            au = pu.angle(Point(0,0,1))
+            ar = pr.angle(Point(0,0,1))
+            al = pl.angle(Point(0,0,1))
+            af = pf.angle(Point(0,0,1))
+            #
+            magnitude =  abs(math.sin(af)) # abs(math.sin(au))
+            magnitude *= math.sin(0.5*(al - ar))
+            #
+            angle = 10 * magnitude * math.pi/180
+            q = Quaternion.create_from_axis_angle(angle, 0,0,1)
+            self._rotation1 = ( q * self._rotation1 ).normalize() 
+        
+        # Refresh
+        for axes in self.axeses:
+            axes.Draw(True)
+        
+    
     def SetView(self):
         """ SetView()
         
@@ -1326,25 +1494,15 @@ class FlyCamera(ThreeDCamera):
         # this implementation uses gluPerspective rather than
         # glOrtho, and some signs for the angles are changed.    
         
-        # test zoomfactors
-        if not self.axes.daspectAuto:
-            if self._view_zoomx != self._view_zoomy:
-                # apply average zoom
-                tmp = self._view_zoomx + self._view_zoomy
-                self._view_zoomx = self._view_zoomy = tmp / 2.0
-#         if self._view_zoomx < 2:
-#             self._view_zoomx = 2.0
-#         if self._view_zoomy < 2:
-#             self._view_zoomy = 2.0
+        # Calculate viewing range for x and y
+        fx = abs( 1.0 / self._zoom )
+        fy = abs( 1.0 / self._zoom )
         
-        # get zoom
-        fx, fy = self._view_zoomx, self._view_zoomy
-        
-        # correct for window size        
-        if not self.axes.daspectAuto:
+        # Correct for window size        
+        if True:
             w, h = self.axes.position.size
             w, h = float(w), float(h)        
-            if w / h > 1:#self._ylim.range / self._xlim.range:
+            if w / h > 1:
                 fx *= w/h
             else:
                 fy *= h/w
@@ -1359,24 +1517,39 @@ class FlyCamera(ThreeDCamera):
         
         # 4. Define part that we view. Remember, we're looking down the
         # z-axis. We zoom here.        
-        glu.gluPerspective(fy/50, fx/fy, 1.0, 100000.0)
-        #gl.glOrtho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy,
-        #            -100000.0, 100000.0 )
+        # Figure distance to center in order to have correct FoV and fy.
+        d = fy / (2 * math.tan(math.radians(self._fov)/2))
+        val = math.sqrt(getDepthValue())
+        glu.gluPerspective(self._fov, fx/fy, d/val, d*val)
+        #ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         
-        # 3. Set viewing angle (this is the only difference with 2D camera)
-        gl.glRotate(self._view_el-90, 1.0, 0.0, 0.0)        
-        gl.glRotate(-self._view_az, 0.0, 0.0, 1.0)
-        
-        # Prepare for models ...
+        # Prepare for models
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
+        # Set camera lights
+        for light in self.axes._lights:
+            if light.isCamLight:                
+                light._Apply()
+        
+        # 3. Set viewing angle from the quaternion
+        # This bit needs to be in the Modelview matrix so that the light
+        # is from the camera; in the 3D camera, we move the scene, here
+        # we move the camera.
+        axis_angle = self._rotation.get_axis_angle()
+        angle = axis_angle[0]*180/math.pi
+        gl.glRotate(angle, *axis_angle[1:])
+        
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
-        daspect = self.axes.daspect        
-        gl.glScale( daspect[0], daspect[1] , daspect[2] )
+        ndaspect = self.axes.daspectNormalized    
+        gl.glScale( ndaspect[0], ndaspect[1] , ndaspect[2] )
         
         # 1. Translate to view location. Do this first because otherwise
         # the translation is not in world coordinates.
         gl.glTranslate(-self._view_loc[0], -self._view_loc[1], -self._view_loc[2])
-
+        
+        # Set non-camera lights
+        for light in self.axes._lights:
+            if not light.isCamLight:
+                light._Apply()
 
