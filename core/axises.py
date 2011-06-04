@@ -31,7 +31,7 @@ from visvis.core.misc import Property, PropWithDraw, DrawAfter
 #
 from visvis.core.textRender import Text
 from visvis.core.line import lineStyles, PolarLine
-from visvis.core.cameras import depthToZ, TwoDCamera
+from visvis.core.cameras import depthToZ, TwoDCamera, FlyCamera
 
 
 # A note about tick labels. We format these such that the width of the ticks
@@ -840,10 +840,15 @@ class BaseAxis(base.Wobject):
             return pmin*pi + pmax*p
         
         # Get the 8 corners of the cube in real coords and screen pixels
+        # Note that in perspective mode the screen coords for points behind
+        # the near clipping plane are undefined. This results in odd values,
+        # which should be accounted for. This is mostly only a problem for
+        # the fly camera though.
         proj = glu.gluProject
         
         corners8_c = [relativeToCoord(p) for p in self._corners]
         corners8_s = [Point(proj(p.x,p.y,p.z)) for p in corners8_c]
+        
         
         # Return
         return corners8_c, corners8_s
@@ -1160,7 +1165,16 @@ class CartesianAxis3D(BaseAxis):
 
     """
 
-    def _SelectShortestRidgeVector(self, d, corners8_c, corners8_s):
+    def _GetRidgeVector(self, d, corners8_c, corners8_s):
+        """  _GetRidgeVector(d, corners8_c, corners8_s)
+        
+        Get the four vectors for the four ridges coming from the
+        corners that correspond to the given direction.
+        
+        Also returns the lengths of the smallest vectors, for the
+        calculation of the minimum tick distance.
+        
+        """ 
         
         # Get the vectors
         vectors_c = []
@@ -1174,13 +1188,15 @@ class CartesianAxis3D(BaseAxis):
         # Select the smallest vector (in screen coords)
         smallest_i, smallest_L = 0, 9999999999999999999999999.0
         for i in range(4):
-            L = vectors_s[i].norm()
+            L = vectors_s[i].x**2 + vectors_s[i].y**2
             if L < smallest_L:
                 smallest_i = i
                 smallest_L = L
         
         # Return smallest and the vectors
-        return vectors_c[smallest_i], vectors_s[smallest_i], vectors_c, vectors_s
+        norm_c = vectors_c[smallest_i].norm()
+        norm_s = smallest_L**0.5
+        return norm_c, norm_s, vectors_c, vectors_s
     
     
     def _CreateLinesAndLabels(self, axes):
@@ -1196,7 +1212,7 @@ class CartesianAxis3D(BaseAxis):
 
         # Get camera instance
         cam = axes.camera
-
+        
         # Get parameters
         drawGrid = [v for v in self.showGrid]
         drawMinorGrid = [v for v in self.showMinorGrid]
@@ -1237,16 +1253,25 @@ class CartesianAxis3D(BaseAxis):
             corners4_c = [corners8_c[i] for i in tmp]
             corners4_s = [corners8_s[i] for i in tmp]
             
-            # Get directional vectors corresponding to (emanating from)
-            # the four corners.
-            # There are 4 vectors (i.e. cube ridges) and the 
-            # shortest (in screen pixels) is also returned.
-            _vectors = self._SelectShortestRidgeVector(d, corners8_c, corners8_s)
-            vector_c, vector_s, vectors4_c, vectors4_s = _vectors
+            # Get directional vectors (i.e. ridges) corresponding to 
+            # (emanating from) the four corners. Also returns the length
+            # of the shortest ridges (in screen coords)
+            _vectors = self._GetRidgeVector(d, corners8_c, corners8_s)
+            norm_c, norm_s, vectors4_c, vectors4_s = _vectors
+            
+            # Due to cords not being defined behind the near clip plane,
+            # the vectors4_s migt be inaccurate. This means the size and
+            # angle of the tickmarks may be calculated wrong. It also
+            # means the norm_s might be wrong. Since this is mostly a problem
+            # for the fly camera, we use a fixed norm_s in that case. This
+            # also prevents grid line flicker due to the constant motion
+            # of the camera.
+            if isinstance(axes.camera, FlyCamera):
+                norm_s = axes.position.width
             
             # Calculate tick distance in units (using shortest ridge vector)
             minTickDist = self._minTickDist
-            minTickDist *= vector_c.norm() / vector_s.norm()
+            minTickDist *= norm_c / norm_s
             
             # Get index of corner to put ticks at.
             # This is determined by chosing the corner which is the lowest
@@ -1333,6 +1358,7 @@ class CartesianAxis3D(BaseAxis):
                         t.valign = -1
             
             # Get gridlines
+            draw4 = self._showBox and isinstance(axes.camera, FlyCamera)
             if drawGrid[d] or drawMinorGrid[d]:
                 # get more gridlines if required
                 if drawMinorGrid[d]:
@@ -1344,10 +1370,16 @@ class CartesianAxis3D(BaseAxis):
                     p1[d] = tick
                     if tick not in [lim.min, lim.max]: # not ON the box
                         # add gridlines (back and front)
-                        p3 = p1+gv1
-                        p4 = p3+gv2
-                        ppg.append(p1);  ppg.append(p3)
-                        ppg.append(p3);  ppg.append(p4)
+                        if True:
+                            p3 = p1+gv1
+                            p4 = p3+gv2
+                            ppg.append(p1);  ppg.append(p3)
+                            ppg.append(p3);  ppg.append(p4)
+                        if draw4:
+                            p5 = p1+gv2
+                            p6 = p5+gv1
+                            ppg.append(p1);  ppg.append(p5)
+                            ppg.append(p5);  ppg.append(p6)
             
             # Apply label
             textDict = self._textDicts[d]
