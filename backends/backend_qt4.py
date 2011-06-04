@@ -130,6 +130,8 @@ class GLWidget(QtOpenGL.QGLWidget):
         ev.Fire() 
     
     def keyReleaseEvent(self, event):
+        if event.isAutoRepeat():
+            return # Skip release auto repeat events
         ev = self.figure.eventKeyUp
         key = self._ProcessKey(event)
         text = str(event.text())

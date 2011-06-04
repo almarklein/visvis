@@ -948,13 +948,13 @@ class Axes(base.Wibject):
             # Draw stuff, but wait with lines     
             lines2draw = []
             for item in self._wobjects:
-                if isinstance(item, (Line,)):
+                if isinstance(item, (Line, BaseAxis)):
                     lines2draw.append(item)
                 else:
                     item._DrawTree(mode, pickerHelper)
             
-            # Lines are special case. In order to blend them well, we should
-            # draw textures, meshes etc, first.
+            # Lines (and the axis) are a special case. In order to blend 
+            # them well, we should draw textures, meshes etc, first.
             # Note that this does not work if lines textures are children
             # of each-other. in that case they should be added to the scene
             # in the correct order.
