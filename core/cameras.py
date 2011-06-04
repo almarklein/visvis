@@ -1144,12 +1144,26 @@ class FlyCamera(BaseCamera):
         self._speed_rot = math.sin(speed_angle)
         self._speed_trans = math.cos(speed_angle)
         
-        # Motion (-1, 0, 1)
-        self._move_forward = 0 
-        self._move_right = 0
-        self._move_up = 0
+        # Acceleration (by key press)
+        # 2 means pressed, 1 means depressed, set to 0 in OnTimer().
+        # That way, even a small tap always results in some motion.
+        # Negative values for opposite directions.
+        self._acc_forward = 0
+        self._acc_right = 0
+        self._acc_up = 0
         #
-        self._roll_right = 0
+        self._acc_roll = 0
+        self._acc_pitch = 0
+        self._acc_yaw = 0
+        
+        # Motion speed in each direction.
+        self._speed_forward = 0 
+        self._speed_right = 0
+        self._speed_up = 0
+        #
+        self._speed_roll = 0
+        self._speed_pitch = 0
+        self._speed_yaw = 0
         
         # reference variables for when dragging
         self._ref_loc = 0,0,0    # view_loc when clicked
@@ -1160,11 +1174,21 @@ class FlyCamera(BaseCamera):
         self._ref_fov = 0
         self._ref_zoom = 0
         
+        # Key mapping for conrolling the camera
+        self._keymap = {    'w':+1, 's':-1, 'd':+2, 'a':-2, 'f':+3, 'c':-3,
+                            'i':+4, 'k':-4, 'l':+5, 'j':-5, 'q':+6, 'e':-6}
+        # Make event.text -> event.key
+        for k in [k for k in self._keymap]:
+            if isinstance(k, basestring) and len(k)==1:
+                self._keymap[ord(k.upper())] = self._keymap[k]
+                del self._keymap[k]
+        
         # create timer and bind to it. This timer is started when clicked
         # and stopped when the mouse is released. This is to make a 
-        # smoother flying possible.
+        # smoother flying possible. 20 fps
         self._timer = vv.Timer(self, 50, False)
         self._timer.Bind(self.OnTimer)
+    
     
     @property
     def _rotation(self):
@@ -1199,10 +1223,21 @@ class FlyCamera(BaseCamera):
         """
         
         # Stop moving
-        self._move_forward = 0
-        self._move_right = 0
-        self._move_up = 0
-        self._roll_right = 0
+        self._acc_forward = 0
+        self._acc_right = 0
+        self._acc_up = 0
+        #
+        self._acc_pitch = 0
+        self._acc_yaw = 0
+        self._acc_roll = 0
+        #
+        self._speed_forward = 0
+        self._speed_right = 0
+        self._speed_up = 0
+        #
+        self._speed_pitch = 0
+        self._speed_yaw = 0
+        self._speed_roll = 0
         
         # Set orientation
         q_ro = Quaternion.create_from_axis_angle(-125*math.pi/180, 0,0,1)
@@ -1260,56 +1295,54 @@ class FlyCamera(BaseCamera):
     
     def OnKeyDown(self, event):
         
-        # Translation in-plane
-        if event.text == ' ':
-            self._move_forward = 0
-            self._move_right = 0
-            self._move_up = 0
-            self._roll_right = 0
-        elif event.text == 'w':
-            self._move_forward += 1
-        elif event.text == 's':
-            self._move_forward -= 1
-        elif event.text == 'd':
-            self._move_right += 1
-        elif event.text == 'a':
-            self._move_right -= 1
-        # Translation up/down
-        elif event.text == 'f':
-            self._move_up += 1
-        elif event.text == 'c':
-            self._move_up -= 1
-        # Rotation
-        elif event.text == 'e':
-            self._roll_right += 1
-        elif event.text == 'q':
-            self._roll_right -= 1
+        # Only listen to plain keys.
+        if event.modifiers:
+            return False
         
-        # Limit values
-        limit = 3
-        if self._move_forward > +limit: self._move_forward = +limit
-        if self._move_forward < -limit: self._move_forward = -limit
-        if self._move_right > +limit: self._move_right = +limit
-        if self._move_right < -limit: self._move_right = -limit
-        if self._move_up > +limit: self._move_up = +limit
-        if self._move_up < -limit: self._move_up = -limit
-        if self._roll_right > +limit: self._roll_right = +limit
-        if self._roll_right < -limit: self._roll_right = -limit
+        # Get action (or None)
+        action = self._keymap.get(event.key, None)
+        
+        # Decide
+        if not action:
+            return False
+        # Translation in-plane
+        elif abs(action) == 1:
+            self._acc_forward = 2 * cmp(action,0)
+        elif abs(action) == 2:
+            self._acc_right = 2 * cmp(action,0)
+        elif abs(action) == 3:
+            self._acc_up = 2 * cmp(action,0)
+        # Rotation
+        elif abs(action) == 4:
+            self._acc_pitch = 2 * cmp(action,0)
+        elif abs(action) == 5:
+            self._acc_yaw = 2 * cmp(action,0)
+        elif abs(action) == 6:
+            self._acc_roll = 2 * cmp(action,0)
     
     
     def OnKeyUp(self, event):
-        pass
-#         # Translation in-plane
-#         if event.text in ['w', 's']:
-#             self._move_forward = 0
-#         elif event.text in ['a', 'd']:
-#             self._move_right = 0
-#         # Translation up/down
-#         elif event.text in ['f', 'c']:
-#             self._move_up = 0
-#         # Rotation
-#         elif event.text in ['e', 'q']:
-#             self._roll_right = 0
+        
+        # Get action (or None)
+        action = self._keymap.get(event.key, None)
+        
+        # Decide
+        if not action:
+            return False
+        # Translation in-plane
+        elif abs(action) == 1:
+            self._acc_forward = 1 * cmp(action,0)
+        elif abs(action) == 2:
+            self._acc_right = 1 * cmp(action,0)
+        elif abs(action) == 3:
+            self._acc_up = 1 * cmp(action,0)
+        # Rotation
+        elif abs(action) == 4:
+            self._acc_pitch = 1 * cmp(action,0)
+        elif abs(action) == 5:
+            self._acc_yaw = 1 * cmp(action,0)
+        elif abs(action) == 6:
+            self._acc_roll = 1 * cmp(action,0)
     
     
     def OnMouseDown(self, event):
@@ -1413,13 +1446,7 @@ class FlyCamera(BaseCamera):
             axes.Draw(True)
     
     
-    def OnTimer(self, event):
-        
-        # Stop running?
-        if not self.axes.camera is self:
-            self._timer.Stop()
-            return
-        
+    def _GetDirections(self):
         # Get reference points in reference coordinates
         p0 = Point(0,0,0)
         pf = Point(0,0,-1) # front
@@ -1439,48 +1466,134 @@ class FlyCamera(BaseCamera):
         pl = rotation.rotate_point(pl).normalize() * dv
         pu = rotation.rotate_point(pu).normalize() * dv
         
-        # Create vectors, use zoom to scale
+        return pf, pr, pl, pu
+    
+    
+    def OnTimer(self, event):
+        
+        # Stop running?
+        if not self.axes.camera is self:
+            self._timer.Stop()
+            return
+        
+        # Get direction vectors for forwatd, right, left, and up
+        pf, pr, pl, pu = self._GetDirections()
+        
+        # Create speed vectors, use zoom to scale
         # Create the space in 100 "units"
         vf = pf * 0.01 * self._speed_trans / self._zoom
         vr = pr * 0.01 * self._speed_trans / self._zoom
         vu = pu * 0.01 * self._speed_trans / self._zoom
         
-        # Use to change position
-        pos = Point(self._view_loc)
-        if self._move_forward:
-            pos =  pos + self._move_forward * vf
-        if self._move_right:
-            pos = pos + self._move_right * vr
-        if self._move_up:
-            pos = pos + self._move_up * vu
         
-        # Apply position
-        self._view_loc = (pos.x, pos.y, pos.z)
-        
-        if self._roll_right:
-            # Calculate user-controlled roll
-            angle = self._roll_right * 5 * math.pi/180
-            q = Quaternion.create_from_axis_angle(angle, 0,0,1)
-            self._rotation1 = ( q * self._rotation1 ).normalize() 
-        
-        else:
-            # Calculate auto-roll
-            au = pu.angle(Point(0,0,1))
-            ar = pr.angle(Point(0,0,1))
-            al = pl.angle(Point(0,0,1))
-            af = pf.angle(Point(0,0,1))
+        # Determine speed from acceleration
+        if True:
+            acc = 0.2
             #
-            magnitude =  abs(math.sin(af)) # abs(math.sin(au))
-            magnitude *= math.sin(0.5*(al - ar))
+            if self._acc_forward > 0:       self._speed_forward += acc
+            elif self._speed_forward > 0:   self._speed_forward -= acc * 0.5
+            if self._acc_forward < 0:       self._speed_forward -= acc
+            elif self._speed_forward < 0:   self._speed_forward += acc * 0.5
             #
-            angle = 10 * magnitude * math.pi/180
-            q = Quaternion.create_from_axis_angle(angle, 0,0,1)
-            self._rotation1 = ( q * self._rotation1 ).normalize() 
+            if self._acc_right > 0:       self._speed_right += acc
+            elif self._speed_right > 0:   self._speed_right -= acc * 0.5
+            if self._acc_right < 0:       self._speed_right -= acc
+            elif self._speed_right < 0:   self._speed_right += acc * 0.5
+            #
+            if self._acc_up > 0:       self._speed_up += acc
+            elif self._speed_up > 0:   self._speed_up -= acc * 0.5
+            if self._acc_up < 0:       self._speed_up -= acc
+            elif self._speed_up < 0:   self._speed_up += acc * 0.5
+            #
+            if self._acc_pitch > 0:       self._speed_pitch += acc
+            elif self._speed_pitch > 0:   self._speed_pitch -= acc * 0.5
+            if self._acc_pitch < 0:       self._speed_pitch -= acc
+            elif self._speed_pitch < 0:   self._speed_pitch += acc * 0.5
+            #
+            if self._acc_yaw > 0:       self._speed_yaw += acc
+            elif self._speed_yaw > 0:   self._speed_yaw -= acc * 0.5
+            if self._acc_yaw < 0:       self._speed_yaw -= acc
+            elif self._speed_yaw < 0:   self._speed_yaw += acc * 0.5
+            #
+            if self._acc_roll > 0:       self._speed_roll += acc
+            elif self._speed_roll > 0:   self._speed_roll -= acc * 0.5
+            if self._acc_roll < 0:       self._speed_roll -= acc
+            elif self._speed_roll < 0:   self._speed_roll += acc * 0.5
+            
+            # Set speed to 0 in a reliable way (no accumulating round errors)
+            if abs(self._speed_forward) < acc: self._speed_forward = 0
+            if abs(self._speed_right) < acc: self._speed_right = 0
+            if abs(self._speed_up) < acc: self._speed_up = 0
+            if abs(self._speed_pitch) < acc: self._speed_pitch = 0
+            if abs(self._speed_yaw) < acc: self._speed_yaw = 0
+            if abs(self._speed_roll) < acc: self._speed_roll = 0
+            
+            # Limit speed
+            self._speed_forward = min(1.5, max(-1.5, self._speed_forward))
+            self._speed_right = min(1.0, max(-1.0, self._speed_right))
+            self._speed_up = min(1.0, max(-1.0, self._speed_up))
+            self._speed_pitch = min(1.0, max(-1.0, self._speed_pitch))
+            self._speed_yaw = min(1.0, max(-1.0, self._speed_yaw))
+            self._speed_roll = min(1.0, max(-1.0, self._speed_roll))
+        
+        
+        # Disable accelerations?
+        if True:
+            if abs(self._acc_forward) == 1: self._acc_forward = 0
+            if abs(self._acc_right) == 1: self._acc_right = 0
+            if abs(self._acc_up) == 1: self._acc_up = 0
+            if abs(self._acc_pitch) == 1: self._acc_pitch = 0
+            if abs(self._acc_yaw) == 1: self._acc_yaw = 0
+            if abs(self._acc_roll) == 1: self._acc_roll = 0
+        
+        
+        # Determine new position from translation speed
+        if True:
+            pos = Point(self._view_loc)
+            #
+            if self._speed_forward:
+                pos =  pos + self._speed_forward * vf
+            if self._speed_right:
+                pos = pos + self._speed_right * vr
+            if self._speed_up:
+                pos = pos + self._speed_up * vu
+            # Apply position
+            self._view_loc = (pos.x, pos.y, pos.z)
+        
+        # Determine new orientation from rotation speed
+        if True:
+            angleGain = 3 * math.pi/180
+            if self._speed_pitch:
+                angle = self._speed_pitch * angleGain
+                q = Quaternion.create_from_axis_angle(angle, -1,0,0)
+                self._rotation1 = ( q * self._rotation1 ).normalize()
+            if self._speed_yaw:
+                angle = self._speed_yaw * angleGain
+                q = Quaternion.create_from_axis_angle(angle, 0,1,0)
+                self._rotation1 = ( q * self._rotation1 ).normalize()
+            if self._speed_roll:
+                # Manual roll
+                angle = self._speed_roll * angleGain
+                q = Quaternion.create_from_axis_angle(angle, 0,0,-1)
+                self._rotation1 = ( q * self._rotation1 ).normalize()
+            else:
+                # Calculate auto-roll
+                au = pu.angle(Point(0,0,1))
+                ar = pr.angle(Point(0,0,1))
+                al = pl.angle(Point(0,0,1))
+                af = pf.angle(Point(0,0,1))
+                #
+                magnitude =  abs(math.sin(af)) # abs(math.sin(au))
+                magnitude *= math.sin(0.5*(al - ar))
+                #
+                angle = 10 * magnitude * math.pi/180
+                q = Quaternion.create_from_axis_angle(angle, 0,0,1)
+                self._rotation1 = ( q * self._rotation1 ).normalize() 
         
         # Refresh
         for axes in self.axeses:
             axes.Draw(True)
-        
+    
     
     def SetView(self):
         """ SetView()
