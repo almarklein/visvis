@@ -47,6 +47,10 @@ KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
             QtCore.Qt.Key_Delete: constants.KEY_DELETE
             }
 
+# Make uppercase letters be lowercase
+for i in range(ord('A'), ord('Z')):
+    KEYMAP[i] = i+32
+
 
 def modifiers(event):
     """Convert the QT modifier state into a tuple of active modifier keys."""

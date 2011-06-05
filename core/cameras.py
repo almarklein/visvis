@@ -1180,7 +1180,7 @@ class FlyCamera(BaseCamera):
         # Make event.text -> event.key
         for k in [k for k in self._keymap]:
             if isinstance(k, basestring) and len(k)==1:
-                self._keymap[ord(k.upper())] = self._keymap[k]
+                self._keymap[ord(k)] = self._keymap[k]
                 del self._keymap[k]
         
         # create timer and bind to it. This timer is started when clicked

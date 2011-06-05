@@ -31,6 +31,10 @@ KEYMAP = {  fltk.FL_SHIFT: constants.KEY_SHIFT,
             fltk.FL_Delete: constants.KEY_DELETE
             }
 
+# Make uppercase letters be lowercase
+for i in range(ord('A'), ord('Z')):
+    KEYMAP[i] = i+32
+
 
 def modifiers():
     """Convert the fltk modifier state into a tuple of active modifier keys."""
