@@ -19,6 +19,7 @@ import numpy as np
 
 from visvis.pypoints import Point, Pointset
 #
+import visvis as vv
 from visvis.core import base
 from visvis.core.base import DRAW_NORMAL, DRAW_FAST, DRAW_SHAPE, DRAW_SCREEN
 from visvis.core.misc import Property, PropWithDraw, DrawAfter 
@@ -202,6 +203,7 @@ class Axes(base.Wibject):
         
         # bind to event (no need to unbind because it's our own)
         self.eventMouseDown.Bind(self._OnMouseDown)
+        self.eventKeyDown.Bind(self._OnKeyDown)
         
         # Store axis class and instantiate it
         if axisClass is None or not isinstance(axisClass, BaseAxis):
@@ -985,6 +987,42 @@ class Axes(base.Wibject):
     
     def _OnMouseDown(self, event):
         self.MakeCurrent()
+    
+    def _OnKeyDown(self, event):
+        """ Give user a lot of control via special keyboard input.
+        """
+        
+        # Only do this if this is the current axes
+        f = self.GetFigure()
+        if not (f and self is f.currentAxes):
+            return False
+        
+        if vv.KEY_CONTROL in event.modifiers and vv.KEY_ALT in event.modifiers:
+            
+            if event.key == ord('2'):
+                self.cameraType = '2d'
+            elif event.key == ord('3'):
+                self.cameraType = '3d'
+            elif event.key == ord('4'):
+                self.cameraType = 'fly'
+            elif event.key == ord('D'):
+                self.daspectAuto = not self.daspectAuto
+            elif event.key == ord('A'):
+                self.axis.visible = not self.axis.visible
+            elif event.key == ord('G'):
+                self.axis.showGrid = not any(self.axis.showGrid)
+            elif event.key == ord('B'):
+                if self.bgcolor == (1,1,1):
+                    self.bgcolor = 'k'
+                    self.axis.axisColor = 'w'
+                else:
+                    self.bgcolor = 'w'
+                    self.axis.axisColor = 'k'
+            else:
+                return False
+        else:
+            return False
+    
     
     def MakeCurrent(self):
         """ MakeCurrent()

@@ -856,7 +856,7 @@ class BaseFigure(_BaseFigure):
         # Fire them
         for item in items:
             ev = item.eventKeyDown
-            ev.Set(event.key, event.text)
+            ev.Set(event.key, event.text, event.modifiers)
             ev.Fire()
     
     
@@ -868,7 +868,7 @@ class BaseFigure(_BaseFigure):
         # Fire them
         for item in items:
             ev = item.eventKeyUp
-            ev.Set(event.key, event.text)
+            ev.Set(event.key, event.text, event.modifiers)
             ev.Fire()
     
     

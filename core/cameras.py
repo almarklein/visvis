@@ -1240,11 +1240,11 @@ class FlyCamera(BaseCamera):
         self._speed_roll = 0
         
         # Set orientation
-        q_ro = Quaternion.create_from_axis_angle(-125*math.pi/180, 0,0,1)
-        q_az = Quaternion.create_from_axis_angle(-45*math.pi/180, 0,1,0)
-        q_el = Quaternion.create_from_axis_angle(45*math.pi/180, 1,0,0)
+        q_ro = Quaternion.create_from_axis_angle(200*math.pi/180, 0,0,1)
+        q_az = Quaternion.create_from_axis_angle(130*math.pi/180, 0,1,0)
+        q_el = Quaternion.create_from_axis_angle(120*math.pi/180, 1,0,0)
         #
-        self._rotation1 = ( q_ro * q_el * q_az ).normalize()
+        self._rotation1 = ( q_ro * q_az * q_el).normalize()
         self._rotation2 = Quaternion()
         self._fov = 90.0
         speed_angle = 0.5*self._fov*math.pi/180
@@ -1284,7 +1284,7 @@ class FlyCamera(BaseCamera):
         self._zoom = min(1/rx, 1/ry, 1/rz)
         
         # Set initial position to a corner of the scene
-        dx,dy,dz = self._xlim.max, self._ylim.max, self._zlim.max        
+        dx,dy,dz = self._xlim.min, self._ylim.min, self._zlim.max        
         dd = (rx**2 + ry**2 + rz**2 )**0.5        
         self._view_loc = dx, dy, dz
         
@@ -1457,19 +1457,19 @@ class FlyCamera(BaseCamera):
         # Get total rotation
         rotation = self._rotation.inverse()
         
-        # Transform to real coordinates, correct for daspect
-        ndaspect = self.axes.daspectNormalized
-        dv = Point([1.0/d for d in ndaspect])
-        #
-        pf = rotation.rotate_point(pf).normalize() * dv
-        pr = rotation.rotate_point(pr).normalize() * dv
-        pl = rotation.rotate_point(pl).normalize() * dv
-        pu = rotation.rotate_point(pu).normalize() * dv
+        # Transform to real coordinates
+        pf = rotation.rotate_point(pf).normalize() 
+        pr = rotation.rotate_point(pr).normalize()
+        pl = rotation.rotate_point(pl).normalize()
+        pu = rotation.rotate_point(pu).normalize()
         
         return pf, pr, pl, pu
     
     
     def OnTimer(self, event):
+        
+        # todo: does not work on gtk, in qt the key is ord('A'), in gtk
+        # its ord('a')
         
         # Stop running?
         if not self.axes.camera is self:
@@ -1481,9 +1481,12 @@ class FlyCamera(BaseCamera):
         
         # Create speed vectors, use zoom to scale
         # Create the space in 100 "units"
-        vf = pf * 0.01 * self._speed_trans / self._zoom
-        vr = pr * 0.01 * self._speed_trans / self._zoom
-        vu = pu * 0.01 * self._speed_trans / self._zoom
+        ndaspect = self.axes.daspectNormalized
+        dv = Point([1.0/d for d in ndaspect])
+        #
+        vf = pf * dv * 0.01 * self._speed_trans / self._zoom
+        vr = pr * dv * 0.01 * self._speed_trans / self._zoom
+        vu = pu * dv * 0.01 * self._speed_trans / self._zoom
         
         
         # Determine speed from acceleration
@@ -1529,7 +1532,7 @@ class FlyCamera(BaseCamera):
             if abs(self._speed_roll) < acc: self._speed_roll = 0
             
             # Limit speed
-            self._speed_forward = min(1.5, max(-1.5, self._speed_forward))
+            self._speed_forward = min(1.2, max(-1.2, self._speed_forward))
             self._speed_right = min(1.0, max(-1.0, self._speed_right))
             self._speed_up = min(1.0, max(-1.0, self._speed_up))
             self._speed_pitch = min(1.0, max(-1.0, self._speed_pitch))
@@ -1568,7 +1571,7 @@ class FlyCamera(BaseCamera):
                 q = Quaternion.create_from_axis_angle(angle, -1,0,0)
                 self._rotation1 = ( q * self._rotation1 ).normalize()
             if self._speed_yaw:
-                angle = self._speed_yaw * angleGain
+                angle = 1.5 * self._speed_yaw * angleGain
                 q = Quaternion.create_from_axis_angle(angle, 0,1,0)
                 self._rotation1 = ( q * self._rotation1 ).normalize()
             if self._speed_roll:
