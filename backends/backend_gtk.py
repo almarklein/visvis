@@ -35,6 +35,11 @@ KEYMAP = {  gtk.keysyms.Shift_L: constants.KEY_SHIFT,
             gtk.keysyms.Delete: constants.KEY_DELETE,
             }
 
+# Make uppercase letters be lowercase
+for i in range(ord('A'), ord('Z')):
+    KEYMAP[i] = i+32
+
+
 def modifiers(event):
     """Convert the GTK state into a tuple of active modifier keys."""
     if not hasattr(event, 'state'):

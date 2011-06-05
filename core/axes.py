@@ -1005,13 +1005,13 @@ class Axes(base.Wibject):
                 self.cameraType = '3d'
             elif event.key == ord('4'):
                 self.cameraType = 'fly'
-            elif event.key == ord('D'):
+            elif event.key == ord('d'):
                 self.daspectAuto = not self.daspectAuto
-            elif event.key == ord('A'):
+            elif event.key == ord('a'):
                 self.axis.visible = not self.axis.visible
-            elif event.key == ord('G'):
+            elif event.key == ord('g'):
                 self.axis.showGrid = not any(self.axis.showGrid)
-            elif event.key == ord('B'):
+            elif event.key == ord('b'):
                 if self.bgcolor == (1,1,1):
                     self.bgcolor = 'k'
                     self.axis.axisColor = 'w'
