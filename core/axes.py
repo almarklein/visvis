@@ -365,7 +365,9 @@ class Axes(base.Wibject):
         """
         
         # get camera
-        cam = self._cameras['TwoDCamera']
+        cam = self.camera
+        if not isinstance(cam, cameras.TwoDCamera):
+            cam = self._cameras['TwoDCamera']
         
         # Calculate viewing range for x and y
         fx = abs( 1.0 / cam._zoom )
@@ -550,8 +552,28 @@ class Axes(base.Wibject):
     
     @PropWithDraw
     def camera():
-        """ Get/Set the current camera. When setting, one can supply
-        a value as in the 'cameraType' property, or a new camera instance.
+        """ Get/Set the current camera. 
+        
+        Setting can be done using:
+          * The index of the camera; 1,2,3 for fly, 2d and 3d respectively.
+          * A value as in the 'cameraType' property.
+          * A new camera instance. This will replace any existing camera 
+            of the same type. To have multiple 3D cameras at the same axes,
+            one needs to subclass cameras.ThreeDCamera.
+        
+        Shared cameras
+        --------------
+        One can set the camera to the camera of another Axes, so that they
+        share the same camera. A camera that is shared uses the daspect
+        and daspectAuto properties of the first axes it was attached to. 
+        Note that if daspectAuto is True, setting the daspect on this axes
+        changes the daspect of the other axes.
+        
+        Interactively changing a camera
+        -------------------------------
+        By default, the camera can be changed using the keyboard using the
+        shortcut CTRL+ALT+i, where i is the camera number. Similarly
+        the daspectAuto propert can be switched with CTRL+ALT+d.
         """
         def fget(self):
             return self._camera
@@ -583,9 +605,10 @@ class Axes(base.Wibject):
         """ Get/Set the camera type to use. 
         
         Currently supported are:
-          * '2d' - a two dimensional camera that looks down the z-dimension.
-          * '3d' - a three dimensional camera.
-          * 'fly' - a camera like a flight sim. Not recommended.
+          * '2d' or 2  - two dimensional camera that looks down the z-dimension.
+          * '3d' or 3  - three dimensional camera.
+          * 'fly' or 1 - a camera like a flight sim.
+        
         """
         def fget(self):
             return self._camera._NAMES[0]
@@ -623,11 +646,11 @@ class Axes(base.Wibject):
         """ Get/Set the data aspect ratio as a three element tuple. 
         
         A two element tuple can also be given (then z is assumed 1).
-        Values can be negative, in which case the corresponding dimension
-        is flipped. 
+        When a value is negative, the corresponding dimension is flipped. 
         
-        Note that if daspectAuto is True, only the sign of the
-        daspect is taken into account.
+        Note that if daspectAuto is True, the daspect is changed by the 
+        camera to nicely scale the data to fit the screen (but the sign
+        is preserved).
         """
         def fget(self):            
             return self._daspect
@@ -660,9 +683,10 @@ class Axes(base.Wibject):
     def daspectAuto():
         """ Get/Set whether to scale the dimensions independently.
         
-        If True, the dimensions are scaled independently, and only the sign
-        of the axpect ratio is taken into account. If False, the dimensions
-        have the scale specified by the daspect property.
+        If True, the dimensions are scaled independently; the camera changes
+        the value of daspect to nicely fit the data on screen (but the sign
+        is preserved). This can happen (depending on the type of camera) 
+        during resetting, zooming, and resizing of the axes.
         """
         def fget(self):
             return self._daspectAuto
@@ -990,6 +1014,7 @@ class Axes(base.Wibject):
     
     def _OnKeyDown(self, event):
         """ Give user a lot of control via special keyboard input.
+        Kind of a secret function, as not all keys are not documented.
         """
         
         # Only do this if this is the current axes
@@ -999,12 +1024,10 @@ class Axes(base.Wibject):
         
         if vv.KEY_CONTROL in event.modifiers and vv.KEY_ALT in event.modifiers:
             
-            if event.key == ord('2'):
-                self.cameraType = '2d'
-            elif event.key == ord('3'):
-                self.cameraType = '3d'
-            elif event.key == ord('4'):
-                self.cameraType = 'fly'
+            numbers = [ord(i) for i in '0123456789']
+            
+            if event.key in numbers:
+                self.cameraType = int(chr(event.key))
             elif event.key == ord('d'):
                 self.daspectAuto = not self.daspectAuto
             elif event.key == ord('a'):
