@@ -90,6 +90,8 @@ class BaseCamera(object):
     and the interaction style.
     
     """
+    
+    # The names by which this camera type is known
     _NAMES = ()
     
     # Subclasses should set viewparams; the list if attributes that define
@@ -137,7 +139,7 @@ class BaseCamera(object):
         axes.eventMouseDown.Bind(self.OnMouseDown)
         axes.eventMouseUp.Bind(self.OnMouseUp)        
         axes.eventMotion.Bind(self.OnMotion)
-        axes.eventDoubleClick.Bind(self.Reset)
+        axes.eventDoubleClick.Bind(self.OnDoubleClick)
     
     
     def _UnregisterAxes(self, axes):
@@ -159,7 +161,7 @@ class BaseCamera(object):
         axes.eventMouseDown.Unbind(self.OnMouseDown)
         axes.eventMouseUp.Unbind(self.OnMouseUp)        
         axes.eventMotion.Unbind(self.OnMotion)
-        axes.eventDoubleClick.Unbind(self.Reset)
+        axes.eventDoubleClick.Unbind(self.OnDoubleClick)
     
     
     def OnResize(self, event):
@@ -172,7 +174,13 @@ class BaseCamera(object):
         pass
     def OnMouseUp(self, event):
         pass
+    def OnMotion(self, event):
+        pass
     
+    def OnDoubleClick(self, event):
+        # Reset view if this is the current camera.
+        if self is self.axes.camera:
+            return self.Reset()
     
     @property
     def axes(self):
@@ -407,7 +415,7 @@ class TwoDCamera(BaseCamera):
     
     The default camera for viewing 2D data. 
     
-    This camera uses orthografic projection and basically looks
+    This camera uses orthografic projection and looks
     down the z-axis from inifinitly far away. 
     
     Interaction
@@ -1098,34 +1106,32 @@ class ThreeDCamera(BaseCamera):
 class FlyCamera(BaseCamera):
     """ FlyCamera()
     
-    The fly camera is a funky camera to visualise 3D data.
+    The fly camera provides a fun way to visualise 3D data using an 
+    interaction style that resembles a flight sim.
     
     Think of the fly camera as a remote controlled vessel with
-    which you fly trough your data, like in the classic game 'Descent'.
+    which you fly trough your data, much like in the classic game 'Descent'.
     
     Interaction
     -----------
-    Interacting with this camera might need a bit of practice. Press
-    any of the keys (listed below) to start moving. Move the reverse
-    key to stop moving. Tapping a key twice increases the speed (up
-    to three times the normal speed.
+    Notice: interacting with this camera might need a bit of practice. 
     
     Moving:
       * w,a,s,f keys to move forward, backward, left and right
       * f and g keys move up and down
-      * Space bar to stop moving. 
       * Using SHIFT+RMB, the zoom factor can be changed, a higher zoom
         means smaller motions (i.e. more fine-grained control).
     
     Viewing:
       * Use the mouse to control the pitch and yaw.
+      * Alternatively, the pitch and yaw can be changed using the keys i,k,j,l.
       * The camera auto-rotates to make the bottom of the vessel point down,
         manual rolling can be performed using q and e.
       * Using the RMB, one can zoom in, like looking through a binocular. 
         This will also make you move slightly faster.
     
     """
-    _NAMES = ('fly', 4)
+    _NAMES = ('fly', 1) # 1 for first person
     ndim = 3
     _viewparams = BaseCamera._viewparams + ('fov', '_rotation1', '_rotation2')
     
@@ -1145,7 +1151,7 @@ class FlyCamera(BaseCamera):
         self._speed_trans = math.cos(speed_angle)
         
         # Acceleration (by key press)
-        # 2 means pressed, 1 means depressed, set to 0 in OnTimer().
+        # 2 means pressed, 1 means depressed, if 1 set to 0 in OnTimer().
         # That way, even a small tap always results in some motion.
         # Negative values for opposite directions.
         self._acc_forward = 0
