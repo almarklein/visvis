@@ -1119,7 +1119,7 @@ class FlyCamera(BaseCamera):
     Moving:
       * w,a,s,d keys to move forward, backward, left and right
       * f and c keys move up and down
-      * Using SHIFT+RMB, the zoom factor can be changed, a higher zoom
+      * Using SHIFT+RMB, the scale factor can be changed, a lower scale
         means smaller motions (i.e. more fine-grained control).
     
     Viewing:
@@ -1133,13 +1133,16 @@ class FlyCamera(BaseCamera):
     """
     _NAMES = ('fly', 1) # 1 for first person
     ndim = 3
-    _viewparams = BaseCamera._viewparams + ('fov', '_rotation1', '_rotation2')
+    _viewparams = BaseCamera._viewparams + ('fov', 'rotation')
     
     def __init__(self):
         BaseCamera.__init__(self)
         
         # Here, view_loc is not the position you look at,
         # but the position you ARE at
+        
+        # Note that the zoom factor is the measure for scale, and the fov
+        # is used for zooming.
         
         self._rotation1 = Quaternion() # The total totation
         self._rotation2 = Quaternion() # The delta yaw and pitch rotation
@@ -1182,7 +1185,7 @@ class FlyCamera(BaseCamera):
         
         # Key mapping for conrolling the camera
         self._keymap = {    'w':+1, 's':-1, 'd':+2, 'a':-2, 'f':+3, 'c':-3,
-                            'i':+4, 'k':-4, 'l':+5, 'j':-5, 'q':+6, 'e':-6}
+                            'i':-4, 'k':+4, 'l':+5, 'j':-5, 'q':+6, 'e':-6}
         # Make event.text -> event.key
         for k in [k for k in self._keymap]:
             if isinstance(k, basestring) and len(k)==1:
@@ -1195,13 +1198,7 @@ class FlyCamera(BaseCamera):
         self._timer = vv.Timer(self, 50, False)
         self._timer.Bind(self.OnTimer)
     
-    
-    @property
-    def _rotation(self):
-        rotation = self._rotation2 * self._rotation1
-        return rotation.normalize()
-    
-    
+        
     @Property
     def fov():
         """ Get/set the current field of view (i.e. camera aperture). 
@@ -1220,6 +1217,31 @@ class FlyCamera(BaseCamera):
             # Draw
             for ax in self.axeses:
                 ax.Draw()
+    
+    
+    @Property
+    def rotation():
+        """ Get/set the current rotation quaternion.
+        """
+        def fget(self):
+            return self._rotation1.copy()
+        def fset(self, value):
+            # Set
+            self._rotation1 = value.normalize()
+            # Draw
+            for ax in self.axeses:
+                ax.Draw()
+    
+    
+    @property
+    def _rotation(self):
+        """ Get the full rotation for internal use. This rotation is composed
+        of the normal rotation plus the extra rotation due to the current 
+        interaction of the user.
+        """
+        rotation = self._rotation2 * self._rotation1
+        return rotation.normalize()
+    
     
     def Reset(self, event=None):
         """ Reset()
@@ -1491,14 +1513,17 @@ class FlyCamera(BaseCamera):
         # Get direction vectors for forwatd, right, left, and up
         pf, pr, pl, pu = self._GetDirections()
         
+        # Initial relative speed
+        rel_speed = 0.02
+        
         # Create speed vectors, use zoom to scale
         # Create the space in 100 "units"
         ndaspect = self.axes.daspectNormalized
         dv = Point([1.0/d for d in ndaspect])
-        #
-        vf = pf * dv * 0.01 * self._speed_trans / self._zoom
-        vr = pr * dv * 0.01 * self._speed_trans / self._zoom
-        vu = pu * dv * 0.01 * self._speed_trans / self._zoom
+        # 
+        vf = pf * dv * rel_speed * self._speed_trans / self._zoom
+        vr = pr * dv * rel_speed * self._speed_trans / self._zoom
+        vu = pu * dv * rel_speed * self._speed_trans / self._zoom
         
         
         # Determine speed from acceleration
