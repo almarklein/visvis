@@ -572,8 +572,8 @@ class Axes(base.Wibject):
         Interactively changing a camera
         -------------------------------
         By default, the camera can be changed using the keyboard using the
-        shortcut ALT+SHIFT+i, where i is the camera number. Similarly
-        the daspectAuto propert can be switched with ALT+SHIFT+d.
+        shortcut ALT+i, where i is the camera number. Similarly
+        the daspectAuto propert can be switched with ALT+d.
         """
         def fget(self):
             return self._camera
@@ -1022,7 +1022,7 @@ class Axes(base.Wibject):
         if not (f and self is f.currentAxes):
             return False
         
-        if vv.KEY_ALT in event.modifiers and vv.KEY_SHIFT in event.modifiers:
+        if vv.KEY_ALT in event.modifiers:
             
             numbers = [ord(i) for i in '0123456789']
             
