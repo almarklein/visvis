@@ -1301,6 +1301,12 @@ class FlyCamera(BaseCamera):
     
     def OnKeyDown(self, event):
         
+        if not self.axes.camera is self:
+            return 
+        elif not self._timer.isRunning:
+            # Make sure the timer runs
+            self._timer.Start()
+        
         # Only listen to plain keys.
         if event.modifiers:
             return False
@@ -1328,6 +1334,9 @@ class FlyCamera(BaseCamera):
     
     
     def OnKeyUp(self, event):
+        
+        if not self.axes.camera is self:
+            return 
         
         # Get action (or None)
         action = self._keymap.get(event.key, None)
