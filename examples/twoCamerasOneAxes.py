@@ -22,7 +22,7 @@ class OurCamera2(vv.cameras.TwoDCamera):
 # Draw an image    
 im = vv.imread('lena.png')
 vv.imshow(im)
-vv.title('Press CTRL+ALT+8 for cam1 and CTRL+ALT+9 for cam2')
+vv.title('Press ALT+SHIFT+8 for cam1 and ALT+SHIFT+9 for cam2')
 
 # Get axes
 a = vv.gca()
