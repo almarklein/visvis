@@ -1117,8 +1117,8 @@ class FlyCamera(BaseCamera):
     Notice: interacting with this camera might need a bit of practice. 
     
     Moving:
-      * w,a,s,f keys to move forward, backward, left and right
-      * f and g keys move up and down
+      * w,a,s,d keys to move forward, backward, left and right
+      * f and c keys move up and down
       * Using SHIFT+RMB, the zoom factor can be changed, a higher zoom
         means smaller motions (i.e. more fine-grained control).
     
@@ -1127,7 +1127,7 @@ class FlyCamera(BaseCamera):
       * Alternatively, the pitch and yaw can be changed using the keys i,k,j,l.
       * The camera auto-rotates to make the bottom of the vessel point down,
         manual rolling can be performed using q and e.
-      * Using the RMB, one can zoom in, like looking through a binocular. 
+      * Using the RMB, one can zoom in, like looking through binoculars. 
         This will also make you move slightly faster.
     
     """
@@ -1482,9 +1482,6 @@ class FlyCamera(BaseCamera):
     
     
     def OnTimer(self, event):
-        
-        # todo: does not work on gtk, in qt the key is ord('A'), in gtk
-        # its ord('a')
         
         # Stop running?
         if not self.axes.camera is self:
