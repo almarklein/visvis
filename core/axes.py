@@ -1022,7 +1022,7 @@ class Axes(base.Wibject):
         if not (f and self is f.currentAxes):
             return False
         
-        if vv.KEY_ALT in event.modifiers:
+        if vv.KEY_ALT in event.modifiers and len(event.modifiers)==1:
             
             numbers = [ord(i) for i in '0123456789']
             
