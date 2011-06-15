@@ -1594,10 +1594,18 @@ class FlyCamera(BaseCamera):
                 #
                 magnitude =  abs(math.sin(af)) # abs(math.sin(au))
                 magnitude *= math.sin(0.5*(al - ar))
+                if abs(magnitude) < 0.01:
+                    magnitude = 0
                 #
                 angle = 10 * magnitude * math.pi/180
                 q = Quaternion.create_from_axis_angle(angle, 0,0,1)
                 self._rotation1 = ( q * self._rotation1 ).normalize() 
+        
+        # Break if there is no motion
+        if not (self._speed_forward or self._speed_right or self._speed_up
+                or self._speed_pitch or self._speed_yaw or self._speed_roll
+                or magnitude):
+            return
         
         # Refresh
         for axes in self.axeses:
