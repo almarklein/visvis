@@ -51,7 +51,6 @@ KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
 for i in range(ord('A'), ord('Z')):
     KEYMAP[i] = i+32
 
-NUMBERKEYS = [ord(i) for i in '0123456789']
 
 def modifiers(event):
     """Convert the QT modifier state into a tuple of active modifier keys."""
@@ -147,12 +146,9 @@ class GLWidget(QtOpenGL.QGLWidget):
         """ evaluates the keycode of qt, and transform to visvis key.
         """
         key = event.key()
-        key2 = event.nativeVirtualKey()
         
         # special cases for shift control and alt -> map to 17 18 19
-        if key2 in NUMBERKEYS:
-            return key2 # Make numbers right even if shift is pressed
-        elif key in KEYMAP:
+        if key in KEYMAP:
             return KEYMAP[key]
         else:
             return key
