@@ -387,6 +387,11 @@ class SliceTextureProxy(Wobject, Colormapable):
         for s in self.children:
             s._SetColormap(value)
     
+    def _EnableColormap(self, texUnit=0):
+        return self.children[0]._EnableColormap(texUnit)
+    def _DisableColormap(self):
+        return self.children[0]._DisableColormap()
+    
     def _GetClim(self):
         return self.children[0].clim
     def _SetClim(self, value):

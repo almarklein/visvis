@@ -728,8 +728,11 @@ class Colormapable(object):
     
     Instances of this class have a colormap propery and a clim property.
     
-    Inheriting classes can overload _GetColormap, _SetColormap, _GetClim,
-    _SetClim to overload the default behavior.
+    Inheriting classes can implement the following methods to overload 
+    the default behavior:
+      * _GetColormap, _SetColormap(cmap) 
+      * _GetClim, _SetClim(clim) 
+      * _EnableColormap(texUnit=0), _DisableColormap
     
     """
     
@@ -770,6 +773,11 @@ class Colormapable(object):
         return self._colormap.GetMap()
     def _SetColormap(self, value):
         self._colormap.SetMap(value)
+    
+    def _EnableColormap(self, texUnit=0):
+        self._colormap.Enable(texUnit)
+    def _DisableColormap(self):
+        self._colormap.Disable()
     
     def _GetClim(self):
         return self._clim
