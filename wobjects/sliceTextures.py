@@ -395,7 +395,7 @@ class SliceTextureProxy(Wobject, Colormapable):
     
     @Property 
     def renderStyle():
-        """ renderStyle is not available for SliceTextures. This 
+        """ Not available for SliceTextures. This 
         property is implemented to be able to produce a warning when
         it is used.
         """
@@ -406,7 +406,7 @@ class SliceTextureProxy(Wobject, Colormapable):
     
     @Property 
     def isoThreshold():
-        """ isoThreshold is not available for SliceTextures. This 
+        """ Not available for SliceTextures. This 
         property is implemented to be able to produce a warning when
         it is used.
         """

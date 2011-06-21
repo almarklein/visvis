@@ -2,6 +2,10 @@
 """ This example shows all mesh objects that can be created out of the box.
 It also shows the different techniques to apply color to the meshes using
 plain color, colormaps and texture.
+
+On the website, this example also demonstrates the fly camera to fly through 
+the mesh objects.
+
 """
 
 import numpy as np
