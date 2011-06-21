@@ -43,7 +43,7 @@ For more help, see ...
 
 """
 
-__version__  = '1.4' 
+__version__  = '1.5' 
 
 # Loose sub-modules and sub-packages
 from visvis.pypoints import Point, Pointset, Aarray, Quaternion
