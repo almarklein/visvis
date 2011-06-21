@@ -25,7 +25,7 @@ with IPython or IEP) and can be embedded in applications.
 Requirements:
   * Numpy
   * PyOpengl
-  * A backend GUI toolkit (PyQt4, wxPython, fltk)
+  * A backend GUI toolkit (PyQt4, wxPython, GTK, fltk)
   * (optionally, to enable reading and writing of images) PIL
 
 usage:
