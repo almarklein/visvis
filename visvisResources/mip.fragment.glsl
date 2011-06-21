@@ -124,7 +124,7 @@ void main()
         discard;
     
     // set depth value
-    if (1)
+    if (1==1)
     {
         // Calculate end position in world coordinates
         vec4 position2 = vertexPosition;
