@@ -21,8 +21,8 @@ def use(backendName=None):
     If no backend is given, returns the previously selected backend. If no
     backend was yet selected, a suitable backend is selected automatically.
     This is done by detecting whether any of the backend toolkits is
-    already loaded. If not, visvis tries to load a backend in the order:
-    qt4, wx, fltk.
+    already loaded. If not, visvis tries to load the 
+    vv.settings.preferredBackend first.
     
     Note: the backend can be changed even when figures are created with
     another backend, but this is not recommended.
