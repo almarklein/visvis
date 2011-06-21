@@ -93,7 +93,7 @@ class BaseMapableEditor(DraggableBox):
         # Get the weak refs to the actual wobjects
         self._mapables = []
         for arg in args:
-            if isinstance(arg, (BaseFigure,Axes)) or hasattr(arg, '_colormap'):
+            if isinstance(arg, (BaseFigure,Axes)) or isinstance(Colormapable):
                 self._mapables.append( weakref.ref(arg) )
             else:
                 print 'Warning object is not mappable: ', arg 
@@ -284,13 +284,13 @@ class ColormapEditor(BaseMapableEditor):
         # Get the last mappable and obtain its colormap
         mappables = self.GetMapables()
         if not mappables:
-            return        
-        cmap = mappables[-1]._colormap
+            return
+        cmap = mappables[-1]._GetColormap()
         if not cmap:
             return
         
         # Get node data
-        nodeData = cmap.GetMap()
+        nodeData = cmap
         
         # Can we make nodes of it?
         if isinstance(nodeData, list):
@@ -514,7 +514,7 @@ class CM_NodeWidget(Box):
             # Apply colormap to all registered objects
             if self.parent:
                 for ob in self.parent.GetMapables():
-                    ob._colormap.SetMap(map)
+                    ob._SetColormap(map)
                     ob.Draw()
     
     
@@ -637,7 +637,7 @@ class Colorbar(Box):
         # draw plane
         if mapable:
             # Use it's colormap texture
-            mapable._colormap.Enable()
+            mapable._EnableColormap()
             # Disable alpha channel (by not blending)
             gl.glDisable(gl.GL_BLEND)
             gl.glColor(1.0, 1.0, 1.0, 1.0)
@@ -652,7 +652,7 @@ class Colorbar(Box):
             # Clean up
             gl.glEnable(gl.GL_BLEND)
             gl.glFlush()
-            mapable._colormap.Disable()
+            mapable._DisableColormap()
         
         # prepare                
         gl.glDisable(gl.GL_LINE_SMOOTH)
