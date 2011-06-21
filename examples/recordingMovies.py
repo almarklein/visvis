@@ -21,9 +21,9 @@ rec = vv.record(a)
 
 # Rotate camera
 for i in range(Nangles):
-    a.camera.view_az = 360 * float(i) / Nangles
-    if a.camera.view_az>180:
-        a.camera.view_az -= 360
+    a.camera.azimuth = 360 * float(i) / Nangles
+    if a.camera.azimuth>180:
+        a.camera.azimuth -= 360
     a.Draw() # Tell the axes to redraw 
     f.DrawNow() # Draw the figure NOW, instead of waiting for GUI event loop
 
