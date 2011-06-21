@@ -114,6 +114,6 @@ void main()
     if (gl_FragColor.a < 0.1)
         discard;
     
-    // Apply a depth? No, does only really make sence for the iso renderer.
+    // Apply a depth? No, does only really make sence for this renderer.
     
 }
