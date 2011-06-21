@@ -78,10 +78,13 @@ try:
 except ImportError:
     np = None    
 
-try:
-    from scipy.spatial import cKDTree
-except ImportError:
-    cKDTree = None
+def get_cKDTree():
+    try:
+        from scipy.spatial import cKDTree
+    except ImportError:
+        cKDTree = None
+    return cKDTree
+
 
 # getheader gives a 87a header and a color palette (two elements in a list).
 # getdata()[0] gives the Image Descriptor up to (including) "LZW min code size".
@@ -998,7 +1001,7 @@ class NeuQuant:
     
     def quantize(self, image):
         """ Use a kdtree to quickly find the closest palette colors for the pixels """
-        if cKDTree:
+        if get_cKDTree():
             return self.quantize_with_scipy(image)
         else:
             print 'Scipy not available, falling back to slower version.'
@@ -1010,6 +1013,7 @@ class NeuQuant:
         px = np.asarray(image).copy()
         px2 = px[:,:,:3].reshape((w*h,3))
         
+        cKDTree = get_cKDTree()
         kdtree = cKDTree(self.colormap[:,:3],leafsize=10)
         result = kdtree.query(px2)
         colorindex = result[1]

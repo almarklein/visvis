@@ -5,7 +5,6 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-import webbrowser
 
 def help():    
     """ help()
@@ -17,6 +16,7 @@ def help():
     documentation on the fly.
     
     """
+    import webbrowser
     webbrowser.open("http://code.google.com/p/visvis/wiki/Documentation")
 
 if __name__ == '__main__':

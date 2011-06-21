@@ -5,7 +5,6 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-import webbrowser
 
 def reportIssue():    
     """ help()
@@ -14,6 +13,7 @@ def reportIssue():
     
     
     """
+    import webbrowser
     webbrowser.open("http://code.google.com/p/visvis/issues/list")
 
 if __name__ == '__main__':
