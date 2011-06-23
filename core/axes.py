@@ -200,6 +200,7 @@ class Axes(base.Wibject):
         
         # init the background color of this axes
         self.bgcolor = 1,1,1  # remember that bgcolor is a property
+        self.bgcolors = None
         
         # bind to event (no need to unbind because it's our own)
         self.eventMouseDown.Bind(self._OnMouseDown)
@@ -496,6 +497,35 @@ class Axes(base.Wibject):
             self.position.Correct(-dx, 0, dx, dy)
     
     ## Define more properties
+    
+    
+    @PropWithDraw
+    def bgcolors():
+        """ Get/Set the colors for the axes background gradient. If used, this
+        value overrides the normal bgcolor property. Notes:
+          * Set to None to disable the gradient
+          * Setting two colors defines a gradient from top to bottom.
+          * Setting four colors sets the colors at the four corners.
+          * The value must be an iterable (2 or 4 elements) in which each
+            element can be converted to a color.
+        """
+        def fget(self):
+            return self._bgcolors
+        def fset(self, value):
+            # None?
+            if value is None:
+                self._bgcolors = None
+                return
+            # Check
+            try:                
+                if len(value) not in [2,4]:
+                    raise ValueError('bgcolors must have 2 or 4 elements.')
+            except Exception:
+                # not an iterable
+                raise ValueError('bgcolors must be None, or tuple/list/string.')
+            # Apply
+            colors = [getColor(val, 'setting bgcolors') for val in value]
+            self._bgcolors = tuple(colors)
     
     
     @property
@@ -952,18 +982,30 @@ class Axes(base.Wibject):
             # Overwrite all
             gl.glDisable(gl.GL_DEPTH_TEST)
             
+            # Define colors, use gradient?
+            bgcolor1 = bgcolor2 = bgcolor3 = bgcolor4 = bgcolor
+            if mode != DRAW_SHAPE and self.bgcolors:
+                gl.glShadeModel(gl.GL_SMOOTH)
+                if len(self.bgcolors) == 2:
+                    bgcolor1 = bgcolor2 = self.bgcolors[0]
+                    bgcolor3 = bgcolor4 = self.bgcolors[1]
+                elif len(self.bgcolors) == 4:
+                    bgcolor1, bgcolor2, bgcolor3, bgcolor4 = self.bgcolors
+            
             # Draw
-            gl.glColor3f(bgcolor[0], bgcolor[1], bgcolor[2])
             gl.glBegin(gl.GL_POLYGON)
+            gl.glColor3f(bgcolor3[0], bgcolor3[1], bgcolor3[2])
             gl.glVertex2f(0,0)
+            gl.glColor3f(bgcolor1[0], bgcolor1[1], bgcolor1[2])
             gl.glVertex2f(0,1)
+            gl.glColor3f(bgcolor2[0], bgcolor2[1], bgcolor2[2])
             gl.glVertex2f(1,1)
+            gl.glColor3f(bgcolor4[0], bgcolor4[1], bgcolor4[2])
             gl.glVertex2f(1,0)
             gl.glEnd()
             
             # Reset
             gl.glEnable(gl.GL_DEPTH_TEST)
-        
         
         # Draw items in world coordinates
         if True:

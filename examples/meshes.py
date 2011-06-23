@@ -12,6 +12,7 @@ import numpy as np
 import visvis as vv
 from visvis.pypoints import Point, Pointset
 vv.figure()
+a = vv.gca()
 
 # Define points for the line
 pp = Pointset(3)
