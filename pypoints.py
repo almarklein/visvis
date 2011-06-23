@@ -1350,8 +1350,11 @@ class Aarray(np.ndarray):
         if not isinstance(index, (list,tuple)):
             index2[0] = index
         else:
-            for i in range(len(index)):                    
-                index2[i] = index[i]
+            try:
+                for i in range(len(index)):                    
+                    index2[i] = index[i]
+            except Exception:
+                index2[0] = index
         
         # Process
         for i in range(len(index2)):
@@ -1740,7 +1743,7 @@ class Quaternion(object):
         # Prepare 
         p = Quaternion(0, p.x, p.y, p.z, False) # Do not normalize!
         q1 = self.normalize()
-        q2 = self.inverse().normalize()
+        q2 = self.inverse()
         # Apply rotation
         r = (q1*p)*q2
         # Make point and return        
@@ -1805,7 +1808,7 @@ class Quaternion(object):
             az = self.z / scale
         else:
             # No rotation, so arbitrary axis
-            ax, ay, az = 1, 0, 0 
+            ax, ay, ax = 1, 0, 0 
         
         # Return
         return angle, ax, ay, az
