@@ -131,10 +131,6 @@ class BaseCamera(object):
         # Make sure it not currently registered
         self._UnregisterAxes(axes)
         
-        # Use the daspect of the axes to initialize this camer's daspect?
-#         if not self._axeses:
-#             self._daspect = axes._daspect
-        
         # Append to list
         self._axeses.append(axes)
         
