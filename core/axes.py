@@ -673,55 +673,49 @@ class Axes(base.Wibject):
     
     @PropWithDraw
     def daspect():
-        """ Get/Set the data aspect ratio as a three element tuple. 
+        """ Get/set the data aspect ratio of the current camera. Setting will
+        also update daspect for the other cameras.
         
-        A two element tuple can also be given (then z is assumed 1).
-        When a value is negative, the corresponding dimension is flipped. 
+        The daspect is a 3-element tuple (x,y,z). If a 2-element tuple is
+        given, z is assumed 1. Note that only the ratio between the values
+        matters (i.e. (1,1,1) equals (2,2,2)). When a value is negative, the 
+        corresponding dimension is flipped. 
         
-        Note that if daspectAuto is True, the daspect is changed by the 
-        camera to nicely scale the data to fit the screen (but the sign
+        Note that if daspectAuto is True, the camera automatically changes
+        its daspect to nicely scale the data to fit the screen (but the sign
         is preserved).
         """
         def fget(self):            
-            return self._daspect
-        def fset(self, value):        
-            if not value:
-                self._daspect = 0
-                return
-            try:
-                l = len(value)
-            except TypeError:
-                raise Exception("You can only set daspect with a sequence!")
-            if 0 in value:
-                raise Exception("The given daspect contained a zero!")
-            if l==2:            
-                self._daspect = (float(value[0]), float(value[1]), 1.0)
-            elif l==3:
-                self._daspect = (float(value[0]), 
-                    float(value[1]), float(value[2]))
-            else:            
-                raise Exception("daspect should be a length 2 or 3 sequence!")
+            return self.camera.daspect
+        def fset(self, value):
+            # Set on all cameras
+            for camera in self._cameras.values():
+                camera.daspect = value
+            # Set on self so new cameras can see what the user set.
+            # Use camera's daspect, in case a 2-element tuple was used.
+            self._daspect = camera.daspect 
     
     @property
     def daspectNormalized(self):
         """ Get the data aspect ratio, normalized such that the x scaling 
         is +/- 1.
         """
-        return tuple(d/abs(self._daspect[0]) for d in self._daspect)
+        return self.camera.daspectNormalized
     
     @PropWithDraw
     def daspectAuto():
         """ Get/Set whether to scale the dimensions independently.
         
-        If True, the dimensions are scaled independently; the camera changes
-        the value of daspect to nicely fit the data on screen (but the sign
-        is preserved). This can happen (depending on the type of camera) 
-        during resetting, zooming, and resizing of the axes.
+        If True, the camera changes the value of its daspect to nicely fit 
+        the data on screen (but the sign is preserved). This can happen 
+        (depending on the type of camera) during resetting, zooming, and 
+        resizing of the axes.
         """
         def fget(self):
             return self._daspectAuto
         def fset(self, value):
             self._daspectAuto = bool(value)
+    
     
     @PropWithDraw
     def legend():

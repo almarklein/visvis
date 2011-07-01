@@ -114,6 +114,9 @@ class BaseCamera(object):
         # Init zoom factor
         self._zoom = 1.0
         
+        # Init daspect
+        self._daspect = 1.0, 1.0, 1.0
+        
         # Variable to keep track of window size during resizing
         self._windowSizeFactor = 0
     
@@ -127,6 +130,10 @@ class BaseCamera(object):
         
         # Make sure it not currently registered
         self._UnregisterAxes(axes)
+        
+        # Use the daspect of the axes to initialize this camer's daspect?
+#         if not self._axeses:
+#             self._daspect = axes._daspect
         
         # Append to list
         self._axeses.append(axes)
@@ -201,17 +208,39 @@ class BaseCamera(object):
     
     @Property
     def daspect():
-        """ This property mirrors the daspect property of the first axes. 
-        Setting this propery will set the daspect of all axeses.
+        """ Get/Set the data aspect ratio as a three element tuple. 
+        
+        The daspect is a 3-element tuple (x,y,z). If a 2-element tuple is
+        given, z is assumed 1. Note that only the ratio between the values
+        matters (i.e. (1,1,1) equals (2,2,2)). When a value is negative, the 
+        corresponding dimension is flipped. 
+        
+        Note that if axes.daspectAuto is True, the daspect is changed by the 
+        camera to nicely scale the data to fit the screen (but the sign
+        is preserved).
         """
-        def fget(self):
-            if self.axes:
-                return self.axes.daspect
-            else:
-                return None
+        def fget(self):            
+            return self._daspect
         def fset(self, value):
-            for ax in self.axeses:
-                ax.daspect = value # ax.daspect posts a draw
+            try:
+                l = len(value)
+            except TypeError:
+                raise Exception("You can only set daspect with a sequence.")
+            if 0 in value:
+                raise Exception("The given daspect should not contain zeros.")
+            if l==2:            
+                self._daspect = (float(value[0]), float(value[1]), 1.0)
+            elif l==3:
+                self._daspect = tuple([float(v) for v in value])
+            else:            
+                raise Exception("daspect should be a length 2 or 3 sequence!")
+    
+    @property
+    def daspectNormalized(self):
+        """ Get the data aspect ratio, normalized such that the x scaling 
+        is +/- 1.
+        """
+        return tuple(d/abs(self._daspect[0]) for d in self._daspect)
     
     @Property
     def zoom():
@@ -352,7 +381,7 @@ class BaseCamera(object):
         x, y = (x/w-0.5) * fx, (0.5-y/h) * fy
         
         # scale
-        daspect = self.axes.daspectNormalized
+        daspect = self.daspectNormalized
         x, y = x / daspect[0], y / daspect[1]
         
         # translate it
@@ -365,27 +394,20 @@ class BaseCamera(object):
     def _SetDaspect(self, ratio, i, j, refDaspect=None):
         """ _SetDaspect(ratio,  i, j, refDaspect=None)
         
-        Change the value of the given refDaspect (or use axes.daspect)
+        Change the value of the given refDaspect (or use self.daspect)
         and set that as the new daspect. The new daspect is also returned.
         
         Sets daspect[i] to daspect[j] * ratio, but preserves the sign
         of the original reference daspect.
         
-        Will change the daspect of all registered axeses that have this 
-        camera as their current camera.
-        
         """
-        
-        # Check if we are allowed to change the daspect
-        if self is not self.axes.camera:
-            return refDaspect
         
         # Make sure that the ratio is absolute        
         ratio = abs(ratio)
         
         # Get daspect from reference daspect
         if refDaspect is None:
-            refDaspect = self.axes.daspect
+            refDaspect = self.daspect
         
         # Get absolute version
         daspect = [abs(d) for d in refDaspect]
@@ -401,12 +423,8 @@ class BaseCamera(object):
             else:
                 daspect2.append(daspect[i])
         
-        # Set for all axes for which this is the camera
-        for a in self.axeses:
-            if a.camera is self:
-                a.daspect = tuple(daspect2)
-        
-        # Done
+        # Done 
+        self.daspect = daspect2
         return daspect2
 
 
@@ -477,6 +495,7 @@ class TwoDCamera(BaseCamera):
         self._windowSizeFactor = sizeFactor1
         
         # Change daspect and zoom
+        daspect2 = tuple(self.daspect)
         self._SetDaspect(daspectFactor, 1, 1)
         self._zoom *= zoomFactor
     
@@ -488,9 +507,14 @@ class TwoDCamera(BaseCamera):
         
         """
         
-        # Get window size
+        # Reset daspect from user-given daspect
+        if self.axes:
+            self._daspect = self.axes._daspect
+        
+        # Get window size (and store factor now to sync with resizing)
         w,h = self.axes.position.size
         w,h = float(w), float(h)
+        self._windowSizeFactor = h / w
         
         # Get range and translation for x and y   
         rx, ry = self._xlim.range, self._ylim.range
@@ -506,7 +530,7 @@ class TwoDCamera(BaseCamera):
             daspect = self._SetDaspect(rx/ry, 1, 0)
         
         # Correct for normalized daspect
-        ndaspect = self.axes.daspectNormalized
+        ndaspect = self.daspectNormalized
         rx, ry = abs(rx*ndaspect[0]), abs(ry*ndaspect[1])
         
         # Convert to screen coordinates. (just for clarity and to be 
@@ -531,7 +555,7 @@ class TwoDCamera(BaseCamera):
         # store current view parameters        
         self._ref_loc = self._view_loc
         self._ref_zoom = self._zoom
-        self._ref_daspect = self.axes.daspect
+        self._ref_daspect = self.daspect
         
         #self.ScreenToWorld() # for debugging
 
@@ -636,7 +660,7 @@ class TwoDCamera(BaseCamera):
         gl.glLoadIdentity()
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
-        ndaspect = self.axes.daspectNormalized
+        ndaspect = self.daspectNormalized
         gl.glScale( ndaspect[0], ndaspect[1], ndaspect[2] )
         
         # 1. Translate to view location (coordinate where we look at). 
@@ -815,15 +839,20 @@ class ThreeDCamera(BaseCamera):
         
         """
         
+        # Reset daspect from user-given daspect
+        if self.axes:
+            self._daspect = self.axes._daspect
+        
         # Set angles
         self._view_az = -10.0
         self._view_el = 30.0
         self._view_ro = 0.0 
         self._fov = 0.0
         
-        # Get window size
+        # Get window size (and store factor now to sync with resizing)
         w,h = self.axes.position.size
         w,h = float(w), float(h)
+        self._windowSizeFactor = h / w
         
         # Get range and translation for x and y   
         rx, ry, rz = self._xlim.range, self._ylim.range, self._zlim.range
@@ -843,7 +872,7 @@ class ThreeDCamera(BaseCamera):
             self._SetDaspect(rx/rz, 2, 0)
         
         # Correct for normalized daspect
-        ndaspect = self.axes.daspectNormalized
+        ndaspect = self.daspectNormalized
         rx, ry, rz = abs(rx*ndaspect[0]), abs(ry*ndaspect[1]), abs(rz*ndaspect[2])
         
         # Convert to screen coordinates. In screen x, only x and y have effect.
@@ -874,7 +903,7 @@ class ThreeDCamera(BaseCamera):
         self._ref_loc = self._view_loc
         #
         self._ref_zoom = self._zoom
-        self._ref_daspect = self.axes.daspect
+        self._ref_daspect = self.daspect
     
     
     def OnKeyDown(self, event):
@@ -923,7 +952,7 @@ class ThreeDCamera(BaseCamera):
             loc = self.ScreenToWorld(mloc)
             
             # calculate distance and undo aspect ratio adjustment from ScreenToWorld
-            ar = self.axes.daspect
+            ar = self.daspect
             distx = (refloc[0] - loc[0]) * ar[0]
             distz = (refloc[1]-loc[1]) * ar[1]
             
@@ -1090,7 +1119,7 @@ class ThreeDCamera(BaseCamera):
         gl.glRotate(-self._view_az, 0.0, 0.0, 1.0)
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
-        ndaspect = self.axes.daspectNormalized    
+        ndaspect = self.daspectNormalized    
         gl.glScale( ndaspect[0], ndaspect[1] , ndaspect[2] )
         
         # 1. Translate to view location. Do this first because otherwise
@@ -1249,6 +1278,9 @@ class FlyCamera(BaseCamera):
         Reset the view.
         
         """
+        # Reset daspect from user-given daspect
+        if self.axes:
+            self._daspect = self.axes._daspect
         
         # Stop moving
         self._acc_forward = 0
@@ -1279,9 +1311,10 @@ class FlyCamera(BaseCamera):
         self._speed_rot = math.sin(speed_angle)
         self._speed_trans = math.cos(speed_angle)
         
-        # Get window size
+        # Get window size (and store factor now to sync with resizing)
         w,h = self.axes.position.size
         w,h = float(w), float(h)
+        self._windowSizeFactor = h / w
         
         # Get range and translation for x and y   
         rx, ry, rz = self._xlim.range, self._ylim.range, self._zlim.range
@@ -1301,7 +1334,7 @@ class FlyCamera(BaseCamera):
             self._SetDaspect(rx/rz, 2, 0)
         
         # Correct for normalized daspect
-        ndaspect = self.axes.daspectNormalized
+        ndaspect = self.daspectNormalized
         rx, ry, rz = abs(rx*ndaspect[0]), abs(ry*ndaspect[1]), abs(rz*ndaspect[2])
         
         # Do not convert to screen coordinates. This camera does not need
@@ -1518,7 +1551,7 @@ class FlyCamera(BaseCamera):
         
         # Create speed vectors, use zoom to scale
         # Create the space in 100 "units"
-        ndaspect = self.axes.daspectNormalized
+        ndaspect = self.daspectNormalized
         dv = Point([1.0/d for d in ndaspect])
         # 
         vf = pf * dv * rel_speed * self._speed_trans / self._zoom
@@ -1702,7 +1735,7 @@ class FlyCamera(BaseCamera):
         gl.glRotate(angle, *axis_angle[1:])
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
-        ndaspect = self.axes.daspectNormalized    
+        ndaspect = self.daspectNormalized    
         gl.glScale( ndaspect[0], ndaspect[1] , ndaspect[2] )
         
         # 1. Translate to view location. Do this first because otherwise
