@@ -594,10 +594,8 @@ class Axes(base.Wibject):
         Shared cameras
         --------------
         One can set the camera to the camera of another Axes, so that they
-        share the same camera. A camera that is shared uses the daspect
-        and daspectAuto properties of the first axes it was attached to. 
-        Note that if daspectAuto is True, setting the daspect on this axes
-        changes the daspect of the other axes.
+        share the same camera. A camera that is shared uses daspectAuto 
+        property of the first axes it was attached to. 
         
         Interactively changing a camera
         -------------------------------
