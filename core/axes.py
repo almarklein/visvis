@@ -687,11 +687,13 @@ class Axes(base.Wibject):
             return self.camera.daspect
         def fset(self, value):
             # Set on all cameras
+            camera = None
             for camera in self._cameras.values():
                 camera.daspect = value
             # Set on self so new cameras can see what the user set.
             # Use camera's daspect, in case a 2-element tuple was used.
-            self._daspect = camera.daspect 
+            if camera is not None:
+                self._daspect = camera.daspect 
     
     @property
     def daspectNormalized(self):
