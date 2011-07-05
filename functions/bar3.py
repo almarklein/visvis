@@ -16,6 +16,8 @@ class Bars3D(vv.Wobject):
     This class is a container for a series of Mesh objects created using 
     solidBox.
     
+    This wobject is created by the function vv.bar3().
+    
     """
     
     @vv.misc.Property
@@ -120,7 +122,7 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
     """
     
     # Pre check
-    if data1 is not None:
+    if True:
         try:
             if not hasattr(data1, '__len__'):
                 raise ValueError
@@ -150,7 +152,7 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
         yy = [0] * len(hh)
     elif data3 is None:
         # Height and x given
-        xx = data1
+        xx = data1 
         hh = data2
         yy = [0] * len(hh)
     else:
