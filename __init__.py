@@ -59,6 +59,7 @@ from visvis.wobjects import *
 
 # Expose some more classes
 from visvis.wobjects.polygonalModeling import BaseMesh
+from visvis.processing.statistics import StatData
 
 # Do this last
 import backends

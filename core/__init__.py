@@ -34,7 +34,6 @@ from visvis.core.base import BaseObject, Wibject, Wobject, Position
 from visvis.core.baseTexture import TextureObject, Colormap, Colormapable
 from visvis.core.shaders import GlslProgram
 
-
 ## The secondary core (contains important wibjects and wobjects)
 
 # Import everything that we want to expose to the user
