@@ -16,9 +16,11 @@ from visvis.processing.statistics import StatData
 def boxplot(data1, data2=None, width=0.75, whiskers=1.5, axesAdjust=True, axes=None):
     """ boxplot(*args, width=0.75, whiskers=1.5, axesAdjust=True, axes=None)
     
-    Create a box plot (aka Box and whisker plot) and returns a 
-    BoxPlot wobject that can be used to change the appearance of the 
-    boxes (such as color).
+    Create a box and whisker plot and returns a BoxPlot wobject that can
+    be used to change the appearance of the boxes (such as color).
+    
+    If whiskers=='violin' creates a violin plot, which displays the
+    kernel density estimate (kde) of each data.
     
     Usage
     -----
