@@ -68,7 +68,7 @@ def boxplot(data1, data2=None, width=0.75, whiskers=1.5, axesAdjust=True, axes=N
     if data2 is None:
         xx = range(len(data_list))
     else:
-        xx = [float(x) for x in data2]
+        xx = [float(x) for x in data1]
         if len(data_list) != len(xx):
             raise ValueError('Positions do not match length of data.')
     
@@ -148,7 +148,7 @@ class BoxPlotBox(object):
         """
         
         # Init limts
-        self._limits = self._stats.dmin, self._stats.dmax
+        self._limits = vv.Range(self._stats.dmin, self._stats.dmax)
         
         # Calculate more?
         if isinstance(self._whiskers, float):
@@ -300,7 +300,7 @@ class BoxPlotBox(object):
             gl.glEnable(gl.GL_POINT_SMOOTH)
             gl.glBegin(gl.GL_POINTS)
             for outlierGroup in outliers:
-                offset = - len(outlierGroup) * w3 * 0.5
+                offset = - (len(outlierGroup)-1) * w3 * 0.5
                 offset = max(offset, -w1)
                 for i in range(len(outlierGroup)):
                     p = outlierGroup[i]
@@ -312,6 +312,9 @@ class BoxPlotBox(object):
         
         # Get stats
         stats = self._stats
+        
+        # Smooth lines
+        gl.glEnable(gl.GL_LINE_SMOOTH)
         
         # Translate points
         points = self._points.copy()
@@ -348,14 +351,14 @@ class BoxPlot(vv.Wobject):
         
         # Draw all boxes
         for i in range(len(self._boxes)):
-            self._boxes[i].Draw(i)
+            self._boxes[i].Draw(self._xx[i])
     
     
     def _GetLimits(self):
         
         # xlim and zlim are easy
         x1, x2 = -0.5, len(self._boxes)-0.5
-        z1, z2 = 0, 0
+        z1, z2 = 0, 0.2
         
         # ylim is harder
         y1, y2 = 9999999999999, -99999999999999999
