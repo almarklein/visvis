@@ -1466,7 +1466,7 @@ class _BinaryBlock(_Block):
         # Get shape and dtype
         ndim = f.read_number()
         shape = [f.read_number() for i in range(ndim)]
-        dtypestr = f.read_string()
+        dtypestr = simplestr(f.read_string())
         # Create numpy array or Virtual array
         i = f._fp
         if not np:
