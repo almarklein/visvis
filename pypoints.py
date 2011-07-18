@@ -1320,9 +1320,12 @@ class Aarray(np.ndarray):
         # Call base getitem method
         ob = np.ndarray.__getitem__(self, index)
         
-        # If not a scalar, perform sampling and origin corrections
-        # This means there is only a very small performance penalty
-        if isinstance(ob, Aarray):
+        if isinstance(index, np.ndarray):
+            # Masked or arbitrary indices; sampling and origin irrelevant
+            ob = np.asarray(ob)
+        elif isinstance(ob, Aarray):
+            # If not a scalar, perform sampling and origin corrections
+            # This means there is only a very small performance penalty
             sampling, origin = self._correct_sampling(index)
             if sampling:
                 ob.sampling = sampling

@@ -20,6 +20,7 @@ from visvis.core.misc import Property, PropWithDraw, DrawAfter
 from visvis import Wobject, Colormapable, OrientationForWobjects_mixClass
 from visvis.core.light import _testColor, _getColor
 from visvis.wobjects.textures import TextureObjectToVisualize 
+from visvis.core.shaders import vshaders, fshaders, GlslProgram
 
 
 def checkDimsOfArray(value, *ndims):
@@ -446,6 +447,9 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         Colormapable.__init__(self)
         self._texture = None
         
+        # Create glsl program
+        self._glsl_program = GlslProgram()
+        
         # Material properties
         self._ambient = 0.7
         self._diffuse = 0.7
@@ -654,6 +658,29 @@ class Mesh(Wobject, BaseMesh, Colormapable):
                 self._cullFaces = None
     
     
+    @PropWithDraw
+    def vertexShader():
+        """ Get/Set the vertex shader program. Set to None to revert to
+        the default OpenGL rendering pipeline. 
+        """
+        def fget(self):
+            return self._vertexShader
+        def fset(self, value):
+            if not value:
+                self._glsl_program.SetVertexShader('') # Remove program
+                self._glsl_program.SetFragmentShader('')
+            elif isinstance(value, basestring):
+                value = value.lower()
+                if value in vshaders:
+                    self._vertexShader = value
+                    self._glsl_program.SetVertexShader(vshaders[value])
+                    self._glsl_program.SetFragmentShader(fshaders['phong'])
+                else:
+                    raise ValueError('Unknown vertex shader: "%s".' % value)
+            else:
+                raise ValueError('vertexShader must be a string name.')
+    
+    
     ## Setters
     
     
@@ -721,6 +748,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     def OnDestroyGl(self):
         # Clean up OpenGl resources.
+        self._glsl_program.DestroyGl()
         self._colormap.DestroyGl()
         if self._texture is not None:
             self._texture.DestroyGl()
@@ -841,6 +869,17 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             gl.glCullFace(self._cullFaces)
         
         
+        # Prepare vertex shader
+        if not hasattr(self, '_waveTime'):
+            self._waveTime = 0.0
+        self._waveTime += 0.5
+        if self._glsl_program.IsUsable():
+            self._glsl_program.Enable()
+            self._glsl_program.SetUniformf('waveTime', [self._waveTime])
+            self._glsl_program.SetUniformf('waveWidth', [0.02])
+            self._glsl_program.SetUniformf('waveHeight', [50.0])
+        
+        
         # Draw
         type = {3:gl.GL_TRIANGLES, 4:gl.GL_QUADS}[self._verticesPerFace]
         if self._faces is None:
@@ -867,6 +906,8 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         gl.glDisableClientState(gl.GL_NORMAL_ARRAY)
         gl.glDisableClientState(gl.GL_COLOR_ARRAY)
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        #
+        self._glsl_program.Disable()
         #
         gl.glDisable(gl.GL_COLOR_MATERIAL)
         gl.glShadeModel(gl.GL_FLAT)
