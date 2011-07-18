@@ -357,7 +357,9 @@ class BoxPlot(vv.Wobject):
     def _GetLimits(self):
         
         # xlim and zlim are easy
-        x1, x2 = -0.5, len(self._boxes)-0.5
+        #x1, x2 = 0.5, len(self._boxes)-0.5
+        x1 = self._xx[0] - self._boxes[0]._width * 1.05
+        x2 = self._xx[-1] + self._boxes[-1]._width * 1.05
         z1, z2 = 0, 0.2
         
         # ylim is harder
