@@ -22,6 +22,14 @@ def getframe(ob):
     
     """
     
+    # Get figure
+    fig = ob.GetFigure()
+    if not fig:
+        raise ValueError('Object is not present in any alive figures.')
+    
+    # Select the figure
+    fig._SetCurrent() # works on all backends
+
     # we read the pixels as shown on screen.
     gl.glReadBuffer(gl.GL_FRONT)
     
@@ -31,11 +39,11 @@ def getframe(ob):
     elif isinstance(ob, vv.AxesContainer):
         x,y = ob.position.absTopLeft
         w,h = ob.position.size
-        y = ob.GetFigure().position.h - (y+h)
+        y = fig.position.h - (y+h)
     elif isinstance(ob, vv.Axes):
         x,y = ob.position.absTopLeft
         w,h = ob.position.size
-        y = ob.GetFigure().position.h - (y+h)
+        y = fig.position.h - (y+h)
         x+=1; y+=1; w-=1; h-=1;  # first pixel is the bounding box
     else:
         raise ValueError("The given object is not a figure nor an axes.")
