@@ -710,11 +710,18 @@ class Axes(base.Wibject):
         the data on screen (but the sign is preserved). This can happen 
         (depending on the type of camera) during resetting, zooming, and 
         resizing of the axes.
+        
+        If set to False, the daspect of all cameras is reverted to 
+        the user-set daspect.
         """
         def fget(self):
             return self._daspectAuto
         def fset(self, value):
+            # Set dastecpAuto
             self._daspectAuto = bool(value)
+            # Update daspect if False
+            if not value:
+                self.daspect = self._daspect
     
     
     @PropWithDraw
