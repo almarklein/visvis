@@ -92,4 +92,6 @@ for a in [a1, a2, a3, a4]:
         a.axis.yLabel = 'Temperature [C^o]'  
         a.axis.showGridY = True  
         a.axis.xTicksAngle = -30
-  
+
+app = vv.use()
+app.Run()

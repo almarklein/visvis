@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ Examples of using qhull via scipy to generate 3D plots in visvis.
 Requires numpy ver 1.5, scipy ver 0.9 and qhull from
 http://www.qhull.org/ (on Windows this comes with Scipy).
