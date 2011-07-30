@@ -8,11 +8,12 @@ import visvis.backends as backends
 from visvis import BaseFigure
 
 
-def figure(nr=None):
-    """ figure(nr=None)
+def figure(fig=None):
+    """ figure(fig=None)
     
-    Create a new figure or return the figure with the asociated nr. 
-    The returned figure will be the new current figure.
+    Set the specified figure to be the current figure, creating it if
+    necessary.  fig may be a Figure object, a figure number (a positive
+    integer), or None.  Returns the specified or created figure.
     
     """
     
@@ -23,14 +24,21 @@ def figure(nr=None):
     # get function to create new figure
     newFigure = backends.currentBackend.newFigure
     
-    # nr given?
-    if nr is not None:
+    # fig can be a Figure instance
+    if isinstance(fig, BaseFigure):
+        if fig._destroyed:
+            raise Exception("Figure has already been destroyed.")
+        nr = fig.nr
+    # ... or a positive integer
+    elif fig is not None:
         # test nr
         try:
-            nr = int(nr)
+            nr = int(fig)
             assert nr > 0
-        except (ValueError, AssertionError):
-            raise Exception("Figure nr should be an integer >=1")
+        except (ValueError, TypeError, AssertionError):
+            raise Exception("Figure number should be an integer >=1")
+    else:
+        nr = None
     
     # does a figure with that number already exist?
     if nr and BaseFigure._figures.has_key(nr):        
