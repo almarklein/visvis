@@ -16,13 +16,16 @@ for i in range(3):
 
 # Show
 vv.figure()
-vv.subplot(121); 
+a1 = vv.subplot(121); 
 t1 = vv.volshow(vol[:,:,:,:], renderStyle = 'colormip')
 vv.title('color MIP render')
-vv.subplot(122); 
+a2 = vv.subplot(122); 
 t2 = vv.volshow(vol[:,:,:,:], renderStyle = 'coloriso')
 t2.isoThreshold = 0.5
 vv.title('color ISO-surface render')
+
+# Share cameras
+a1.camera = a2.camera
 
 # Run app
 app.Run()
