@@ -8,7 +8,7 @@ import visvis as vv
 app = vv.use()
 
 # Create volume (smooth a bit)
-if False:
+if True:
     
     vol0 = vv.aVolume()
     vol = vol0.copy()*0.5
@@ -35,7 +35,7 @@ for i in range(4):
     a = vv.subplot(2,2,i+1)
     t = vv.volshow(vol)
     vv.title('Renderstyle ' + RS[i])
-    t.colormap = vv.CM_CT1
+    #t.colormap = vv.CM_CT1
     t.renderStyle = RS[i]
     tt.append(t)
     if a0 is None:
