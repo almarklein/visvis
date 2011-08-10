@@ -31,7 +31,7 @@ import visvis
 from visvis import Range, Wobject, Colormapable
 from visvis.core.misc import Property, PropWithDraw, DrawAfter, getColor
 from visvis.core.misc import Transform_Translate, Transform_Scale, Transform_Rotate
-from visvis.core.shaders import vshaders, fshaders, GlslProgram
+from visvis.core import shaders
 #
 from visvis.core import TextureObject, Colormap
 
@@ -197,6 +197,138 @@ class TextureObjectToVisualize(TextureObject):
         return scale, bias
 
 
+class DeformTexture(TextureObjectToVisualize):
+    """ DeformTexture(*deforms)
+    
+    Texture to manage a deformation that can be applied to a 
+    texture or mesh.
+    
+    """
+    def __init__(self, *deforms):
+        ndim = len(deforms)
+#         TextureObject.__init__(self, ndim)
+        
+        self._interpolate = True
+        
+        # Build single texture
+        new_shape = deforms[0].shape+(ndim,)
+        deform = np.zeros(new_shape, 'float32')
+        for i in range(ndim):
+            if ndim==1:
+                deform[:,i] = deforms[i]
+            elif ndim==2:
+                deform[:,:,i] = deforms[i]
+            elif ndim==3:
+                deform[:,:,:,i] = deforms[i]
+            else:
+                raise ValueError('DeformTexture only supports 1D, 2D and 3D.')
+        
+        # Store        
+        TextureObjectToVisualize.__init__(self, ndim, deform, True)
+        self.SetData(deform)
+        
+        #self._climRef.Set(*minmax(data)) # Done in TextureObjectToVisualize.__init__
+        #self._clim = shape
+    
+    
+    def _ScaleBias_init(self, datatype):
+        """ Given the climRef (which is set to data.min() and data.max())
+        in constructor, set the scale 
+        and bias for copying data to opengl memory. Correct for the dataype.
+        Also set the default value for clim to the full data range.
+        
+        More info: OpenGL will map the full range of the datatype
+        to 0:1 for unsigned datatypes, and to -1:1 for signed datatypes.
+        For floats, 0:1 is mapped to 0:1. We modify the scale, such that
+        the full range of the data (not the datatype) is scaled between 0:1.
+        This way we can also visualize float data with values other than 0:1.
+        """
+        # store data range as a reference and init clim with that
+        #self._clim = self._climRef.Copy()
+        # calculate scale and bias
+        ran = max(-self._climRef.min, self._climRef.max)
+        if ran==0:
+            ran = 1.0
+        scale = climCorrection[datatype] / ran
+        bias = -self._climRef.min / ran
+        # set transfer functions
+        gl.glPixelTransferf(gl.GL_RED_SCALE, scale)
+        gl.glPixelTransferf(gl.GL_GREEN_SCALE, scale)
+        gl.glPixelTransferf(gl.GL_BLUE_SCALE, scale)
+#         gl.glPixelTransferf(gl.GL_RED_BIAS, bias)
+#         gl.glPixelTransferf(gl.GL_GREEN_BIAS, bias)
+#         gl.glPixelTransferf(gl.GL_BLUE_BIAS, bias)
+
+    def _ScaleBias_get(self):
+        """ Given clim, get scale and bias to apply in shader."""
+#         # ger ranges and correct if zero
+#         r1, r2 = self._clim.range, self._climRef.range
+#         if r1==0:
+#             r1 = 1.0
+#         if r2==0:
+#             r2 = 1.0
+#         # calculate scale and bias
+#         scale = self._climRef.range / r1
+#         bias = 0.0#(self._climRef.min - self._clim.min) / r2    
+#         return scale, bias
+        ran = max(-self._climRef.min, self._climRef.max)
+        if ran==0:
+            ran = 1.0
+        scale =  ran
+        return scale, 0.0
+    
+    
+#     def _UploadTexture(self, data, *args):
+#         """ "Overloaded" method to upload texture data
+#         """
+#         
+#         # Set alignment to 1. It is 4 by default, but my data array has no
+#         # strides, so in order for the image not to be distorted, I set it 
+#         # to 1. I assume graphics cards can still render in hardware. If 
+#         # not, I would have to add one or two rows to my data instead.
+#         gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT,1)
+#         
+#         # init transferfunctions and set clim to full range
+# #         self._ScaleBias_init(data.dtype.name)
+#         
+#         # create texture
+#         TextureObject._UploadTexture(self, data, *args)
+#         
+#         # set interpolation and extrapolation parameters            
+#         tmp1 = gl.GL_NEAREST
+#         tmp2 = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
+#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MIN_FILTER, tmp1)
+#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MAG_FILTER, tmp2)
+#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
+#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
+#         
+#         # reset transfer
+# #         self._ScaleBias_afterUpload()
+#         
+#         # Set clamping. When testing the raycasting, comment these lines!
+#         if self._ndim==3:
+#             gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
+#             gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
+#             gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_R, gl.GL_CLAMP)
+#     
+#     def _UpdateTexture(self, data, *args):
+#         """ "Overloaded" method to update texture data
+#         """
+#         
+#         # init transferfunctions and set clim to full range
+# #         self._ScaleBias_init(data.dtype.name)
+#         
+#         # create texture
+#         TextureObject._UpdateTexture(self, data, *args)
+#         
+#         # Update interpolation
+#         tmp = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
+#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MAG_FILTER, tmp)
+#         
+#         # reset transfer
+# #         self._ScaleBias_afterUpload()
+
+
 class BaseTexture(Wobject, Colormapable):
     """ BaseTexture(parent, data)
     
@@ -218,13 +350,34 @@ class BaseTexture(Wobject, Colormapable):
         self._texture1 = None
         
         # create glsl program for this texture...
-        self._program1 = program =  GlslProgram()
+        self._glsl_program = shaders.GlslProgram()
+        self._vertexShader = shaders.ShaderCode()
+        self._fragmentShader = shaders.ShaderCode()
+        
+        # Add colormap uniform
+        self._fragmentShader.SetUniform('colormap', self._colormap)
         
         # scale and translation transforms
         self._trafo_scale = Transform_Scale()
         self._trafo_trans = Transform_Translate()
         self.transformations.append(self._trafo_trans)
         self.transformations.append(self._trafo_scale)        
+    
+    
+    @property
+    def vertexShader(self):
+        """ Get the vertex shader code object. This can be used to add
+        code of your own and customize the vertex shader.
+        """
+        return self._vertexShader
+    
+    
+    @property
+    def fragmentShader(self):
+        """ Get the fragment shader code object. This can be used to add
+        code of your own and customize the fragment shader.
+        """
+        return self._fragmentShader
     
     
     @DrawAfter
@@ -304,7 +457,7 @@ class BaseTexture(Wobject, Colormapable):
         self._texture1.DestroyGl()
         
         # clear shaders
-        self._program1.DestroyGl()
+        self._glsl_program.DestroyGl()
         
         # remove colormap's texture from memory        
         if hasattr(self, '_colormap'):
@@ -467,20 +620,20 @@ class Texture2D(BaseTexture):
             return
         
         # fragment shader on
-        if self._program1.IsUsable():
-            self._program1.Enable()
+        if self._glsl_program.IsUsable():
+            self._glsl_program.Enable()
             # textures        
-            self._program1.SetUniformi('texture', [0])        
+            self._glsl_program.SetUniformi('texture', [0])        
             self._colormap.Enable(1)
-            self._program1.SetUniformi('colormap', [1])
+            self._glsl_program.SetUniformi('colormap', [1])
             # uniform variables
             shape = self._texture1._shape # how it is in opengl
             k = self._CreateGaussianKernel()
-            self._program1.SetUniformf('kernel', k)
-            self._program1.SetUniformf('dx', [1.0/shape[0]])
-            self._program1.SetUniformf('dy', [1.0/shape[1]])
-            self._program1.SetUniformf('scaleBias', self._texture1._ScaleBias_get())
-            self._program1.SetUniformi('applyColormap', [len(shape)==2])
+            self._glsl_program.SetUniformf('kernel', k)
+            self._glsl_program.SetUniformf('dx', [1.0/shape[0]])
+            self._glsl_program.SetUniformf('dy', [1.0/shape[1]])
+            self._glsl_program.SetUniformf('scaleBias', self._texture1._ScaleBias_get())
+            self._glsl_program.SetUniformi('applyColormap', [len(shape)==2])
         
         # do the drawing!
         self._DrawQuads()
@@ -489,7 +642,7 @@ class Texture2D(BaseTexture):
         # clean up
         self._texture1.Disable()
         self._colormap.Disable()
-        self._program1.Disable()
+        self._glsl_program.Disable()
     
     
     def _DrawQuads(self):
@@ -548,16 +701,16 @@ class Texture2D(BaseTexture):
                     return
                 self._aa = value
                 if self._aa == 1:
-                    self._program1.SetFragmentShader(fshaders['aa1'])
+                    self._glsl_program.SetFragmentShader(shaders.fshaders['aa1'])
                 elif self._aa == 2:
-                    self._program1.SetFragmentShader(fshaders['aa2'])
+                    self._glsl_program.SetFragmentShader(shaders.fshaders['aa2'])
                 elif self._aa == 3:
-                    self._program1.SetFragmentShader(fshaders['aa3'])
+                    self._glsl_program.SetFragmentShader(shaders.fshaders['aa3'])
                 else:
-                    self._program1.SetFragmentShader(fshaders['aa0'])
+                    self._glsl_program.SetFragmentShader(shaders.fshaders['aa0'])
             elif isinstance(value, basestring):
                 if value in fshaders:
-                    self._program1.SetFragmentShader(fshaders[value])
+                    self._glsl_program.SetFragmentShader(shaders.fshaders[value])
                 else:
                     print "Texture2D.aa: unknown shader, no action taken."
             else:
@@ -585,24 +738,60 @@ class Texture3D(BaseTexture):
         self._texture1 = TextureObjectToVisualize(3, data)
         self.SetData(data)
         
+        # Init deform
+        self._deformation = None
+        
         # init interpolation
         self._texture1._interpolate = True # looks so much better
         
         # init iso shader param
         self._isoThreshold = 0.0
+        self._stepRatio =1.0
+        
+        # Init vertex shader
+        self.vertexShader.AddPart('base', shaders.vshaders['calculateray'])
+        self.fragmentShader.AddPart('base', shaders.fshaders['volumerender'])
+        self.fragmentShader.AddPart('steps', shaders.SH_CALCSTEPS)
+        self.fragmentShader.AddPart('style', shaders.SH_STYLE_MIP)
+        self.fragmentShader.AddPart('color', shaders.SH_COLOR_SCALAR)
+        
+        
+        def uniform_shape():
+            shape = self._texture1._shape[:3] # as in opengl
+            return [float(s) for s in reversed(list(shape))]
+        def uniform_th():
+            ran = self._texture1._climRef.range
+            if ran==0:
+                ran = 1.0
+            th = (self._isoThreshold - self._texture1._climRef.min ) / ran
+            return th
+        
+        self._fragmentShader.SetUniform('colormap', self._colormap)
+        self._fragmentShader.SetUniform('shape', uniform_shape)
+        self._fragmentShader.SetUniform('th', uniform_th)
+        self._fragmentShader.SetUniform('scaleBias', self._texture1._ScaleBias_get)
+        
+        # Set lighting for iso renderer
+        self._fragmentShader.SetUniform('ambient', [0.7,0.7,0.7,1.0])
+        self._fragmentShader.SetUniform('diffuse', [0.7,0.7,0.7,1.0])
+        self._fragmentShader.SetUniform('specular', [0.3,0.3,0.3,1.0])
+        self._fragmentShader.SetUniform('shininess', 50.0)
         
         # init vertex shader
-        self._program1.SetVertexShader(vshaders['calculateray'])
-        # init fragment shader, be robust if user gives invalid method
-        self._renderStyle = ''
-        self.renderStyle = renderStyle
-        if not self._renderStyle:
-            self.renderStyle = 'mip'
+#         self._glsl_program.SetVertexShader(shaders.vshaders['calculateray'])
+#         # init fragment shader, be robust if user gives invalid method
+#         self._renderStyle = ''
+#         self.renderStyle = renderStyle
+#         if not self._renderStyle:
+#             self.renderStyle = 'mip'
         
         # Attribute to store array of quads (vertices and texture coords)
         self._quads = None
         # Also store daspect, if this changes quads should be recalculated
         self._daspectStored = (1,1,1)
+        
+        # Set renderstyle
+        self.renderStyle = renderStyle
     
     
     def OnDrawShape(self, clr):
@@ -620,6 +809,12 @@ class Texture3D(BaseTexture):
         # _texture._shape is a good indicator of a valid texture
         if not self._texture1._shape:
             return
+        
+        # Apply code for vertex and fragment shaders if possible
+        if self.vertexShader._isDirtyForProgram:
+            self._glsl_program.SetVertexShader(self.vertexShader.GetCode())
+        if self.fragmentShader._isDirtyForProgram:
+            self._glsl_program.SetFragmentShader(self.fragmentShader.GetCode())
         
         # Prepare by setting things to their defaults. This might release some
         # memory so result in a bigger chance that the shader is run in 
@@ -643,29 +838,49 @@ class Texture3D(BaseTexture):
 #             cam=axes._cameras['ThreeDCamera']
 #             daspect = axes.daspect
 #             gl.glScale( 1.0/daspect[0], 1.0/daspect[1] , 1.0/daspect[2] )
-            
+        
         # fragment shader on
-        if self._program1.IsUsable():
-            self._program1.Enable()
+        if self._glsl_program.IsUsable():
+            self._glsl_program.Enable()
             
-            # bind texture- and help-textures (create if it does not exist)
-            self._program1.SetUniformi('texture', [0])        
-            self._colormap.Enable(1)
-            self._program1.SetUniformi('colormap', [1])
+            # Apply uniforms
+            self.vertexShader._ApplyUniforms(self._glsl_program)
+            self.fragmentShader._ApplyUniforms(self._glsl_program)
+        
+            # Bind texture- and help-textures (create if it does not exist)
+            self._glsl_program.SetUniformi('texture', [0])        
             
-            # set uniforms: parameters
-            shape = self._texture1._shape[:3] # as in opengl
-            self._program1.SetUniformf('shape',reversed(list(shape)) )
-            ran = self._texture1._climRef.range
-            if ran==0:
-                ran = 1.0
-            th = (self._isoThreshold - self._texture1._climRef.min ) / ran
-            self._program1.SetUniformf('th', [th]) # in 0:1
+            # Set step ratio
             if fast:
-                self._program1.SetUniformf('stepRatio', [0.4])
+                self._glsl_program.SetUniformf('stepRatio', [self._stepRatio*0.5])
             else:
-                self._program1.SetUniformf('stepRatio', [1.0])
-            self._program1.SetUniformf('scaleBias', self._texture1._ScaleBias_get())        
+                self._glsl_program.SetUniformf('stepRatio', [self._stepRatio])
+            
+#             self._colormap.Enable(1)
+#             self._glsl_program.SetUniformi('colormap', [1])
+#             
+#             # bind deform texture
+#             if self._deformation is not None:
+#                 self._deformation.Enable(2)
+#                 if not self._deformation._shape:
+#                     print 'deformation not ok'
+#                 self._glsl_program.SetUniformi('deformation', [2])
+#                 self._glsl_program.SetUniformf('scaleBiasDeform',
+#                                     self._deformation._ScaleBias_get())        
+#             
+#             # set uniforms: parameters
+#             shape = self._texture1._shape[:3] # as in opengl
+#             self._glsl_program.SetUniformf('shape',reversed(list(shape)) )
+#             ran = self._texture1._climRef.range
+#             if ran==0:
+#                 ran = 1.0
+#             th = (self._isoThreshold - self._texture1._climRef.min ) / ran
+#             self._glsl_program.SetUniformf('th', [th]) # in 0:1
+#             if fast:
+#                 self._glsl_program.SetUniformf('stepRatio', [0.4])
+#             else:
+#                 self._glsl_program.SetUniformf('stepRatio', [1.0])
+#             self._glsl_program.SetUniformf('scaleBias', self._texture1._ScaleBias_get())        
         
         # do the actual drawing
         self._DrawQuads()
@@ -677,7 +892,9 @@ class Texture3D(BaseTexture):
         gl.glFlush()        
         self._texture1.Disable()
         self._colormap.Disable()
-        self._program1.Disable()
+        if self._deformation is not None:
+            self._deformation.Disable()
+        self._glsl_program.Disable()
         #
         gl.glDisable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_LINE_SMOOTH)
@@ -803,38 +1020,46 @@ class Texture3D(BaseTexture):
         """ Get/Set the render style to render the volumetric data:
           * mip: maximum intensity projection
           * iso: isosurface rendering
-          * rays: ray casting (tip: use the ColormapEditor wibject to 
+          * ray: ray casting (tip: use the ColormapEditor wibject to 
             control transparancy)
-          * colormip: mip render with color (RGB or RGBA) data
-          * coloriso: iso render for color data
+          * isoray: a hybrid iso/ray renderer.
+        Prepend the name with "color" to render color volumes.
         If drawing takes really long, your system renders in software
         mode. Try rendering data that is shaped with a power of two. This 
         helps on some cards.
         """
         def fget(self):
             return self._renderStyle
-        def fset(self, style):            
+        def fset(self, style):     
             style = style.lower()
-            # first try directly
-            if style in fshaders:
-                self._renderStyle = style
-                self._program1.SetFragmentShader(fshaders[style])
-            # then try aliases
-            elif style in ['mip']:
-                self._renderStyle = 'mip'
-                self._program1.SetFragmentShader(fshaders['mip'])
-            elif style in ['iso', 'isosurface']:
-                self._renderStyle = 'isosurface'
-                self._program1.SetFragmentShader(fshaders['isosurface'])
-            elif style in ['coloriso', 'colorisosurface']:
-                self._renderStyle = 'colorisosurface'
-                self._program1.SetFragmentShader(fshaders['colorisosurface'])
-            elif style in ['ray', 'rays', 'raycasting']:
-                self._renderStyle = 'raycasting'
-                self._program1.SetFragmentShader(fshaders['raycasting'])
+            # Set render style
+            if 'mip' in style:
+                self._fragmentShader.ReplacePart('style', shaders.SH_STYLE_MIP)
+                self._fragmentShader.RemovePart('litvoxel')
+            elif 'isoray' in style:
+                lf = shaders.SH_LITVOXEL
+                self._fragmentShader.ReplacePart('style', shaders.SH_STYLE_ISORAY)
+                self._fragmentShader.AddOrReplace('litvoxel', lf, after='style')
+            elif 'iso' in style:
+                lf = shaders.SH_LITVOXEL
+                self._fragmentShader.ReplacePart('style', shaders.SH_STYLE_ISO)
+                self._fragmentShader.AddOrReplace('litvoxel', lf, after='style')
+            elif 'ray' in style:
+                self._fragmentShader.ReplacePart('style', shaders.SH_STYLE_RAY)
+                self._fragmentShader.RemovePart('litvoxel')
             else:
-                print "Unknown render style in Texture3d.renderstyle."
-
+                raise ValueError("Unknown render style in Texture3d.renderstyle.")
+            # Store style
+            self._renderStyle = style
+            # Set color
+            if 'color' in style or 'rgb' in style:
+                self._fragmentShader.ReplacePart('color', shaders.SH_COLOR_RGB)
+            elif 'nocmap' in style:
+                self._fragmentShader.ReplacePart('color', shaders.SH_COLOR_SCALAR_NOCMAP)
+            else:
+                self._fragmentShader.ReplacePart('color', shaders.SH_COLOR_SCALAR)
+    
+    
     @PropWithDraw
     def isoThreshold():
         """ Get/Set the isothreshold value used in the isosurface renderer.
@@ -891,27 +1116,27 @@ class MultiTexture3D(Texture3D):
         gl.glCullFace(gl.GL_BACK)
         
         # fragment shader on
-        if self._program1.IsUsable():
-            self._program1.Enable()
+        if self._glsl_program.IsUsable():
+            self._glsl_program.Enable()
             
             # bind texture- and help-textures (create if it does not exist)
-            self._program1.SetUniformi('texture', [0])        
+            self._glsl_program.SetUniformi('texture', [0])        
             self._colormap.Enable(1)
-            self._program1.SetUniformi('colormap', [1])
+            self._glsl_program.SetUniformi('colormap', [1])
             
             # set uniforms: parameters
             shape = self._texture1._shape # as in opengl
-            self._program1.SetUniformf('shape',reversed(list(shape)) )
+            self._glsl_program.SetUniformf('shape',reversed(list(shape)) )
             ran = self._climRef.range
             if ran==0:
                 ran = 1.0
             th = (self._isoThreshold - self._climRef.min ) / ran
-            self._program1.SetUniformf('th', [th]) # in 0:1
+            self._glsl_program.SetUniformf('th', [th]) # in 0:1
             if fast:
-                self._program1.SetUniformf('stepRatio', [0.4])
+                self._glsl_program.SetUniformf('stepRatio', [0.4])
             else:
-                self._program1.SetUniformf('stepRatio', [1.0])
-            self._program1.SetUniformf('scaleBias', self._ScaleBias_get())        
+                self._glsl_program.SetUniformf('stepRatio', [1.0])
+            self._glsl_program.SetUniformf('scaleBias', self._ScaleBias_get())        
         
         # do the actual drawing
         self._DrawQuads()
@@ -921,7 +1146,7 @@ class MultiTexture3D(Texture3D):
         self._texture1.Disable()
         self._texture2.Disable()
         self._colormap.Disable()
-        self._program1.Disable()
+        self._glsl_program.Disable()
         #
         gl.glDisable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_LINE_SMOOTH)
@@ -936,7 +1161,7 @@ class MultiTexture3D(Texture3D):
         self._texture2.DestroyGl()
         
         # clear shaders
-        self._program1.DestroyGl()
+        self._glsl_program.DestroyGl()
         
         # remove colormap's texture from memory        
         if hasattr(self, '_colormap'):

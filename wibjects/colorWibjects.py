@@ -93,7 +93,7 @@ class BaseMapableEditor(DraggableBox):
         # Get the weak refs to the actual wobjects
         self._mapables = []
         for arg in args:
-            if isinstance(arg, (BaseFigure,Axes)) or isinstance(Colormapable):
+            if isinstance(arg, (BaseFigure,Axes)) or isinstance(arg, Colormapable):
                 self._mapables.append( weakref.ref(arg) )
             else:
                 print 'Warning object is not mappable: ', arg 
