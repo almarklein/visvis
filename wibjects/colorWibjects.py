@@ -576,8 +576,8 @@ class Colorbar(Box):
     def __init__(self, parent):        
         Box.__init__(self, parent)
         
-        self.Label = Label(self, '')
-        self.Label.bgcolor = ''
+        self._label = Label(self, '')
+        self._label.bgcolor = ''
         self.eventPosition.Bind(self._OnPositionChange)
         
         # Pool of labels for tickmarks, to reuse them
@@ -601,33 +601,42 @@ class Colorbar(Box):
     def _OnPositionChange(self, event):
         """ Adjust the position of the label.
         """
-        self.Label.halign = 'center'
-        self.Label.valign = 'center'
+        self._label.halign = 'center'
+        self._label.valign = 'center'
 
         w,h = self.position.size
         if w > h:
-            self.Label.textAngle = 0
-            self.Label.position.w = 100
-            self.Label.position.h = self.Label.fontSize
-            self.Label.position.x = (w - 100)/2.
-            self.Label.position.y = h + 20
+            self._label.textAngle = 0
+            self._label.position.w = 100
+            self._label.position.h = self._label.fontSize
+            self._label.position.x = (w - 100)/2.
+            self._label.position.y = h + 20
         else:
-            self.Label.textAngle = 90
-            self.Label.position.w = self.Label.fontSize
-            self.Label.position.h = 100
-            self.Label.position.x = w + 40
-            self.Label.position.y = (h - 100)/2.
+            self._label.textAngle = 90
+            self._label.position.w = self._label.fontSize
+            self._label.position.h = 100
+            self._label.position.x = w + 40
+            self._label.position.y = (h - 100)/2.
     
     def _OnAxesPositionChange(self, event):
         axes = event.owner
         if axes:
             self.position.x = axes.position.width+5
-        
     
-    def setLabel(self, value):
-        """ A convenience function to set the label text.
+    @property
+    def label(self):
+        """ Get the label instance for this colorbar. 
         """
-        self.Label.text = value
+        return self._label
+    
+    
+    def SetLabel(self, value):
+        """ SetLabel(value)
+        
+        A convenience function to set the label text.
+        
+        """
+        self._label.text = value
     
     
     def OnDraw(self):
