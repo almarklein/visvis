@@ -749,10 +749,10 @@ class Texture3D(BaseTexture):
         self._stepRatio =1.0
         
         # Init vertex shader
-        self.vertexShader.AddPart('base', shaders.vshaders['calculateray'])
-        self.fragmentShader.AddPart('base', shaders.fshaders['volumerender'])
-        self.fragmentShader.AddPart('steps', shaders.SH_CALCSTEPS)
-        self.fragmentShader.AddPart('style', shaders.SH_STYLE_MIP)
+        self.vertexShader.AddPart('base', shaders.SH_3V_BASE)
+        self.fragmentShader.AddPart('base', shaders.SH_3F_BASE)
+        self.fragmentShader.AddPart('steps', shaders.SH_3F_CALCSTEPS)
+        self.fragmentShader.AddPart('style', shaders.SH_3F_STYLE_MIP)
         self.fragmentShader.AddPart('color', shaders.SH_COLOR_SCALAR)
         
         
@@ -1034,18 +1034,18 @@ class Texture3D(BaseTexture):
             style = style.lower()
             # Set render style
             if 'mip' in style:
-                self._fragmentShader.ReplacePart('style', shaders.SH_STYLE_MIP)
+                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_MIP)
                 self._fragmentShader.RemovePart('litvoxel')
             elif 'isoray' in style:
-                lf = shaders.SH_LITVOXEL
-                self._fragmentShader.ReplacePart('style', shaders.SH_STYLE_ISORAY)
+                lf = shaders.SH_3F_LITVOXEL
+                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_ISORAY)
                 self._fragmentShader.AddOrReplace('litvoxel', lf, after='style')
             elif 'iso' in style:
-                lf = shaders.SH_LITVOXEL
-                self._fragmentShader.ReplacePart('style', shaders.SH_STYLE_ISO)
+                lf = shaders.SH_3F_LITVOXEL
+                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_ISO)
                 self._fragmentShader.AddOrReplace('litvoxel', lf, after='style')
             elif 'ray' in style:
-                self._fragmentShader.ReplacePart('style', shaders.SH_STYLE_RAY)
+                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_RAY)
                 self._fragmentShader.RemovePart('litvoxel')
             else:
                 raise ValueError("Unknown render style in Texture3d.renderstyle.")
