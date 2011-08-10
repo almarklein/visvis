@@ -19,13 +19,14 @@ if True:
     vol[:,:,1:] += 0.3 * vol0[:,:,:-1]
     vol[:,:,:-1] += 0.3 * vol0[:,:,1:]
 else:
+    # My personal test
     from visvis import ssdf
     s = ssdf.load('/home/almar/data/dicom/cropped/croppedReg_pat01.bsdf')
     vol = s.vol
 
 ##
 
-# Create figures
+# Create figure and make subplots with different renderers
 vv.figure(1); vv.clf()
 RS = ['mip', 'ray', 'iso', 'isoray']
 a0 = None
@@ -33,6 +34,7 @@ tt = []
 for i in range(4):
     a = vv.subplot(2,2,i+1)
     t = vv.volshow(vol)
+    vv.title('Renderstyle ' + RS[i])
     #t.colormap = vv.CM_CT1
     t.renderStyle = RS[i]
     tt.append(t)
@@ -45,4 +47,5 @@ for i in range(4):
 cme = vv.ColormapEditor(a0, *tt)
 
 # Run app
+app.Create()
 app.Run()
