@@ -45,7 +45,7 @@ SH_3V_BASE = """
         // but quite acceptable
         
         // Get location of vertex in device coordinates
-        vec4 refPos1 = gl_Position
+        vec4 refPos1 = gl_Position;
         refPos1 *= refPos1.w; // Not sure why, but this does the trick
         // Calculate point right behind it
         vec4 refPos2 = refPos1 + vec4(0.0, 0.0, 1.0, 0.0);
@@ -341,7 +341,67 @@ SH_3F_STYLE_RAY = """
     gl_FragColor = color3;
     
 """
-
+## SH_3D fragment STYLE RAY2
+SH_3F_STYLE_RAY2 = """
+    
+    >>uniforms>>
+    uniform float stepRatio;
+    <<uniforms<<
+    
+    >>pre-loop>>
+    vec4 color1; // what we sample from the texture
+    vec4 color2; // what should be displayed
+    vec4 color3 = vec4(0.0, 0.0, 0.0, 0.0); // init color
+    vec3 step = 1.5 / shape;
+    <<pre-loop<<
+    
+    >>in-loop>>
+    
+    // Sample color and make display color
+    color1 = texture3D( texture, loc );
+    vec4 color0 = color1;
+    
+    // Look in neighborhood
+    color2 = color1;
+    color1 = texture3D( texture, loc+vec3(-step[0],0.0,0.0) );
+    color2 = max(color1, color2);
+    color1 = texture3D( texture, loc+vec3(step[0],0.0,0.0) );
+    color2 = max(color1, color2);    
+    color1 = texture3D( texture, loc+vec3(0.0,-step[1],0.0) );
+    color2 = max(color1, color2);    
+    color1 = texture3D( texture, loc+vec3(0.0,step[1],0.0) );
+    color2 = max(color1, color2);
+    color1 = texture3D( texture, loc+vec3(0.0,0.0,-step[2]) );
+    color2 = max(color1, color2);
+    color1 = texture3D( texture, loc+vec3(0.0,0.0,step[2]) );
+    color2 = max(color1, color2);
+    
+    // Calculate color strengths
+    float colorStrength0 = length(color0.rgb);
+    float colorStrength2 = length(color2.rgb);
+    
+    // Calculate display color and reduce according to difference
+    color1 = color2 * (colorStrength0/(colorStrength2+0.01));
+    <<color1-to-color2<<
+    color2.rgb *= max(0.5, 1.0-(colorStrength2-colorStrength0));
+    
+    // Update value  by adding contribution of this voxel
+    // Put bias in denominator so the first voxels dont contribute too much
+    float a = color2.a * max(0.0, 1.0-color3.a) / stepRatio;
+    color3.rgb += color2.rgb*a;
+    color3.a += a; // color3.a counts total color contribution.
+    
+    >>post-loop>>
+    
+    // Set depth at zero
+    iter_depth = 0;
+    
+    // Set color
+    color3.rgb /= color3.a;
+    color3.a = min(1.0, color3.a);
+    gl_FragColor = color3;
+    
+"""
 ## 3D fragment STYLE ISO
 # Needs Color part and litvoxel part
 SH_3F_STYLE_ISO = """
