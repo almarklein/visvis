@@ -484,8 +484,12 @@ class ShaderCode(object):
         except Exception:
             return False
         else:
+            # Signal dirty
+            self._buffer = None
+            # Pop
             self._parts.pop(i)
             return True
+        
     
     
     def HasPart(self, name):
@@ -507,6 +511,9 @@ class ShaderCode(object):
         
         """
         self._parts = []
+        
+        # Signal dirty
+        self._buffer = None
     
     
     def GetCode(self, name=None):
@@ -700,7 +707,7 @@ class ShaderCode(object):
                 setuniform(value())
         
         for name in self._uniforms:
-            self._SetUniform(self._uniforms[name])
+           setuniform(self._uniforms[name])
 
 
 if __name__ == '__main__':

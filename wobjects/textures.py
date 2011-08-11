@@ -894,8 +894,8 @@ class Texture3D(BaseTexture):
         gl.glFlush()        
         self._texture1.Disable()
         self._colormap.Disable()
-        if self._deformation is not None:
-            self._deformation.Disable()
+        self.fragmentShader._DisableUniformTextures()
+        self.vertexShader._DisableUniformTextures()
         self._glsl_program.Disable()
         #
         gl.glDisable(gl.GL_CULL_FACE)
@@ -1035,35 +1035,37 @@ class Texture3D(BaseTexture):
             return self._renderStyle
         def fset(self, style):     
             style = style.lower()
+             # Set color
+            sh_color = shaders.SH_COLOR_SCALAR
+            if 'color' in style or 'rgb' in style:
+                sh_color = shaders.SH_COLOR_RGB
+            elif 'nocmap' in style:
+                sh_color = shaders.SH_COLOR_SCALAR_NOCMAP
+            styleStrict = style.replace('rgb','').replace('color','')
             # Set render style
-            if 'mip' in style:
+            if 'mip' == styleStrict:
                 self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_MIP)
                 self._fragmentShader.RemovePart('litvoxel')
-            elif 'isoray' in style:
+            elif 'isoray' == styleStrict:
                 lf = shaders.SH_3F_LITVOXEL
                 self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_ISORAY)
                 self._fragmentShader.AddOrReplace('litvoxel', lf, after='style')
-            elif 'iso' in style:
+            elif 'iso' == styleStrict:
                 lf = shaders.SH_3F_LITVOXEL
                 self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_ISO)
                 self._fragmentShader.AddOrReplace('litvoxel', lf, after='style')
-            elif 'ray2' in style:
+            elif 'ray2' == styleStrict:
                 self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_RAY2)
                 self._fragmentShader.RemovePart('litvoxel')
-            elif 'ray' in style:
+            elif 'ray' == styleStrict:
                 self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_RAY)
                 self._fragmentShader.RemovePart('litvoxel')
             else:
                 raise ValueError("Unknown render style in Texture3d.renderstyle.")
-            # Store style
+            # Store style and set color
             self._renderStyle = style
-            # Set color
-            if 'color' in style or 'rgb' in style:
-                self._fragmentShader.ReplacePart('color', shaders.SH_COLOR_RGB)
-            elif 'nocmap' in style:
-                self._fragmentShader.ReplacePart('color', shaders.SH_COLOR_SCALAR_NOCMAP)
-            else:
-                self._fragmentShader.ReplacePart('color', shaders.SH_COLOR_SCALAR)
+            self._fragmentShader.ReplacePart('color', sh_color)
+           
     
     
     @PropWithDraw

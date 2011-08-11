@@ -299,6 +299,7 @@ SH_3F_STYLE_MIP = """
     color1 = maxcolor;
     <<color1-to-color2<<
     gl_FragColor = color2;
+    <<post-loop<<
     
 """
 
@@ -329,6 +330,7 @@ SH_3F_STYLE_RAY = """
     float a = color2.a * max(0.0, 1.0-color3.a) / stepRatio;
     color3.rgb += color2.rgb*a;
     color3.a += a; // color3.a counts total color contribution.
+    <<in-loop<<
     
     >>post-loop>>
     
@@ -339,6 +341,7 @@ SH_3F_STYLE_RAY = """
     color3.rgb /= color3.a;
     color3.a = min(1.0, color3.a);
     gl_FragColor = color3;
+    <<post-loop<<
     
 """
 ## SH_3D fragment STYLE RAY2
@@ -390,6 +393,7 @@ SH_3F_STYLE_RAY2 = """
     float a = color2.a * max(0.0, 1.0-color3.a) / stepRatio;
     color3.rgb += color2.rgb*a;
     color3.a += a; // color3.a counts total color contribution.
+    <<in-loop<<
     
     >>post-loop>>
     
@@ -400,6 +404,7 @@ SH_3F_STYLE_RAY2 = """
     color3.rgb /= color3.a;
     color3.a = min(1.0, color3.a);
     gl_FragColor = color3;
+    <<post-loop<<
     
 """
 ## 3D fragment STYLE ISO
@@ -450,6 +455,7 @@ SH_3F_STYLE_ISO = """
             break;
         }
     }
+    <<in-loop<<
     
     >>post-loop>>
     
@@ -460,6 +466,7 @@ SH_3F_STYLE_ISO = """
     color3.rgb /= color3.a;
     color3.a = float(iter_depth_f>0.0);
     gl_FragColor = color3;
+    <<post-loop<<
     
 """
 
@@ -496,7 +503,7 @@ SH_3F_STYLE_ISORAY = """
     
     // Set depth
     iter_depth_f =  float(iter_depth==0.0) * float(color3.a>0) * float(i);
-    
+    <<in-loop<<
     
     >>post-loop>>
     
@@ -506,20 +513,24 @@ SH_3F_STYLE_ISORAY = """
     color3.rgb /= color3.a;
     color3.a = min(1.0, color3.a);
     gl_FragColor = color3;
+    <<post-loop<<
     
 """
 
 ## 3D fragment_LITVOXEL (for ISO and ISORAY styles)
 SH_3F_LITVOXEL = """
     >>uniforms>>
-    varying vec3 L; // light direction
-    varying vec3 V; // view direction
     // lighting
     uniform vec4 ambient;
     uniform vec4 diffuse;
     uniform vec4 specular;
     uniform float shininess;
     <<uniforms<<
+    
+    >>varyings>>
+    varying vec3 L; // light direction
+    varying vec3 V; // view direction
+    <<varyings<<
     
     
     >>functions>>
