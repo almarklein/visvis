@@ -20,6 +20,68 @@ SH_3V_BASE = """
     void main()
     {    
         
+        // First of all, set projected position.
+        // (We need to do this because this shader replaces the original shader.)
+        gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+        
+        // Store position of vertex too, so the fragment shader can calculate
+        // the depth
+        vertexPosition = gl_Vertex.xyzw;
+        
+        // Store texture coordinate (also a default thing).
+        gl_TexCoord[0].xyz = gl_MultiTexCoord0.xyz;
+        
+        // Calculate light direction
+        L = (gl_LightSource[0].position * gl_ModelViewMatrix).xyz;
+        if (gl_LightSource[0].position[3]==1.0)
+            L -= gl_Vertex.xyz;
+        L = normalize(L);
+        
+        // Calculate view direction
+        V = (vec4(0.0, 0.0, 1.0, 1.0) * gl_ModelViewMatrix).xyz;
+        V = normalize(V);
+        
+        // Calculate ray. Not perfect in projective view, 
+        // but quite acceptable
+        
+        // Get location of vertex in device coordinates
+        vec4 refPos1 = gl_Position
+        refPos1 *= refPos1.w; // Not sure why, but this does the trick
+        // Calculate point right behind it
+        vec4 refPos2 = refPos1 + vec4(0.0, 0.0, 1.0, 0.0);
+        // Project back to world coordinates to calculate ray direction
+        vec4 p1 = gl_ModelViewProjectionMatrixInverse * refPos1 ;
+        vec4 p2 = gl_ModelViewProjectionMatrixInverse * refPos2 ;
+        ray = (p2.xyz/p2.w) - (p1.xyz/p1.w);
+        
+        // Normalize ray to unit length.    
+        ray = normalize(ray);
+        
+        // Make the ray represent the length of a single voxel.
+        ray = ray / shape;
+        ray = ray * 0.58; // 1 over root of three = 0.577
+        
+        // Scale ray to take smaller steps.
+        ray = ray / stepRatio;
+        
+    }
+
+"""
+
+_SH_3V_BASE = """
+    // Uniforms obtained from OpenGL
+    uniform vec3 shape; // The dimensions of the data
+    uniform float stepRatio; // Ratio to tune the number of steps
+    
+    // Varyings to pass to fragment shader
+    varying vec3 ray; // The direction to cast the rays in
+    varying vec3 L; // The 0th light source direction
+    varying vec3 V; // The View direction
+    varying vec4 vertexPosition; // The vertex position in world coordinates
+    
+    void main()
+    {    
+        
         // First of all, set position.
         // (We need to do this because this shader replaces the original shader.)
         gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
@@ -287,6 +349,7 @@ SH_3F_STYLE_ISO = """
     >>uniforms>>
     uniform float th; // isosurface treshold
     uniform float stepRatio;
+    uniform int maxIsoSamples;
     <<uniforms<<
     
     >>pre-loop>>
@@ -296,6 +359,7 @@ SH_3F_STYLE_ISO = """
     vec4 color2; // temp color
     vec4 color3 = vec4(0.0, 0.0, 0.0, 0.0); // init color
     float iter_depth_f = 0.0; // to set the depth
+    int nsamples = 0;
     <<pre-loop<<
     
     >>in-loop>>
@@ -307,14 +371,24 @@ SH_3F_STYLE_ISO = """
     if (val > th)
     {
         // Set color
-        color3 = calculateColor(color1, loc, step);
+        color2 = calculateColor(color1, loc, step);
+        
+        // Update value by adding contribution of this voxel
+        float a = color2.a * max(0.0, 1.0-color3.a) / stepRatio;
+        //float a = color2.a / ( color2.a + color3.a + 0.00001); 
+        color3.rgb += color2.rgb*a;
+        color3.a += a; // color3.a counts total color contribution.
         
         // Set depth
         iter_depth_f =  float(i);
         
         // Break
-        i = n;
-        break;
+        nsamples += 1;
+        if (nsamples>maxIsoSamples)
+        {
+            i = n;
+            break;
+        }
     }
     
     >>post-loop>>
@@ -323,6 +397,7 @@ SH_3F_STYLE_ISO = """
     iter_depth = int(iter_depth_f);
     
     // Set color
+    color3.rgb /= color3.a;
     color3.a = float(iter_depth_f>0.0);
     gl_FragColor = color3;
     
