@@ -776,6 +776,8 @@ class Texture3D(BaseTexture):
         self._fragmentShader.SetUniform('diffuse', [0.7,0.7,0.7,1.0])
         self._fragmentShader.SetUniform('specular', [0.3,0.3,0.3,1.0])
         self._fragmentShader.SetUniform('shininess', 50.0)
+        # And number of surface samples
+        self._fragmentShader.SetUniform('maxIsoSamples', 3)
         
         # init vertex shader
 #         self._glsl_program.SetVertexShader(shaders.vshaders['calculateray'])
