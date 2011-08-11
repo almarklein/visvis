@@ -1024,6 +1024,7 @@ class Texture3D(BaseTexture):
           * iso: isosurface rendering
           * ray: ray casting (tip: use the ColormapEditor wibject to 
             control transparancy)
+          * ray2: ray casting with simple shadow effects. Looks nicer than ray.
           * isoray: a hybrid iso/ray renderer.
         Prepend the name with "color" to render color volumes.
         If drawing takes really long, your system renders in software
@@ -1046,6 +1047,9 @@ class Texture3D(BaseTexture):
                 lf = shaders.SH_3F_LITVOXEL
                 self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_ISO)
                 self._fragmentShader.AddOrReplace('litvoxel', lf, after='style')
+            elif 'ray2' in style:
+                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_RAY2)
+                self._fragmentShader.RemovePart('litvoxel')
             elif 'ray' in style:
                 self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_RAY)
                 self._fragmentShader.RemovePart('litvoxel')
