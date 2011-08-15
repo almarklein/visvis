@@ -751,7 +751,8 @@ class NeuQuant:
         # Check image
         if image.size[0] * image.size[1] < NeuQuant.MAXPRIME:
             raise IOError("Image is too small")
-        assert image.mode == "RGBA"
+        if image.mode != "RGBA":
+            raise IOError("Image mode should be RGBA.")
         
         # Initialize
         self.setconstants(samplefac, colors)

@@ -141,7 +141,7 @@ def polarplot(data1, data2=None, inRadians=False,
     else:
 
         if data1 is None:
-            raise Exception("The first argument cannot be None!")
+            raise ValueError("The first argument cannot be None!")
         data1 = makeArray(data1)
         
         if data2 is None:
@@ -155,7 +155,7 @@ def polarplot(data1, data2=None, inRadians=False,
         # check dimensions
         L = data1.size
         if L != data2.size:
-            raise("Array dimensions do not match! %i vs %i " %
+            raise ValueError("Array dimensions do not match! %i vs %i " %
                     (data1.size, data2.size))
         
         # build points

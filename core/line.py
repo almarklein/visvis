@@ -125,7 +125,7 @@ class Sprite:
             try:
                 gl.glDeleteTextures([self._texId])
                 self._texId = 0
-            except:
+            except Exception:
                 pass
 
     def __del__(self):
