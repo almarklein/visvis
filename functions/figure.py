@@ -34,8 +34,9 @@ def figure(fig=None):
         # test nr
         try:
             nr = int(fig)
-            assert nr > 0
-        except (ValueError, TypeError, AssertionError):
+            if nr <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
             raise Exception("Figure number should be an integer >=1")
     else:
         nr = None

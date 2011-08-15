@@ -114,7 +114,7 @@ class GLWidget(GLCanvas):
         x,y = event.GetPosition()
         try:
             self.ReleaseMouse()
-        except:
+        except Exception:
             pass
         self.figure._GenerateMouseEvent('up', x, y, 1, modifiers(event))
 
@@ -127,7 +127,7 @@ class GLWidget(GLCanvas):
         x,y = event.GetPosition()  
         try:
             self.ReleaseMouse()
-        except:
+        except Exception:
             pass        
         self.figure._GenerateMouseEvent('up', x, y, 2, modifiers(event))
     
