@@ -173,7 +173,7 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
         if gldrawable.is_double_buffered():
             gldrawable.swap_buffers()
         else:
-            glFlush()
+            gl.glFlush()
 
 
 class Figure(BaseFigure):

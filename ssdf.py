@@ -48,7 +48,6 @@ Python 2 as well as Python 3.
 
 __version__ = '2.0'
 
-import os
 import sys
 import time
 import struct
@@ -713,7 +712,7 @@ class Struct(object):
     def __getitem__(self, key):
         # Name ok?
         key2 = _isvalidname(key)
-        if not key:
+        if not key2:
             raise KeyError("Trying to get invalid name '%s'." % key)
         # Name exists?
         if not key in self.__dict__:
@@ -1762,10 +1761,6 @@ class _TextBlock(_Block):
     
     
     def _from_array(self, value):
-        if value.shape:
-            size = reduce( lambda a,b:a*b, value.shape)
-        else:
-            size = 1 # Scalar
         shapestr = _shapeString(value)
         dtypestr = str(value.dtype)
             
@@ -1816,7 +1811,7 @@ class _TextBlock(_Block):
             shape = [int(i) for i in word2.split('x') if i]
         except Exception:
             print("SSDF: invalid array shape on line %i."%self._blocknr)
-            return name, None
+            return None
         if shape:
             size = reduce( lambda a,b:a*b, shape)
         else:

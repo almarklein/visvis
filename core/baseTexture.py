@@ -783,4 +783,3 @@ class Colormapable(object):
         return self._clim
     def _SetClim(self, value):
         self._clim = value
-    

@@ -268,7 +268,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
     Get the tick values, position and texts.
     These are calculated from a start end end position and the range
     of values to map on a straight line between these two points
-    (which can be 2d or 3d). If ticks is given, use these values instead.
+    (which can be 2d or 3d). If givenTicks is given, use these values instead.
     
     """
     
@@ -859,11 +859,18 @@ class BaseAxis(base.Wobject):
         and the range to cover (lim), calculate the actual tick values.
         """
         
+        # Get position of first and last tick
         firstTick = np.ceil(  lim.min/tickUnit ) * tickUnit
         lastTick  = np.floor( lim.max/tickUnit ) * tickUnit
+        
+        # Valid range?
+        if firstTick > lim.max or lastTick < lim.min:
+            return []
+        
+        # Create ticks
         count = 0
         ticks = [firstTick]
-        while ticks[-1] < lastTick-tickUnit/2:
+        while ticks[-1] < lastTick-tickUnit:
             count += 1
 #             tmp = firstTick + count*tickUnit
 #             if abs(tmp/tickUnit) < 10**-10:
@@ -1037,6 +1044,9 @@ class CartesianAxis2D(BaseAxis):
             p1, p2 = firstCorner.copy(), firstCorner+vector_c
             tmp = GetTicks(p1,p2, lim, minTickDist, tickValues)
             ticks, ticksPos, ticksText = tmp
+            tickUnit = lim.range
+            if len(ticks)>=2:
+                tickUnit = ticks[1] - ticks[0]
             
             # Apply Ticks
             for tick, pos, text in zip(ticks, ticksPos, ticksText):
@@ -1316,6 +1326,9 @@ class CartesianAxis3D(BaseAxis):
             p1, p2 = firstCorner.copy(), firstCorner+vectors4_c[i0]
             tmp = GetTicks(p1,p2, lim, minTickDist, tickValues)
             ticks, ticksPos, ticksText = tmp
+            tickUnit = lim.range
+            if len(ticks)>=2:
+                tickUnit = ticks[1] - ticks[0]
             
             # Apply Ticks
             for tick, pos, text in zip(ticks, ticksPos, ticksText):
@@ -1781,6 +1794,11 @@ class PolarAxis2D(BaseAxis):
                             minTickDist, tickValues)
         ticks, ticksPos, ticksText = tmp
         textRadius = (2.2 * txtSize) + radiusMax_c
+        # Get tick unit
+        tickUnit = self._angularRange.range
+        if len(ticks)>=2:
+            tickUnit = ticks[1] - ticks[0]
+        
         for tick, pos, text in zip(ticks, ticksPos, ticksText):
             # Get little tail to indicate tick, current hard coded to 4
             p1 = pos
@@ -1817,7 +1835,7 @@ class PolarAxis2D(BaseAxis):
         if drawGrid[0] or drawMinorGrid[0]:
             # Get more gridlines if required
             if drawMinorGrid[0]:
-                ticks = self._GetPolarTicks(tickUnit / 5, lim)
+                ticks = self._GetPolarTicks(tickUnit / 5, self._angularRange)
             # Get positions
             for tick, p in zip(ticks, ticksPos):
                 ppg.append(center_c)
@@ -1861,7 +1879,7 @@ class PolarAxis2D(BaseAxis):
                 ticks = ticks + tmp[0][1:]
                 ticksPos = ticksPos + tmp[1][1:]
                 quadIndex = quadIndex + [index + 1] * len(tmp[1][1:])
-
+        
         for tick, pos,  qIndx in zip(ticks, ticksPos, quadIndex):
             # Get little tail to indicate tick
             tickXformed = tick + self._radialRange.min
@@ -1916,7 +1934,7 @@ class PolarAxis2D(BaseAxis):
             theta = self._angularRefPos + \
                     self._sense * np.linspace(0, 2 * np.pi, 61)
             if drawMinorGrid[1]:
-                ticks = self._GetTicks(tickUnit / 5, lim)
+                ticks = self._GetTicks(tickUnit / 5, self._angularRange)
             # Get positions
             for tick in ticks:
                 xc = tick * np.cos(theta)

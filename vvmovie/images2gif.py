@@ -284,7 +284,7 @@ class GifWriter:
             for i in range(len(images)):
                 im = images[i]
                 if isinstance(im, Image.Image):
-                    tmp = pilIm.convert() # Make without palette
+                    tmp = im.convert() # Make without palette
                     a = np.asarray(tmp)
                     if len(a.shape)==0:
                         raise MemoryError("Too little memory to convert PIL image to array")
@@ -768,9 +768,9 @@ class NeuQuant:
             bb = self.colormap[i,0];
             gg = self.colormap[i,1];
             rr = self.colormap[i,2];
-            out.write(rr if rgb else bb)
-            out.write(gg)
-            out.write(bb if rgb else rr)
+            outstream.write(rr if rgb else bb)
+            outstream.write(gg)
+            outstream.write(bb if rgb else rr)
         return self.NETSIZE
     
     def setUpArrays(self):
