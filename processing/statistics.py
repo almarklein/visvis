@@ -353,7 +353,7 @@ class StatData:
         if False:
             # Analog algoritm, better readable perhaps, but much slower:
             for x in data:
-                i = (x-dmin) * (1.0/factor) + ktail
+                i = (x-dmin) * (1.0/dbin) + ktail
                 i = int(round(i))
                 for j in range(k.size):
                     kde[i+j-ktail] += k[j]

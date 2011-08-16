@@ -18,6 +18,7 @@ of objects (e.g. plot(), imshow(), volshow(), surf()).
 from distutils.core import setup
 
 # Get version
+__version__ = None
 for line in file('__init__.py').readlines():
     if (line.startswith('__version__')):
         exec(line.strip())
