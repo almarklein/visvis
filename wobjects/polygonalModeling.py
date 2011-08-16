@@ -41,8 +41,8 @@ def checkDimsOfArray(value, *ndims):
     if not isinstance(value, np.ndarray):
         try:
             value = np.array(value, dtype=np.float32)
-        except Error:
-            raise ValueError()
+        except Exception:
+            raise ValueError('Could not coerce to numpy array.')
     
     # Allow 1D?
     if value.ndim==1 and 0 in ndims:

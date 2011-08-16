@@ -16,6 +16,7 @@ visvis modules.
 """
 
 import sys, os, time
+import numpy as np
 from visvis import ssdf
 import OpenGL.GL as gl
 

@@ -314,7 +314,7 @@ class Figure(BaseFigure):
             try:
                 widget.GetParent().Hide()
                 widget.GetParent().Close()
-            except PyAssertionError:
+            except wx.PyAssertionError:
                 # Prevent "wxEVT_MOUSE_CAPTURE_LOST not being processed" error.
                 pass 
 
