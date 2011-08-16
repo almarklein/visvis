@@ -709,7 +709,7 @@ class Texture2D(BaseTexture):
                 else:
                     self._glsl_program.SetFragmentShader(shaders.fshaders['aa0'])
             elif isinstance(value, basestring):
-                if value in fshaders:
+                if value in shaders.fshaders:
                     self._glsl_program.SetFragmentShader(shaders.fshaders[value])
                 else:
                     print "Texture2D.aa: unknown shader, no action taken."
