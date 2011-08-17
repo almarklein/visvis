@@ -10,11 +10,9 @@ Implements a few button widgets.
 
 """
 
-import OpenGL.GL as gl
-
 from visvis.core.events import BaseEvent, MouseEvent
-from visvis.core.misc import Property, PropWithDraw, DrawAfter, Range
-from visvis import Box, DraggableBox, Label
+from visvis.core.misc import Property
+from visvis import Label
 
 
 class PushButton(Label):

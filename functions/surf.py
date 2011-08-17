@@ -6,10 +6,7 @@
 
 import numpy as np
 import visvis as vv
-from visvis.pypoints import Point, Pointset
 
-import OpenGL.GL as gl
-import time
 
 def surf(*args, **kwargs):
     """ surf(..., axesAdjust=True, axes=None)

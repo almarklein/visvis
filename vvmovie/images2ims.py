@@ -31,7 +31,7 @@ Use PIL to create a series of images.
 
 """
 
-import os, sys, time
+import os
 
 try:
     import numpy as np

@@ -35,7 +35,7 @@ http://linux.die.net/man/1/ffmpeg
 
 """
 
-import os, sys, time
+import os, time
 import subprocess, shutil
 import images2ims
 

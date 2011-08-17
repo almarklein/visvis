@@ -4,9 +4,8 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-import numpy as np
 import visvis as vv
-from visvis.pypoints import Point, Pointset, is_Point, is_Pointset
+from visvis.pypoints import Pointset, is_Pointset
 from visvis.processing import lineToMesh
 
 def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):

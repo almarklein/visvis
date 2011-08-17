@@ -5,7 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-from visvis.pypoints import Point, Pointset
+from visvis.pypoints import Pointset
 import numpy as np
 
 import zlib, base64

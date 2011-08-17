@@ -71,19 +71,29 @@ def check(codeString, filename):
             for needle in IGNORE_STRINGS:
                 if needle in str(warning):
                     ignore_warning = True
+                    break
+            if '__init__.py' in filename and 'imported but unused' in str(warning):
+                ignore_warning = True
             if not ignore_warning:
                 warnings.append(warning)
         for warning in warnings:
             print warning
         return len(warnings)
 
-IGNORE_STRINGS = ['but unused', 'but never used', 'redefinition of unused']
+IGNORE_STRINGS = []
+# IGNORE_STRINGS.extend(['but unused', 'but never used', 'redefinition of unused'])
 IGNORE_STRINGS.append('from visvis.core.shaders_src import *')
 IGNORE_STRINGS.append('from visvis.core.constants import *')
 IGNORE_STRINGS.append('from functions import *')
 IGNORE_STRINGS.append('from visvis.wobjects import *')
 IGNORE_STRINGS.append('from visvis.wibjects import *')
 IGNORE_STRINGS.append('from visvis.core import *')
+#
+IGNORE_STRINGS.append("redefinition of unused 'np'")
+IGNORE_STRINGS.append("redefinition of unused 'vv'")
+IGNORE_STRINGS.append("redefinition of unused 'PIL'")
+IGNORE_STRINGS.append("redefinition of unused 'np'")
+
 
 def checkPath(filename):
     """

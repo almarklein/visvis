@@ -20,20 +20,18 @@ name of any of the available fragment shaders.
 """
 
 import OpenGL.GL as gl
-import OpenGL.GLU as glu
 
 import numpy as np
-import math, time, os
+import math
 
-from visvis.pypoints import Point, Pointset, Aarray, is_Aarray
+from visvis.pypoints import Pointset, is_Aarray
 #
-import visvis
 from visvis import Range, Wobject, Colormapable
-from visvis.core.misc import Property, PropWithDraw, DrawAfter, getColor
-from visvis.core.misc import Transform_Translate, Transform_Scale, Transform_Rotate
+from visvis.core.misc import PropWithDraw, DrawAfter
+from visvis.core.misc import Transform_Translate, Transform_Scale
 from visvis.core import shaders
 #
-from visvis.core import TextureObject, Colormap
+from visvis.core import TextureObject
 
 
 # A correction for the clim. For a datatype of uint8, the fragents

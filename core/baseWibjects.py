@@ -11,11 +11,10 @@ Defines the Box class and the DraggableBox class.
 """
 
 import OpenGL.GL as gl
-import OpenGL.GLU as glu
 
 from visvis.core import Wibject
 from visvis.core import misc
-from visvis.pypoints import Point, Pointset
+from visvis.pypoints import Pointset
 
 
 class Box(Wibject):
@@ -154,8 +153,7 @@ class DraggableBox(Box):
         self._dragMouseOver = False
         self.Draw()
    
-    def _DragOnDown(self, event):
-        f = self.GetFigure()        
+    def _DragOnDown(self, event):   
         pos = self.position
         # Store position if clicked on draggable arreas
         if event.x < 10 and event.y < 10:

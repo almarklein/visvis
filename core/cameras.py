@@ -24,9 +24,8 @@ import OpenGL.GLU as glu
 import math
 
 import visvis as vv
-from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+from visvis.core.misc import Property 
 from visvis.core.misc import Range
-from visvis.core.events import Timer
 from visvis.core import constants
 from visvis.pypoints import Quaternion, Point
 
@@ -491,7 +490,6 @@ class TwoDCamera(BaseCamera):
         self._windowSizeFactor = sizeFactor1
         
         # Change daspect and zoom
-        daspect2 = tuple(self.daspect)
         self._SetDaspect(daspectFactor, 1, 1)
         self._zoom *= zoomFactor
     
@@ -523,7 +521,7 @@ class TwoDCamera(BaseCamera):
         
         # If auto-scale is on, change daspect, x is the reference
         if self.axes.daspectAuto:
-            daspect = self._SetDaspect(rx/ry, 1, 0)
+            self._SetDaspect(rx/ry, 1, 0)
         
         # Correct for normalized daspect
         ndaspect = self.daspectNormalized
@@ -1342,7 +1340,7 @@ class FlyCamera(BaseCamera):
         
         # Set initial position to a corner of the scene
         dx,dy,dz = self._xlim.min, self._ylim.min, self._zlim.max        
-        dd = (rx**2 + ry**2 + rz**2 )**0.5        
+        #dd = (rx**2 + ry**2 + rz**2 )**0.5        
         self._view_loc = dx, dy, dz
         
         # Refreshw
@@ -1514,7 +1512,7 @@ class FlyCamera(BaseCamera):
     
     def _GetDirections(self):
         # Get reference points in reference coordinates
-        p0 = Point(0,0,0)
+        #p0 = Point(0,0,0)
         pf = Point(0,0,-1) # front
         pr = Point(1,0,0)  # right
         pl = Point(-1,0,0)  # left
@@ -1647,7 +1645,7 @@ class FlyCamera(BaseCamera):
                 self._rotation1 = ( q * self._rotation1 ).normalize()
             else:
                 # Calculate auto-roll
-                au = pu.angle(Point(0,0,1))
+                #au = pu.angle(Point(0,0,1))
                 ar = pr.angle(Point(0,0,1))
                 al = pl.angle(Point(0,0,1))
                 af = pf.angle(Point(0,0,1))

@@ -303,7 +303,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
             # Thanks to Torquil Macdonald Sorensen for this bug report.
             if tickUnit*pixelsPerUnit <= 0.99*minTickDist:
                 raise ValueError
-        except (ValueError, TypeError), err:
+        except (ValueError, TypeError):
             # too small
             return [],[],[]
         
@@ -1116,7 +1116,7 @@ class CartesianAxis2D(BaseAxis):
                     p1[d] = tick
                     # Add gridlines
                     p3 = p1+gv1
-                    p4 = p3+gv2
+                    #p4 = p3+gv2
                     ppg.append(p1);  ppg.append(p3)
             
             # Apply label

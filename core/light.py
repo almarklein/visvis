@@ -12,10 +12,9 @@ to eight lights associated with it.
 """
 
 import OpenGL.GL as gl
-import OpenGL.GLU as glu
 
 from visvis.core import misc
-from visvis.core.misc import Property, PropWithDraw, DrawAfter
+from visvis.core.misc import PropWithDraw, DrawAfter
 
 
 def _testColor(value, canBeScalar=True):

@@ -14,13 +14,11 @@ This module also defines a few helper classes for the Figure.
 """
 
 import OpenGL.GL as gl
-import OpenGL.GLU as glu
 
 import time
 import numpy as np
 
 import visvis
-from visvis.pypoints import Point, Pointset
 #
 from visvis.core import base
 from visvis.core.base import DRAW_NORMAL, DRAW_FAST, DRAW_SHAPE, DRAW_SCREEN
@@ -29,8 +27,8 @@ from visvis.core.misc import getOpenGlInfo
 from visvis.core import events
 #
 from visvis.core.cameras import ortho
-from visvis.core.textRender import FontManager, BaseText, Text, Label
-from visvis.core.line import MarkerManager, Line 
+from visvis.core.textRender import FontManager, BaseText
+from visvis.core.line import MarkerManager 
 from visvis.core.axes import _BaseFigure, AxesContainer, Axes, Legend
 from visvis.core.axes import _Screenshot
 

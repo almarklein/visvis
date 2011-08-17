@@ -12,24 +12,19 @@ by the Axes.
 """
 
 import OpenGL.GL as gl
-import OpenGL.GLU as glu
 
-import time
-import numpy as np
-
-from visvis.pypoints import Point, Pointset
+from visvis.pypoints import Pointset
 #
 import visvis as vv
 from visvis.core import base
 from visvis.core.base import DRAW_NORMAL, DRAW_FAST, DRAW_SHAPE, DRAW_SCREEN
 from visvis.core.misc import Property, PropWithDraw, DrawAfter 
 from visvis.core.misc import Range, getColor
-from visvis.core import events
 #
 from visvis.core.baseWibjects import Box, DraggableBox
 from visvis.core import cameras
-from visvis.core.cameras import ortho, depthToZ
-from visvis.core.textRender import BaseText, Text, Label
+from visvis.core.cameras import ortho
+from visvis.core.textRender import Label
 from visvis.core.line import Line 
 from visvis.core.axises import BaseAxis, CartesianAxis, PolarAxis2D
 from visvis.core.light import Light
@@ -538,7 +533,6 @@ class Axes(base.Wibject):
         See also the [[cls_BaseAxis Axis class]].
         
         """
-        axis = None
         # Find object in root
         for object in self._wobjects:
             if isinstance(object, BaseAxis):

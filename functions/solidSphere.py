@@ -8,7 +8,6 @@ import visvis as vv
 import numpy as np
 from visvis.pypoints import Point, Pointset
 
-import OpenGL.GL as gl
 
 # Alternative implementation bu subdeivinding a tetrahedon,
 # but not as good for mapping textures.

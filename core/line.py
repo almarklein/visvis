@@ -18,14 +18,11 @@ for example the Legend class, this module is part of the core.
 """
 
 import OpenGL.GL as gl
-import OpenGL.GL.ARB.shader_objects as gla
-import OpenGL.GLU as glu
-
 import numpy as np
-import math, time, os
+import math
 
-from visvis.pypoints import Point, Pointset
-from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+from visvis.pypoints import Pointset
+from visvis.core.misc import PropWithDraw, DrawAfter 
 from visvis.core.misc import Range, getColor, getOpenGlCapable
 from visvis.core.base import Wobject
 
@@ -493,8 +490,7 @@ class Line(Wobject):
         def fget(self):
             return self._mc
         def fset(self, value):
-            value = getColor(value, 'markerColor')
-            self._mc = value
+            self._mc = getColor(value, 'markerColor')
 
     @PropWithDraw
     def mew():
@@ -513,8 +509,7 @@ class Line(Wobject):
         def fget(self):
             return self._mec
         def fset(self, value):
-            tmp = getColor(value, 'markerEdgeColor')
-            self._mec = value
+            self._mec = getColor(value, 'markerEdgeColor')
 
 #     # create aliases
 #     lineWidth = lw

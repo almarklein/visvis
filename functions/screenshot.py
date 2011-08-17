@@ -61,7 +61,7 @@ def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
     ---------
     We'd prefer storing screenshots of plots as vector (eps) images, but 
     the nature of OpenGl prevents this. By applying high quality 
-	interpolation (using a cardinal spline), the resolution can be increased, 
+    interpolation (using a cardinal spline), the resolution can be increased, 
     thereby significantly improving the visibility/smoothness for lines 
     and fonts. Use this to produce publication quality snapshots of your
     plots.
@@ -73,9 +73,8 @@ def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
     # but the more it is capable to make for example font glyphs smooth.
     # If tension is 0, the interpolator is a Catmull-Rom spline.
     
-    # Scale must be integer, calc amount of pixels in between 
+    # Scale must be integer
     s = int(sf)
-    inBetween = s-1
     
     # Object given?
     if ob is None:
