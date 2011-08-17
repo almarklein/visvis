@@ -71,11 +71,11 @@ import numpy as np
 
 import visvis
 from visvis import ssdf
-from visvis.pypoints import Point, Pointset
+from visvis.pypoints import Pointset
 #
 from visvis.core.baseTexture import TextureObject
-from visvis.core.base import Wobject, Wibject
-from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+from visvis.core.base import Wobject
+from visvis.core.misc import Property, PropWithDraw 
 from visvis.core.misc import getResourceDir, getColor
 #
 from visvis.core.cameras import depthToZ

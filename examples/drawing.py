@@ -11,7 +11,7 @@ class Drawer:
     def __init__(self):
         
         # Create figure and axes
-        f = vv.figure()
+        vv.figure()
         self._a = a = vv.gca()
         vv.title("Hold mouse to draw lines. Use 'rgbcmyk' and '1-9' keys.")
         

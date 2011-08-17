@@ -15,8 +15,8 @@ import sys
 import numpy as np
 import OpenGL.GL as gl
 
-from visvis.pypoints import Point, Pointset, is_Point, is_Pointset
-from visvis.core.misc import Property, PropWithDraw, DrawAfter
+from visvis.pypoints import is_Pointset
+from visvis.core.misc import PropWithDraw, DrawAfter
 from visvis import Wobject, Colormapable, OrientationForWobjects_mixClass
 from visvis.core.light import _testColor, _getColor
 from visvis.wobjects.textures import TextureObjectToVisualize 
@@ -83,7 +83,7 @@ class BaseMesh(object):
             arguments = self._old_init(*args, **kwargs)
             try:
                 raise Exception("Mesh signature changed.")
-            except Exception, why:
+            except Exception:
                 type, value, tb = sys.exc_info()
                 frame = tb.tb_frame
                 del tb

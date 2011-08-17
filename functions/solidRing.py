@@ -8,8 +8,6 @@ import visvis as vv
 import numpy as np
 from visvis.pypoints import Point, Pointset
 
-import OpenGL.GL as gl
-
 
 def solidRing(translation=None, scaling=None, direction=None, rotation=None,
                 thickness=0.25, N=16, M=16, axesAdjust=True, axes=None):
@@ -56,7 +54,6 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
     # vertices.
     
     # Quick access
-    pi = np.pi
     pi2 = np.pi*2
     cos = np.cos
     sin = np.sin

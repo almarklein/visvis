@@ -56,8 +56,7 @@ def _insertFunctions():
                 continue # only try import once
         elif not file.endswith('.py'):
             continue    
-        # build names
-        fullfile = os.path.join(path, file)
+        # build name
         funname = os.path.splitext(file)[0]
         # import module
         mod = __import__("visvis.functions."+funname, fromlist=[funname])

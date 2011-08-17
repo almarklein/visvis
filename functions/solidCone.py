@@ -6,9 +6,8 @@
 
 import visvis as vv
 import numpy as np
-from visvis.pypoints import Point, Pointset
+from visvis.pypoints import Pointset
 
-import OpenGL.GL as gl
 
 def solidCone(translation=None, scaling=None, direction=None, rotation=None,
                 N=16, M=16, axesAdjust=True, axes=None):

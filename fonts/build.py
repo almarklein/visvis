@@ -5,7 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 
-import os, sys
+import os
 from visvis import ssdf
 
 # vv.imwrite('d:/almar/projects/ims/test0.png', vv.getframe(vv.gcf()))

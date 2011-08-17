@@ -6,7 +6,7 @@
 
 import visvis as vv
 from visvis.wobjects.polygonalModeling import checkDimsOfArray
-import numpy as np
+
 
 def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
         colormap=None, clim=None, texture=None, axesAdjust=True, axes=None):

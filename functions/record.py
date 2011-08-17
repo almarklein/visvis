@@ -6,12 +6,6 @@
 
 import visvis as vv
 
-import OpenGL.GL as gl
-import OpenGL.GL.ARB.shader_objects as gla
-import OpenGL.GLU as glu
-
-import os, time
-import numpy as np
 
 class Recorder:
     """ Recorder(object)

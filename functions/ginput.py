@@ -5,7 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-from visvis.pypoints import Point, Pointset
+from visvis.pypoints import Pointset
 import time
 
 class GinputHelper(object):
@@ -127,10 +127,6 @@ def ginput(N=0, axes=None, ms='+', **kwargs):
     line = vv.plot(Pointset(2), axes=axes, ms=ms, **kwargs)    
     pp = line._points
     ginputHelper.Start(axes, pp, N)
-    
-    # Get app
-    import sys
-    app = sys.stdin.interpreter.wxapp
     
     # Enter a loop
     while ginputHelper.axes:

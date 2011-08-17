@@ -193,9 +193,8 @@ class BoxPlotBox(object):
     
     def calculate_violin(self):
         
-        # Get stats and data
+        # Get stats
         stats = self._stats
-        data = stats._data
         
         # Get kernel density estimate
         nbins = stats.best_number_of_bins(8, 128)

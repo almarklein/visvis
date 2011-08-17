@@ -16,12 +16,9 @@ memory and padding if the system requires the size to be a factor of two.
 """
 
 import OpenGL.GL as gl
-import OpenGL.GLU as glu
-
 import numpy as np
 
 from visvis.core.misc import getOpenGlCapable, PropWithDraw, Range
-from visvis.core.base import Wobject 
 
 
 # Dict that maps numpy datatypes to openGL data types

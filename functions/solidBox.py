@@ -5,10 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-import numpy as np
-from visvis.pypoints import Point, Pointset
-
-import OpenGL.GL as gl
+from visvis.pypoints import Pointset
 
 
 def solidBox(translation=None, scaling=None, direction=None, rotation=None,

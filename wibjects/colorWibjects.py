@@ -16,11 +16,10 @@ import numpy as np
 import weakref
 
 from visvis.pypoints import Point, Pointset
-from visvis.core.misc import Property
 from visvis import Colormapable
 #
 from visvis import Box, DraggableBox
-from visvis import Label, Text
+from visvis import Label
 from visvis import BaseFigure, Axes
 from visvis.core.axises import GetTicks
 #
@@ -245,8 +244,9 @@ class ColormapEditor(BaseMapableEditor):
         """ Pass event on """
         # get event of nodwWibject and its position
         event2 = self._nodeWidget.eventDoubleClick
-        pos = self._nodeWidget.position
+        
         # Calc location and limit
+#         pos = self._nodeWidget.position
 #         event2.Set(event.x-pos.left, event.y-pos.top, event.button)
         event2.Set(event.absx, event.absy, event.button) 
         # Fire!
@@ -653,9 +653,6 @@ class Colorbar(Box):
             mapables = par.GetMapables()
         else:
             mapables = []
-        
-        # Get figure
-        fig = self.GetFigure()
         
         # Get the last one
         mapable = None

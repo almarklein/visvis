@@ -11,18 +11,15 @@ Defines the Wibject and Wobject classes, and the Position class.
 """
 
 import OpenGL.GL as gl
-import OpenGL.GL.ARB.shader_objects as gla
-import OpenGL.GLU as glu
-
 import numpy as np
-import math, time
+
 import weakref
 
 from visvis.core import misc
 from visvis.core.misc import (Transform_Base, Transform_Translate, 
                                     Transform_Scale, Transform_Rotate)
 from visvis.core import events
-from visvis.pypoints import Point, Pointset, Quaternion, is_Point
+from visvis.pypoints import Pointset, Quaternion
 
 
 # Define draw modes

@@ -5,7 +5,6 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-import numpy as np
 
 def volshow(*args, **kwargs):
     """ volshow(vol, clim=None, cm=CM_GRAY, axesAdjust=True, axes=None)

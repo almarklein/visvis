@@ -10,7 +10,7 @@ Loads the code for the shaders and defines the GlslProgram class.
 
 """
 
-import os, sys, time
+import os
 
 import OpenGL.GL as gl
 import OpenGL.GL.ARB.shader_objects as gla

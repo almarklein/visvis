@@ -189,7 +189,7 @@ class BaseEvent:
                 break
             try:
                 handled = func.call(self)
-            except Exception, why:
+            except Exception:
                 # get easier func name
                 s = str(func)
                 i = s.find("function")

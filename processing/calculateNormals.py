@@ -31,7 +31,6 @@ def calculateNormals(mesh):
     # Init normal array
     N = vertices.shape[0]
     normals = np.zeros((N,3), dtype='float32')
-    defaultNormal = np.array([1,0,0], dtype='float32')
     
     # Get faces array
     faces = mesh._GetFaces()

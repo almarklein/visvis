@@ -68,7 +68,7 @@ import os, time
 
 try:
     import PIL
-    from PIL import Image, ImageChops
+    from PIL import Image
     from PIL.GifImagePlugin import getheader, getdata
 except ImportError:
     PIL = None
@@ -539,7 +539,7 @@ def writeGif(filename, images, duration=0.1, repeat=True, dither=False,
     # Check duration
     if hasattr(duration, '__len__'):
         if len(duration) == len(images):
-            durations = [d for d in duration]
+            duration = [d for d in duration]
         else:
             raise ValueError("len(duration) doesn't match amount of images.")
     else:
@@ -570,7 +570,7 @@ def writeGif(filename, images, duration=0.1, repeat=True, dither=False,
     # Write
     fp = open(filename, 'wb')
     try:
-        n = gifWriter.writeGifToFile(fp, images, duration, loops, xy, dispose)
+        gifWriter.writeGifToFile(fp, images, duration, loops, xy, dispose)
     finally:
         fp.close()
 

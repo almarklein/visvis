@@ -795,7 +795,7 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
     # Check duration
     if hasattr(duration, '__len__'):
         if len(duration) == len(images2):
-            durations = [d for d in duration]
+            duration = [d for d in duration]
         else:
             raise ValueError("len(duration) doesn't match amount of images.")
     else:

@@ -12,7 +12,7 @@ Defines the mix class for orientable wobjects.
 
 import numpy as np
 from visvis.core import misc
-from visvis.pypoints import Point, Pointset, Quaternion, is_Point
+from visvis.pypoints import Point, is_Point
 
 
 # todo: is this the best way to allow users to orient their objects,
