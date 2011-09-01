@@ -2,10 +2,147 @@
 
 Contains the source for various shaders, divided in different parts.
 
+The names consists of different parts, seperated by underscores:
+  * SH: just to indicate its a shader
+  * 2F, 3F, MF, 2V, 3V, MV: the kind of program, 2D/3D texture or mesh,
+    vertex or fragment shader. May be left out for generic parts (such as color)
+  * part name: can be BASE, STYLE, or anything else really.
+  * part name type: Optional. Some parts have alternatives, 
+    such as the STYLE part for 3D rendering techniques. 
+
 """
+
+## Color
+# These are used by many shaders to be able to deal with scalar or RGB data.
+# color1-to-val is used by volume renderes to test thresholds etc.
+# color1-to-color2 is used to convert the color sampled from the texture to
+# a color to be displayed on screen.
+
+# This one is not really usefull, but included for completeness
+SH_COLOR_SCALARNOCMAP = """
+
+    >>uniforms>>
+    uniform vec2 scaleBias;
+    <<uniforms<<
+    
+    >>pre-loop>>
+    float _colorval;
+    
+    >>color1-to-val>>
+    val = color1.r;
+    
+    >>color1-to-color2>>
+    _colorval = ( color1.r + scaleBias[1] ) * scaleBias[0];
+    color2 = vec4(_colorval, _colorval, _colorval, 1.0);
+    
+    """
+
+SH_COLOR_SCALAR = """
+    
+    >>uniforms>>
+    uniform sampler1D colormap;
+    uniform vec2 scaleBias;
+    <<uniforms<<
+    
+    >>color1-to-val>>
+    val = color1.r;
+    
+    >>color1-to-color2>>
+    color2 = texture1D( colormap, (color1.r + scaleBias[1]) * scaleBias[0]);
+    
+    """
+
+SH_COLOR_RGB = """
+
+    >>uniforms>>
+    uniform vec2 scaleBias;
+    <<uniforms<<
+    
+    >>color1-to-val>>
+    val = max(color1.r, max(color1.g, color1.b));
+    
+    >>color1-to-color2>>
+    color2 = ( color1 + scaleBias[1] ) * scaleBias[0];
+    
+    """
+
+## 2D fragment
+# Shows 2D texture and does anti-aliasing when image is zoomed out.
+
+SH_2F_BASE = """
+
+// Uniforms obtained from OpenGL
+uniform sampler2D texture; // The 3D texture
+uniform vec2 shape; // And its shape (as in OpenGl)
+uniform vec2 extent; // Extent of the data in world coordinates
+uniform vec4 aakernel; // The smoothing kernel for anti-aliasing
+<<uniforms<<
+
+// Varyings obtained from vertex shader
+<<varyings<<
+
+void main()
+{    
+    // Get centre location
+    vec2 pos = gl_TexCoord[0].xy;
+    
+    // Init value
+    vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0); 
+    vec4 color2; // to set color later
+    
+    // Init kernel and number of steps
+    vec4 kernel = aakernel;
+    <<aa-steps<<
+    
+    // Init step size in tex coords
+    float dx = 1.0/shape.x;
+    float dy = 1.0/shape.y;
+    
+    // Allow more stuff
+    <<pre-loop<<
+    
+    // Convolve
+    for (int y=-sze; y<sze+1; y++)
+    {
+        for (int x=-sze; x<sze+1; x++)
+        {   
+            float k = kernel[abs(x)] * kernel[abs(y)];
+            vec2 dpos = vec2(float(x)*dx, float(y)*dy);
+            <<in-loop<<
+        }
+    }
+    
+    // Allow more stuff
+    <<post-loop<<
+    
+    // Determine final color
+    <<color1-to-color2<<
+    gl_FragColor = color2;
+    
+}
+"""
+
+# Simply samples the color from the texture
+SH_2F_STYLE_NORMAL = """
+    >>in-loop>>
+    color1 += texture2D(texture, pos+dpos) * k;
+"""
+
+# This cannot be done with a uniform, because on some systems it wont code
+# with loops of which the length is undefined.
+_SH_2F_AASTEPS = """
+>>aa-steps>>
+int sze = %i;
+"""
+SH_2F_AASTEPS_0 = _SH_2F_AASTEPS % 0
+SH_2F_AASTEPS_1 = _SH_2F_AASTEPS % 1
+SH_2F_AASTEPS_2 = _SH_2F_AASTEPS % 2
+SH_2F_AASTEPS_3 = _SH_2F_AASTEPS % 3
+
 
 ## 3D vertex base
 # The vertex shader only has one part
+
 SH_3V_BASE = """
     // Uniforms obtained from OpenGL
     uniform vec3 shape; // The dimensions of the data
@@ -68,6 +205,7 @@ SH_3V_BASE = """
 
 """
 
+# todo: remove this old version in a few commits
 _SH_3V_BASE = """
     // Uniforms obtained from OpenGL
     uniform vec3 shape; // The dimensions of the data
@@ -143,12 +281,15 @@ _SH_3V_BASE = """
 
 """
 ## 3D fragment base
+# Base for volume rendering
 # The 3D fragment shader needs calcsteps, and a type
+
 SH_3F_BASE = """
 
     // Uniforms obtained from OpenGL
     uniform sampler3D texture; // The 3D texture
-    uniform vec3 shape; // And its shape
+    uniform vec3 shape; // And its shape (as in OpenGl)
+    uniform vec3 extent; // extent of the data in world coordinates
     <<uniforms<<
     
     // Varyings received from fragment shader
@@ -213,6 +354,8 @@ SH_3F_BASE = """
 """
 
 ## 3D fragment calcsteps
+# Calculates the amount of steps that the volume rendering should take
+
 SH_3F_CALCSTEPS = """
 
 >>functions>>
@@ -261,7 +404,9 @@ int calculateSteps(vec3 edgeLoc)
 """
 
 ## 3D fragment STYLE MIP
-# Needs Color part
+# Casts a ray all the way through. Displays the highest encountered
+# intensity.
+
 SH_3F_STYLE_MIP = """
     
     >>pre-loop>>
@@ -303,8 +448,60 @@ SH_3F_STYLE_MIP = """
     
 """
 
+## 3D fragment STYLE PMIP
+# todo: names....
+# Pseudo mip. This looks a bit like MIP, and like MIP, it does usually show
+# structures of interest without having to fiddle with the alpha channel.
+# A ray is cast through the volume and each voxel contributes to the final
+# color. The contribution saturates linearly, so things in the back have
+# small contributions.
+
+SH_3F_STYLE_PMIP = """
+    
+    >>uniforms>>
+    uniform float stepRatio;
+    <<uniforms<<
+    
+    >>pre-loop>>
+    vec4 color1; // what we sample from the texture
+    vec4 color2; // what should be displayed
+    vec4 color3 = vec4(0.0, 0.0, 0.0, 0.0); // init color
+    float alpha = 0.0; // total contribution
+    float val;
+    <<pre-loop<<
+    
+    >>in-loop>>
+    
+    // Sample color and make display color
+    color1 = texture3D( texture, loc );
+    <<color1-to-color2<<
+    <<color1-to-val<<
+    
+    // Update value  by adding contribution of this voxel
+    // Put bias in denominator so the first voxels dont contribute too much
+    float color2_alpha = val*val*val*val + 0.00001;
+    float a = color2_alpha / ( color2_alpha + alpha + 1.0); 
+    a /= stepRatio;
+    color3.rgba += color2.rgba*a;
+    alpha += a; // alpha counts total color contribution.
+    <<in-loop<<
+    
+    >>post-loop>>
+    
+    // Set depth at zero
+    iter_depth = 0;
+    
+    // Set color
+    color3.rgba /= alpha;
+    color3.a = min(1.0, color3.a);
+    gl_FragColor = color3;
+    <<post-loop<<
+    
+"""
+
 ## SH_3D fragment STYLE RAY
-# Needs Color part
+# Casts a ray all the way through. All voxels contribute (using their alpha
+# value), untill the alpha is saturated.
 SH_3F_STYLE_RAY = """
     
     >>uniforms>>
@@ -345,6 +542,8 @@ SH_3F_STYLE_RAY = """
     
 """
 ## SH_3D fragment STYLE RAY2
+# Same as ray, but has some artificial shadow effects. Really not that usefull,
+# because the normal ray renderer also has these effects, although a bit less.
 SH_3F_STYLE_RAY2 = """
     
     >>uniforms>>
@@ -472,6 +671,8 @@ SH_3F_STYLE_ISO = """
 
 ## 3D fragment_STYLE ISORAY
 # Needs Color part and litvoxel part
+# Casts a ray all the way through and calculates lighting at each step
+# All contributions are combined untill alpha value saturates.
 SH_3F_STYLE_ISORAY = """
 
     >>uniforms>>
@@ -593,53 +794,4 @@ SH_3F_LITVOXEL = """
     
 """
 
-## color SCALAR NOCMAP
 
-SH_COLOR_SCALAR_NOCMAP = """
-
-    >>uniforms>>
-    uniform vec2 scaleBias;
-    <<uniforms<<
-    
-    >>pre-loop>>
-    float _colorval;
-    
-    >>color1-to-val>>
-    val = color1.r;
-    
-    >>color1-to-color2>>
-    _colorval = ( color1.r + scaleBias[1] ) * scaleBias[0];
-    color2 = vec4(_colorval, _colorval, _colorval, 1.0);
-    
-    """
-
-## color SCALAR
-SH_COLOR_SCALAR = """
-    
-    >>uniforms>>
-    uniform sampler1D colormap;
-    uniform vec2 scaleBias;
-    <<uniforms<<
-    
-    >>color1-to-val>>
-    val = color1.r;
-    
-    >>color1-to-color2>>
-    color2 = texture1D( colormap, (color1.r + scaleBias[1]) * scaleBias[0]);
-    
-    """
-
-## color RGB
-SH_COLOR_RGB = """
-
-    >>uniforms>>
-    uniform vec2 scaleBias;
-    <<uniforms<<
-    
-    >>color1-to-val>>
-    val = max(color1.r, max(color1.g, color1.b));
-    
-    >>color1-to-color2>>
-    color2 = ( color1 + scaleBias[1] ) * scaleBias[0];
-    
-    """

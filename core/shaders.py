@@ -222,16 +222,18 @@ class GlslProgram:
         # get loc
         loc = gla.glGetUniformLocationARB(self._programId, varname)        
         
-        # set values
-        if len(values) == 1:
-            gl.glUniform1f(loc, values[0])
-        elif len(values) == 2:
-            gl.glUniform2f(loc, values[0], values[1])            
-        elif len(values) == 3:
-            gl.glUniform3f(loc, values[0], values[1], values[2])
-        elif len(values) == 4:
-            gl.glUniform4f(loc, values[0], values[1], values[2], values[3])
-    
+        try:
+            # set values
+            if len(values) == 1:
+                gl.glUniform1f(loc, values[0])
+            elif len(values) == 2:
+                gl.glUniform2f(loc, values[0], values[1])            
+            elif len(values) == 3:
+                gl.glUniform3f(loc, values[0], values[1], values[2])
+            elif len(values) == 4:
+                gl.glUniform4f(loc, values[0], values[1], values[2], values[3])
+        except:
+            print 'Could not set uniform in shader. "%s": %s' % (varname, repr(values))
     
     def SetUniformi(self, varname, values):
         """ SetUniformi(varname, values)

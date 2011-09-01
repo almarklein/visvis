@@ -415,7 +415,7 @@ class BaseSlider(Box):
         
 
 class Slider(BaseSlider):
-    """ Slider(parent, range=(0,1), value=0.5)
+    """ Slider(parent, fullRange=(0,1), value=0.5)
     
     A slider with which a scalar value can be interactively changed.
     The slider can be horizontal or vertical, depending on its 

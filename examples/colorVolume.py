@@ -17,10 +17,10 @@ for i in range(3):
 # Show
 vv.figure()
 a1 = vv.subplot(121); 
-t1 = vv.volshow(vol[:,:,:,:], renderStyle = 'colormip')
+t1 = vv.volshow(vol[:,:,:,:], renderStyle = 'mip')
 vv.title('color MIP render')
 a2 = vv.subplot(122); 
-t2 = vv.volshow(vol[:,:,:,:], renderStyle = 'coloriso')
+t2 = vv.volshow(vol[:,:,:,:], renderStyle = 'iso')
 t2.isoThreshold = 0.5
 vv.title('color ISO-surface render')
 
