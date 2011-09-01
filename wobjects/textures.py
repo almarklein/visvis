@@ -394,10 +394,20 @@ class BaseTexture(Wobject, Colormapable):
         # set data to texture
         self._SetData(data)
         
+        # For 3D array, make vertex positions be re-calculated
+        if hasattr(self, '_quads'):
+            self._quads = None
+        
+        # Set fragment color part
+        isColor = len(data.shape) > self._ndim
+        if 'color' in self.fragmentShader.parts:
+            part = [shaders.SH_COLOR_SCALAR, shaders.SH_COLOR_RGB][isColor]
+            self.fragmentShader.ReplacePart('color', part)
+        
         # if Aarray, edit scaling and transform
         if is_Aarray(data):
-            if hasattr(data,'_sampling') and hasattr(data,'_origin'):
-                if data.ndim >= 3 and data.shape[2] > 4:
+            if hasattr(data,'sampling') and hasattr(data,'origin'):
+                if self._ndim == 3:
                     # Three dimensional
                     self._trafo_scale.sx = data.sampling[2]
                     self._trafo_scale.sy = data.sampling[1]
@@ -406,7 +416,7 @@ class BaseTexture(Wobject, Colormapable):
                     self._trafo_trans.dx = data.origin[2]
                     self._trafo_trans.dy = data.origin[1]
                     self._trafo_trans.dz = data.origin[0]
-                else:
+                elif self._ndim == 2:
                     # Two dimensional
                     self._trafo_scale.sx = data.sampling[1]
                     self._trafo_scale.sy = data.sampling[0]
@@ -539,13 +549,49 @@ class Texture2D(BaseTexture):
     
     def __init__(self, parent, data):
         BaseTexture.__init__(self, parent, data)
+        self._ndim = 2
         
         # create texture and set data
         self._texture1 = TextureObjectToVisualize(2, data)
+        
+        # init shader
+        self._InitShader()
+        
+        # set data
         self.SetData(data)
         
         # init antialiasing
         self.aa = 0
+    
+    
+    def _InitShader(self):
+        
+        # Add components of shaders
+        self.fragmentShader.AddPart('base', shaders.SH_2F_BASE)
+        self.fragmentShader.AddPart('style', shaders.SH_2F_STYLE_NORMAL)
+        self.fragmentShader.AddPart('aa-steps', shaders.SH_2F_AASTEPS_2)
+        self.fragmentShader.AddPart('color', shaders.SH_COLOR_SCALAR)
+        
+        def uniform_shape():
+            shape = self._texture1._shape[:2] # as in opengl
+            return [float(s) for s in reversed(list(shape))]
+        def uniform_extent():
+            data = self._texture1._dataRef # as original array
+            shape = reversed(data.shape[:2])
+            if hasattr(data, 'sampling'):
+                sampling = reversed(data.sampling[:2])
+            else:
+                sampling = [1.0 for s in range(2)]
+            
+            del data
+            return [s1*s2 for s1, s2 in zip(shape, sampling)]
+        
+        # Set some uniforms
+        self._fragmentShader.SetUniform('colormap', self._colormap)
+        self._fragmentShader.SetUniform('shape', uniform_shape)
+        self._fragmentShader.SetUniform('scaleBias', self._texture1._ScaleBias_get)
+        self._fragmentShader.SetUniform('extent', uniform_extent)
+        self._fragmentShader.SetUniform('aakernel', self._CreateGaussianKernel)
     
     
     def _CreateGaussianKernel(self):
@@ -566,7 +612,7 @@ class Texture2D(BaseTexture):
         sy = (1.0 / abs(axes.daspectNormalized[1]*cam._zoom) ) / h
         
         # correct for fact that humans prefer sharpness
-        tmp = 0.7
+        tmp = 0.5
         sx, sy = sx*tmp, sy*tmp
         
         # keep >= 0 so we can devide
@@ -575,7 +621,7 @@ class Texture2D(BaseTexture):
         
         # calculate kernel
         #  3 2 1 0 1 2 3
-        k = [1.0,0,0,0] 
+        k = [1.0, 0, 0, 0]
         k[1] = math.exp( -1.0 / (2*sx**2) )
         k[2] = math.exp( -2.0 / (2*sy**2) )
         k[3] = math.exp( -3.0 / (2*sy**2) )
@@ -589,9 +635,9 @@ class Texture2D(BaseTexture):
             l = k[0] + 2*k[1] + 2*k[2] + 2*k[3]
         else:
             l = k[0]
-        k = [e/l for e in k]
+        k = [float(e)/l for e in k]
         
-        # done!        
+        # done!     
         return k
     
     
@@ -617,22 +663,24 @@ class Texture2D(BaseTexture):
         if not self._texture1._shape:
             return
         
+        # Apply code for vertex and fragment shaders if possible
+        if self.vertexShader._isDirtyForProgram:
+            self._glsl_program.SetVertexShader(self.vertexShader.GetCode())
+        if self.fragmentShader._isDirtyForProgram:
+            self._glsl_program.SetFragmentShader(self.fragmentShader.GetCode())
+        
         # fragment shader on
         if self._glsl_program.IsUsable():
             self._glsl_program.Enable()
-            # textures        
-            self._glsl_program.SetUniformi('texture', [0])        
-            self._colormap.Enable(1)
-            self._glsl_program.SetUniformi('colormap', [1])
-            # uniform variables
-            shape = self._texture1._shape # how it is in opengl
-            k = self._CreateGaussianKernel()
-            self._glsl_program.SetUniformf('kernel', k)
-            self._glsl_program.SetUniformf('dx', [1.0/shape[0]])
-            self._glsl_program.SetUniformf('dy', [1.0/shape[1]])
-            self._glsl_program.SetUniformf('scaleBias', self._texture1._ScaleBias_get())
-            self._glsl_program.SetUniformi('applyColormap', [len(shape)==2])
+            
+            # Apply uniforms
+            self.vertexShader._ApplyUniforms(self._glsl_program)
+            self.fragmentShader._ApplyUniforms(self._glsl_program)
+            
+            # Bind texture- and help-textures (create if it does not exist)
+            self._glsl_program.SetUniformi('texture', [0])  
         
+
         # do the drawing!
         self._DrawQuads()
         gl.glFlush()
@@ -640,6 +688,8 @@ class Texture2D(BaseTexture):
         # clean up
         self._texture1.Disable()
         self._colormap.Disable()
+        self.fragmentShader._DisableUniformTextures()
+        self.vertexShader._DisableUniformTextures()
         self._glsl_program.Disable()
     
     
@@ -671,6 +721,7 @@ class Texture2D(BaseTexture):
         
         # Obtain untransformed coords 
         shape = self._texture1._dataRef.shape
+        #shape = self._texture1._shape
         x1, x2 = -0.5, shape[1]-0.5
         y1, y2 = -0.5, shape[0]-0.5
         z1, z2 = 0, 0
@@ -693,27 +744,20 @@ class Texture2D(BaseTexture):
         def fset(self, value):
             if not value:
                 value = 0
-            if isinstance(value, (int,float)):
-                if value < 0 or value > 3:
-                    print "Texture2D.aa: value should be 0,1,2,3 or a string."
-                    return
-                self._aa = value
-                if self._aa == 1:
-                    self._glsl_program.SetFragmentShader(shaders.fshaders['aa1'])
-                elif self._aa == 2:
-                    self._glsl_program.SetFragmentShader(shaders.fshaders['aa2'])
-                elif self._aa == 3:
-                    self._glsl_program.SetFragmentShader(shaders.fshaders['aa3'])
-                else:
-                    self._glsl_program.SetFragmentShader(shaders.fshaders['aa0'])
-            elif isinstance(value, basestring):
-                if value in shaders.fshaders:
-                    self._glsl_program.SetFragmentShader(shaders.fshaders[value])
-                else:
-                    print "Texture2D.aa: unknown shader, no action taken."
+            if not isinstance(value, (int,float)):
+                raise ValueError("Texture2D.aa: value should be 0,1,2,3.")
+            elif value < 0 or value > 3:
+                 raise ValueError("Texture2D.aa: value should be 0,1,2,3.")
             else:
-                raise ValueError("Texture2D.aa accepts integer or string.")
-    
+                # Store
+                self._aa = int(value)
+                # Get aa program part
+                M = [   shaders.SH_2F_AASTEPS_0, shaders.SH_2F_AASTEPS_1,
+                        shaders.SH_2F_AASTEPS_2, shaders.SH_2F_AASTEPS_3]
+                aa_steps = M[self._aa]
+                # Apply
+                self.fragmentShader.ReplacePart('aa-steps', aa_steps)
+
 
 class Texture3D(BaseTexture):
     """ Texture3D(parent, data, renderStyle='mip')
@@ -731,9 +775,15 @@ class Texture3D(BaseTexture):
     
     def __init__(self, parent, data, renderStyle='mip'):
         BaseTexture.__init__(self, parent, data)
+        self._ndim = 3
         
-        # create texture and set data
+        # create texture 
         self._texture1 = TextureObjectToVisualize(3, data)
+        
+        # Init vertex and fragment shader
+        self._InitShader()
+        
+        # set data
         self.SetData(data)
         
         # Init deform
@@ -744,10 +794,22 @@ class Texture3D(BaseTexture):
         
         # init iso shader param
         self._isoThreshold = 0.0
-        self._stepRatio =1.0
+        self._stepRatio = 1.0
         
-        # Init vertex shader
+        # Attribute to store array of quads (vertices and texture coords)
+        self._quads = None
+        # Also store daspect, if this changes quads should be recalculated
+        self._daspectStored = (1,1,1)
+        
+        # Set renderstyle
+        self.renderStyle = renderStyle
+    
+    
+    def _InitShader(self):
+        
+        # Add components of shaders
         self.vertexShader.AddPart('base', shaders.SH_3V_BASE)
+        #
         self.fragmentShader.AddPart('base', shaders.SH_3F_BASE)
         self.fragmentShader.AddPart('steps', shaders.SH_3F_CALCSTEPS)
         self.fragmentShader.AddPart('style', shaders.SH_3F_STYLE_MIP)
@@ -763,11 +825,22 @@ class Texture3D(BaseTexture):
                 ran = 1.0
             th = (self._isoThreshold - self._texture1._climRef.min ) / ran
             return th
+        def uniform_extent():
+            data = self._texture1._dataRef
+            shape = reversed(data.shape[:3])
+            if hasattr(data, 'sampling'):
+                sampling = reversed(data.sampling[:3])
+            else:
+                sampling = [1.0 for s in range(3)]
+            del data
+            return [s1*s2 for s1, s2 in zip(shape, sampling)]
         
+        # Set some uniforms
         self._fragmentShader.SetUniform('colormap', self._colormap)
         self._fragmentShader.SetUniform('shape', uniform_shape)
         self._fragmentShader.SetUniform('th', uniform_th)
         self._fragmentShader.SetUniform('scaleBias', self._texture1._ScaleBias_get)
+        self._fragmentShader.SetUniform('extent', uniform_extent)
         
         # Set lighting for iso renderer
         self._fragmentShader.SetUniform('ambient', [0.7,0.7,0.7,1.0])
@@ -776,22 +849,6 @@ class Texture3D(BaseTexture):
         self._fragmentShader.SetUniform('shininess', 50.0)
         # And number of surface samples
         self._fragmentShader.SetUniform('maxIsoSamples', 3)
-        
-        # init vertex shader
-#         self._glsl_program.SetVertexShader(shaders.vshaders['calculateray'])
-#         # init fragment shader, be robust if user gives invalid method
-#         self._renderStyle = ''
-#         self.renderStyle = renderStyle
-#         if not self._renderStyle:
-#             self.renderStyle = 'mip'
-        
-        # Attribute to store array of quads (vertices and texture coords)
-        self._quads = None
-        # Also store daspect, if this changes quads should be recalculated
-        self._daspectStored = (1,1,1)
-        
-        # Set renderstyle
-        self.renderStyle = renderStyle
     
     
     def OnDrawShape(self, clr):
@@ -1014,7 +1071,7 @@ class Texture3D(BaseTexture):
         # There we are
         return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
     
-    
+    # todo: test color volumes, automatically detected?
     @PropWithDraw
     def renderStyle():
         """ Get/Set the render style to render the volumetric data:
@@ -1024,7 +1081,6 @@ class Texture3D(BaseTexture):
             control transparancy)
           * ray2: ray casting with simple shadow effects. Looks nicer than ray.
           * isoray: a hybrid iso/ray renderer.
-        Prepend the name with "color" to render color volumes.
         If drawing takes really long, your system renders in software
         mode. Try rendering data that is shaped with a power of two. This 
         helps on some cards.
@@ -1034,11 +1090,11 @@ class Texture3D(BaseTexture):
         def fset(self, style):     
             style = style.lower()
              # Set color
-            sh_color = shaders.SH_COLOR_SCALAR
-            if 'color' in style or 'rgb' in style:
-                sh_color = shaders.SH_COLOR_RGB
-            elif 'nocmap' in style:
-                sh_color = shaders.SH_COLOR_SCALAR_NOCMAP
+#             sh_color = shaders.SH_COLOR_SCALAR
+#             if 'color' in style or 'rgb' in style:
+#                 sh_color = shaders.SH_COLOR_RGB
+#             elif 'nocmap' in style:
+#                 sh_color = shaders.SH_COLOR_SCALAR_NOCMAP
             styleStrict = style.replace('rgb','').replace('color','')
             # Set render style
             if 'mip' == styleStrict:
@@ -1062,7 +1118,7 @@ class Texture3D(BaseTexture):
                 raise ValueError("Unknown render style in Texture3d.renderstyle.")
             # Store style and set color
             self._renderStyle = style
-            self._fragmentShader.ReplacePart('color', sh_color)
+#             self._fragmentShader.ReplacePart('color', sh_color)
            
     
     

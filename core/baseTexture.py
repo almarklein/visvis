@@ -220,13 +220,17 @@ class TextureObject(object):
             if scaleTrafo and self._downsampleFactor>1:
                 factor = self._downsampleFactor
                 data = self._dataRef
+                if hasattr(data, 'sampling'):
+                    sampling = data.sampling
+                else:
+                    sampling = [1.0 for tmp in data.shape]
                 if data.ndim >= 3 and data.shape[2] > 4: # 3D
-                    scaleTrafo.sx = data.sampling[2] * factor
-                    scaleTrafo.sy = data.sampling[1] * factor
-                    scaleTrafo.sz = data.sampling[0] * factor
+                    scaleTrafo.sx = sampling[2] * factor
+                    scaleTrafo.sy = sampling[1] * factor
+                    scaleTrafo.sz = sampling[0] * factor
                 else: # 2D
-                    scaleTrafo.sx = data.sampling[1] * factor
-                    scaleTrafo.sy = data.sampling[0] * factor
+                    scaleTrafo.sx = sampling[1] * factor
+                    scaleTrafo.sy = sampling[0] * factor
         
         # check if ok now
         if not gl.glIsTexture(self._texId):
