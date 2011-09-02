@@ -6,7 +6,10 @@
 
 """ Module shaders
 
-Loads the code for the shaders and defines the GlslProgram class.
+Defines the classes that manage shading:
+  * GlslProgram: represents a GLSL program by wrapping the OpenGl stuff.
+  * ShaderCode: represents the code for one GLSL program (vertex or fragment).
+  * ShaderCodePart: a part of GLSL code. Multiple parts combined form a program.
 
 """
 
@@ -58,7 +61,6 @@ def loadShaders():
 vshaders, fshaders = loadShaders()
 
 
-# todo: also make CG shaders? they say on the web they are more predictable.
 class GlslProgram:
     """ GlslProgram()
     
@@ -326,27 +328,62 @@ class ShaderCode(object):
     and programs can be altered in a very flexible way. This allows 
     users to for example modify existing volume renderers.
     
+    Parts
+    -----
+    A ShaderCode instance has one or more parts which are inserted in 
+    one another. The first part is the base code, the next is "inserted" 
+    into it, and the next is inserted in the result, etc.
+    
+    Every part has a name, representing what it does or represents. 
+    Different parts that do the same thing (but in different ways) 
+    have the same way. This enables replacing parts (such as the render
+    style for 3D textures) in a very easy and natural way. All parts
+    in a ShaderCode instance must have unique names.
+    
     Composition
     -----------
-    The parts are inserted in one another. The first part
-    is the base code, the next is inserted into it, and the next is
-    inserted in the result, etc.
+    Insertion of one part in the base code happens via replacement. 
+    The code of a ShaderCodePart consists of multiple sections, where
+    each section starts with a specification of what is removed. For
+    this we use two greater than characters '>>':
+    {{{
+    >>someValue = 3;
+    someValue = 4;
+    }}}
     
-    Every part (except the base part) consists of several sections,
-    which are identified by a line as such: ">>section-identifier>>".
+    All code following the replacement-lines is inserted in the base 
+    code. Note that both the replace-code as the replacing code may
+    consist of multiple lines. 
     
-    Sections are inserted in the base code by an inclusion line:
-    "<<section-identifier<<". Note the direction of the arrows.
+    The matching of code is based on the stripped code, so spaces do not
+    matter. The replace-code (the code behind '>>') needs to be an exact 
+    match, but in the source there may be other code in front and after 
+    the code; this works:
+    {{{
+    // == Base code ==
+    a = b+3;
+    // insert more code here
+    c = a-b;
+    d = a+b;
+    }}}
+    {{{
+    // == Code to insert ==
+    >>more code
+    float tmp = a;
+    a = b;
+    b = tmp;
+    }}}
+    
     
     Standard sections
     -----------------
-    For clarity we define a few standard sections: uniforms, varying, functions.
-    When defining a function/uniform/varying, don't forget to include 
-    the functions/uniforms/varyings of any next parts:
+    For clarity we define a few standard sections: '--uniforms--', 
+    '--varying--', '--functions--'. When defining a function/uniform/varying, 
+    don't forget to include the functions/uniforms/varyings of any next parts:
     {{{
-        >>uniforms>>
+        >>--uniforms--
         uniform vec3 some_vector
-        <<uniforms<< // enables the next parts to set uniforms
+        // --uniforms-- // enables the next parts to set uniforms
     }}}
     
     """
@@ -372,12 +409,12 @@ class ShaderCode(object):
         """ Get a list of the parts in the shader. 
         """
         return [part for part in self._parts]
-    
+    # todo: comparison with string possible?
     @property
-    def partTypes(self):
-        """ Get a list of the part types in the shader. 
+    def partNames(self):
+        """ Get a list of the part names in the shader. 
         """
-        return [part.type for part in self._parts]
+        return [part.name for part in self._parts]
     
     @property
     def _isDirty(self):
@@ -407,13 +444,13 @@ class ShaderCode(object):
     
     def _IndexOfPart(self, part):
         
-        parts, types = self.parts, self.partTypes
+        parts, names = self.parts, self.partNames
         
         if isinstance(part, basestring):
-            if part not in types:
+            if part not in names:
                 raise ValueError('part not present: %s' % part)
             else:
-                return types.index(part)
+                return names.index(part)
         elif isinstance(part, ShaderCodePart):
             if part not in parts:
                 raise ValueError('part not present: %s' % repr(part))
@@ -429,7 +466,7 @@ class ShaderCode(object):
         Add a ShaderCodePart instance. It can be placed before or after an
         existing part. The default places the part at the end.
         
-        It is an error to add a part with of a type that is already
+        It is an error to add a part with of a name that is already
         present in the shader.
         
         """
@@ -439,8 +476,8 @@ class ShaderCode(object):
             raise ValueError('AddPart needs a ShaderCodePart.')
         
         # Check if already exists
-        if part.type in self.partTypes:
-            raise ValueError('part of that type already exists: %s' % part.type)
+        if part.name in self.partNames:
+            raise ValueError('part of that name already exists: %s' % part.name)
         
         # Add
         if before and after:
@@ -461,7 +498,7 @@ class ShaderCode(object):
     def ReplacePart(self, part):
         """ ReplacePart(part)
         
-        Replace an existing part, based on the type.
+        Replace an existing part, based on the name.
         
         """
         
@@ -470,7 +507,7 @@ class ShaderCode(object):
             raise ValueError('ReplacePart needs a ShaderCodePart.')
         
         # Replace
-        i = self._IndexOfPart(part.type)
+        i = self._IndexOfPart(part.name)
         self._parts[i] = part
         
         # Signal dirty
@@ -481,10 +518,10 @@ class ShaderCode(object):
         """ AddOrReplace(part, before=None, after=None)
         
         Convenience function to add a part or replace it if 
-        a part of this type already exists.
+        a part of this name already exists.
         
         """
-        if self.HasPart(part.type):
+        if self.HasPart(part.name):
             return self.ReplacePart(part)
         else:
             return self.AddPart(part, before, after)
@@ -494,7 +531,7 @@ class ShaderCode(object):
         """ RemovePart(part)
         
         Remove a part. Returns True on success, and False if no part exists 
-        for the given type. Also accepts a part type-name.
+        for the given name. Also accepts a part name.
         
         """
         try:
@@ -513,17 +550,17 @@ class ShaderCode(object):
     def HasPart(self, part):
         """ HasPart(part)
         
-        If part is a string, checks whether a part with the given type is
+        If part is a string, checks whether a part with the given name is
         present. If part is a ShaderCodePart instance, checks whether that
         exact part is present.
         
         """
         if isinstance(part, basestring):
-            return part in self.partTypes
+            return part in self.partNames
         elif isinstance(part, ShaderCodePart):
             return part in self.parts
         else:
-            raise ValueError('HasPart needs type or part.')
+            raise ValueError('HasPart needs name or part.')
     
     
     def Clear(self):
@@ -556,36 +593,36 @@ class ShaderCode(object):
         Can be useful when debugging glsl code.
         
         When part is given, only print the lines that belong to the
-        given part type. The 'part' argument can also be a string with
-        the type name.
+        given part name. The 'part' argument can also be a string with
+        the part name.
         
         """
         # Make sure that there is code
         self.GetCode()
         
-        # Get type
+        # Get name
         if part is None:
-            type = None
+            name = None
         elif isinstance(part, basestring):
-            type = part
+            name = part
         elif isinstance(part, ShaderCodePart):
-            type = part.type
+            name = part.name
         else:
-            raise ValueError('ShowCode needs type name or ShaderCodePart instance.')
+            raise ValueError('ShowCode needs part name or ShaderCodePart instance.')
         
-        # Test type
-        if type  and type not in self.partTypes:
-            raise ValueError('Given type not present.')
+        # Test name
+        if name and name not in self.partNames:
+            raise ValueError('Given name not present.')
         
         # Iterate through lines
         linenr = 0
         lines = []
-        for line, partType in self._buffer:
+        for line, partName in self._buffer:
             linenr += 1
             line2 = '%03i|%s' % (linenr, line)
             if len(line2) > columnLimit:
                 line2 = line2[:columnLimit-3] + '...'
-            if (not type) or (type == partType):
+            if (not name) or (name == partName):
                 lines.append(line2)
         print '\n'.join(lines)
     
@@ -605,7 +642,7 @@ class ShaderCode(object):
             return '\n'.join(lines2)
         
         # Init code
-        totalLines = [] # code lines: (line, indent, part-type)
+        totalLines = [] # code lines: (line, partName)
         totalCode = '' # code without indentation or trailing whitespace
         
         for part in self.parts:
@@ -614,7 +651,7 @@ class ShaderCode(object):
             if not totalLines:
                 for line in part.code.splitlines():
                     indent = len(line) - len(line.lstrip())
-                    totalLines.append( (line, part.type) )
+                    totalLines.append( (line, part.name) )
                 totalCode = dedentCode(totalLines)
                 continue
             
@@ -650,7 +687,7 @@ class ShaderCode(object):
                     for line in reversed(code.splitlines()):
                         line = originalIndent*' ' + line
                         indent = len(line) - len(line.lstrip())
-                        totalLines.insert( nr1, (line, part.type) )
+                        totalLines.insert( nr1, (line, part.name) )
                 
                 # Set total code
                 totalCode = dedentCode(totalLines)
@@ -741,13 +778,42 @@ class ShaderCode(object):
 
 # todo: doc
 class ShaderCodePart(object):
-    def __init__(self, type, name, code):
-        self._type = str(type)
+    """ ShaderCodePart(name, version, code)
+    
+    A ShaderCodePart instance represents a part of GLSL code. Multiple 
+    parts can be combined by replacing lines in the preceding parts. 
+    This makes code-reuse much easier, and allows users to for example
+    implement a volume renderer without the hassle of calculating ray
+    direction etc.; they can simply modify an existing renderer.
+    
+    Parameters
+    ----------
+    name : str
+      The name of the part, showing what it does. Different parts that
+      have the same purpose have the same name. The different render 
+      styles are for example implemented using parts all having the
+      name 'renderstyle'.
+    version : str
+      What version of the part this is. For the render styles, this would
+      be 'mip', 'ray', 'iso', etc. This is purely for the developer/user
+      to better identify this different parts.
+    code : str
+      The source code. Consists of different sections. Each section starts
+      with one or more lines that start with '>>'. The text behind the lines
+      is what shall be replaced in the preceding code part. The following
+      lines are the one that shall be inserted. Indentation does not matter.
+      See core/shaders_src.py for examples.      
+    
+    """
+    def __init__(self, name, version, code):
         self._name = str(name)
+        self._version = str(version)
         self._code = self._stripCode(code)
     
     def _stripCode(self, code):
-        
+        """ Strip the code of its minimum indentation. Also strip empty
+        lines before and after the actual code.
+        """
         # Strip empy trailing lines
         code = code.rstrip()
         
@@ -772,19 +838,32 @@ class ShaderCodePart(object):
         return '\n'.join(lines2)
     
     @property
-    def type(self):
-        return self._type
-    @property
     def name(self):
+        """ Get the name of this ShaderCodePart instance.
+        """
         return self._name
     @property
+    def version(self):
+        """ Get the version of this ShaderCodePart instance.
+        """
+        return self._version
+    @property
     def code(self):
+        """ Get the code of this ShaderCodePart instance.
+        """
         return self._code
     def __repr__(self):
-        return '<Shaderpart %s: %s>' % (self.type, self.name)
+        return '<Shaderpart %s: %s>' % (self.name, self.version)
     def __str__(self):
         return self._code
     def CollectSections(self):
+        """ CollectSections()
+        
+        Returns a two-element tuple with two list elements:
+          * the replace-code for each section (can be multi-line)
+          * the corresponding code to replace it with. 
+          
+        """
         
         # Init
         sections = []
@@ -822,16 +901,16 @@ class ShaderCodePart(object):
         # Done
         return sections, codes2
 
+
 # Import all shaders. Can only do the import after the ShaderCodePart is deffed
 from visvis.core.shaders_src import *
+
 
 if __name__ == '__main__':
     
     S1 = ShaderCodePart('s1','',
     """ 
-        // Cast ray. For some reason the inner loop is not iterated the whole
-        // way for large datasets. Thus this ugly hack. If you know how to do
-        // it better, please let me know!
+        // Cast ray. 
         int i=0;
         while (i<n)
         {

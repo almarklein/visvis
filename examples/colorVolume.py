@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """ This example demonstrates rendering a color volume.
-We demonstrate two renderers capable of rendering color data:
-the colormip and coloriso renderer.
+This example demonstrates two render styles. Note that
+all render styles are capable of rendering color data.
 """
 
 import numpy as np

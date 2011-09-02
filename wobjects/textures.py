@@ -400,7 +400,7 @@ class BaseTexture(Wobject, Colormapable):
         
         # Set fragment color part
         isColor = len(data.shape) > self._ndim
-        if 'color' in self.fragmentShader.partTypes:
+        if 'color' in self.fragmentShader.partNames:
             part = [shaders.SH_COLOR_SCALAR, shaders.SH_COLOR_RGB][isColor]
             self.fragmentShader.ReplacePart(part)
         
@@ -561,7 +561,7 @@ class Texture2D(BaseTexture):
         self.SetData(data)
         
         # init antialiasing
-        self.aa = 2
+        self.aa = 1
     
     
     def _InitShader(self):
@@ -754,7 +754,7 @@ class Texture2D(BaseTexture):
                         shaders.SH_2F_AASTEPS_2, shaders.SH_2F_AASTEPS_3]
                 aa_steps = M[self._aa]
                 # Apply
-                self.fragmentShader.ReplacePart(aa_steps)
+                self.fragmentShader.AddOrReplace(aa_steps)
 
 
 class Texture3D(BaseTexture):
@@ -1095,8 +1095,8 @@ class Texture3D(BaseTexture):
         mode. Try rendering data that is shaped with a power of two. This 
         helps on some cards.
         
-        You can also create your own render style by modyfying the glsl code.
-        See core/shaders_src.py and the ShaderCode class.
+        You can also create your own render style by modyfying the GLSL code.
+        See core/shaders_src.py and the ShaderCode class for more info.
         """
         def fget(self):
             return self._renderStyle
@@ -1137,7 +1137,7 @@ class Texture3D(BaseTexture):
     
     @PropWithDraw
     def isoThreshold():
-        """ Get/Set the isothreshold value used in the isosurface renderer.
+        """ Get/Set the isothreshold value used in the iso renderer.
         """
         def fget(self):
             return self._isoThreshold
