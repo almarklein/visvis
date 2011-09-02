@@ -11,6 +11,8 @@ The names consists of different parts, seperated by underscores:
     such as the STYLE part for 3D rendering techniques. 
 
 """
+from visvis.core.shaders import ShaderCodePart
+
 
 ## Color
 # These are used by many shaders to be able to deal with scalar or RGB data.
@@ -19,140 +21,134 @@ The names consists of different parts, seperated by underscores:
 # a color to be displayed on screen.
 
 # This one is not really usefull, but included for completeness
-SH_COLOR_SCALARNOCMAP = """
-
-    >>uniforms>>
+SH_COLOR_SCALARNOCMAP = ShaderCodePart('color', 'scalar-nocmap',
+"""
+    >>--uniforms--
     uniform vec2 scaleBias;
-    <<uniforms<<
+    // --uniforms--
     
-    >>pre-loop>>
-    float _colorval;
-    
-    >>color1-to-val>>
+    >>--color1-to-val--
     val = color1.r;
     
-    >>color1-to-color2>>
-    _colorval = ( color1.r + scaleBias[1] ) * scaleBias[0];
-    color2 = vec4(_colorval, _colorval, _colorval, 1.0);
-    
-    """
+    >>--color1-to-color2--
+    color2.rgb = ( color1.r + scaleBias[1] ) * scaleBias[0];
+    color2.a = 1.0;
+""")
+# todo: does that even work, the .rgb thing?
 
-SH_COLOR_SCALAR = """
-    
-    >>uniforms>>
+SH_COLOR_SCALAR = ShaderCodePart('color', 'scalar',
+"""
+    >>--uniforms--
     uniform sampler1D colormap;
     uniform vec2 scaleBias;
-    <<uniforms<<
+    // --uniforms--
     
-    >>color1-to-val>>
+    >>--color1-to-val--
     val = color1.r;
     
-    >>color1-to-color2>>
+    >>--color1-to-color2--
     color2 = texture1D( colormap, (color1.r + scaleBias[1]) * scaleBias[0]);
-    
-    """
+""")
 
-SH_COLOR_RGB = """
-
-    >>uniforms>>
+SH_COLOR_RGB = ShaderCodePart('color', 'RGB',
+"""
+    >>--uniforms--
     uniform vec2 scaleBias;
-    <<uniforms<<
+    // --uniforms--
     
-    >>color1-to-val>>
-    val = max(color1.r, max(color1.g, color1.b));
+    >>--color1-to-val--
+    val = length(color1.rgb);
     
-    >>color1-to-color2>>
+    >>--color1-to-color2--
     color2 = ( color1 + scaleBias[1] ) * scaleBias[0];
-    
-    """
+""")
+
 
 ## 2D fragment
 # Shows 2D texture and does anti-aliasing when image is zoomed out.
 
-SH_2F_BASE = """
-
-// Uniforms obtained from OpenGL
-uniform sampler2D texture; // The 3D texture
-uniform vec2 shape; // And its shape (as in OpenGl)
-uniform vec2 extent; // Extent of the data in world coordinates
-uniform vec4 aakernel; // The smoothing kernel for anti-aliasing
-<<uniforms<<
-
-// Varyings obtained from vertex shader
-<<varyings<<
-
-void main()
-{    
-    // Get centre location
-    vec2 pos = gl_TexCoord[0].xy;
+SH_2F_BASE = ShaderCodePart('base', '2D-fragment-default',
+"""
+    // Uniforms obtained from OpenGL
+    uniform sampler2D texture; // The 3D texture
+    uniform vec2 shape; // And its shape (as in OpenGl)
+    uniform vec2 extent; // Extent of the data in world coordinates
+    uniform vec4 aakernel; // The smoothing kernel for anti-aliasing
+    // --uniforms--
     
-    // Init value
-    vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0); 
-    vec4 color2; // to set color later
+    // Varyings obtained from vertex shader
+    // --varyings--
     
-    // Init kernel and number of steps
-    vec4 kernel = aakernel;
-    <<aa-steps<<
-    
-    // Init step size in tex coords
-    float dx = 1.0/shape.x;
-    float dy = 1.0/shape.y;
-    
-    // Allow more stuff
-    <<pre-loop<<
-    
-    // Convolve
-    for (int y=-sze; y<sze+1; y++)
-    {
-        for (int x=-sze; x<sze+1; x++)
-        {   
-            float k = kernel[abs(x)] * kernel[abs(y)];
-            vec2 dpos = vec2(float(x)*dx, float(y)*dy);
-            <<in-loop<<
+    void main()
+    {    
+        // Get centre location
+        vec2 pos = gl_TexCoord[0].xy;
+        
+        // Init value
+        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0); 
+        vec4 color2; // to set color later
+        
+        // Init kernel and number of steps
+        vec4 kernel = aakernel;
+        int sze = 0; // Overwritten in aa-steps part
+        
+        // Init step size in tex coords
+        float dx = 1.0/shape.x;
+        float dy = 1.0/shape.y;
+        
+        // Allow more stuff
+        // --pre-loop--
+        
+        // Convolve
+        for (int y=-sze; y<sze+1; y++)
+        {
+            for (int x=-sze; x<sze+1; x++)
+            {   
+                float k = kernel[abs(x)] * kernel[abs(y)];
+                vec2 dpos = vec2(float(x)*dx, float(y)*dy);
+                color1 += texture2D(texture, pos+dpos) * k;
+            }
         }
+        
+        // Allow more stuff
+        // --post-loop--
+        
+        // Determine final color
+        // --color1-to-color2--
+        gl_FragColor = color2;
+        
     }
-    
-    // Allow more stuff
-    <<post-loop<<
-    
-    // Determine final color
-    <<color1-to-color2<<
-    gl_FragColor = color2;
-    
-}
-"""
 
-# Simply samples the color from the texture
-SH_2F_STYLE_NORMAL = """
-    >>in-loop>>
-    color1 += texture2D(texture, pos+dpos) * k;
-"""
+""")
 
 # This cannot be done with a uniform, because on some systems it wont code
 # with loops of which the length is undefined.
 _SH_2F_AASTEPS = """
->>aa-steps>>
-int sze = %i;
+    >>int sze = 0;
+    int sze = %i;
 """
-SH_2F_AASTEPS_0 = _SH_2F_AASTEPS % 0
-SH_2F_AASTEPS_1 = _SH_2F_AASTEPS % 1
-SH_2F_AASTEPS_2 = _SH_2F_AASTEPS % 2
-SH_2F_AASTEPS_3 = _SH_2F_AASTEPS % 3
+SH_2F_AASTEPS_0 = ShaderCodePart('aa-steps', '0', _SH_2F_AASTEPS % 0)
+SH_2F_AASTEPS_1 = ShaderCodePart('aa-steps', '1', _SH_2F_AASTEPS % 1)
+SH_2F_AASTEPS_2 = ShaderCodePart('aa-steps', '2', _SH_2F_AASTEPS % 2)
+SH_2F_AASTEPS_3 = ShaderCodePart('aa-steps', '3', _SH_2F_AASTEPS % 3)
 
 
 ## 3D vertex base
 # The vertex shader only has one part
 
-SH_3V_BASE = """
+SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
+"""
     // Uniforms obtained from OpenGL
     uniform vec3 shape; // The dimensions of the data
     uniform float stepRatio; // Ratio to tune the number of steps
+    // --uniforms--
     
     // Varyings to pass to fragment shader
     varying vec3 ray; // The direction to cast the rays in
     varying vec3 L; // The 0th light source direction
     varying vec3 V; // The View direction
     varying vec4 vertexPosition; // The vertex position in world coordinates
+    // --varyings--
     
     void main()
     {    
@@ -200,10 +196,9 @@ SH_3V_BASE = """
         
         // Scale ray to take smaller steps.
         ray = ray / stepRatio;
-        
     }
 
-"""
+""")
 
 # todo: remove this old version in a few commits
 _SH_3V_BASE = """
@@ -280,27 +275,27 @@ _SH_3V_BASE = """
     }
 
 """
+
+
 ## 3D fragment base
 # Base for volume rendering
 # The 3D fragment shader needs calcsteps, and a type
 
-SH_3F_BASE = """
-
+SH_3F_BASE = ShaderCodePart('base', '3D-fragment-default',
+"""
     // Uniforms obtained from OpenGL
     uniform sampler3D texture; // The 3D texture
     uniform vec3 shape; // And its shape (as in OpenGl)
     uniform vec3 extent; // extent of the data in world coordinates
-    <<uniforms<<
+    // --uniforms--
     
     // Varyings received from fragment shader
     varying vec3 ray; // One unit step in texture coordinates
     varying vec4 vertexPosition;  // Vertex position in world coordinates
-    <<varyings<<
+    // --varyings--
     
     // ----- Functions follow below -----
-    
-    <<functions<<
-    
+    // --functions--
     // ----- End of functions -----
     
     void main()
@@ -313,7 +308,7 @@ SH_3F_BASE = """
         int iter_depth = 0;
         
         // Insert more initialization here
-        <<pre-loop<<
+        // --pre-loop--
         
         // Cast ray. For some reason the inner loop is not iterated the whole
         // way for large datasets. Thus this ugly hack. If you know how to do
@@ -326,13 +321,12 @@ SH_3F_BASE = """
                 // Calculate location.
                 vec3 loc = edgeLoc + float(i) * ray;
                 
-                // Insert more loop stuff here
-                <<in-loop<<
+                // --in-loop--
             }
         }
         
         // Insert finalization code here
-        <<post-loop<<
+        // --post-loop--
         
         
         // Discard fragment if small alpha
@@ -348,68 +342,69 @@ SH_3F_BASE = """
         vec4 iproj = gl_ModelViewProjectionMatrix * position2;
         iproj.z /= iproj.w;
         gl_FragDepth = (iproj.z+1.0)/2.0;
-        
     }
     
-"""
+""")
+
 
 ## 3D fragment calcsteps
 # Calculates the amount of steps that the volume rendering should take
 
-SH_3F_CALCSTEPS = """
-
->>functions>>
-<<functions<<
-
-float d2P(vec3 p, vec3 d, vec4 P)
-{
-    // calculate the distance of a point p to a plane P along direction d.
-    // plane P is defined as ax + by + cz = d    
-    // line is defined as two points on that line
-    
-    // calculate nominator and denominator
-    float nom = -( dot(P.rgb,p) - P.a );
-    float denom =  dot(P.rgb,d);
-    // determine what to return
-    if (nom*denom<=0.0)
-       return 9999999.0; // if negative, or ON the plane, return ~inf
-    else
-        return nom / denom; // return normally
-}
-
-int calculateSteps(vec3 edgeLoc)
-{
-    // Given the start pos, returns a corrected version of the ray
-    // and the number of steps combined in a vec4.
-    
-    // Check for all six planes how many rays fit from the start point.
-    // Take the minimum value (not counting negative and 0).
-    float smallest = 9999999.0;
-    smallest = min(smallest, d2P(edgeLoc, ray, vec4(1.0, 0.0, 0.0, 0.0)));
-    smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 1.0, 0.0, 0.0)));
-    smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 0.0, 1.0, 0.0)));
-    smallest = min(smallest, d2P(edgeLoc, ray, vec4(1.0, 0.0, 0.0, 1.0)));
-    smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 1.0, 0.0, 1.0)));
-    smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 0.0, 1.0, 1.0)));
-    
-    // round-off errors can cause the value to be very large.
-    // an n of 100.000 is pretty save
-    if (smallest > 9999.0)
-        smallest = 0.0;
-    
-    // determine amount of steps
-    return int( ceil(smallest) );
-}
-
+SH_3F_CALCSTEPS = ShaderCodePart('calcsteps', 'default',
 """
+    >>--functions--
+    // --functions--
+    
+    float d2P(vec3 p, vec3 d, vec4 P)
+    {
+        // calculate the distance of a point p to a plane P along direction d.
+        // plane P is defined as ax + by + cz = d    
+        // line is defined as two points on that line
+        
+        // calculate nominator and denominator
+        float nom = -( dot(P.rgb,p) - P.a );
+        float denom =  dot(P.rgb,d);
+        // determine what to return
+        if (nom*denom<=0.0)
+        return 9999999.0; // if negative, or ON the plane, return ~inf
+        else
+            return nom / denom; // return normally
+    }
+    
+    int calculateSteps(vec3 edgeLoc)
+    {
+        // Given the start pos, returns a corrected version of the ray
+        // and the number of steps combined in a vec4.
+        
+        // Check for all six planes how many rays fit from the start point.
+        // Take the minimum value (not counting negative and 0).
+        float smallest = 9999999.0;
+        smallest = min(smallest, d2P(edgeLoc, ray, vec4(1.0, 0.0, 0.0, 0.0)));
+        smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 1.0, 0.0, 0.0)));
+        smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 0.0, 1.0, 0.0)));
+        smallest = min(smallest, d2P(edgeLoc, ray, vec4(1.0, 0.0, 0.0, 1.0)));
+        smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 1.0, 0.0, 1.0)));
+        smallest = min(smallest, d2P(edgeLoc, ray, vec4(0.0, 0.0, 1.0, 1.0)));
+        
+        // round-off errors can cause the value to be very large.
+        // an n of 100.000 is pretty save
+        if (smallest > 9999.0)
+            smallest = 0.0;
+        
+        // determine amount of steps
+        return int( ceil(smallest) );
+    }
+
+""")
+
 
 ## 3D fragment STYLE MIP
 # Casts a ray all the way through. Displays the highest encountered
-# intensity.
+# intensity; there is only one pixel that contributes to the final color.
 
-SH_3F_STYLE_MIP = """
-    
-    >>pre-loop>>
+SH_3F_STYLE_MIP = ShaderCodePart('renderstyle', 'mip',
+"""
+    >>--pre-loop--
     
     // Remember that we made sure that the total range of the data is 
     // mapped between 0 and 1 (also for signed data types).
@@ -420,21 +415,21 @@ SH_3F_STYLE_MIP = """
     vec4 maxcolor; // The color found at the maximum value 
     vec4 color1; // What we sample from the texture
     vec4 color2; // What should be displayed
-    <<pre-loop<<
+    // --pre-loop--
     
-    >>in-loop>>
+    >>--in-loop--
     
     // Sample color and make value
     color1 = texture3D( texture, loc );
-    <<color1-to-val<<
+    --color1-to-val--
     // Bookkeeping (avoid if statements)
     float r = float(val>maxval);
     maxval = (1.0-r)*maxval + r*val;
     maxi = (1.0-r)*maxi + r*float(i);
     maxcolor = (1.0-r)*maxcolor + r*color1;
-    <<in-loop<<
+    // --in-loop--
     
-    >>post-loop>>
+    >>--post-loop--
     
     // Set depth
     iter_depth = int(maxi);
@@ -442,94 +437,42 @@ SH_3F_STYLE_MIP = """
     // Resample color and make display-color
     //color1 = texture3D( texture, edgeLoc + float(maxi)*ray );
     color1 = maxcolor;
-    <<color1-to-color2<<
+    // --color1-to-color2--
     gl_FragColor = color2;
-    <<post-loop<<
+    // --post-loop--
     
-"""
+""")
 
-## 3D fragment STYLE PMIP
-# todo: names....
-# Pseudo mip. This looks a bit like MIP, and like MIP, it does usually show
-# structures of interest without having to fiddle with the alpha channel.
-# A ray is cast through the volume and each voxel contributes to the final
-# color. The contribution saturates linearly, so things in the back have
-# small contributions.
-
-SH_3F_STYLE_PMIP = """
-    
-    >>uniforms>>
-    uniform float stepRatio;
-    <<uniforms<<
-    
-    >>pre-loop>>
-    vec4 color1; // what we sample from the texture
-    vec4 color2; // what should be displayed
-    vec4 color3 = vec4(0.0, 0.0, 0.0, 0.0); // init color
-    float alpha = 0.0; // total contribution
-    float val;
-    <<pre-loop<<
-    
-    >>in-loop>>
-    
-    // Sample color and make display color
-    color1 = texture3D( texture, loc );
-    <<color1-to-color2<<
-    <<color1-to-val<<
-    
-    // Update value  by adding contribution of this voxel
-    // Put bias in denominator so the first voxels dont contribute too much
-    float color2_alpha = val*val*val*val + 0.00001;
-    float a = color2_alpha / ( color2_alpha + alpha + 1.0); 
-    a /= stepRatio;
-    color3.rgba += color2.rgba*a;
-    alpha += a; // alpha counts total color contribution.
-    <<in-loop<<
-    
-    >>post-loop>>
-    
-    // Set depth at zero
-    iter_depth = 0;
-    
-    // Set color
-    color3.rgba /= alpha;
-    color3.a = min(1.0, color3.a);
-    gl_FragColor = color3;
-    <<post-loop<<
-    
-"""
 
 ## SH_3D fragment STYLE RAY
 # Casts a ray all the way through. All voxels contribute (using their alpha
-# value), untill the alpha is saturated.
-SH_3F_STYLE_RAY = """
-    
-    >>uniforms>>
+# value).
+
+SH_3F_STYLE_RAY = ShaderCodePart('renderstyle', 'ray',
+"""
+    >>--uniforms--
     uniform float stepRatio;
-    <<uniforms<<
+    // --uniforms--
     
-    >>pre-loop>>
+    >>--pre-loop--
     vec4 color1; // what we sample from the texture
     vec4 color2; // what should be displayed
     vec4 color3 = vec4(0.0, 0.0, 0.0, 0.0); // init color
-    <<pre-loop<<
+    // --pre-loop--
     
-    >>in-loop>>
+    >>--in-loop--
     
     // Sample color and make display color
     color1 = texture3D( texture, loc );
-    <<color1-to-color2<<
+    // --color1-to-color2--
     
     // Update value  by adding contribution of this voxel
-    // Put bias in denominator so the first voxels dont contribute too much
-    //float a = color2.a / ( color2.a + color3.a + 1.0); 
-    //a /= stepRatio;
     float a = color2.a * max(0.0, 1.0-color3.a) / stepRatio;
     color3.rgb += color2.rgb*a;
     color3.a += a; // color3.a counts total color contribution.
-    <<in-loop<<
+    // --in-loop--
     
-    >>post-loop>>
+    >>--post-loop--
     
     // Set depth at zero
     iter_depth = 0;
@@ -538,63 +481,67 @@ SH_3F_STYLE_RAY = """
     color3.rgb /= color3.a;
     color3.a = min(1.0, color3.a);
     gl_FragColor = color3;
-    <<post-loop<<
+    // --post-loop--
     
-"""
-## SH_3D fragment STYLE RAY2
-# Same as ray, but has some artificial shadow effects. Really not that usefull,
-# because the normal ray renderer also has these effects, although a bit less.
-SH_3F_STYLE_RAY2 = """
-    
-    >>uniforms>>
+""")
+
+
+## SH_3D fragment STYLE EDGERAY
+# Same as ray, but the alpha is scaled with the gradient magnitude, which
+# makes it easier to "quickly" visualize a volume without having to play
+# with the alpha channel in the ColormapEditor.
+
+SH_3F_STYLE_EDGERAY = ShaderCodePart('renderstyle', 'edgeray',
+"""   
+    >>--uniforms--
     uniform float stepRatio;
-    <<uniforms<<
+    // --uniforms--
     
-    >>pre-loop>>
+    >>--pre-loop--
     vec4 color1; // what we sample from the texture
     vec4 color2; // what should be displayed
     vec4 color3 = vec4(0.0, 0.0, 0.0, 0.0); // init color
     vec3 step = 1.5 / shape;
-    <<pre-loop<<
+    // --pre-loop--
     
-    >>in-loop>>
+    >>--in-loop--
     
     // Sample color and make display color
     color1 = texture3D( texture, loc );
-    vec4 color0 = color1;
+    vec4 betterColor = color1;
     
-    // Look in neighborhood
-    color2 = color1;
+    // Look in neighborhood    
+    // calculate normal vector from gradient
+    vec3 N; // normal
     color1 = texture3D( texture, loc+vec3(-step[0],0.0,0.0) );
-    color2 = max(color1, color2);
-    color1 = texture3D( texture, loc+vec3(step[0],0.0,0.0) );
-    color2 = max(color1, color2);    
+    color2 = texture3D( texture, loc+vec3(step[0],0.0,0.0) );
+    N[0] = length(color1.rgb - color2.rgb);
+    betterColor = max(max(color1, color2),betterColor);
     color1 = texture3D( texture, loc+vec3(0.0,-step[1],0.0) );
-    color2 = max(color1, color2);    
-    color1 = texture3D( texture, loc+vec3(0.0,step[1],0.0) );
-    color2 = max(color1, color2);
+    color2 = texture3D( texture, loc+vec3(0.0,step[1],0.0) );
+    N[1] = length(color1.rgb - color2.rgb);
+    betterColor = max(max(color1, color2),betterColor);
     color1 = texture3D( texture, loc+vec3(0.0,0.0,-step[2]) );
-    color2 = max(color1, color2);
-    color1 = texture3D( texture, loc+vec3(0.0,0.0,step[2]) );
-    color2 = max(color1, color2);
+    color2 = texture3D( texture, loc+vec3(0.0,0.0,step[2]) );
+    N[2] = length(color1.rgb - color2.rgb);
+    betterColor = max(max(color1, color2),betterColor);
+    float gm = length(N); // gradient magnitude
     
-    // Calculate color strengths
-    float colorStrength0 = length(color0.rgb);
-    float colorStrength2 = length(color2.rgb);
-    
-    // Calculate display color and reduce according to difference
-    color1 = color2 * (colorStrength0/(colorStrength2+0.01));
-    <<color1-to-color2<<
-    color2.rgb *= max(0.5, 1.0-(colorStrength2-colorStrength0));
+    // Get "display" color
+    color1 = betterColor;
+    // --color1-to-color2--
+    // threshold gm (this treshold can be crucial) and use to scale alpha
+    gm = (gm-0.1);
+    color2.a *= min(1.0, max(0.0, gm ));
     
     // Update value  by adding contribution of this voxel
     // Put bias in denominator so the first voxels dont contribute too much
     float a = color2.a * max(0.0, 1.0-color3.a) / stepRatio;
     color3.rgb += color2.rgb*a;
     color3.a += a; // color3.a counts total color contribution.
-    <<in-loop<<
+    // --in-loop--
     
-    >>post-loop>>
+    >>--post-loop--
     
     // Set depth at zero
     iter_depth = 0;
@@ -603,20 +550,26 @@ SH_3F_STYLE_RAY2 = """
     color3.rgb /= color3.a;
     color3.a = min(1.0, color3.a);
     gl_FragColor = color3;
-    <<post-loop<<
+    // --post-loop--
     
-"""
-## 3D fragment STYLE ISO
-# Needs Color part and litvoxel part
-SH_3F_STYLE_ISO = """
+""")
 
-    >>uniforms>>
+
+## 3D fragment STYLE ISO
+# Needs Color part and litvoxel part.
+# Traces a ray untill it meets a pre-defined threshold. At that location
+# the lighting is calculated. When the threshold is passed X times (usually 3)
+# the program exits. Final color thus corresponds to couple of voxels.
+
+SH_3F_STYLE_ISO = ShaderCodePart('renderstyle', 'iso',
+"""
+    >>--uniforms--
     uniform float th; // isosurface treshold
     uniform float stepRatio;
     uniform int maxIsoSamples;
-    <<uniforms<<
+    // --uniforms--
     
-    >>pre-loop>>
+    >>--pre-loop--
     vec3 step = 1.5 / shape; // Step the size of one voxel
     float val; // the value  to determine if voxel is above threshold
     vec4 color1; // temp color
@@ -624,9 +577,9 @@ SH_3F_STYLE_ISO = """
     vec4 color3 = vec4(0.0, 0.0, 0.0, 0.0); // init color
     float iter_depth_f = 0.0; // to set the depth
     int nsamples = 0;
-    <<pre-loop<<
+    // --pre-loop--
     
-    >>in-loop>>
+    >>--in-loop--
     
     // Sample color and make display color
     color1 = texture3D( texture, loc );
@@ -654,9 +607,9 @@ SH_3F_STYLE_ISO = """
             break;
         }
     }
-    <<in-loop<<
+    // --in-loop--
     
-    >>post-loop>>
+    >>--post-loop--
     
     // Set depth
     iter_depth = int(iter_depth_f);
@@ -665,48 +618,50 @@ SH_3F_STYLE_ISO = """
     color3.rgb /= color3.a;
     color3.a = float(iter_depth_f>0.0);
     gl_FragColor = color3;
-    <<post-loop<<
+    // --post-loop--
     
-"""
+""")
 
-## 3D fragment_STYLE ISORAY
+
+## 3D fragment_STYLE LITRAY
 # Needs Color part and litvoxel part
 # Casts a ray all the way through and calculates lighting at each step
 # All contributions are combined untill alpha value saturates.
-SH_3F_STYLE_ISORAY = """
+# Most pretty and most demanding for the GPU.
 
-    >>uniforms>>
+SH_3F_STYLE_LITRAY = ShaderCodePart('renderstyle', 'litray',
+"""
+    >>--uniforms--
     uniform float stepRatio;
-    <<uniforms<<
+    // --uniforms--
     
-    >>pre-loop>>
+    >>--pre-loop--
     vec3 step = 1.5 / shape; // Step the size of one voxel
     float val; // the value  to determine if voxel is above threshold
     vec4 color1; // temp color
     vec4 color2; // temp color
     vec4 color3 = vec4(0.0, 0.0, 0.0, 0.0); // init color
     float iter_depth_f = 0.0; // to set the depth
-    <<pre-loop<<
+    // --pre-loop--
     
-    >>in-loop>>
-    
+    >>--in-loop--
+
     // Sample color and make display color
     color1 = texture3D( texture, loc );
-
-    // Set color
+    
+    // Get color with lighting
     color2 = calculateColor(color1, loc, step);
     
     // Update value by adding contribution of this voxel
     float a = color2.a * max(0.0, 1.0-color3.a) / stepRatio;
-    //float a = color2.a / ( color2.a + color3.a + 0.00001); 
     color3.rgb += color2.rgb*a;
     color3.a += a; // color3.a counts total color contribution.
     
     // Set depth
     iter_depth_f =  float(iter_depth==0.0) * float(color3.a>0) * float(i);
-    <<in-loop<<
+    // --in-loop--
     
-    >>post-loop>>
+    >>--post-loop--
     
     // Set depth
     iter_depth = int(iter_depth_f);
@@ -714,34 +669,35 @@ SH_3F_STYLE_ISORAY = """
     color3.rgb /= color3.a;
     color3.a = min(1.0, color3.a);
     gl_FragColor = color3;
-    <<post-loop<<
+    // --post-loop--
     
-"""
+""")
 
 ## 3D fragment_LITVOXEL (for ISO and ISORAY styles)
-SH_3F_LITVOXEL = """
-    >>uniforms>>
+SH_3F_LITVOXEL = ShaderCodePart('litvoxel', 'default',
+"""
+    >>--uniforms--
     // lighting
     uniform vec4 ambient;
     uniform vec4 diffuse;
     uniform vec4 specular;
     uniform float shininess;
-    <<uniforms<<
+    // --uniforms--
     
-    >>varyings>>
+    >>--varyings--
     varying vec3 L; // light direction
     varying vec3 V; // view direction
-    <<varyings<<
+    // --varyings--
     
     
-    >>functions>>
-    <<functions<<
+    >>--functions--
+    // --functions--
     
     float colorToVal(vec4 color1)
     {
         //return color1.r;
         float val;
-        <<color1-to-val<<
+        // --color1-to-val--
         //val = color1.r;
         return val;
     }
@@ -780,18 +736,17 @@ SH_3F_LITVOXEL = """
         
         // Apply color of the texture
         color1 = betterColor;
-        <<color1-to-color2<<
+        // --color1-to-color2--
         totalColor *= color2;
         
         // Apply specular color
         vec3 H = normalize(L+V);
         str = pow( max(dot(H,N),0.0), shininess);
-        totalColor += str * specular * gl_LightSource[0].specular;
+        totalColor.rgb += str * specular.rgb * gl_LightSource[0].specular;
         
-        totalColor.a = color2.a * gm;
+        // Done
+        totalColor.a = color2.a;// * gm;
         return totalColor;
     }
     
-"""
-
-
+""")

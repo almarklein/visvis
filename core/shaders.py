@@ -16,7 +16,6 @@ import OpenGL.GL as gl
 import OpenGL.GL.ARB.shader_objects as gla
 
 from visvis.core.misc import getResourceDir, getOpenGlCapable
-from visvis.core.shaders_src import *
 import visvis as vv
 
 # Variable for debugging / developing to display shader info logs always.
@@ -370,10 +369,15 @@ class ShaderCode(object):
     
     @property
     def parts(self):
-        """ Get a list of the part names in the shader. 
+        """ Get a list of the parts in the shader. 
         """
-        return [part[0] for part in self._parts]
+        return [part for part in self._parts]
     
+    @property
+    def partTypes(self):
+        """ Get a list of the part types in the shader. 
+        """
+        return [part.type for part in self._parts]
     
     @property
     def _isDirty(self):
@@ -401,88 +405,100 @@ class ShaderCode(object):
         return dirty
     
     
-    def _IndexOfPart(self, name):
+    def _IndexOfPart(self, part):
         
-        parts = self.parts
-        if name not in self.parts:
-            raise ValueError('part does not exist: %s' % name)
+        parts, types = self.parts, self.partTypes
+        
+        if isinstance(part, basestring):
+            if part not in types:
+                raise ValueError('part not present: %s' % part)
+            else:
+                return types.index(part)
+        elif isinstance(part, ShaderCodePart):
+            if part not in parts:
+                raise ValueError('part not present: %s' % repr(part))
+            else:
+                return parts.index(part)
         else:
-            return parts.index(name)
+            raise ValueError('Inalid part description (must be string or ShaderCodePart).')
     
     
-    def AddPart(self, name, code, before=None, after=None):
-        """ AddPart(name, code, before=None, after=None)
+    def AddPart(self, part, before=None, after=None):
+        """ AddPart(part, before=None, after=None)
         
-        Add a part of code. It can be placed before or after an
+        Add a ShaderCodePart instance. It can be placed before or after an
         existing part. The default places the part at the end.
         
-        It is an error to add a part with a name that is already
+        It is an error to add a part with of a type that is already
         present in the shader.
         
         """
         
         # Check
-        if not isinstance(name, basestring) or len(name) == 0:
-            raise ValueError('name for ShaderCode part must be a nonempty string.')
-        if not isinstance(code, basestring) or len(name) ==0:
-            raise ValueError('code for ShaderCode part must be a nonempty string.')
+        if not isinstance(part, ShaderCodePart):
+            raise ValueError('AddPart needs a ShaderCodePart.')
         
         # Check if already exists
-        if name in self.parts:
-            raise ValueError('part already exists: %s' % name)
+        if part.type in self.partTypes:
+            raise ValueError('part of that type already exists: %s' % part.type)
         
         # Add
         if before and after:
             raise ValueError('Can only specify before or after; not both.')
         elif before:
             i = self._IndexOfPart(before)
-            self._parts.insert( i, (name, code) )
+            self._parts.insert(i, part)
         elif after:
             i = self._IndexOfPart(after)
-            self._parts.insert( i+1, (name, code) )
+            self._parts.insert(i+1, part)
         else:
-            self._parts.append( (name, code) )
+            self._parts.append(part)
         
         # Signal dirty
         self._buffer = None
     
     
-    def ReplacePart(self, name, code):
-        """ ReplacePart(name, code)
+    def ReplacePart(self, part):
+        """ ReplacePart(part)
         
-        Replace the code of an existing part.
+        Replace an existing part, based on the type.
+        
         """
+        
+        # Check
+        if not isinstance(part, ShaderCodePart):
+            raise ValueError('ReplacePart needs a ShaderCodePart.')
         
         # Replace
-        i = self._IndexOfPart(name)
-        self._parts[i] = name, code
+        i = self._IndexOfPart(part.type)
+        self._parts[i] = part
         
         # Signal dirty
         self._buffer = None
     
     
-    def AddOrReplace(self, name, code, before=None, after=None):
-        """ AddOrReplace(name, code, before=None, after=None)
+    def AddOrReplace(self, part, before=None, after=None):
+        """ AddOrReplace(part, before=None, after=None)
         
-        Convenience function to add a code part or replace it if 
-        a part with this name already exists.
+        Convenience function to add a part or replace it if 
+        a part of this type already exists.
         
         """
-        if self.HasPart(name):
-            return self.ReplacePart(name, code)
+        if self.HasPart(part.type):
+            return self.ReplacePart(part)
         else:
-            return self.AddPart(name, code, before, after)
+            return self.AddPart(part, before, after)
     
     
-    def RemovePart(self, name):
-        """ RemovePart(name)
+    def RemovePart(self, part):
+        """ RemovePart(part)
         
         Remove a part. Returns True on success, and False if no part exists 
-        for the given name. 
+        for the given type. Also accepts a part type-name.
         
         """
         try:
-            i = self._IndexOfPart(name)
+            i = self._IndexOfPart(part)
         except Exception:
             return False
         else:
@@ -494,16 +510,20 @@ class ShaderCode(object):
         
     
     
-    def HasPart(self, name):
-        """ HasPart(name)
+    def HasPart(self, part):
+        """ HasPart(part)
         
-        Check whether a part with the given name exists at this shader.
+        If part is a string, checks whether a part with the given type is
+        present. If part is a ShaderCodePart instance, checks whether that
+        exact part is present.
         
         """
-        if name in self.parts:
-            return True
+        if isinstance(part, basestring):
+            return part in self.partTypes
+        elif isinstance(part, ShaderCodePart):
+            return part in self.parts
         else:
-            return False
+            raise ValueError('HasPart needs type or part.')
     
     
     def Clear(self):
@@ -518,41 +538,56 @@ class ShaderCode(object):
         self._buffer = None
     
     
-    def GetCode(self, name=None):
-        """ GetCode(name=None)
+    def GetCode(self):
+        """ GetCode()
         
-        Show the code of this shader. If name is given, show the
-        code of that part. Otherwise show the total code.
+        Get the total code for this shader.
         
         """
-        if name is None:
-            # Return full code
-            if self._isDirty:
-                self._Compile()
-            return self._buffer
+        if self._isDirty:
+            self._Compile()
+        return '\n'.join( [t[0] for t in self._buffer] )
+    
+    
+    def ShowCode(self, part=None, columnLimit=79):
+        """ ShowCode(part=None, columnLimit=79)
+        
+        Print the code with line numbers, and limiting long lines.
+        Can be useful when debugging glsl code.
+        
+        When part is given, only print the lines that belong to the
+        given part type. The 'part' argument can also be a string with
+        the type name.
+        
+        """
+        # Make sure that there is code
+        self.GetCode()
+        
+        # Get type
+        if part is None:
+            type = None
+        elif isinstance(part, basestring):
+            type = part
+        elif isinstance(part, ShaderCodePart):
+            type = part.type
         else:
-            i = self._IndexOfPart(name)
-            return self._parts[i][1]
-    
-    
-    def _CollectSections(self, text, kind='>>'):
-        """ _CollectSections(text)
+            raise ValueError('ShowCode needs type name or ShaderCodePart instance.')
         
-        Check what sections are in the given text.
+        # Test type
+        if type  and type not in self.partTypes:
+            raise ValueError('Given type not present.')
         
-        """
-        # Collect all section names
-        sections = []
-        indents = []
-        for line in text.splitlines():
-            line2 = line.lstrip()
-            indent = len(line)-len(line2)
-            line = line2.rstrip()
-            if line.startswith(kind) and line.endswith(kind):
-                if ' ' not in line:
-                    sections.append(line[len(kind):-len(kind)])
-                    indents.append(indent)
-        return sections, indents
+        # Iterate through lines
+        linenr = 0
+        lines = []
+        for line, partType in self._buffer:
+            linenr += 1
+            line2 = '%03i|%s' % (linenr, line)
+            if len(line2) > columnLimit:
+                line2 = line2[:columnLimit-3] + '...'
+            if (not type) or (type == partType):
+                lines.append(line2)
+        print '\n'.join(lines)
     
     
     def _Compile(self):
@@ -561,74 +596,67 @@ class ShaderCode(object):
         Compile the full code by filling composing all parts/sections.
         
         """
+        def dedentCode(lines):
+            lines2 = []
+            for line in lines:
+                if isinstance(line, tuple):
+                    line = line[0]
+                lines2.append(line.strip())
+            return '\n'.join(lines2)
         
         # Init code
-        totalCode = ''
+        totalLines = [] # code lines: (line, indent, part-type)
+        totalCode = '' # code without indentation or trailing whitespace
         
-        for name, code in self._parts:
+        for part in self.parts:
             
-            # If totalCode is empty, simply replace code
-            if not totalCode:
-                totalCode = code
+            # If totalCode is empty, simply set code
+            if not totalLines:
+                for line in part.code.splitlines():
+                    indent = len(line) - len(line.lstrip())
+                    totalLines.append( (line, part.type) )
+                totalCode = dedentCode(totalLines)
                 continue
             
-            # Get base sections in total code
-            baseSections, baseIndents = self._CollectSections(totalCode, '<<')
-            indent_per_section = {}
-            for section, indent in zip(baseSections, baseIndents):
-                indent_per_section[section] = indent
-            
             # Get sections in this part
-            partSections, partIndents = self._CollectSections(code, '>>')
+            partSections, partCodes = part.CollectSections()
             
-            # Get code for each section in this part
-            partCodes = []
-            for section in partSections:
-                code2, dummy, code = code.partition('>>%s>>'%section)
-                partCodes.append(code2)
-            partCodes.append(code)
-            partCodes.pop(0)
-            
-            for section, indent, code in zip(partSections, partIndents, partCodes):
+            for section, code in zip(partSections, partCodes):
                 
-                # Valid section?
-                if section not in baseSections:
+                # Find sections
+                splittedCode = totalCode.split(section)
+                
+                # Section present?
+                if len(splittedCode) == 1:
                     #print 'Warning: code section <%s> not known.' % section
                     continue
                 
-                # Fix indentation
-                lines = []
-                section_indent = indent_per_section[section]
-                for line in code.splitlines():
-                    line2 = line.lstrip()
-                    line_indent = len(line) - len(line2)
-                    if line_indent >= indent:
-                        line = ' '*section_indent + line[indent:]
-                    else:
-                        line = ' '*section_indent + line
-                    lines.append(line)
+                # For every occurance ...
+                for i in range(len(splittedCode)-1):
+                    
+                    # Count where we need to insert
+                    nr1 = splittedCode[i].count('\n')
+                    nr2 = nr1 + 1 + section.count('\n')
+                    
+                    # Calculate original indentation
+                    line = totalLines[nr1][0]
+                    originalIndent = len(line) - len(line.lstrip())
+                    
+                    # Remove lines that we replace
+                    for ii in reversed(range(nr1, nr2)):
+                        totalLines.pop(ii)
+                    
+                    # Insert new lines
+                    for line in reversed(code.splitlines()):
+                        line = originalIndent*' ' + line
+                        indent = len(line) - len(line.lstrip())
+                        totalLines.insert( nr1, (line, part.type) )
                 
-                # Remove empty trailing lines
-                lines2 = []
-                for line in reversed(lines):
-                    if lines2 or line.strip():
-                        lines2.append(line)
-                lines = [line for line in reversed(lines2)]
-                
-                # Combine to get code
-                code = '\n'.join(lines[1:])
-                
-                # Insert section
-                needle ='%s<<%s<<' % (' '*section_indent, section)
-                totalCode = totalCode.replace(needle, code)
-        
-        # Fill any leftover sections with blanks
-        baseSections, baseIndents = self._CollectSections(totalCode, '<<')
-        for section in baseSections:
-            totalCode = totalCode.replace('<<%s<<'%section, '')
+                # Set total code
+                totalCode = dedentCode(totalLines)
         
         # Done
-        self._buffer = totalCode
+        self._buffer = totalLines
     
     
     def SetUniform(self, name, value):
@@ -711,9 +739,123 @@ class ShaderCode(object):
         for name in self._uniforms:
            setuniform(self._uniforms[name])
 
+# todo: doc
+class ShaderCodePart(object):
+    def __init__(self, type, name, code):
+        self._type = str(type)
+        self._name = str(name)
+        self._code = self._stripCode(code)
+    
+    def _stripCode(self, code):
+        
+        # Strip empy trailing lines
+        code = code.rstrip()
+        
+        # Find minimum indentation, skip first empty lines
+        lines1 = []
+        minIndent = 99999999
+        encounteredRealLine = False
+        for line1 in code.splitlines():
+            line2 = line1.lstrip()
+            line3 = line2.rstrip()
+            if encounteredRealLine or line3:
+                lines1.append(line1)
+            if line3:
+                encounteredRealLine = True
+                indent = len(line1) - len(line2)
+                minIndent = min(minIndent, indent)
+        
+        # Remove minimum indentation and trailing whitespace
+        lines2 = []
+        for line1 in lines1:
+            lines2.append(line1[minIndent:].rstrip())
+        return '\n'.join(lines2)
+    
+    @property
+    def type(self):
+        return self._type
+    @property
+    def name(self):
+        return self._name
+    @property
+    def code(self):
+        return self._code
+    def __repr__(self):
+        return '<Shaderpart %s: %s>' % (self.type, self.name)
+    def __str__(self):
+        return self._code
+    def CollectSections(self):
+        
+        # Init
+        sections = []
+        sections_raw = []
+        codes = []
+        
+        # Collect all section needles
+        linenr = 0    
+        lastLinenr = -10
+        for line in self.code.splitlines():
+            linenr += 1
+            if line.startswith('>>'):
+                if linenr == lastLinenr + 1:
+                    sections[-1] += '\n' + line[2:].lstrip()
+                    sections_raw[-1] += '\n' + line
+                else:
+                    sections.append(line[2:].lstrip())
+                    sections_raw.append(line)
+                lastLinenr = linenr
+        
+        # Collect code
+        code = self.code
+        for section_raw in sections_raw:
+            code2, dummy, code = code.partition(section_raw)
+            codes.append(code2)
+        codes.append(code)
+        codes.pop(0)
+        
+        # Clean up codes
+        codes2 = []
+        for code in codes:
+            code = code[1:].rstrip() + '\n'
+            codes2.append(code)
+        
+        # Done
+        return sections, codes2
+
+# Import all shaders. Can only do the import after the ShaderCodePart is deffed
+from visvis.core.shaders_src import *
 
 if __name__ == '__main__':
+    
+    S1 = ShaderCodePart('s1','',
+    """ 
+        // Cast ray. For some reason the inner loop is not iterated the whole
+        // way for large datasets. Thus this ugly hack. If you know how to do
+        // it better, please let me know!
+        int i=0;
+        while (i<n)
+        {
+            for (i=i; i<n; i++)
+            {
+                // Calculate location.
+                vec3 loc = edgeLoc + float(i) * ray;
+    """)
+    
+    S2 = ShaderCodePart('s2','',
+    """
+    >>int i=0;
+    >>while (i<n)
+    >>{
+    >>for (i=i; i<n; i++)
+    // reversed loop
+    int i = n-1;
+    while (i>0)
+    {
+        for (i=i; i>=0; i--)
+    """)
+    
     s = ShaderCode()
-    s.AddPart('type', SH_MIP)
-    s.AddPart('color', SH_COLOR_COLORMAP)
+    s.AddPart(S1)
+    s.AddPart(S2)
     print s.GetCode()
+
