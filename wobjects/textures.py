@@ -400,9 +400,9 @@ class BaseTexture(Wobject, Colormapable):
         
         # Set fragment color part
         isColor = len(data.shape) > self._ndim
-        if 'color' in self.fragmentShader.parts:
+        if 'color' in self.fragmentShader.partTypes:
             part = [shaders.SH_COLOR_SCALAR, shaders.SH_COLOR_RGB][isColor]
-            self.fragmentShader.ReplacePart('color', part)
+            self.fragmentShader.ReplacePart(part)
         
         # if Aarray, edit scaling and transform
         if is_Aarray(data):
@@ -561,16 +561,15 @@ class Texture2D(BaseTexture):
         self.SetData(data)
         
         # init antialiasing
-        self.aa = 0
+        self.aa = 2
     
     
     def _InitShader(self):
         
         # Add components of shaders
-        self.fragmentShader.AddPart('base', shaders.SH_2F_BASE)
-        self.fragmentShader.AddPart('style', shaders.SH_2F_STYLE_NORMAL)
-        self.fragmentShader.AddPart('aa-steps', shaders.SH_2F_AASTEPS_2)
-        self.fragmentShader.AddPart('color', shaders.SH_COLOR_SCALAR)
+        self.fragmentShader.AddPart(shaders.SH_2F_BASE)
+        self.fragmentShader.AddPart(shaders.SH_2F_AASTEPS_2)
+        self.fragmentShader.AddPart(shaders.SH_COLOR_SCALAR)
         
         def uniform_shape():
             shape = self._texture1._shape[:2] # as in opengl
@@ -612,7 +611,7 @@ class Texture2D(BaseTexture):
         sy = (1.0 / abs(axes.daspectNormalized[1]*cam._zoom) ) / h
         
         # correct for fact that humans prefer sharpness
-        tmp = 0.5
+        tmp = 0.333*self.aa
         sx, sy = sx*tmp, sy*tmp
         
         # keep >= 0 so we can devide
@@ -737,7 +736,6 @@ class Texture2D(BaseTexture):
           * 1 for minor anti aliasing
           * 2 for medium anti aliasing
           * 3 for much anti aliasing
-          * a string to chose a shader (to allow home-made shaders)
         """
         def fget(self):
             return self._aa
@@ -756,7 +754,7 @@ class Texture2D(BaseTexture):
                         shaders.SH_2F_AASTEPS_2, shaders.SH_2F_AASTEPS_3]
                 aa_steps = M[self._aa]
                 # Apply
-                self.fragmentShader.ReplacePart('aa-steps', aa_steps)
+                self.fragmentShader.ReplacePart(aa_steps)
 
 
 class Texture3D(BaseTexture):
@@ -808,12 +806,12 @@ class Texture3D(BaseTexture):
     def _InitShader(self):
         
         # Add components of shaders
-        self.vertexShader.AddPart('base', shaders.SH_3V_BASE)
+        self.vertexShader.AddPart(shaders.SH_3V_BASE)
         #
-        self.fragmentShader.AddPart('base', shaders.SH_3F_BASE)
-        self.fragmentShader.AddPart('steps', shaders.SH_3F_CALCSTEPS)
-        self.fragmentShader.AddPart('style', shaders.SH_3F_STYLE_MIP)
-        self.fragmentShader.AddPart('color', shaders.SH_COLOR_SCALAR)
+        self.fragmentShader.AddPart(shaders.SH_3F_BASE)
+        self.fragmentShader.AddPart(shaders.SH_3F_CALCSTEPS)
+        self.fragmentShader.AddPart(shaders.SH_3F_STYLE_MIP)
+        self.fragmentShader.AddPart(shaders.SH_COLOR_SCALAR)
         
         
         def uniform_shape():
@@ -1071,25 +1069,40 @@ class Texture3D(BaseTexture):
         # There we are
         return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
     
-    # todo: test color volumes, automatically detected?
+    
     @PropWithDraw
     def renderStyle():
         """ Get/Set the render style to render the volumetric data:
-          * mip: maximum intensity projection
-          * iso: isosurface rendering
-          * ray: ray casting (tip: use the ColormapEditor wibject to 
-            control transparancy)
-          * ray2: ray casting with simple shadow effects. Looks nicer than ray.
-          * isoray: a hybrid iso/ray renderer.
+          * MIP: maximum intensity projection. Shows the voxel with the 
+            maxiumum value.
+          * ISO: isosurface rendering. Casts ray until value is above 
+            threshold. Ligthing is calculated at that voxel. Use together 
+            with isoThreshold property.
+          * RAY: ray casting. All voxels along the ray contribute to final 
+            color, weighted by the alpha value.
+          * EDGERAY: ray casting in which alpha is scaled with the gradient 
+            magnitude.
+          * LITRAY: ray casting in which all voxels are lit. Most pretty and
+            most demanding for GPU.
+        
+        Notes
+        =====
+        MIP and EDGERAY usually work out of the box. ISO requires playing
+        with the isoThreshold property. RAY and LITRAY require playing with
+        the alpha channel using the ColormapEditor wibject.
+        
         If drawing takes really long, your system renders in software
         mode. Try rendering data that is shaped with a power of two. This 
         helps on some cards.
+        
+        You can also create your own render style by modyfying the glsl code.
+        See core/shaders_src.py and the ShaderCode class.
         """
         def fget(self):
             return self._renderStyle
         def fset(self, style):     
             style = style.lower()
-             # Set color
+             # Set color (done automatically!)
 #             sh_color = shaders.SH_COLOR_SCALAR
 #             if 'color' in style or 'rgb' in style:
 #                 sh_color = shaders.SH_COLOR_RGB
@@ -1098,22 +1111,22 @@ class Texture3D(BaseTexture):
             styleStrict = style.replace('rgb','').replace('color','')
             # Set render style
             if 'mip' == styleStrict:
-                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_MIP)
+                self._fragmentShader.ReplacePart(shaders.SH_3F_STYLE_MIP)
                 self._fragmentShader.RemovePart('litvoxel')
-            elif 'isoray' == styleStrict:
-                lf = shaders.SH_3F_LITVOXEL
-                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_ISORAY)
-                self._fragmentShader.AddOrReplace('litvoxel', lf, after='style')
             elif 'iso' == styleStrict:
                 lf = shaders.SH_3F_LITVOXEL
-                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_ISO)
-                self._fragmentShader.AddOrReplace('litvoxel', lf, after='style')
-            elif 'ray2' == styleStrict:
-                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_RAY2)
-                self._fragmentShader.RemovePart('litvoxel')
+                self._fragmentShader.ReplacePart(shaders.SH_3F_STYLE_ISO)
+                self._fragmentShader.AddOrReplace(lf, after='renderstyle')
             elif 'ray' == styleStrict:
-                self._fragmentShader.ReplacePart('style', shaders.SH_3F_STYLE_RAY)
+                self._fragmentShader.ReplacePart(shaders.SH_3F_STYLE_RAY)
                 self._fragmentShader.RemovePart('litvoxel')
+            elif 'edgeray' == styleStrict:
+                self._fragmentShader.ReplacePart(shaders.SH_3F_STYLE_EDGERAY)
+                self._fragmentShader.RemovePart('litvoxel')
+            elif 'litray' == styleStrict:
+                lf = shaders.SH_3F_LITVOXEL
+                self._fragmentShader.ReplacePart(shaders.SH_3F_STYLE_LITRAY)
+                self._fragmentShader.AddOrReplace(lf, after='renderstyle')
             else:
                 raise ValueError("Unknown render style in Texture3d.renderstyle.")
             # Store style and set color

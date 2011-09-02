@@ -24,28 +24,28 @@ import numpy as np
 #
 # Note that the aa kernel is symetric; kernel[0] is the center pixel, and
 # kernel[1] through kernel[3] is the tail on all ends.
-SH_2F_SHARPEN = """
-    >>uniforms>>
+SH_2F_SHARPEN = vv.shaders.ShaderCodePart('sharpen','unsharp masking',
+"""
+    >>--uniforms--
     uniform float amount;
-    <<uniforms<<
+    // --uniforms--
     
-    >>pre-loop>>
+    >>--pre-loop--
     sze = 3; // Use full kernel (otherwise it wont work if t.aa == 0)
     kernel = vec4(1.0, 0.9, 0.6, 0.3); // approximate Gauss of sigma 2
     float kernel_norm = kernel[0] + (kernel[1] + kernel[2] + kernel[3])*2.0;
     kernel /= kernel_norm;
-    <<pre-loop<<
+    // --pre-loop--
     
-    >>post-loop>>
+    >>--post-loop--
     float th = 0.05;
     vec4 normalColor = texture2D(texture, pos);
     // Element-wise mask on blurred image (color1), using a threshold    
     float mask = float(length(color1.rgb)-length(color2.rgb)>th);
     normalColor.rgb += mask * amount * (normalColor.rgb -color1.rgb);
     color1 = normalColor;
-    <<post-loop<<
-    
-"""
+    // --post-loop--    
+""")
 
 # Read image
 im = vv.imread('lena.png')
@@ -59,7 +59,7 @@ t1.parent.camera = t2.parent.camera
 t1.aa = 0
 
 # Insert our part in the fragment shader program
-t2.fragmentShader.AddOrReplace('sharpen', SH_2F_SHARPEN, after='base')
+t2.fragmentShader.AddOrReplace(SH_2F_SHARPEN, after='base')
 if False: # Execute this line to turn it off:
     t2.fragmentShader.RemovePart('sharpen')
 
@@ -71,20 +71,10 @@ slider = vv.Slider(t2.parent, (0.0, 1.5))
 slider.eventSliding.Bind(sliderCallback)
 sliderCallback(None) # init uniform
 
+# In case there are bugs in the code, it might be helpfull to see the code
+# t2.fragmentShader.ShowCode() # Shows the whole code
+t2.fragmentShader.ShowCode('sharpen') # Shows only our bit, with line numbers
+
 # Run app
 app = vv.use()
 app.Run()
-
-
-
-SH_2F_STYLE_EDGE = """
-    >>in-loop>>
-    vec2 dposx = vec2(dx, 0.0);
-    vec2 dposy = vec2(0.0, dy);
-    vec4 gradx = texture2D(texture, pos+dpos+dposx) - texture2D(texture, pos+dpos-dposx);
-    vec4 grady = texture2D(texture, pos+dpos+dposy) - texture2D(texture, pos+dpos-dposy);
-    vec4 tmpColor = gradx*gradx + grady*grady;
-    tmpColor = sqrt(tmpColor);
-    tmpColor.a = texture2D(texture, pos+dpos).a;
-    color1 += tmpColor * k;
-"""

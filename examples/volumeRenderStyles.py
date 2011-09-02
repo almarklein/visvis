@@ -21,21 +21,21 @@ if True:
 else:
     # My personal test
     from visvis import ssdf
-    s = ssdf.load('/home/almar/data/dicom/cropped/croppedReg_pat01.bsdf')
+    s = ssdf.load('/home/almar/data/dicom/cropped/croppedReg_pat01_gravity.bsdf')
     vol = s.vol
 
 ##
 
 # Create figure and make subplots with different renderers
 vv.figure(1); vv.clf()
-RS = ['mip', 'ray', 'iso', 'isoray']
+RS = ['mip', 'iso', 'edgeray', 'ray', 'litray']
 a0 = None
 tt = []
-for i in range(4):
-    a = vv.subplot(2,2,i+1)
+for i in range(5):
+    a = vv.subplot(3,2,i+2)
     t = vv.volshow(vol)
     vv.title('Renderstyle ' + RS[i])
-    #t.colormap = vv.CM_CT1
+    t.colormap = vv.CM_HOT #vv.CM_CT1
     t.renderStyle = RS[i]
     tt.append(t)
     if a0 is None:
@@ -44,7 +44,7 @@ for i in range(4):
         a.camera = a0.camera
 
 # Create colormap editor in first axes
-cme = vv.ColormapEditor(a0, *tt)
+cme = vv.ColormapEditor(vv.gcf(), *tt[3:])
 
 # Run app
 app.Create()
