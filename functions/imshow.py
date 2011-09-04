@@ -7,9 +7,9 @@
 import visvis as vv
 import numpy as np
 
-def imshow(im, clim=None, aa=1, interpolate=False, cm=None,
+def imshow(im, clim=None, aa=2, interpolate=False, cm=None,
             axesAdjust=True, axes=None):
-    """ imshow(im, clim=None, aa=1, interpolate=False, cm=CM_GRAY,
+    """ imshow(im, clim=None, aa=2, interpolate=False, cm=CM_GRAY,
                 axesAdjust=True, axes=None)
     
     Display a 2D image and returns the Texture2D object. 
@@ -25,9 +25,9 @@ def imshow(im, clim=None, aa=1, interpolate=False, cm=None,
         The color limits to scale the intensities of the image. If not given,
         the im.min() and im.max() are used (neglecting nan and inf).
     aa : 0, 1, 2 or 3
-        Anti aliasing. 0 means no anti-aliasing. The higher the number,
-        the more anti-aliasing is applied. (Requires a GLSL compatible
-        OpenGl implementation).
+        Anti aliasing. 0 means no anti-aliasing. The highee the number, the
+        better quality the anti-aliasing is (Requires a GLSL compatible
+        OpenGl implementation). Default 2.
     interpolation : bool
         Use no interpolation (i.e. nearest neighbour) or linear interpolation.
     cm : Colormap
