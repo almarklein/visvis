@@ -92,7 +92,7 @@ def lineToMesh(pp, radius, vertex_num):
     lclosed = (pp[0]==pp[-1])
     
     # calculate normal vectors on each line point    
-    normals = pp[1:] - pp[:-1]
+    normals = pp[:-1].Subtract( pp[1:] )
     if lclosed:        
         normals.append( pp[0]-pp[1] )
     else:        
@@ -120,7 +120,7 @@ def lineToMesh(pp, radius, vertex_num):
             r = (1-(j/5.0)**2)**0.5
             circmp = float(r*radius[0])*circm + (pp[0]-(j/5.0)*bufdist*normals[0])
             # Calc normals
-            circmn = ( circmp - pp[0]).normalize() 
+            circmn = ( pp[0].Subtract(circmp) ).normalize() 
             # Store the vertex list            
             vertices.extend( circmp )
             surfaceNormals.extend( -1*circmn )
@@ -186,7 +186,7 @@ def lineToMesh(pp, radius, vertex_num):
             r = (1-(j/5.0)**2)**0.5
             circmp = float(r*radius[-1])*circm + (pp[-1]+(j/5.0)*bufdist*normals[-1])
             # Calc normals
-            circmn = ( circmp - pp[-1]).normalize()            
+            circmn = ( pp[-1].Subtract(circmp) ).normalize()            
             # Store the vertex list
             vertices.extend( circmp )
             surfaceNormals.extend( -1*circmn )

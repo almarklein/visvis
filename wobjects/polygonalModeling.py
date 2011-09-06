@@ -656,6 +656,8 @@ class Mesh(Wobject, BaseMesh, Colormapable):
                     raise ValueError('Invalid value for cullFaces')
             elif value is None:
                 self._cullFaces = None
+            else:
+                raise ValueError('Invalid value for cullFaces')
     
     
     @PropWithDraw
