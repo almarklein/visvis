@@ -400,7 +400,7 @@ class BaseTexture(Wobject, Colormapable):
         
         # Set fragment color part
         isColor = len(data.shape) > self._ndim
-        if 'color' in self.fragmentShader.partTypes:
+        if 'color' in self.fragmentShader.partNames:
             part = [shaders.SH_COLOR_SCALAR, shaders.SH_COLOR_RGB][isColor]
             self.fragmentShader.ReplacePart(part)
         
@@ -590,13 +590,21 @@ class Texture2D(BaseTexture):
         self._fragmentShader.SetUniform('shape', uniform_shape)
         self._fragmentShader.SetUniform('scaleBias', self._texture1._ScaleBias_get)
         self._fragmentShader.SetUniform('extent', uniform_extent)
-        self._fragmentShader.SetUniform('aakernel', self._CreateGaussianKernel)
+        self._fragmentShader.SetUniform('aakernel', self._CreateAaKernel)
     
     
-    def _CreateGaussianKernel(self):
+    def _CreateAaKernel(self):
         """ Create kernel values to use in the aa program.
         Returns 4 element list which should be applied using the
         following indices: 3 2 1 0 1 2 3
+        
+        We use a Lanczos kernel: a windowed sinc function.
+        (In previous versions we used a Gaussian, but lanczos filtering
+        has better frequency repsonse; images stay more crysp.)
+        
+        Thanks to Nicolas Rougier for pointing out that the Gaussian filter
+        is not the best for aa.
+        
         """
         
         figure = self.GetFigure()
@@ -610,22 +618,24 @@ class Texture2D(BaseTexture):
         sx = (1.0 / abs(axes.daspectNormalized[0]*cam._zoom) ) / w
         sy = (1.0 / abs(axes.daspectNormalized[1]*cam._zoom) ) / h
         
-        # correct for fact that humans prefer sharpness
-        tmp = 0.333*self.aa
-        sx, sy = sx*tmp, sy*tmp
+        # For cutoff frequency we take average of both dimensons.
+        B = 2.0/(sx+sy)
         
-        # keep >= 0 so we can devide
-        if sx<0.01: sx = 0.01
-        if sy<0.01: sy = 0.01
+        # Define sinc function
+        def sinc(x):
+            if x==0.0:
+                return 1.0
+            else:
+                return float( np.sin(x) / x )
         
-        # calculate kernel
-        #  3 2 1 0 1 2 3
-        k = [1.0, 0, 0, 0]
-        k[1] = math.exp( -1.0 / (2*sx**2) )
-        k[2] = math.exp( -2.0 / (2*sy**2) )
-        k[3] = math.exp( -3.0 / (2*sy**2) )
+        # Calculate kernel values
+        a = 3.0 # Number of side lobes of sync to take into account.
+        k = [0,0,0,0]
+        sin, pi = np.sin, np.pi
+        for t in range(4):
+            k[t] = 2*B * sinc(2*B*t)*sinc(2*B*t/a)
         
-        # normalize
+        # Normalize (take kenel size into account)
         if self.aa == 1:
             l = k[0] + 2*k[1]
         elif self.aa == 2:
@@ -636,7 +646,7 @@ class Texture2D(BaseTexture):
             l = k[0]
         k = [float(e)/l for e in k]
         
-        # done!     
+        # Done   
         return k
     
     
@@ -731,11 +741,19 @@ class Texture2D(BaseTexture):
     
     @PropWithDraw
     def aa():
-        """ Get/Set anti aliasing.
+        """ Get/Set anti aliasing quality.
           * 0 or False for no anti aliasing
-          * 1 for minor anti aliasing
-          * 2 for medium anti aliasing
-          * 3 for much anti aliasing
+          * 1 for anti aliasing using 3-element kernel.
+          * 2 for anti aliasing using 5-element kernel.
+          * 3 for anti aliasing using 7-element kernel.
+        
+        Higher numbers result in better quality anti-aliasing,
+        but may be slower on older hardware.
+        
+        Note that in previous versions of visvis, this property influenced
+        the *amount* of aliasing. We now use a better kernel (Lanczos instead 
+        of Gaussian), such that the amount can be fixed without negatively
+        affecting the visualization.
         """
         def fget(self):
             return self._aa
@@ -754,7 +772,7 @@ class Texture2D(BaseTexture):
                         shaders.SH_2F_AASTEPS_2, shaders.SH_2F_AASTEPS_3]
                 aa_steps = M[self._aa]
                 # Apply
-                self.fragmentShader.ReplacePart(aa_steps)
+                self.fragmentShader.AddOrReplace(aa_steps)
 
 
 class Texture3D(BaseTexture):
@@ -1095,8 +1113,8 @@ class Texture3D(BaseTexture):
         mode. Try rendering data that is shaped with a power of two. This 
         helps on some cards.
         
-        You can also create your own render style by modyfying the glsl code.
-        See core/shaders_src.py and the ShaderCode class.
+        You can also create your own render style by modyfying the GLSL code.
+        See core/shaders_src.py and the ShaderCode class for more info.
         """
         def fget(self):
             return self._renderStyle
@@ -1137,7 +1155,7 @@ class Texture3D(BaseTexture):
     
     @PropWithDraw
     def isoThreshold():
-        """ Get/Set the isothreshold value used in the isosurface renderer.
+        """ Get/Set the isothreshold value used in the iso renderer.
         """
         def fget(self):
             return self._isoThreshold
