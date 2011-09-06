@@ -16,7 +16,7 @@ import OpenGL.GLU as glu
 from visvis.pypoints import Point
 from visvis import Wobject, Colormapable
 from visvis.core.misc import Property, PropWithDraw, getColor
-from visvis.core.shaders import fshaders
+from visvis.core import shaders
 from visvis.wobjects.textures import BaseTexture, TextureObjectToVisualize
 
 
@@ -31,20 +31,23 @@ class SliceTexture(BaseTexture):
     
     def __init__(self, parent, data, axis=0, index=0):
         BaseTexture.__init__(self, parent, data)
+        self._ndim = 3
         
         # Init parameters
         self._axis = axis
         self._index = index
         
-        # create texture and set data  (data to textureToV. only for min/max)
+        # create texture
         self._texture1 = TextureObjectToVisualize(2, data)
+        
+        # init shader
+        self._InitShader()
+        
+        # set data  (data to textureToV. only for min/max)
         self.SetData(data)
         
         # init interpolation
         self._texture1._interpolate = True 
-        
-        # Init shader for colormap use
-        self._program1.SetFragmentShader(fshaders['aa0'])
         
         # For edge
         self._edgeColor = None
@@ -65,6 +68,38 @@ class SliceTexture(BaseTexture):
         self.eventMouseDown.Bind(self._OnMouseDown)
         self.eventMouseUp.Bind(self._OnMouseUp)
         self.eventMotion.Bind(self._OnMouseMotion)
+    
+    
+    def _InitShader(self):
+        
+        # Vertex shader
+        self.vertexShader.Clear()
+        
+        # Fragment shader
+        self.fragmentShader.Clear()
+        self.fragmentShader.AddPart(shaders.SH_2F_BASE)  # No aa
+        self.fragmentShader.AddPart(shaders.SH_2F_AASTEPS_0)
+        self.fragmentShader.AddPart(shaders.SH_COLOR_SCALAR)
+        
+        def uniform_shape():
+            shape = self._texture1._shape[:2] # as in opengl
+            return [float(s) for s in reversed(list(shape))]
+        def uniform_extent():
+            data = self._texture1._dataRef # as original array
+            shape = reversed(data.shape[:2])
+            if hasattr(data, 'sampling'):
+                sampling = reversed(data.sampling[:2])
+            else:
+                sampling = [1.0 for s in range(2)]
+            
+            del data
+            return [s1*s2 for s1, s2 in zip(shape, sampling)]
+        
+        # Set some uniforms
+        self._fragmentShader.SetUniform('shape', uniform_shape)
+        self._fragmentShader.SetUniform('scaleBias', self._texture1._ScaleBias_get)
+        self._fragmentShader.SetUniform('extent', uniform_extent)
+        self._fragmentShader.SetUniform('aakernel', [1.0, 0.0, 0.0, 0.0])
     
     
     def _SetData(self, data):
@@ -137,27 +172,28 @@ class SliceTexture(BaseTexture):
         #gl.glCullFace(gl.GL_FRONT_AND_BACK)
         
         # enable texture
-        self._texture1.Enable(0)
+        self._texture1.Enable(0, self._trafo_scale)
         
         # _texture._shape is a good indicator of a valid texture
         if not self._texture1._shape:
             return
         
+        # Apply code for vertex and fragment shaders if possible
+        if self.vertexShader._isDirtyForProgram:
+            self._glsl_program.SetVertexShader(self.vertexShader.GetCode())
+        if self.fragmentShader._isDirtyForProgram:
+            self._glsl_program.SetFragmentShader(self.fragmentShader.GetCode())
+            
         # fragment shader on
-        if self._program1.IsUsable():
-            self._program1.Enable()
-            # textures        
-            self._program1.SetUniformi('texture', [0])        
-            self._colormap.Enable(1)
-            self._program1.SetUniformi('colormap', [1])
-            # uniform variables
-            shape = self._texture1._shape # how it is in opengl
-            k = 1,0,0,0  # self._CreateGaussianKernel()
-            self._program1.SetUniformf('kernel', k)
-            self._program1.SetUniformf('dx', [1.0/shape[0]])
-            self._program1.SetUniformf('dy', [1.0/shape[1]])
-            self._program1.SetUniformf('scaleBias', self._texture1._ScaleBias_get())
-            self._program1.SetUniformi('applyColormap', [len(shape)==2])
+        if self._glsl_program.IsUsable():
+            self._glsl_program.Enable()
+            
+            # Bind texture- and help-textures (create if it does not exist)
+            self._glsl_program.SetUniformi('texture', [0])  
+            
+            # Apply uniforms
+            self.vertexShader._ApplyUniforms(self._glsl_program)
+            self.fragmentShader._ApplyUniforms(self._glsl_program)
         
         # do the drawing!
         self._DrawQuads()
@@ -165,8 +201,9 @@ class SliceTexture(BaseTexture):
         
         # clean up
         self._texture1.Disable()
-        self._colormap.Disable()
-        self._program1.Disable()
+        self.fragmentShader._DisableUniformTextures()
+        self.vertexShader._DisableUniformTextures()
+        self._glsl_program.Disable()
         
         # Draw outline?
         clr = self._edgeColor

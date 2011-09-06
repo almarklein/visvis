@@ -566,7 +566,11 @@ class Texture2D(BaseTexture):
     
     def _InitShader(self):
         
-        # Add components of shaders
+        # Vertex shader
+        self.vertexShader.Clear()
+        
+        # Fragment shader
+        self.fragmentShader.Clear()
         self.fragmentShader.AddPart(shaders.SH_2F_BASE)
         self.fragmentShader.AddPart(shaders.SH_2F_AASTEPS_2)
         self.fragmentShader.AddPart(shaders.SH_COLOR_SCALAR)
@@ -586,7 +590,6 @@ class Texture2D(BaseTexture):
             return [s1*s2 for s1, s2 in zip(shape, sampling)]
         
         # Set some uniforms
-        self._fragmentShader.SetUniform('colormap', self._colormap)
         self._fragmentShader.SetUniform('shape', uniform_shape)
         self._fragmentShader.SetUniform('scaleBias', self._texture1._ScaleBias_get)
         self._fragmentShader.SetUniform('extent', uniform_extent)
@@ -823,9 +826,12 @@ class Texture3D(BaseTexture):
     
     def _InitShader(self):
         
-        # Add components of shaders
+        # Vertex shader
+        self.vertexShader.Clear()
         self.vertexShader.AddPart(shaders.SH_3V_BASE)
-        #
+        
+        # Fragment shader
+        self.fragmentShader.Clear()
         self.fragmentShader.AddPart(shaders.SH_3F_BASE)
         self.fragmentShader.AddPart(shaders.SH_3F_CALCSTEPS)
         self.fragmentShader.AddPart(shaders.SH_3F_STYLE_MIP)
@@ -852,7 +858,6 @@ class Texture3D(BaseTexture):
             return [s1*s2 for s1, s2 in zip(shape, sampling)]
         
         # Set some uniforms
-        self._fragmentShader.SetUniform('colormap', self._colormap)
         self._fragmentShader.SetUniform('shape', uniform_shape)
         self._fragmentShader.SetUniform('th', uniform_th)
         self._fragmentShader.SetUniform('scaleBias', self._texture1._ScaleBias_get)
