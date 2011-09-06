@@ -101,23 +101,22 @@ def check_the_two(p1,p2, what='something'):
     Returns (p1,p2), if one is a point, p1 is it.
     """
     
-    # define errors
-    tmp = "To calculate %s between two pointsets, " % what
-    er1 = tmp + "both pointsets must be of equal length."
-    er2 = tmp + "the dimensions must be equal."
-    
-    # if one is a point, put in in p1
+    # if one is a point, put it in p1
     if is_Pointset(p1):
         p2,p1 = p1,p2
     
     # only pointsets of equal length can be used
     if not is_Point(p1) and len(p1) != len(p2):
-        raise ValueError(er1)
+        # define errors
+        tmp = "To calculate %s between two pointsets, " % what
+        err = tmp + "both pointsets must be of equal length."
+        raise ValueError(err)
     
     # check dimensions
     if p1.ndim != p2.ndim:
-        tmp = "the dimensions must be equal."
-        raise ValueError(er2)
+        tmp = "To calculate %s between two pointsets, " % what
+        err = tmp + "the dimensions must be equal."
+        raise ValueError(err)
     
     return p1, p2
 
@@ -454,17 +453,54 @@ class BasePoints(object):
             return Point(data)
         else:
             return Pointset(data)
-
-
+    
+    
+    def _showTrace(self):
+        # Get traceback info
+        type, value, tb = sys.exc_info()
+        err = ''
+        frame = tb.tb_frame.f_back
+        count = 0
+        try:
+            while frame and count < 5:
+                count += 1
+                if 'iepRemote' in frame.f_code.co_filename:
+                    break
+                err +=  "line %i of %s.\n" % (
+                        frame.f_lineno, frame.f_code.co_filename)
+                frame = frame.f_back
+        finally:
+            del tb, frame
+        print(err[:-1])
+    
+    
     def __sub__(self, p):
         """ Subtract vectors. """
         
         # make sure p is a point or pointset
         if not is_Point_or_Pointset(p):
-            p = Point(p)        
+            p = Point(p)
         
-        # check
-        p1,p2 = check_the_two(self,p,'subtract')
+        # check. Keep the correct order!
+        p3, p4 = check_the_two(self,p,'subtract')
+        p1, p2 = self, p
+        
+        # Check for the subtract bug ...
+        if p1 is not p3:
+            # In previous versions the subtract bug would have occured
+            # do not allow...
+            try:
+                raise ValueError()
+            except Exception:
+                print('+'*79)
+                print('Note that previous versions of pypoints contained a ' +
+                'bug in the minus operator. To prevent this message, use the ' +
+                'Subtract method instead of the operator. To get the ' +
+                'same behavior as before, replace "A-B" with "B.Subtract(A)". ' +
+                'Info: http://code.google.com/p/visvis/issues/detail?id=30. ' +
+                'Trace:')
+                self._showTrace()
+                print('+'*79)
         
         # apply and return
         data = p1.data - p2.data # this should go well
@@ -472,7 +508,37 @@ class BasePoints(object):
             return Pointset(data)
         else:
             return Point(data)
-
+    
+    
+    def Subtract(self, p):
+        """ Subtract(other)
+        
+        Subtract Pointset/Point instances.
+        
+        
+        Notes
+        -----
+        This method was introduced because of the minus-bug. To get the
+        same behaviour of when the bug was still there, replace
+        "A-B" with B.Replace(A).
+        
+        """
+        
+        # make sure p is a point or pointset
+        if not is_Point_or_Pointset(p):
+            p = Point(p)        
+        
+        # check. Keep the correct order!
+        check_the_two(self,p,'subtract')
+        p1, p2 = self, p
+        
+        # apply and return
+        data = p1.data - p2.data # this should go well
+        if is_Pointset(p1) or is_Pointset(p2):
+            return Pointset(data)
+        else:
+            return Point(data)
+    
 
     def __mul__(self,value):
         """ Scale vectors. """
@@ -511,7 +577,7 @@ class BasePoints(object):
                 value = Point(value)
                 
             # check (note that the order is important for division!)
-            p1, p2 = check_the_two(self,value,'divide')
+            check_the_two(self,value,'divide')
             data1, data2 = self.data, value.data
             
         # apply and return
@@ -541,7 +607,7 @@ class BasePoints(object):
                 value = Point(value)
                 
             # check (note that the order is important for division!)
-            p1, p2 = check_the_two(self,value,'divide')
+            check_the_two(self,value,'divide')
             data1, data2 = self.data, value.data
             
         # apply and return
@@ -1861,4 +1927,7 @@ if __name__ =='__main__':
     pp.extend(pp)
     print pp
     pp.contains(2,3,4)
+    
+    print pp-pp[0]
+    print pp.Subtract(pp[0])
     
