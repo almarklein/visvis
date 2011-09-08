@@ -495,8 +495,8 @@ class BasePoints(object):
                 print('+'*79)
                 print('Note that previous versions of pypoints contained a ' +
                 'bug in the minus operator. To prevent this message, use the ' +
-                'Subtract method instead of the operator. To get the ' +
-                'same behavior as before, replace "A-B" with "B.Subtract(A)". ' +
+                'subtract method instead of the operator. To get the ' +
+                'same behavior as before, replace "A-B" with "B.subtract(A)". ' +
                 'Info: http://code.google.com/p/visvis/issues/detail?id=30. ' +
                 'Trace:')
                 self._showTrace()
@@ -510,8 +510,8 @@ class BasePoints(object):
             return Point(data)
     
     
-    def Subtract(self, p):
-        """ Subtract(other)
+    def subtract(self, p):
+        """ subtract(other)
         
         Subtract Pointset/Point instances.
         
@@ -520,7 +520,7 @@ class BasePoints(object):
         -----
         This method was introduced because of the minus-bug. To get the
         same behaviour of when the bug was still there, replace
-        "A-B" with B.Replace(A).
+        "A-B" with B.subtract(A).
         
         """
         
@@ -1929,5 +1929,5 @@ if __name__ =='__main__':
     pp.contains(2,3,4)
     
     print pp-pp[0]
-    print pp.Subtract(pp[0])
+    print pp.subtract(pp[0])
     
