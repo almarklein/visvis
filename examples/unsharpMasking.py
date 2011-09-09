@@ -9,11 +9,7 @@ import visvis as vv
 import numpy as np
 
 # First define our part of the shading code
-# >>XXX>> denotes a code section; this section is inserted in shader code
-# at the right spot. 
-# It is good practice to use <<XXX<<, so that other parts may include code
-# at these sections too.
-# 
+# The '>>' Denote what piece of code we want to replace.  
 # There is a pre-loop section, that is executed before the anti-aliasing
 # loop. We use this to modify the aliasing kernel so it always does a fixed
 # amount of smoothing.

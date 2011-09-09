@@ -58,12 +58,27 @@ def getCircle(angles_cos, angles_sin, a, b):
     return Pointset(X)
 
 
-def lineToMesh(pp, radius, vertex_num):
-    """ lineToMesh(pp, radius, vertex_num)
+def lineToMesh(pp, radius, vertex_num, values=None):
+    """ lineToMesh(pp, radius, vertex_num, values=None)
     
     From a line, create a mesh that represents the line as a tube with 
-    given diameter. vertex_num is the number of vertices to create
-    along the circumference of the tube. Returns a BaseMesh instance.
+    given diameter. Returns a BaseMesh instance.
+    
+    Parameters
+    ----------
+    pp : 3D Pointset
+        The points along the line. If the first and last point are the same,
+        the mesh-line is closed.
+    radius : scalar
+        The radius of the tube that is created. Radius can also be a 
+        sequence of values (containing a radius for each point).
+    vertex_num : int
+        The number of vertices to create along the circumference of the tube. 
+    values : list or numpy array (optional)
+        A value per point. Can be Nx1, Nx2, Nx3 or Nx4. A list of scalars
+        can also be given. The values are propagated to the mesh vertices 
+        and supplied as input to the Mesh constructor. This allows for example
+        to define the color for the tube.
     
     """
     
@@ -81,8 +96,9 @@ def lineToMesh(pp, radius, vertex_num):
     
     # calculate vertex points for 2D circle
     angles = np.arange(0, pi*2-0.0001, pi*2/vertex_num)
-    angle_cos  = np.cos(angles)
+    angle_cos = np.cos(angles)
     angle_sin = np.sin(angles)
+    vertex_num2 = len(angles) # just to be sure
     
     # calculate distance between two line pieces (for smooth cylinders)
     dists = pp[1:].distance(pp[:-1])
@@ -102,6 +118,29 @@ def lineToMesh(pp, radius, vertex_num):
     # create list to store vertices
     vertices = Pointset(3)
     surfaceNormals = Pointset(3)
+    
+    # And a list for the values
+    if values is None:
+        vvalues = None
+        nvalues = 0
+    elif isinstance(values, list):
+        if len(values) != len(pp):
+            raise ValueError('There must be as many values as points.')
+        vvalues = Pointset(1)
+    elif isinstance(values, np.ndarray):
+        if values.ndim != 2:
+            raise ValueError('Values must be Nx1, Nx2, Nx3 or Nx4.')
+        if values.shape[0] != len(pp):
+            raise ValueError('There must be as many values as points.')
+        vvalues = Pointset(values.shape[1])
+    elif vv.pypoints.is_Pointset(values):
+        if values.ndim > 4:
+            raise ValueError('Can specify one to four values per point.')
+        if len(values) != len(pp):
+            raise ValueError('There must be as many values as points.')
+        vvalues = Pointset(values.ndim)
+    else:
+        raise ValueError('Invalid value for values.')
     
     # Number of triangelized cylinder elements added to plot the 3D line
     n_cylinders = 0
@@ -124,6 +163,9 @@ def lineToMesh(pp, radius, vertex_num):
             # Store the vertex list            
             vertices.extend( circmp )
             surfaceNormals.extend( -1*circmn )
+            if vvalues is not None:
+                for iv in range(vertex_num2):
+                    vvalues.append(values[0])
             n_cylinders += 1
     
     # Loop through all line pieces    
@@ -144,6 +186,9 @@ def lineToMesh(pp, radius, vertex_num):
         circmp = float(radius[i])*circm + (point1+bufdist*normal1)        
         vertices.extend( circmp )
         surfaceNormals.extend( circm )
+        if vvalues is not None:
+            for iv in range(vertex_num2):
+                vvalues.append(values[i])
         n_cylinders += 1
         
         # calc second normal and line
@@ -154,6 +199,9 @@ def lineToMesh(pp, radius, vertex_num):
         circmp = float(radius[i+1])*circm + (point2-bufdist*normal1)
         vertices.extend( circmp )
         surfaceNormals.extend( circm )
+        if vvalues is not None:
+            for iv in range(vertex_num2):
+                vvalues.append(values[i+1])
         n_cylinders += 1
         
         
@@ -175,6 +223,9 @@ def lineToMesh(pp, radius, vertex_num):
         circmp = float(radius[i+1])*circm + point12
         vertices.extend( circmp )
         surfaceNormals.extend( circm )
+        if vvalues is not None:
+            for iv in range(vertex_num2):
+                vvalues.append( 0.5*(values[i]+values[i+1]) )
         n_cylinders += 1
     
     
@@ -190,6 +241,9 @@ def lineToMesh(pp, radius, vertex_num):
             # Store the vertex list
             vertices.extend( circmp )
             surfaceNormals.extend( -1*circmn )
+            if vvalues is not None:
+                for iv in range(vertex_num2):
+                    vvalues.append(values[-1])
             n_cylinders += 1
     else:
         # get normal and point
@@ -204,6 +258,9 @@ def lineToMesh(pp, radius, vertex_num):
         circmp = float(radius[0])*circm + (point1+bufdist*normal1)        
         vertices.extend( circmp )
         surfaceNormals.extend( circm )
+        if vvalues is not None:
+            for iv in range(vertex_num2):
+                vvalues.append(values[-1])
         n_cylinders += 1
     
     
@@ -228,4 +285,4 @@ def lineToMesh(pp, radius, vertex_num):
     faces.shape = faces.shape[0]/4, 4
     
     # Done!
-    return BaseMesh(vertices, faces, surfaceNormals)
+    return BaseMesh(vertices, faces, surfaceNormals, vvalues)
