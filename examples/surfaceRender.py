@@ -26,7 +26,7 @@ vv.title('With colormap')
 
 # With color
 a2 = vv.subplot(122)
-m1 = vv.surf(im[:,:,0], im)
+m2 = vv.surf(im[:,:,0], im)
 vv.title('With original texture')
 
 # Flip y-axis, otherwise the image is upside down
