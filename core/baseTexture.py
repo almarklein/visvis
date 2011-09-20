@@ -78,42 +78,35 @@ def downSample(data, ndim):
     
     if ndim==1:
         # Decimate
-        data2 = data[::2].copy()
-        data2 *= 0.4
+        data2 = data[::2] * 0.4
         # Average in x
-        tmp = data[1::2]
-        tmp *= 0.3
+        tmp = data[1::2] * 0.3
         data2[:tmp.shape[0]] += tmp
         data2[1:] += tmp[:data2.shape[0]-1]
     elif ndim==2:
         # Decimate
-        data2 = data[::2,::2].copy()
+        data2 = data[::2,::2] * 0.4
         # Average in y
-        tmp = data[1::2,::2]
-        tmp *= 0.15
+        tmp = data[1::2,::2] * 0.15
         data2[:tmp.shape[0],:] += tmp
         data2[1:,:] += tmp[:data2.shape[0]-1,:]
         # Average in x
-        tmp = data[::2,1::2]
-        tmp *= 0.15
+        tmp = data[::2,1::2] * 0.15
         data2[:,:tmp.shape[1]] += tmp
         data2[:,1:] += tmp[:,:data2.shape[1]-1]
     elif ndim==3:
         # Decimate
-        data2 = data[::2,::2,::2].copy()
+        data2 = data[::2,::2,::2] * 0.4
         # Average in z
-        tmp = data[1::2,::2,::2]
-        tmp *= 0.1
+        tmp = data[1::2,::2,::2] * 0.1
         data2[:tmp.shape[0],:,:] += tmp
         data2[1:,:,:] += tmp[:data2.shape[0]-1,:,:]
         # Average in y
-        tmp = data[::2,1::2,::2]
-        tmp *= 0.1
+        tmp = data[::2,1::2,::2] * 0.1
         data2[:,:tmp.shape[1],:] += tmp
         data2[:,1:,:] += tmp[:,:data2.shape[1]-1,:]
         # Average in x
-        tmp = data[::2,::2,1::2]
-        tmp *= 0.1
+        tmp = data[::2,::2,1::2] * 0.1
         data2[:,:,:tmp.shape[2]] += tmp
         data2[:,:,1:] += tmp[:,:,:data2.shape[2]-1]
     else:
@@ -169,19 +162,16 @@ class TextureObject(object):
         self._texUnit = -1
         self._useTexUnit = False # set to True if OpenGl version high enough
         
-        # The shape of the data as uploaded to OpenGl. Is None if no
-        # data was uploaded. Note that the self._shape does not have to 
-        # be self._dataRef.shape; the data might be downsampled.
-        self._shape = None
-        
         # A reference (not a weak one) to the original data as given with 
         # SetData. We need this in order to re-upload the texture if it is 
         # moved to another OpenGl context (other figure).
         # Note that the self._shape does not have to be self._dataRef.shape.
         self._dataRef = None
         
-        # Factor to indicate the amount of downsampling
-        self._downsampleFactor = 1.0
+        # The shape of the data as uploaded to OpenGl. Is None if no
+        # data was uploaded. Note that the self._shape does not have to 
+        # be self._dataRef.shape; the data might be downsampled.
+        self._shape = None
         
         # A flag to indicate that the data in self._dataRef should be uploaded.
         # 1 signifies an update is required.
@@ -195,11 +185,13 @@ class TextureObject(object):
         self._canUse = False
     
     
-    def Enable(self, texUnit=0, scaleTrafo=None):
+    def Enable(self, texUnit=0):
         """ Enable(texUnit)
         
-        Enable (bind) the texture, using the given texture unit (max 9).
+        Enable the texture, using the given texture unit (max 9).
         If necessary, will upload/update the texture in OpenGl memory now.
+        
+        If texUnit is -1, will not bind the texture.
         
         """ 
         
@@ -215,22 +207,6 @@ class TextureObject(object):
         # If we should upload/update, do that now. (SetData also sets the flag)
         if self._uploadFlag > 0:
             self._SetDataNow()
-            
-            # Should (and can) we correct for downsampling?
-            if scaleTrafo and self._downsampleFactor>1:
-                factor = self._downsampleFactor
-                data = self._dataRef
-                if hasattr(data, 'sampling'):
-                    sampling = data.sampling
-                else:
-                    sampling = [1.0 for tmp in data.shape]
-                if data.ndim >= 3 and data.shape[2] > 4: # 3D
-                    scaleTrafo.sx = sampling[2] * factor
-                    scaleTrafo.sy = sampling[1] * factor
-                    scaleTrafo.sz = sampling[0] * factor
-                else: # 2D
-                    scaleTrafo.sx = sampling[1] * factor
-                    scaleTrafo.sy = sampling[0] * factor
         
         # check if ok now
         if not gl.glIsTexture(self._texId):
@@ -239,15 +215,16 @@ class TextureObject(object):
                 print "Warning enabling texture, the texture is not valid."+tmp
             return
         
-        # Store texture-Unit-id, and activate 
-        self._texUnit = texUnit
-        self._useTexUnit = getOpenGlCapable('1.3')        
-        if self._useTexUnit:
-            gl.glActiveTexture( gl.GL_TEXTURE0 + texUnit )   # Opengl v1.3
-        
-        # Enable texturing, and bind to texture
-        gl.glEnable(self._texType)
-        gl.glBindTexture(self._texType, self._texId)
+        if texUnit >= 0:
+            # Store texture-Unit-id, and activate 
+            self._texUnit = texUnit
+            self._useTexUnit = getOpenGlCapable('1.3')        
+            if self._useTexUnit:
+                gl.glActiveTexture( gl.GL_TEXTURE0 + texUnit )   # Opengl v1.3
+            
+            # Enable texturing, and bind to texture
+            gl.glEnable(self._texType)
+            gl.glBindTexture(self._texType, self._texId)
     
     
     def Disable(self):
@@ -383,10 +360,9 @@ class TextureObject(object):
             while not ok and count<8:
                 ok = self._TestUpload(data, internalformat,format,gltype)
                 if not ok:
+                #if count<2 and data.shape[0]<1000: # for testing
                     data = downSample(data, self._ndim)
                     count += 1
-            if count:
-                self._downsampleFactor = 2.0**count
             
             # give warning or error
             if count and not ok:                

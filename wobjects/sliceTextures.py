@@ -72,14 +72,12 @@ class SliceTexture(BaseTexture):
     
     def _InitShader(self):
         
-        # Vertex shader
-        self.vertexShader.Clear()
-        
-        # Fragment shader
-        self.fragmentShader.Clear()
-        self.fragmentShader.AddPart(shaders.SH_2F_BASE)  # No aa
-        self.fragmentShader.AddPart(shaders.SH_2F_AASTEPS_0)
-        self.fragmentShader.AddPart(shaders.SH_COLOR_SCALAR)
+        # Add components of shaders
+        self.shader.vertex.Clear()
+        self.shader.fragment.Clear()
+        self.shader.fragment.AddPart(shaders.SH_2F_BASE)
+        self.shader.fragment.AddPart(shaders.SH_2F_AASTEPS_0)
+        self.shader.fragment.AddPart(shaders.SH_COLOR_SCALAR)
         
         def uniform_shape():
             shape = self._texture1._shape[:2] # as in opengl
@@ -96,10 +94,11 @@ class SliceTexture(BaseTexture):
             return [s1*s2 for s1, s2 in zip(shape, sampling)]
         
         # Set some uniforms
-        self._fragmentShader.SetUniform('shape', uniform_shape)
-        self._fragmentShader.SetUniform('scaleBias', self._texture1._ScaleBias_get)
-        self._fragmentShader.SetUniform('extent', uniform_extent)
-        self._fragmentShader.SetUniform('aakernel', [1.0, 0.0, 0.0, 0.0])
+        self.shader.SetStaticUniform('colormap', self._colormap)
+        self.shader.SetStaticUniform('shape', uniform_shape)
+        self.shader.SetStaticUniform('scaleBias', self._texture1._ScaleBias_get)
+        self.shader.SetStaticUniform('extent', uniform_extent)
+        self.shader.SetStaticUniform('aakernel', [1.0, 0, 0, 0])
     
     
     def _SetData(self, data):
@@ -168,42 +167,29 @@ class SliceTexture(BaseTexture):
         # set color to white, otherwise with no shading, there is odd scaling
         gl.glColor3f(1.0,1.0,1.0)
         
-        # draw texture also from beneeth
-        #gl.glCullFace(gl.GL_FRONT_AND_BACK)
-        
-        # enable texture
-        self._texture1.Enable(0, self._trafo_scale)
+        # Enable texture, so that it has a corresponding OpenGl texture.
+        # Binding is done by the shader
+        self._texture1.Enable(-1)
+        self.shader.SetUniform('texture', self._texture1)
         
         # _texture._shape is a good indicator of a valid texture
         if not self._texture1._shape:
             return
         
-        # Apply code for vertex and fragment shaders if possible
-        if self.vertexShader._isDirtyForProgram:
-            self._glsl_program.SetVertexShader(self.vertexShader.GetCode())
-        if self.fragmentShader._isDirtyForProgram:
-            self._glsl_program.SetFragmentShader(self.fragmentShader.GetCode())
-            
-        # fragment shader on
-        if self._glsl_program.IsUsable():
-            self._glsl_program.Enable()
-            
-            # Bind texture- and help-textures (create if it does not exist)
-            self._glsl_program.SetUniformi('texture', [0])  
-            
-            # Apply uniforms
-            self.vertexShader._ApplyUniforms(self._glsl_program)
-            self.fragmentShader._ApplyUniforms(self._glsl_program)
+        if self.shader.isUsable and self.shader.hasCode:
+            # fragment shader on -> anti-aliasing
+            self.shader.Enable()
+        else:
+            # Fixed funcrion pipeline
+            self.shader.EnableTextureOnly('texture')
         
         # do the drawing!
         self._DrawQuads()
         gl.glFlush()
         
         # clean up
-        self._texture1.Disable()
-        self.fragmentShader._DisableUniformTextures()
-        self.vertexShader._DisableUniformTextures()
-        self._glsl_program.Disable()
+        self.shader.Disable()
+        
         
         # Draw outline?
         clr = self._edgeColor

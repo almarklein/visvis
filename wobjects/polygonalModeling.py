@@ -20,7 +20,7 @@ from visvis.core.misc import PropWithDraw, DrawAfter
 from visvis import Wobject, Colormapable, OrientationForWobjects_mixClass
 from visvis.core.light import _testColor, _getColor
 from visvis.wobjects.textures import TextureObjectToVisualize 
-from visvis.core.shaders import vshaders, fshaders, GlslProgram
+from visvis.core import shaders
 
 
 def checkDimsOfArray(value, *ndims):
@@ -288,6 +288,7 @@ class BaseMesh(object):
         # Store
         self._values = values
         
+        # todo: set clim to full range automatically
         # A bit of a hack... reset clim for Mesh class
         if isinstance(self, Colormapable):
             self.clim = 0,1
@@ -447,8 +448,12 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         Colormapable.__init__(self)
         self._texture = None
         
-        # Create glsl program
-        self._glsl_program = GlslProgram()
+        # create glsl shaders for this wobject. For faces, edges and shape
+        self._faceShader = shaders.Shader()
+        self._edgeShader = shaders.Shader()
+        self._shapeShader = shaders.Shader()
+        self._InitShaders()
+        self.useNativeShading = False
         
         # Material properties
         self._ambient = 0.7
@@ -462,8 +467,8 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         self._edgeColor = (0,0,0,1)
         
         # Shading
-        self._faceShading = 'smooth'
-        self._edgeShading = None
+        self.faceShading = 'smooth'
+        self.edgeShading = None
         
         # What faces to cull
         self._cullFaces = None # gl.GL_BACK (for surf(), None makes most sense)
@@ -474,6 +479,25 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         # Store value2, which are like 'values' but clim-corrected
         self._values2 = self._values
     
+    
+    def _InitShaders(self):
+        
+        # Give all shaders the base components, plain shading
+        for shader in [self.faceShader, self.edgeShader, self.shapeShader]:
+            
+            # Vertex shader
+            shader.vertex.Clear()
+            shader.vertex.AddPart(shaders.SH_MV_BASE)
+            shader.vertex.AddPart(shaders.SH_MV_SHADING_PLAIN)
+            shader.vertex.AddPart(shaders.SH_NLIGHTS_1)
+            
+            # Fragment shader
+            shader.fragment.Clear()
+            shader.fragment.AddPart(shaders.SH_MF_BASE)
+            shader.fragment.AddPart(shaders.SH_MF_SHADING_PLAIN)
+            shader.fragment.AddPart(shaders.SH_MF_ALBEIDO_UNIT)
+            shader.fragment.AddPart(shaders.SH_NLIGHTS_1)
+        
     
     ## Material properties: how the object is lit
     
@@ -596,51 +620,128 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     
     @PropWithDraw    
+    def useNativeShading():
+        """ Get/set whether to use the native OpenGl shading. The default
+        is False, which means that GLSL-based shading is used. This is
+        prettier, allows more ways of shading and can be customized by
+        changing the shading code.
+        
+        Note that regardless of the value of this property, native shading
+        can be used if the hardward does not support GLSL (OpenGl version<2).
+        """
+        def fget(self):
+            return self._useNativeShading
+        def fset(self, value):
+            self._useNativeShading = bool(value)
+    
+    
+    @PropWithDraw    
     def faceShading():
         """ Get/Set the type of shading to apply for the faces. 
-          * None - Do not show the faces
-          * 'plain' - Display the faces without lighting
-          * 'flat' - Lighted shading uniform for each face
-          * 'smooth' - Lighted smooth shading
+          * None - Do not show the faces.
+          * 'plain' - Display the faces in the faceColor (without lighting).
+          * 'flat' - Lit shading uniform for each face
+          * 'gouraud' - Lighting is calculated at vertices and interpolated 
+            over the face.
+          * 'smooth' - Lighting is calculated for each fragment (aka 
+            phong-shading or phong-interpolation).
+          * 'toon' - A cartoonish look (aka cel-shading).
+        
+        Notes
+        -----
+        In native mode 'smooth' and 'toon' fall back to 'gouraud'.
+        In native mode the blin-phong reflectance model is used. 
+        In non-native mode the phong reflectance model (do not confuse 
+        with phong-shading) is used.
         """
         def fget(self):
             return self._faceShading
         def fset(self, value):
+            # Process value
             if value is None:
                 self._faceShading = None
             elif isinstance(value, basestring) and (value.lower() in 
-                    ['plain', 'flat', 'smooth']):                
+                    ['plain', 'flat', 'gouraud', 'smooth', 'toon']):                
                 self._faceShading = value.lower()
             else:
-                tmp = "Shading must be None, 'plain', 'flat' or 'smooth'."
+                tmp = "Shading must be None, 'plain', 'flat', 'gouraud, 'smooth' or 'toon.'"
                 raise ValueError(tmp)
+            
+            # Apply for shader code
+            self._SetShading(self._faceShading, self.faceShader)
     
     
     @PropWithDraw    
     def edgeShading():
         """ Get/Set the type of shading to apply for the edges. 
-          * None - Do not show the edges
-          * 'plain' - Display the edges without lighting
-          * 'flat' - Lighted shading uniform for each edge
-          * 'smooth' - Lighted smooth shading
+          * None - Do not show the faces.
+          * 'plain' - Display the faces in the faceColor (without lighting).
+          * 'flat' - Lit shading uniform for each face
+          * 'gouraud' - Lighting is calculated at vertices and interpolated 
+            over the face.
+          * 'smooth' - Lighting is calculated for each fragment (aka 
+            phong-shading or phong-interpolation).
+        
+        Notes
+        -----
+        In native mode 'smooth' and 'toon' fall back to 'gouraud'.
+        In native mode the blin-phong reflectance model is used. 
+        In non-native mode the phong reflectance model (do not confuse 
+        with phong-shading) is used.
         """
         def fget(self):
             return self._edgeShading
         def fset(self, value):
+            # Process value
             if value is None:
                 self._edgeShading = None
             elif isinstance(value, basestring) and (value.lower() in 
-                    ['plain', 'flat', 'smooth']):                
+                    ['plain', 'flat', 'gouraud', 'smooth']):
                 self._edgeShading = value.lower()
             else:
-                tmp = "Shading must be None, 'plain', 'flat' or 'smooth'."
+                tmp = "Edge shading must be None, 'plain', 'flat', 'gouraud, 'smooth'."
                 raise ValueError(tmp)
+            
+            # Apply for shader code
+            self._SetShading(self._edgeShading, self.edgeShader)
+    
+    
+    def _SetShading(self, shading, shader):
+            
+            # Select shader part
+            M = [(shaders.SH_MV_SHADING_PLAIN,   shaders.SH_MF_SHADING_PLAIN),
+                 (shaders.SH_MV_SHADING_GOURAUD, shaders.SH_MF_SHADING_GOURAUD),
+                 (shaders.SH_MV_SHADING_SMOOTH,  shaders.SH_MF_SHADING_SMOOTH),
+                 (shaders.SH_MV_SHADING_TOON, shaders.SH_MF_SHADING_TOON),
+                ]
+            #
+            if shading == 'plain':
+                vShading, fShading = M[0]
+            elif shading in ['flat', 'gouraud']:
+                vShading, fShading = M[1]
+            elif shading == 'smooth':
+                vShading, fShading = M[2]
+            elif shading == 'toon':
+                vShading, fShading = M[3]
+            else:
+                return
+            
+            # Change shaders accordingly. There must be a part with name
+            # 'shading' that we can replace, and we only have to replace
+            # if its not already the exact same part.
+            if shader.vertex.HasPart('shading'):
+                if not shader.vertex.HasPart(vShading):
+                    shader.vertex.ReplacePart(vShading)
+            if shader.fragment.HasPart('shading'):
+                if not shader.fragment.HasPart(fShading):
+                    shader.fragment.ReplacePart(fShading)
     
     
     @PropWithDraw
     def cullFaces():
         """ Get/Set the culling of faces. 
-        Values can be 'front', 'back', or None (default). If 'back', 
+        Values can be 'front', 'back', or Non
+        e (default). If 'back', 
         backfacing faces are not drawn. If 'front', frontfacing faces
         are not drawn. 
         """
@@ -659,28 +760,32 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             else:
                 raise ValueError('Invalid value for cullFaces')
     
-    
-    @PropWithDraw
-    def vertexShader():
-        """ Get/Set the vertex shader program. Set to None to revert to
-        the default OpenGL rendering pipeline. 
+    # todo: make sure that the glColor() call is done right everywhere.
+    # -> my Linux pyopengl implementation does not work if given a list
+    # todo: make a base mixin class for wobjects that can be shaded?
+    @property
+    def faceShader(self):
+        """ Get the shader object for the faces. This can 
+        be used to add code of your own and customize the vertex and
+        fragment part of the shader.
         """
-        def fget(self):
-            return self._vertexShader
-        def fset(self, value):
-            if not value:
-                self._glsl_program.SetVertexShader('') # Remove program
-                self._glsl_program.SetFragmentShader('')
-            elif isinstance(value, basestring):
-                value = value.lower()
-                if value in vshaders:
-                    self._vertexShader = value
-                    self._glsl_program.SetVertexShader(vshaders[value])
-                    self._glsl_program.SetFragmentShader(fshaders['phong'])
-                else:
-                    raise ValueError('Unknown vertex shader: "%s".' % value)
-            else:
-                raise ValueError('vertexShader must be a string name.')
+        return self._faceShader
+    
+    @property
+    def edgeShader(self):
+        """ Get the shader object for the edges. This can 
+        be used to add code of your own and customize the vertex and
+        fragment part of the shader.
+        """
+        return self._edgeShader
+    
+    @property
+    def shapeShader(self):
+        """ Get the shader object for the shape. This can 
+        be used to add code of your own and customize the vertex and
+        fragment part of the shader.
+        """
+        return self._shapeShader
     
     
     ## Setters
@@ -750,7 +855,9 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     def OnDestroyGl(self):
         # Clean up OpenGl resources.
-        self._glsl_program.DestroyGl()
+        self._faceShader.program.DestroyGl()
+        self._edgeShader.program.DestroyGl()
+        self._shapeShader.program.DestroyGl()
         self._colormap.DestroyGl()
         if self._texture is not None:
             self._texture.DestroyGl()
@@ -767,24 +874,36 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         
         # Draw faces
         if self._faceShading:
-            self._Draw(self._faceShading, self._faceColor)
+            
+            if self._faceShading == 'toon':
+                # Draw outlines. We do check depth buffer, but do not write
+                # to it, so all fragments can be overwritten.
+                gl.glDepthMask(False)
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+                gl.glLineWidth(3.5)
+                self._Draw('plain', self._edgeColor, self.shapeShader)
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+                gl.glDepthMask(True)
+            if True:
+                # Draw faces normally
+                self._Draw(self._faceShading, self._faceColor, self.faceShader)
         
         # Draw edges
         if self._edgeShading:
             gl.glDepthFunc(gl.GL_LEQUAL)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
             #
-            self._Draw(self._edgeShading, self._edgeColor)
+            self._Draw(self._edgeShading, self._edgeColor, self.edgeShader)
             #
             gl.glDepthFunc(gl.GL_LESS)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
     
     
-    def OnDrawShape(self, color):        
-        self._Draw('plain', color)
+    def OnDrawShape(self, color):
+        self._Draw('plain', color, self.shapeShader)
     
     
-    def _Draw(self, shading, refColor):
+    def _Draw(self, shading, refColor, shader):
         """ The actual drawing. Used for drawing faces, lines, and shape.
         """
         
@@ -814,6 +933,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         
         # Prepare colormap indices, texture cords or colors (if available)
         useTexCords = False
+        SH_ALBEIDO = shaders.SH_MF_ALBEIDO_UNIT
         if self._values is not None:
             values = self._values
             if self._values2 is not None:
@@ -822,22 +942,28 @@ class Mesh(Wobject, BaseMesh, Colormapable):
                 useTexCords = True
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, values)
-                self._colormap.Enable(0)
+                shader.SetUniform('colormap', self._colormap)
+                SH_ALBEIDO = shaders.SH_MF_ALBEIDO_LUT1
             elif values.shape[1] == 2 and self._texture is not None:
                 useTexCords = True
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointerf(values)
-                self._texture.Enable(0)
+                shader.SetUniform('texture', self._texture)
+                SH_ALBEIDO = shaders.SH_MF_ALBEIDO_LUT2
             elif values.shape[1] in [3,4]:
                 gl.glEnable(gl.GL_COLOR_MATERIAL)
                 gl.glColorMaterial(gl.GL_FRONT_AND_BACK,
                                     gl.GL_AMBIENT_AND_DIFFUSE)
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)
                 gl.glColorPointerf(values)
+                if values.shape[1] == 3:
+                    SH_ALBEIDO = shaders.SH_MF_ALBEIDO_RGB
+                else:
+                    SH_ALBEIDO = shaders.SH_MF_ALBEIDO_RGBA
         
         # Prepare material (ambient and diffuse may be overriden by colors)
         if shading == 'plain':
-            gl.glColor(refColor)
+            gl.glColor(*refColor)
         else:
             what = gl.GL_FRONT_AND_BACK
             gc = _getColor
@@ -852,10 +978,10 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         if shading != 'plain':
             gl.glEnable(gl.GL_LIGHTING)
             gl.glEnable(gl.GL_NORMALIZE)  # GL_NORMALIZE or GL_RESCALE_NORMAL
-            if shading == 'smooth':
-                gl.glShadeModel(gl.GL_SMOOTH)
-            else:
+            if shading == 'flat':
                 gl.glShadeModel(gl.GL_FLAT)
+            else:
+                gl.glShadeModel(gl.GL_SMOOTH)
         
         
         # Set culling (take data aspect into account!)
@@ -871,16 +997,38 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             gl.glCullFace(self._cullFaces)
         
         
-        # Prepare vertex shader
-        if not hasattr(self, '_waveTime'):
-            self._waveTime = 0.0
-        self._waveTime += 0.5
-        if self._glsl_program.IsUsable():
-            self._glsl_program.Enable()
-            self._glsl_program.SetUniformf('waveTime', [self._waveTime])
-            self._glsl_program.SetUniformf('waveWidth', [0.02])
-            self._glsl_program.SetUniformf('waveHeight', [50.0])
+        # Check number of lights
+        nlights = 1
+        for i in range(1, 7): #len(axes.lights)):
+            if axes.lights[i].isOn:
+                nlights = i+1
+        #
+        M = [ shaders.SH_NLIGHTS_1, shaders.SH_NLIGHTS_2, shaders.SH_NLIGHTS_3,
+              shaders.SH_NLIGHTS_4, shaders.SH_NLIGHTS_5, shaders.SH_NLIGHTS_6,
+              shaders.SH_NLIGHTS_7, shaders.SH_NLIGHTS_8, ]
+        SH_LIGHTS = M[nlights-1]
         
+        # Ensure that the right light shaderpart is selected
+        if not shader.vertex.HasPart(SH_LIGHTS):
+            shader.vertex.AddOrReplace(SH_LIGHTS)
+        if not shader.fragment.HasPart(SH_LIGHTS):
+            shader.fragment.AddOrReplace(SH_LIGHTS)
+        
+        # Ensure that the right albeido shader part is selected
+        if shader.fragment.HasPart('albeido'):
+            if not shader.fragment.HasPart(SH_ALBEIDO):
+                shader.fragment.AddOrReplace(SH_ALBEIDO)
+        
+        
+        if shader.isUsable and shader.hasCode and not self.useNativeShading:
+            # GLSL shading
+            shader.Enable()
+        else:
+            # Fixed pipeline
+            if SH_ALBEIDO is shaders.SH_MF_ALBEIDO_LUT1:
+                shader.EnableTextureOnly('colormap')
+            elif SH_ALBEIDO is shaders.SH_MF_ALBEIDO_LUT2:
+                shader.EnableTextureOnly('texture')
         
         # Draw
         type = {3:gl.GL_TRIANGLES, 4:gl.GL_QUADS}[self._verticesPerFace]
@@ -900,16 +1048,12 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         
         # Clean up
         gl.glFlush()
-        if useTexCords:
-            self._colormap.Disable()
-            if self._texture:
-                self._texture.Disable()
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glDisableClientState(gl.GL_NORMAL_ARRAY)
         gl.glDisableClientState(gl.GL_COLOR_ARRAY)
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
         #
-        self._glsl_program.Disable()
+        shader.Disable()
         #
         gl.glDisable(gl.GL_COLOR_MATERIAL)
         gl.glShadeModel(gl.GL_FLAT)
