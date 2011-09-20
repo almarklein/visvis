@@ -123,7 +123,7 @@ _SH_LIGHT = """
         L = normalize(L + (1.0-lightEnabled));
         
         // Calculate lighting properties
-        float lambertTerm = dot(N,L);
+        float lambertTerm = abs( dot(N,L) );
         vec3 R = -reflect(L,N);
         float specular = pow( max(dot(R, V), 0.0), gl_FrontMaterial.shininess );
         
