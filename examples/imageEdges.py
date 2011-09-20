@@ -35,13 +35,13 @@ im = vv.imread('lena.png')
 t = vv.imshow(im)
 
 # Insert our part in the fragment shader program
-t.fragmentShader.AddPart(SH_2F_EDGE)
+t.shader.fragment.AddPart(SH_2F_EDGE)
 if False: # Use this line to switch back:
-    t.fragmentShader.RemovePart(SH_2F_EDGEL)
+    t.shader.fragment.RemovePart(SH_2F_EDGEL)
 
 # In case there are bugs in the code, it might be helpfull to see the code
 # t2.fragmentShader.ShowCode() # Shows the whole code
-t.fragmentShader.ShowCode('edge') # Shows only our bit, with line numbers
+t.shader.fragment.ShowCode('edge') # Shows only our bit, with line numbers
 
 # Run app
 app = vv.use()

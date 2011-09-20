@@ -16,7 +16,7 @@ import OpenGL.GLU as glu
 from visvis.pypoints import Point
 from visvis import Wobject, Colormapable
 from visvis.core.misc import Property, PropWithDraw, getColor
-from visvis.core.shaders import fshaders
+from visvis.core import shaders
 from visvis.wobjects.textures import BaseTexture, TextureObjectToVisualize
 
 
@@ -31,6 +31,7 @@ class SliceTexture(BaseTexture):
     
     def __init__(self, parent, data, axis=0, index=0):
         BaseTexture.__init__(self, parent, data)
+        self._ndim = 3
         
         # Init parameters
         self._axis = axis
@@ -44,7 +45,7 @@ class SliceTexture(BaseTexture):
         self._texture1._interpolate = True 
         
         # Init shader for colormap use
-        self._program1.SetFragmentShader(fshaders['aa0'])
+        self._InitShader()
         
         # For edge
         self._edgeColor = None
@@ -66,6 +67,36 @@ class SliceTexture(BaseTexture):
         self.eventMouseUp.Bind(self._OnMouseUp)
         self.eventMotion.Bind(self._OnMouseMotion)
     
+    
+    def _InitShader(self):
+        
+        # Add components of shaders
+        self.shader.vertex.Clear()
+        self.shader.fragment.Clear()
+        self.shader.fragment.AddPart(shaders.SH_2F_BASE)
+        self.shader.fragment.AddPart(shaders.SH_2F_AASTEPS_0)
+        self.shader.fragment.AddPart(shaders.SH_COLOR_SCALAR)
+        
+        def uniform_shape():
+            shape = self._texture1._shape[:2] # as in opengl
+            return [float(s) for s in reversed(list(shape))]
+        def uniform_extent():
+            data = self._texture1._dataRef # as original array
+            shape = reversed(data.shape[:2])
+            if hasattr(data, 'sampling'):
+                sampling = reversed(data.sampling[:2])
+            else:
+                sampling = [1.0 for s in range(2)]
+            
+            del data
+            return [s1*s2 for s1, s2 in zip(shape, sampling)]
+        
+        # Set some uniforms
+        self.shader.SetStaticUniform('colormap', self._colormap)
+        self.shader.SetStaticUniform('shape', uniform_shape)
+        self.shader.SetStaticUniform('scaleBias', self._texture1._ScaleBias_get)
+        self.shader.SetStaticUniform('extent', uniform_extent)
+        self.shader.SetStaticUniform('aakernel', [1.0, 0, 0, 0])
     
     def _SetData(self, data):
         """ _SetData(data)
@@ -133,40 +164,28 @@ class SliceTexture(BaseTexture):
         # set color to white, otherwise with no shading, there is odd scaling
         gl.glColor3f(1.0,1.0,1.0)
         
-        # draw texture also from beneeth
-        #gl.glCullFace(gl.GL_FRONT_AND_BACK)
-        
-        # enable texture
-        self._texture1.Enable(0)
+        # Enable texture, so that it has a corresponding OpenGl texture.
+        # Binding is done by the shader
+        self._texture1.Enable(-1)
+        self.shader.SetUniform('texture', self._texture1)
         
         # _texture._shape is a good indicator of a valid texture
         if not self._texture1._shape:
             return
         
-        # fragment shader on
-        if self._program1.IsUsable():
-            self._program1.Enable()
-            # textures        
-            self._program1.SetUniformi('texture', [0])        
-            self._colormap.Enable(1)
-            self._program1.SetUniformi('colormap', [1])
-            # uniform variables
-            shape = self._texture1._shape # how it is in opengl
-            k = 1,0,0,0  # self._CreateGaussianKernel()
-            self._program1.SetUniformf('kernel', k)
-            self._program1.SetUniformf('dx', [1.0/shape[0]])
-            self._program1.SetUniformf('dy', [1.0/shape[1]])
-            self._program1.SetUniformf('scaleBias', self._texture1._ScaleBias_get())
-            self._program1.SetUniformi('applyColormap', [len(shape)==2])
+        if self.shader.isUsable and self.shader.hasCode:
+            # fragment shader on -> anti-aliasing
+            self.shader.Enable()
+        else:
+            # Fixed funcrion pipeline
+            self.shader.EnableTextureOnly('texture')
         
         # do the drawing!
         self._DrawQuads()
         gl.glFlush()
         
         # clean up
-        self._texture1.Disable()
-        self._colormap.Disable()
-        self._program1.Disable()
+        self.shader.Disable()
         
         # Draw outline?
         clr = self._edgeColor
