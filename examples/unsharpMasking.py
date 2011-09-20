@@ -59,13 +59,13 @@ t1.parent.camera = t2.parent.camera
 t1.aa = 0
 
 # Insert our part in the fragment shader program
-t2.fragmentShader.AddOrReplace(SH_2F_SHARPEN, after='base')
+t2.shader.fragment.AddOrReplace(SH_2F_SHARPEN, after='base')
 if False: # Execute this line to turn it off:
-    t2.fragmentShader.RemovePart('sharpen')
+    t2.shader.fragment.RemovePart('sharpen')
 
 # Make a slider to set the amount
 def sliderCallback(event):
-    t2.fragmentShader.SetUniform('amount', slider.value)
+    t2.shader.SetStaticUniform('amount', slider.value)
     t2.Draw()
 slider = vv.Slider(t2.parent, (0.0, 1.5))
 slider.eventSliding.Bind(sliderCallback)
@@ -73,7 +73,7 @@ sliderCallback(None) # init uniform
 
 # In case there are bugs in the code, it might be helpfull to see the code
 # t2.fragmentShader.ShowCode() # Shows the whole code
-t2.fragmentShader.ShowCode('sharpen') # Shows only our bit, with line numbers
+t2.shader.fragment.ShowCode('sharpen') # Shows only our bit, with line numbers
 
 # Run app
 app = vv.use()

@@ -61,10 +61,290 @@ def loadShaders():
 vshaders, fshaders = loadShaders()
 
 
+class Shader(object):
+    """ Shader()
+    
+    A Shader object represents the shading code for a GLSL shader. It 
+    provides the main interface for users to control the code, set uniforms
+    etc.
+    
+    This class wraps three objects which can be accessed easily via 
+    properties: 
+      * program: the relatively low level interface to OpenGl.
+      * vertex: represents the source code for the vertex shader.
+      * fragment: represents the source code for the fragment shader.
+    
+    """
+    
+    def __init__(self):
+        self._vertex = ShaderCode()
+        self._fragment = ShaderCode()
+        self._program = GlslProgram()
+        
+        self._staticUniforms = {}
+        self._pendingUniforms = {}
+        self._textureId = -1 # -1 means disabled
+        self._texturesToDisable = []
+    
+    @property
+    def vertex(self):
+        """ Get the vertex ShaderCode object for this shader.
+        """
+        return self._vertex
+    
+    @property
+    def fragment(self):
+        """ Get the vertex ShaderCode object for this shader.
+        """
+        return self._fragment
+    
+    @property
+    def program(self):
+        """ Get the glsl program for this shading code. This is the low
+        level object that compiles and enables the glsl code.
+        """
+        return self._program
+    
+    @property
+    def isUsable(self):
+        """ Get whether this shader is usable. If not, the hardware
+        does not support glsl.
+        """
+        return self._program.IsUsable()
+    
+    @property
+    def hasCode(self):
+        """ Get whether this shader has any code in it.
+        """
+        
+        # Update source code?
+        if self.vertex._isDirtyForProgram:
+            self.program.SetVertexShader(self.vertex.GetCode())
+        if self.fragment._isDirtyForProgram:
+            self.program.SetFragmentShader(self.fragment.GetCode())
+        
+        # Check
+        return bool( self._program.HasCode() )
+    
+    
+    def Enable(self):
+        """ Enable()
+        
+        Enable this shader. This does  number of things:
+          * Update source code of vertex and fragment shader (if necessary).
+          * Compile and bind shader programs (if necessary).
+          * Enables the glsl program.
+          * Applies any static and pending uniforms.
+          * Enables all textures that were given as uniforms.
+        
+        """
+        
+        # Init
+        self._textureId = 0
+        
+        # Update source code?
+        if self.vertex._isDirtyForProgram:
+            self.program.SetVertexShader(self.vertex.GetCode())
+        if self.fragment._isDirtyForProgram:
+            self.program.SetFragmentShader(self.fragment.GetCode())
+        
+        # Enable program (compiles if necessary
+        self.program.Enable()
+     
+        # Apply static and pending uniforms
+        # Note that more uniforms can be set after this function returns.
+        for name, value in self._GetStaticAndPendingUniforms().items():
+            self._ApplyUniform(name, value)
+    
+    
+    def EnableTextureOnly(self, *args):
+        """ EnableTextureOnly(name0, name1, name2)
+        
+        Enable only any textures that were registered as a uniform.
+        This is a convenience function that can be useful when you don't
+        want to use the shader, but the fixed pipeline needs the texture
+        enabled.
+        
+        name0 is enabled with texture-unit 0, name1 with texture-unit 1, etc.
+        If the names are invalid, they are ignored.
+        
+        Use the normal Disable() method to disable the texture.
+        
+        """
+        if self._textureId >= 0:
+            raise RuntimeError('Shader already enabled.')
+        
+        # Enable
+        self._textureId = 0
+        
+        # Get uniforms
+        uniforms = self._GetStaticAndPendingUniforms()
+        
+        # Find textures, ignore if not present
+        for i in range(len(args)):
+            # Get name
+            name = args[i]
+            if name not in uniforms:
+                continue
+            # Get value
+            value = uniforms[name]
+            if not isinstance(value, vv.core.baseTexture.TextureObject):
+                continue
+            # Enable and prepare for disabling
+            value.Enable(i)
+            self._texturesToDisable.append(value)
+    
+        
+    def Disable(self):
+        """ Disable()
+        
+        Disable this shading program. This does a couple of things:
+          * Disables all textures that were given as uniforms.
+          * Disables the glsl program.
+        
+        """
+        
+        # Disable textures
+        for value in self._texturesToDisable:
+            value.Disable()
+        
+        # Disable program
+        self.program.Disable()
+        
+        # Clean up
+        self._textureId = -1
+        self._texturesToDisable = []
+    
+    
+    def SetUniform(self, name, value):
+        """ SetUniform(name, value)
+        
+        Set uniform value for shader code. This is the glsl system for 
+        getting data into the GLSL shader.
+        
+        The given uniform is used during the next or current draw. This 
+        method is therefore to be used inside OnDraw() methods.
+        
+        The value can be:
+            * float or int: becomes float/int in glsl
+            * tuple of up to 4 elements: becomes vec/ivec, based on first value
+            * vv.TextureObject: becomes sampler1D, sampler2D or sampler3D
+        
+        In the case of a texture, the texture is automatically enabled/disabled.
+        
+        """
+        
+        # Check
+        self._CheckUniform(name, value)
+        
+        if self._textureId < 0:
+            # Disabled; add to pending uniforms
+            self._pendingUniforms[name] = value
+        else:
+            # Enabled; apply now
+            self._ApplyUniform(name, value)
+    
+    
+    def SetStaticUniform(self, name, value):
+        """ SetStaticUniform(name, value)
+        
+        Set uniform value for shader code. This is the glsl system for 
+        getting data into the GLSL shader.
+        
+        The given uniform is used in all draws. This method provides
+        a way to set uniforms from outside the OnDraw method, and still
+        be dynamic, because the value can be a callable that returns the
+        actual value.
+        
+        The value can be:
+            * float or int: becomes float/int in glsl
+            * tuple of up to 4 elements: becomes vec/ivec, based on first value
+            * vv.TextureObject: becomes sampler1D, sampler2D or sampler3D
+            * callable that returns one of the above.
+        
+        In the case of a texture, the texture is automatically enabled/disabled.
+        
+        """
+        # Check value
+        if hasattr(value, '__call__'):
+            # Only check name (dummy value)
+            # Value is checked during applying the uniform
+            self._CheckUniform(name, 1.0)
+        else:
+            # Check name and value
+            self._CheckUniform(name, value)
+        
+        # Store
+        self._staticUniforms[name] = value
+    
+    
+    def RemoveStaticUniform(self, name):
+        """ RemoveStaticUniform(name)
+        
+        Remove a static uniform.
+        
+        """
+        self._staticUniforms.pop(name)
+    
+    
+    def _CheckUniform(self, name, value):
+        
+        # Check name
+        if not isinstance(name, basestring):
+            raise ValueError('Uniform name must be a string.')
+        if not name:
+            raise ValueError('Uniform name must be at least 1 character.')
+        
+        # Check value
+        if not ((   isinstance(value, (float, int))    ) or 
+                (   isinstance(value, (list, tuple)) and len(value)<5   ) or
+                (   isinstance(value, vv.core.baseTexture.TextureObject) )
+                ):
+            raise ValueError('Invalid value for uniform.')
+    
+    
+    def _ApplyUniform(self, name, value):
+        # No hard checks, it is assumed that these have been performed
+        
+        if isinstance(value, float):
+            self.program.SetUniformf(name, [value])
+        elif isinstance(value, int):
+            self.program.SetUniformi(name, [value])
+        elif isinstance(value, (list, tuple)):
+            if isinstance(value[0], float):
+                self.program.SetUniformf(name, value)
+            elif isinstance(value[0], int):
+                self.program.SetUniformi(name, value)        
+        elif isinstance(value, vv.core.baseTexture.TextureObject):
+            # Enable and register as uniform
+            value.Enable(self._textureId)
+            self.program.SetUniformi(name, [self._textureId])
+            # Prepare for disabling, and for next texture
+            self._texturesToDisable.append(value)
+            self._textureId += 1
+    
+    
+    def _GetStaticAndPendingUniforms(self):
+        
+        # Collect static uniforms
+        uniforms = {}
+        for name, value in self._staticUniforms.items():
+            if hasattr(value, '__call__'):
+                value = value()
+                self._CheckUniform(name, value)
+            uniforms[name] = value
+        
+        # Update with pending uniforms (override static uniforms with same name)
+        uniforms.update(self._pendingUniforms)
+        
+        return uniforms
+
+
+
 class GlslProgram:
     """ GlslProgram()
     
-    A class representing a GLSL (OpenGL Shading Language) program.
+    A low level class representing a GLSL (OpenGL Shading Language) program.
     It provides an easy interface for adding vertex and fragment shaders
     and setting variables used in them.
     Note: On systems that do not support shading, this class will go in
@@ -88,9 +368,18 @@ class GlslProgram:
             self._usable = False
     
     def IsUsable(self):
-        """ Returns whether the program is usable. 
+        """ Returns whether the program is usable. In other words, whether
+        the OpenGl driver supports GLSL.
         """ 
         return self._usable
+    
+    
+    def HasCode(self):
+        """ Returns whether the program has any code associated with it.
+        If not, you shoul probably not enable it.
+        """
+        return self._fragmentCode or self._vertexCode
+    
     
     def _IsCompiled(self):
         if not self._usable:
@@ -409,7 +698,7 @@ class ShaderCode(object):
         """ Get a list of the parts in the shader. 
         """
         return [part for part in self._parts]
-    # todo: comparison with string possible?
+    
     @property
     def partNames(self):
         """ Get a list of the part names in the shader. 
@@ -494,7 +783,7 @@ class ShaderCode(object):
         # Signal dirty
         self._buffer = None
     
-    
+    # todo: make it such that replacing a part that is exactly the same wongt trigger recompile
     def ReplacePart(self, part):
         """ ReplacePart(part)
         
@@ -544,7 +833,6 @@ class ShaderCode(object):
             # Pop
             self._parts.pop(i)
             return True
-        
     
     
     def HasPart(self, part):
@@ -696,87 +984,87 @@ class ShaderCode(object):
         self._buffer = totalLines
     
     
-    def SetUniform(self, name, value):
-        """ SetUniform(name, value)
-        Can be:
-          * float or int
-          * tuple/list of float or ints (up to 4)
-          * texture
-          * a callable that returns any of the above.
-        """
-        # Check name
-        if not isinstance(name, basestring):
-            raise ValueError('Uniform name for ShaderCode must be a string.')
-        if not name:
-            raise ValueError('Uniform name must be at least 1 character.')
-        
-        # Check value
-        if isinstance(value, (float, int)):
-            pass
-        elif isinstance(value, (list, tuple)):
-            pass
-        elif isinstance(value, vv.core.baseTexture.TextureObject):
-            pass
-        elif hasattr(value, '__call__'):
-            pass        
-        else:
-            raise ValueError('Uniform value for ShaderCode must be a list/tuple.')
-        self._uniforms[name] = value
-    
-    
-    def _ApplyUniforms(self, program):
-        """ _ApplyUniforms(program)
-        
-        Apply all uniforms to the given GlslProgram instance.
-        To be used inside a Draw() method.
-        
-        Also enables all textures that are registered as a uniform.
-        
-        """
-        
-        texture_id = [1]
-        
-        def setuniform(name, value):
-            if isinstance(value, float):
-                program.SetUniformf(name, [value])
-            elif isinstance(value, int):
-                program.SetUniformi(name, [value])
-            elif isinstance(value, (list, tuple)):
-                if isinstance(value[0], float):
-                    program.SetUniformf(name, value)
-                elif isinstance(value[0], int):
-                    program.SetUniformi(name, value)        
-            elif isinstance(value, vv.core.baseTexture.TextureObject):
-                value.Enable(texture_id[0])
-                program.SetUniformi(name, [texture_id[0]])
-                texture_id[0] += 1
-            elif hasattr(value, '__call__'):
-                setuniform(name, value())
-            else:
-                raise ValueError('Invalid uniform value: %s' % repr(value))
-        
-        for name in self._uniforms:
-            setuniform(name, self._uniforms[name])
-    
-    
-    def _DisableUniformTextures(self):
-        """ _DisableUniformTextures(program)
-        
-        Disable any texture objects that were enabled with the call
-        to _ApplyUniforms().
-        
-        """
-        
-        def setuniform(value):
-            if isinstance(value, vv.core.baseTexture.TextureObject):
-                value.Disable()
-            elif hasattr(value, '__call__'):
-                setuniform(value())
-        
-        for name in self._uniforms:
-           setuniform(self._uniforms[name])
+#     def SetUniform(self, name, value):
+#         """ SetUniform(name, value)
+#         Can be:
+#           * float or int
+#           * tuple/list of float or ints (up to 4)
+#           * texture
+#           * a callable that returns any of the above.
+#         """
+#         # Check name
+#         if not isinstance(name, basestring):
+#             raise ValueError('Uniform name for ShaderCode must be a string.')
+#         if not name:
+#             raise ValueError('Uniform name must be at least 1 character.')
+#         
+#         # Check value
+#         if isinstance(value, (float, int)):
+#             pass
+#         elif isinstance(value, (list, tuple)):
+#             pass
+#         elif isinstance(value, vv.core.baseTexture.TextureObject):
+#             pass
+#         elif hasattr(value, '__call__'):
+#             pass        
+#         else:
+#             raise ValueError('Uniform value for ShaderCode must be a list/tuple.')
+#         self._uniforms[name] = value
+#     
+#     
+#     def _ApplyUniforms(self, program):
+#         """ _ApplyUniforms(program)
+#         
+#         Apply all uniforms to the given GlslProgram instance.
+#         To be used inside a Draw() method.
+#         
+#         Also enables all textures that are registered as a uniform.
+#         
+#         """
+#         
+#         texture_id = [1]
+#         
+#         def setuniform(name, value):
+#             if isinstance(value, float):
+#                 program.SetUniformf(name, [value])
+#             elif isinstance(value, int):
+#                 program.SetUniformi(name, [value])
+#             elif isinstance(value, (list, tuple)):
+#                 if isinstance(value[0], float):
+#                     program.SetUniformf(name, value)
+#                 elif isinstance(value[0], int):
+#                     program.SetUniformi(name, value)        
+#             elif isinstance(value, vv.core.baseTexture.TextureObject):
+#                 value.Enable(texture_id[0])
+#                 program.SetUniformi(name, [texture_id[0]])
+#                 texture_id[0] += 1
+#             elif hasattr(value, '__call__'):
+#                 setuniform(name, value())
+#             else:
+#                 raise ValueError('Invalid uniform value: %s' % repr(value))
+#         
+#         for name in self._uniforms:
+#             setuniform(name, self._uniforms[name])
+#     
+#     
+#     def _DisableUniformTextures(self):
+#         """ _DisableUniformTextures(program)
+#         
+#         Disable any texture objects that were enabled with the call
+#         to _ApplyUniforms().
+#         
+#         """
+#         
+#         def setuniform(value):
+#             if isinstance(value, vv.core.baseTexture.TextureObject):
+#                 value.Disable()
+#             elif hasattr(value, '__call__'):
+#                 setuniform(value())
+#         
+#         for name in self._uniforms:
+#            setuniform(self._uniforms[name])
 
-# todo: doc
+
 class ShaderCodePart(object):
     """ ShaderCodePart(name, version, code)
     
@@ -808,6 +1096,7 @@ class ShaderCodePart(object):
     def __init__(self, name, version, code):
         self._name = str(name)
         self._version = str(version)
+        self._rawCode = code
         self._code = self._stripCode(code)
     
     def _stripCode(self, code):
@@ -847,6 +1136,11 @@ class ShaderCodePart(object):
         """ Get the version of this ShaderCodePart instance.
         """
         return self._version
+    @property
+    def rawCode(self):
+        """ Get the original unprocessed code of this ShaderCodePart instance.
+        """
+        return self._rawCode
     @property
     def code(self):
         """ Get the code of this ShaderCodePart instance.
@@ -903,7 +1197,9 @@ class ShaderCodePart(object):
 
 
 # Import all shaders. Can only do the import after the ShaderCodePart is deffed
-from visvis.core.shaders_src import *
+from visvis.core.shaders_2 import *
+from visvis.core.shaders_3 import *
+from visvis.core.shaders_m import *
 
 
 if __name__ == '__main__':

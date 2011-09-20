@@ -1,136 +1,20 @@
-""" Module shaders_src
+""" Module shaders_m
 
-Contains the source for various shaders, divided in different parts.
+Contains the source for various shaders for the Texture3D wobject, 
+divided in different parts.
 
 The names consists of different parts, seperated by underscores:
   * SH: just to indicate its a shader
   * 2F, 3F, MF, 2V, 3V, MV: the kind of program, 2D/3D texture or mesh,
-    vertex or fragment shader. May be left out for generic parts (such as color)
+    vertex or fragment shader. May be left out for some generic parts (such 
+    as color)
   * part name: can be BASE, STYLE, or anything else really.
   * part name type: Optional. Some parts have alternatives, 
-    such as the STYLE part for 3D rendering techniques. 
+    such as the STYLE part for 3D rendering techniques. Or the SHADING 
+    part for meshes
 
 """
 from visvis.core.shaders import ShaderCodePart
-
-
-## Color
-# These are used by many shaders to be able to deal with scalar or RGB data.
-# color1-to-val is used by volume renderes to test thresholds etc.
-# color1-to-color2 is used to convert the color sampled from the texture to
-# a color to be displayed on screen.
-
-# This one is not really usefull, but included for completeness
-SH_COLOR_SCALARNOCMAP = ShaderCodePart('color', 'scalar-nocmap',
-"""
-    >>--uniforms--
-    uniform vec2 scaleBias;
-    // --uniforms--
-    
-    >>--color1-to-val--
-    val = color1.r;
-    
-    >>--color1-to-color2--
-    color2.rgb = ( color1.r + scaleBias[1] ) * scaleBias[0];
-    color2.a = 1.0;
-""")
-# todo: does that even work, the .rgb thing?
-
-SH_COLOR_SCALAR = ShaderCodePart('color', 'scalar',
-"""
-    >>--uniforms--
-    uniform sampler1D colormap;
-    uniform vec2 scaleBias;
-    // --uniforms--
-    
-    >>--color1-to-val--
-    val = color1.r;
-    
-    >>--color1-to-color2--
-    color2 = texture1D( colormap, (color1.r + scaleBias[1]) * scaleBias[0]);
-""")
-
-SH_COLOR_RGB = ShaderCodePart('color', 'RGB',
-"""
-    >>--uniforms--
-    uniform vec2 scaleBias;
-    // --uniforms--
-    
-    >>--color1-to-val--
-    val = length(color1.rgb);
-    
-    >>--color1-to-color2--
-    color2 = ( color1 + scaleBias[1] ) * scaleBias[0];
-""")
-
-
-## 2D fragment
-# Shows 2D texture and does anti-aliasing when image is zoomed out.
-
-SH_2F_BASE = ShaderCodePart('base', '2D-fragment-default',
-"""
-    // Uniforms obtained from OpenGL
-    uniform sampler2D texture; // The 3D texture
-    uniform vec2 shape; // And its shape (as in OpenGl)
-    uniform vec2 extent; // Extent of the data in world coordinates
-    uniform vec4 aakernel; // The smoothing kernel for anti-aliasing
-    // --uniforms--
-    
-    // Varyings obtained from vertex shader
-    // --varyings--
-    
-    void main()
-    {    
-        // Get centre location
-        vec2 pos = gl_TexCoord[0].xy;
-        
-        // Init value
-        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0); 
-        vec4 color2; // to set color later
-        
-        // Init kernel and number of steps
-        vec4 kernel = aakernel;
-        int sze = 0; // Overwritten in aa-steps part
-        
-        // Init step size in tex coords
-        float dx = 1.0/shape.x;
-        float dy = 1.0/shape.y;
-        
-        // Allow more stuff
-        // --pre-loop--
-        
-        // Convolve
-        for (int y=-sze; y<sze+1; y++)
-        {
-            for (int x=-sze; x<sze+1; x++)
-            {   
-                float k = kernel[abs(x)] * kernel[abs(y)];
-                vec2 dpos = vec2(float(x)*dx, float(y)*dy);
-                color1 += texture2D(texture, pos+dpos) * k;
-            }
-        }
-        
-        // Allow more stuff
-        // --post-loop--
-        
-        // Determine final color
-        // --color1-to-color2--
-        gl_FragColor = color2;
-        
-    }
-
-""")
-
-# This cannot be done with a uniform, because on some systems it wont code
-# with loops of which the length is undefined.
-_SH_2F_AASTEPS = """
-    >>int sze = 0;
-    int sze = %i;
-"""
-SH_2F_AASTEPS_0 = ShaderCodePart('aa-steps', '0', _SH_2F_AASTEPS % 0)
-SH_2F_AASTEPS_1 = ShaderCodePart('aa-steps', '1', _SH_2F_AASTEPS % 1)
-SH_2F_AASTEPS_2 = ShaderCodePart('aa-steps', '2', _SH_2F_AASTEPS % 2)
-SH_2F_AASTEPS_3 = ShaderCodePart('aa-steps', '3', _SH_2F_AASTEPS % 3)
 
 
 ## 3D vertex base
@@ -199,82 +83,6 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
     }
 
 """)
-
-# todo: remove this old version in a few commits
-_SH_3V_BASE = """
-    // Uniforms obtained from OpenGL
-    uniform vec3 shape; // The dimensions of the data
-    uniform float stepRatio; // Ratio to tune the number of steps
-    
-    // Varyings to pass to fragment shader
-    varying vec3 ray; // The direction to cast the rays in
-    varying vec3 L; // The 0th light source direction
-    varying vec3 V; // The View direction
-    varying vec4 vertexPosition; // The vertex position in world coordinates
-    
-    void main()
-    {    
-        
-        // First of all, set position.
-        // (We need to do this because this shader replaces the original shader.)
-        gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-        
-        // Store position of vertex too, so the fragment shader can calculate
-        // the depth
-        vertexPosition = gl_Vertex.xyzw;
-        
-        // Store texture coordinate (also a default thing).
-        gl_TexCoord[0].xyz = gl_MultiTexCoord0.xyz;
-        
-        // Calculate light direction
-        L = (gl_LightSource[0].position * gl_ModelViewMatrix).xyz;
-        if (gl_LightSource[0].position[3]==1.0)
-            L -= gl_Vertex.xyz;
-        L = normalize(L);
-        
-        // Calculate view direction
-        V = (vec4(0.0, 0.0, 1.0, 1.0) * gl_ModelViewMatrix).xyz;
-        V = normalize(V);
-        
-        // Calculate the scaling of the modelview matrix so we can correct
-        // for axes.daspect and scale transforms of the wobject (in case
-        // of anisotropic data).
-        // We go from world coordinates to eye coordinates.
-        vec4 p0 = gl_ModelViewMatrix * vec4(0.0,0.0,0.0,1.0);
-        vec4 px = gl_ModelViewMatrix * vec4(1.0,0.0,0.0,1.0);
-        vec4 py = gl_ModelViewMatrix * vec4(0.0,1.0,0.0,1.0);
-        vec4 pz = gl_ModelViewMatrix * vec4(0.0,0.0,1.0,1.0);
-        float sx = length(p0.xyz - px.xyz);
-        float sy = length(p0.xyz - py.xyz);
-        float sz = length(p0.xyz - pz.xyz);
-        
-        // Create a (diagonal) matrix to correct for the scaling
-        mat4 Ms = mat4(0.0);
-        Ms[0][0] = 1.0/(sx*sx);
-        Ms[1][1] = 1.0/(sy*sy);
-        Ms[2][2] = 1.0/(sz*sz);
-        Ms[3][3] = 1.0;
-        
-        // Calculate ray direction. By correcting for the scaling, the ray is
-        // expressed in textute coordinates.
-        // We go from eye coordinates to world/texture coordinates.
-        vec4 p1 = vec4(0.0, 0.0, 0.0, 1.0) * gl_ModelViewProjectionMatrix * Ms;
-        vec4 p2 = vec4(0.0, 0.0, 1.0, 1.0) * gl_ModelViewProjectionMatrix * Ms;
-        ray = (p2.xyz/p2[3]) - (p1.xyz/p1[3]);
-        
-        // Normalize ray to unit length.    
-        ray = normalize(ray);
-        
-        // Make the ray represent the length of a single voxel.
-        ray = ray / shape;
-        ray = ray * 0.58; // 1 over root of three = 0.577
-        
-        // Scale ray to take smaller steps.
-        ray = ray / stepRatio;
-        
-    }
-
-"""
 
 
 ## 3D fragment base
@@ -444,7 +252,7 @@ SH_3F_STYLE_MIP = ShaderCodePart('renderstyle', 'mip',
 """)
 
 
-## SH_3D fragment STYLE RAY
+## 3D fragment STYLE RAY
 # Casts a ray all the way through. All voxels contribute (using their alpha
 # value).
 
@@ -486,7 +294,7 @@ SH_3F_STYLE_RAY = ShaderCodePart('renderstyle', 'ray',
 """)
 
 
-## SH_3D fragment STYLE EDGERAY
+## 3D fragment STYLE EDGERAY
 # Same as ray, but the alpha is scaled with the gradient magnitude, which
 # makes it easier to "quickly" visualize a volume without having to play
 # with the alpha channel in the ColormapEditor.
