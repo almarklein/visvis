@@ -262,5 +262,7 @@ class Light(object):
             gl.glLightfv(thisLight, dif, _getColor(self._diffuse, self._color))
             gl.glLightfv(thisLight, spe, _getColor(self._specular, self._color))
         else:
+            # null-position means that the ligth is off
+            gl.glLightfv(thisLight, gl.GL_POSITION, (0.0, 0.0, 0.0, 0.0))
             gl.glDisable(thisLight)
 
