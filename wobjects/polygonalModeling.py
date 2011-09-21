@@ -21,6 +21,7 @@ from visvis import Wobject, Colormapable, OrientationForWobjects_mixClass
 from visvis.core.light import _testColor, _getColor
 from visvis.wobjects.textures import TextureObjectToVisualize 
 from visvis.core import shaders
+from visvis.wobjects.textures import minmax
 
 
 def checkDimsOfArray(value, *ndims):
@@ -282,16 +283,15 @@ class BaseMesh(object):
             elif values.dtype == np.uint8:
                 values = values.astype(np.float32) / 256.0
             else:
-                mi, ma = values.min(), values.max()
+                mi, ma = minmax(values)
                 values = (values.astype(np.float32) - mi) / (ma-mi)
         
         # Store
         self._values = values
         
-        # todo: set clim to full range automatically
         # A bit of a hack... reset clim for Mesh class
         if isinstance(self, Colormapable):
-            self.clim = 0,1
+            self.clim = minmax(values)
     
     
     @DrawAfter
@@ -759,7 +759,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     # todo: make sure that the glColor() call is done right everywhere.
     # -> my Linux pyopengl implementation does not work if given a list
-    # todo: make a base mixin class for wobjects that can be shaded?
+    
     @property
     def faceShader(self):
         """ Get the shader object for the faces. This can 
