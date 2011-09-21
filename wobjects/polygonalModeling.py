@@ -726,15 +726,12 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             else:
                 return
             
-            # Change shaders accordingly. There must be a part with name
-            # 'shading' that we can replace, and we only have to replace
-            # if its not already the exact same part.
-            if shader.vertex.HasPart('shading'):
-                if not shader.vertex.HasPart(vShading):
-                    shader.vertex.ReplacePart(vShading)
-            if shader.fragment.HasPart('shading'):
-                if not shader.fragment.HasPart(fShading):
-                    shader.fragment.ReplacePart(fShading)
+            # Change shaders accordingly. Does not cause recompile if new 
+            # part replaces itself.
+            if shader.vertex.HasPart('shading'):                
+                shader.vertex.ReplacePart(vShading)
+            if shader.fragment.HasPart('shading'):                
+                shader.fragment.ReplacePart(fShading)
     
     
     @PropWithDraw
@@ -1015,9 +1012,8 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             shader.fragment.AddOrReplace(SH_LIGHTS)
         
         # Ensure that the right albeido shader part is selected
-        if shader.fragment.HasPart('albeido'):
-            if not shader.fragment.HasPart(SH_ALBEIDO):
-                shader.fragment.AddOrReplace(SH_ALBEIDO)
+        if shader.fragment.HasPart('albeido'):            
+            shader.fragment.AddOrReplace(SH_ALBEIDO)
         
         
         if shader.isUsable and shader.hasCode and not self.useNativeShading:
