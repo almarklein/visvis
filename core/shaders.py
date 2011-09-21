@@ -118,9 +118,9 @@ class Shader(object):
         """
         
         # Update source code?
-        if self.vertex._isDirtyForProgram:
+        if self.vertex._needRecompile:
             self.program.SetVertexShader(self.vertex.GetCode())
-        if self.fragment._isDirtyForProgram:
+        if self.fragment._needRecompile:
             self.program.SetFragmentShader(self.fragment.GetCode())
         
         # Check
@@ -143,10 +143,7 @@ class Shader(object):
         self._textureId = 0
         
         # Update source code?
-        if self.vertex._isDirtyForProgram:
-            self.program.SetVertexShader(self.vertex.GetCode())
-        if self.fragment._isDirtyForProgram:
-            self.program.SetFragmentShader(self.fragment.GetCode())
+        dummy = self.hasCode
         
         # Enable program (compiles if necessary
         self.program.Enable()
@@ -689,8 +686,8 @@ class ShaderCode(object):
         self._buffer = None
         
         # Flag for the program. Is set to True by the isDirty property. Is 
-        # only set to False by the special private property _isDirtyForProgram.
-        self._dirtyForProgramFlag = True
+        # only set to False by the special private property _needRecompile.
+        self._needRecompileFlag = True
     
     
     @property
@@ -715,19 +712,19 @@ class ShaderCode(object):
         
         # Update flag for program
         if dirty:
-            self._dirtyForProgramFlag = True
+            self._needRecompileFlag = True
         
         # Done
         return dirty
     
     
     @property
-    def _isDirtyForProgram(self):
+    def _needRecompile(self):
         """ Gets whether this code was changed since this method was last used.
         """
-        dummy = self._isDirty # Sets _dirtyForProgramFlag if it is really dirty
-        dirty = self._dirtyForProgramFlag
-        self._dirtyForProgramFlag = False
+        dummy = self._isDirty # Sets _needRecompileFlag if it is really dirty
+        dirty = self._needRecompileFlag
+        self._needRecompileFlag = False
         return dirty
     
     
@@ -783,11 +780,14 @@ class ShaderCode(object):
         # Signal dirty
         self._buffer = None
     
-    # todo: make it such that replacing a part that is exactly the same wongt trigger recompile
+    
     def ReplacePart(self, part):
         """ ReplacePart(part)
         
-        Replace an existing part, based on the name.
+        Replace an existing part, based on the name. If the given 
+        ShaderCodePart object would replace itself, no action is taken.
+        This makes it possible to call this method on each draw without
+        the risk of the code being recompiled each time.
         
         """
         
@@ -795,12 +795,18 @@ class ShaderCode(object):
         if not isinstance(part, ShaderCodePart):
             raise ValueError('ReplacePart needs a ShaderCodePart.')
         
-        # Replace
+        # Get index and original
         i = self._IndexOfPart(part.name)
-        self._parts[i] = part
+        originalPart = self._parts[i]
         
-        # Signal dirty
-        self._buffer = None
+        # Replace (or not)
+        if originalPart is part:
+            # No action required, so no recompilation required
+            pass
+        else:
+            # Replace and signal dirty
+            self._parts[i] = part
+            self._buffer = None
     
     
     def AddOrReplace(self, part, before=None, after=None):
