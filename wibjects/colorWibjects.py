@@ -540,18 +540,18 @@ class CM_NodeWidget(Box):
         # Draw lines
         for line in self._allLines:
             if len(line) and line is not self._line:
-                gl.glColor( colors[line] )
+                gl.glColor( *colors[line] )
                 gl.glVertexPointerf(line.data)
                 gl.glDrawArrays(gl.GL_LINE_STRIP, 0, len(line))
         
         # Draw the line under control (using a thicker line)
-        gl.glColor( colors[self._line] )
+        gl.glColor( *colors[self._line] )
         gl.glLineWidth(2)
         gl.glVertexPointerf(self._line.data)
         gl.glDrawArrays(gl.GL_LINE_STRIP, 0, len(self._line))
         
         # draw nodes
-        gl.glColor( colors[self._line] )
+        gl.glColor( *colors[self._line] )
         gl.glVertexPointerf(self._nodes.data)
         gl.glDrawArrays(gl.GL_POINTS, 0, len(self._nodes))
         
