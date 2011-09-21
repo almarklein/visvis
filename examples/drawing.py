@@ -40,7 +40,7 @@ class Drawer:
         """ Called when a key is pressed down in the axes.
         """
         
-        if event.text.lower() in 'rgbcmywk':
+        if event.text and event.text.lower() in 'rgbcmywk':
             self._line2.lc = event.text.lower()
         else:
             try:
