@@ -888,6 +888,13 @@ class Texture3D(BaseTexture):
         else:
             self.shader.SetUniform('stepRatio', float(self._stepRatio))
         
+        # Set right number of lights, or disabled light stuff
+        if self.shader.fragment.HasPart('litvoxel'):
+            self._EnsureRightNumberOfLights(self.GetAxes(), self.shader)
+        else:
+            self.shader.vertex.AddOrReplace(shaders.SH_NLIGHTS_0)
+            self.shader.fragment.AddOrReplace(shaders.SH_NLIGHTS_0)
+        
         
         if self.shader.isUsable and self.shader.hasCode:
             # turn glsl shader on
@@ -907,6 +914,27 @@ class Texture3D(BaseTexture):
         gl.glDisable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glEnable(gl.GL_POINT_SMOOTH)
+    
+    
+    def _EnsureRightNumberOfLights(self, axes, shader):
+        
+        # Check number of lights in axes
+        nlights = 1
+        for i in range(1, 7): #len(axes.lights)):
+            if axes.lights[i].isOn:
+                nlights = i+1
+        
+        # Define shader part to use
+        M = [ shaders.SH_NLIGHTS_1, shaders.SH_NLIGHTS_2, shaders.SH_NLIGHTS_3,
+              shaders.SH_NLIGHTS_4, shaders.SH_NLIGHTS_5, shaders.SH_NLIGHTS_6,
+              shaders.SH_NLIGHTS_7, shaders.SH_NLIGHTS_8, ]
+        SH_LIGHTS = M[nlights-1]
+        
+        # Ensure that the right light shaderpart is selected
+        if not shader.vertex.HasPart(SH_LIGHTS):
+            shader.vertex.AddOrReplace(SH_LIGHTS)
+        if not shader.fragment.HasPart(SH_LIGHTS):
+            shader.fragment.AddOrReplace(SH_LIGHTS)
     
     
     def _CreateQuads(self):

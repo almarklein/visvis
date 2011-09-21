@@ -650,9 +650,8 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         Notes
         -----
         In native mode 'smooth' and 'toon' fall back to 'gouraud'.
-        In native mode the blin-phong reflectance model is used. 
-        In non-native mode the phong reflectance model (do not confuse 
-        with phong-shading) is used.
+        In both native and nonnative mode the blinn-phong reflectance model 
+        is used. 
         """
         def fget(self):
             return self._faceShading
@@ -685,9 +684,8 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         Notes
         -----
         In native mode 'smooth' and 'toon' fall back to 'gouraud'.
-        In native mode the blin-phong reflectance model is used. 
-        In non-native mode the phong reflectance model (do not confuse 
-        with phong-shading) is used.
+        In both native and nonnative mode the blinn-phong reflectance model 
+        is used. 
         """
         def fget(self):
             return self._edgeShading
@@ -992,21 +990,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         
         
         # Check number of lights
-        nlights = 1
-        for i in range(1, 7): #len(axes.lights)):
-            if axes.lights[i].isOn:
-                nlights = i+1
-        #
-        M = [ shaders.SH_NLIGHTS_1, shaders.SH_NLIGHTS_2, shaders.SH_NLIGHTS_3,
-              shaders.SH_NLIGHTS_4, shaders.SH_NLIGHTS_5, shaders.SH_NLIGHTS_6,
-              shaders.SH_NLIGHTS_7, shaders.SH_NLIGHTS_8, ]
-        SH_LIGHTS = M[nlights-1]
-        
-        # Ensure that the right light shaderpart is selected
-        if not shader.vertex.HasPart(SH_LIGHTS):
-            shader.vertex.AddOrReplace(SH_LIGHTS)
-        if not shader.fragment.HasPart(SH_LIGHTS):
-            shader.fragment.AddOrReplace(SH_LIGHTS)
+        self._EnsureRightNumberOfLights(axes, shader)
         
         # Ensure that the right albeido shader part is selected
         if shader.fragment.HasPart('albeido'):            
@@ -1054,6 +1038,27 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         gl.glDisable(gl.GL_LIGHTING)
         gl.glDisable(gl.GL_NORMALIZE)
         gl.glDisable(gl.GL_CULL_FACE)
+    
+    
+    def _EnsureRightNumberOfLights(self, axes, shader):
+        
+        # Check number of lights in axes
+        nlights = 1
+        for i in range(1, 7): #len(axes.lights)):
+            if axes.lights[i].isOn:
+                nlights = i+1
+        
+        # Define shader part to use
+        M = [ shaders.SH_NLIGHTS_1, shaders.SH_NLIGHTS_2, shaders.SH_NLIGHTS_3,
+              shaders.SH_NLIGHTS_4, shaders.SH_NLIGHTS_5, shaders.SH_NLIGHTS_6,
+              shaders.SH_NLIGHTS_7, shaders.SH_NLIGHTS_8, ]
+        SH_LIGHTS = M[nlights-1]
+        
+        # Ensure that the right light shaderpart is selected
+        if not shader.vertex.HasPart(SH_LIGHTS):
+            shader.vertex.AddOrReplace(SH_LIGHTS)
+        if not shader.fragment.HasPart(SH_LIGHTS):
+            shader.fragment.AddOrReplace(SH_LIGHTS)
 
 
 class OrientableMesh(Mesh, OrientationForWobjects_mixClass):

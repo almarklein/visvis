@@ -29,7 +29,7 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
     
     // Varyings to pass to fragment shader
     varying vec3 ray; // The direction to cast the rays in
-    varying vec3 L; // The 0th light source direction
+    varying vec3 lightDirs[1]; // The light source directions
     varying vec3 V; // The View direction
     varying vec4 vertexPosition; // The vertex position in world coordinates
     // --varyings--
@@ -49,10 +49,16 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
         gl_TexCoord[0].xyz = gl_MultiTexCoord0.xyz;
         
         // Calculate light direction
-        L = (gl_LightSource[0].position * gl_ModelViewMatrix).xyz;
-        if (gl_LightSource[0].position[3]==1.0)
-            L -= gl_Vertex.xyz;
-        L = normalize(L);
+        int nlights = 1;
+        for (int i=0; i<nlights; i++)
+        {
+            vec4 lightPos = gl_LightSource[i].position;
+            vec3 L = (lightPos * gl_ModelViewMatrix).xyz;
+            if (lightPos.w==1.0)
+                L -= gl_Vertex.xyz;
+            float lightEnabled = float( length(lightPos) > 0.0 );
+            lightDirs[i] = lightEnabled * L;
+        }
         
         // Calculate view direction
         V = (vec4(0.0, 0.0, 1.0, 1.0) * gl_ModelViewMatrix).xyz;
@@ -482,6 +488,9 @@ SH_3F_STYLE_LITRAY = ShaderCodePart('renderstyle', 'litray',
 """)
 
 ## 3D fragment_LITVOXEL (for ISO and ISORAY styles)
+# Calculates light using the binn-phong reflectance model
+# Requires 'nlights' part (SH_NLIGHTS_X from shaders_m.py)
+
 SH_3F_LITVOXEL = ShaderCodePart('litvoxel', 'default',
 """
     >>--uniforms--
@@ -493,7 +502,7 @@ SH_3F_LITVOXEL = ShaderCodePart('litvoxel', 'default',
     // --uniforms--
     
     >>--varyings--
-    varying vec3 L; // light direction
+    varying vec3 lightDirs[1];
     varying vec3 V; // view direction
     // --varyings--
     
@@ -533,28 +542,48 @@ SH_3F_LITVOXEL = ShaderCodePart('litvoxel', 'default',
         float gm = length(N); // gradient magnitude
         N = normalize(N);
         
-        // Init total color and strengt variable
-        vec4 totalColor;
-        float str;
+        // Flip normal so it points towards viewer
+        float Nselect = float(dot(N,V) > 0);
+        N = (2.0*Nselect - 1.0) * N;  // ==  Nselect * N - (1.0-Nselect)*N;
         
-        // Apply ambient and diffuse light
-        totalColor = ambient * gl_LightSource[0].ambient;
-        str = clamp(dot(L,N),0.0,1.0);
-        totalColor += str * diffuse * gl_LightSource[0].diffuse;
-        
-        // Apply color of the texture
+        // Get color of the texture (albeido)
         color1 = betterColor;
         // --color1-to-color2--
-        totalColor *= color2;
         
-        // Apply specular color
-        vec3 H = normalize(L+V);
-        str = pow( max(dot(H,N),0.0), shininess);
-        totalColor.rgb += str * specular.rgb * gl_LightSource[0].specular;
+        // Init colors
+        vec4 ambient_color = vec4(0.0, 0.0, 0.0, 0.0);
+        vec4 diffuse_color = vec4(0.0, 0.0, 0.0, 0.0);
+        vec4 specular_color = vec4(0.0, 0.0, 0.0, 0.0);
+        vec4 final_color;
+        
+        int nlights = 1;
+        for (int i=0; i<nlights; i++)
+        { 
+            // Get light direction (make sure to prevent zero devision)
+            vec3 L = lightDirs[i]; 
+            float lightEnabled = float( length(L) > 0.0 );
+            L = normalize(L+(1.0-lightEnabled));
+            
+            // Calculate lighting properties
+            float lambertTerm = clamp( dot(N,L), 0.0, 1.0 );
+            vec3 H = normalize(L+V); // Halfway vector
+            float specularTerm = pow( max(dot(H,N),0.0), shininess);
+            
+            // Calculate mask
+            float mask1 = lightEnabled;
+            
+            // Calculate colors
+            ambient_color +=  mask1 * ambient * gl_LightSource[i].ambient;
+            diffuse_color +=  mask1 * lambertTerm * diffuse * gl_LightSource[i].diffuse;
+            specular_color += mask1 * specularTerm * specular * gl_LightSource[i].specular;
+        }
+        
+        // Calculate final color by componing different components
+        final_color = color2 * ( ambient_color + diffuse_color) + specular_color;
+        final_color.a = color2.a;
         
         // Done
-        totalColor.a = color2.a;// * gm;
-        return totalColor;
+        return final_color;
     }
     
 """)

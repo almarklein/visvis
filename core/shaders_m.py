@@ -108,6 +108,10 @@ _SH_LIGHT = """
     vec3 V = vec3(0.0, 0.0, 1.0); //view (eye) direction (in eye coords; is easy)
     vec3 L;
     
+    // Flip normal so it points towards viewer
+    float Nselect = float(dot(N,V) > 0);
+    N = (2.0*Nselect - 1.0) * N;  // ==  Nselect * N - (1.0-Nselect)*N;
+    
     int nlights = 1;
     for (int i=0; i<nlights; i++)
     {   
@@ -115,17 +119,21 @@ _SH_LIGHT = """
         vec4 lightPos = gl_LightSource[i].position;
         
         // Is this thing on? 
-        float lightEnabled = float( length(gl_LightSource[i].position) > 0.0 );
+        float lightEnabled = float( length(lightPos) > 0.0 );
         
         // Get light direction (make sure to prevent zero devision)
         // Also take into account if its a directional light
         L = lightPos.xyz - lightPos.w*vVertex;
         L = normalize(L + (1.0-lightEnabled));
         
-        // Calculate lighting properties
-        float lambertTerm = abs( dot(N,L) );
-        vec3 R = -reflect(L,N);
-        float specular = pow( max(dot(R, V), 0.0), gl_FrontMaterial.shininess );
+        // Calculate lighting properties (blinn-phong light model)
+        float lambertTerm = clamp( dot(N,L), 0.0, 1.0 );
+        vec3 H = normalize(L+V); // Halfway vector
+        float specularTerm = pow( max(dot(H,N),0.0), gl_FrontMaterial.shininess);
+        
+        // Below is Phong reflection (for reference)
+        //vec3 R = -reflect(L,N);
+        //float specularTerm = pow( max(dot(R, V), 0.0), gl_FrontMaterial.shininess );
         
         // Calculate masks
         float mask1 = lightEnabled;
@@ -134,7 +142,7 @@ _SH_LIGHT = """
         // Calculate colors
         ambient_color +=  mask1 * gl_LightSource[i].ambient  * gl_FrontMaterial.ambient;
         diffuse_color +=  mask2 * gl_LightSource[i].diffuse  * gl_FrontMaterial.diffuse * lambertTerm;	
-        specular_color += mask2 * gl_LightSource[i].specular * gl_FrontMaterial.specular * specular;
+        specular_color += mask2 * gl_LightSource[i].specular * gl_FrontMaterial.specular * specularTerm;
     }
 """
 
@@ -227,15 +235,26 @@ SH_MF_SHADING_TOON = ShaderCodePart('shading', 'toon',
 _NLIGHTS = """
     >>int nlights = 1;
     int nlights = %i;
+    >>varying vec3 lightDirs[1];
+    varying vec3 lightDirs[%i];
 """
-SH_NLIGHTS_1 = ShaderCodePart('nlights', '1', _NLIGHTS % 1)
-SH_NLIGHTS_2 = ShaderCodePart('nlights', '2', _NLIGHTS % 2)
-SH_NLIGHTS_3 = ShaderCodePart('nlights', '3', _NLIGHTS % 3)
-SH_NLIGHTS_4 = ShaderCodePart('nlights', '4', _NLIGHTS % 4)
-SH_NLIGHTS_5 = ShaderCodePart('nlights', '5', _NLIGHTS % 5)
-SH_NLIGHTS_6 = ShaderCodePart('nlights', '6', _NLIGHTS % 6)
-SH_NLIGHTS_7 = ShaderCodePart('nlights', '7', _NLIGHTS % 7)
-SH_NLIGHTS_8 = ShaderCodePart('nlights', '8', _NLIGHTS % 8)
+SH_NLIGHTS_1 = ShaderCodePart('nlights', '1', _NLIGHTS % (1,1))
+SH_NLIGHTS_2 = ShaderCodePart('nlights', '2', _NLIGHTS % (2,2))
+SH_NLIGHTS_3 = ShaderCodePart('nlights', '3', _NLIGHTS % (3,3))
+SH_NLIGHTS_4 = ShaderCodePart('nlights', '4', _NLIGHTS % (4,4))
+SH_NLIGHTS_5 = ShaderCodePart('nlights', '5', _NLIGHTS % (5,5))
+SH_NLIGHTS_6 = ShaderCodePart('nlights', '6', _NLIGHTS % (6,6))
+SH_NLIGHTS_7 = ShaderCodePart('nlights', '7', _NLIGHTS % (7,7))
+SH_NLIGHTS_8 = ShaderCodePart('nlights', '8', _NLIGHTS % (8,8))
+SH_NLIGHTS_0 = ShaderCodePart('nlights', '0', 
+"""
+    >>int nlights = 1;
+    int nlights = 0;
+    >>varying vec3 lightDirs[1];
+    // no lightDirs
+    >>lightDirs[i] =
+    // Removed Assignment to lightDirs
+""")
 
 ## ALBEIDO
 # Different ways to determine the albeido of the mesh. The material
