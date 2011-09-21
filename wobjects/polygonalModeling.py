@@ -757,9 +757,6 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             else:
                 raise ValueError('Invalid value for cullFaces')
     
-    # todo: make sure that the glColor() call is done right everywhere.
-    # -> my Linux pyopengl implementation does not work if given a list
-    
     @property
     def faceShader(self):
         """ Get the shader object for the faces. This can 
