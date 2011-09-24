@@ -622,12 +622,11 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     @PropWithDraw    
     def useNativeShading():
         """ Get/set whether to use the native OpenGl shading. The default
-        is False, which means that GLSL-based shading is used. This is
-        prettier, allows more ways of shading and can be customized by
-        changing the shading code.
+        is False, which means that GLSL-based shading is used, allowing for
+        more advanced shader styles.
         
         Note that regardless of the value of this property, native shading
-        can be used if the hardward does not support GLSL (OpenGl version<2).
+        is used if the hardward does not support GLSL (OpenGl version<2).
         """
         def fget(self):
             return self._useNativeShading
@@ -683,7 +682,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         
         Notes
         -----
-        In native mode 'smooth' and 'toon' fall back to 'gouraud'.
+        In native mode 'smooth' falls back to 'gouraud'.
         In both native and nonnative mode the blinn-phong reflectance model 
         is used. 
         """
