@@ -130,7 +130,7 @@ class Shader(object):
     def Enable(self):
         """ Enable()
         
-        Enable this shader. This does  number of things:
+        Enable this shader. This does a number of things:
           * Update source code of vertex and fragment shader (if necessary).
           * Compile and bind shader programs (if necessary).
           * Enables the glsl program.
@@ -313,6 +313,7 @@ class Shader(object):
             elif isinstance(value[0], int):
                 self.program.SetUniformi(name, value)        
         elif isinstance(value, vv.core.baseTexture.TextureObject):
+            #print 'uniform texture', name, 'at', self._textureId
             # Enable and register as uniform
             value.Enable(self._textureId)
             self.program.SetUniformi(name, [self._textureId])
