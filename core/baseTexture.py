@@ -204,6 +204,13 @@ class TextureObject(object):
                 # Only if not in failure mode
                 self._uploadFlag = abs(self._uploadFlag)
         
+        # Store texture-Unit-id, and activate. Do before calling _setDataNow!
+        if texUnit >= 0:
+            self._texUnit = texUnit
+            self._useTexUnit = getOpenGlCapable('1.3')        
+            if self._useTexUnit:
+                gl.glActiveTexture( gl.GL_TEXTURE0 + texUnit )   # Opengl v1.3
+        
         # If we should upload/update, do that now. (SetData also sets the flag)
         if self._uploadFlag > 0:
             self._SetDataNow()
@@ -215,14 +222,8 @@ class TextureObject(object):
                 print "Warning enabling texture, the texture is not valid."+tmp
             return
         
+        # Enable texturing, and bind to texture
         if texUnit >= 0:
-            # Store texture-Unit-id, and activate 
-            self._texUnit = texUnit
-            self._useTexUnit = getOpenGlCapable('1.3')        
-            if self._useTexUnit:
-                gl.glActiveTexture( gl.GL_TEXTURE0 + texUnit )   # Opengl v1.3
-            
-            # Enable texturing, and bind to texture
             gl.glEnable(self._texType)
             gl.glBindTexture(self._texType, self._texId)
     
