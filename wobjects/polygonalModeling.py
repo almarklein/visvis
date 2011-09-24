@@ -872,7 +872,8 @@ class Mesh(Wobject, BaseMesh, Colormapable):
                 gl.glDepthMask(False)
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
                 gl.glLineWidth(3.5)
-                self._Draw('plain', self._edgeColor, self.shapeShader)
+                clr = 0.0, 0.0, 0.0
+                self._Draw('plain', clr, self.shapeShader)
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
                 gl.glDepthMask(True)
             if True:
