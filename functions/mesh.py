@@ -23,6 +23,7 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
         The faces given in terms of the vertex indices.  Should be 1D, in
         which case the indices are grouped into groups of verticesPerFace,
         or Mx3 or Mx4, in which case verticesPerFace is ignored.
+        The front of the face is defined using the right-hand-rule.
     normals : Nx3
         A list of vectors specifying the vertex normals.
     values : N, Nx2, Nx3, or Nx4 array

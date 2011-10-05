@@ -337,6 +337,8 @@ class BaseMesh(object):
         a Nx3 numpy array, or a Nx4 numpy array. In the latter two cases
         the type is set to GL_TRIANGLES or GL_QUADS respectively.
         
+        The front of the face is defined using the right-hand-rule.
+        
         """
         
         # Check and store faces
@@ -417,6 +419,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         Defines the faces. If this array is Nx3 or Nx4, verticesPerFace is
         inferred from this array. Faces should be of uint8, uint16 or
         uint32 (if it is not, the data is converted to uint32).
+        The front of the face is defined using the right-hand-rule.
     normals :(optional) Nx3 numpy array
         The vertex normals. If not given, they are calcululated
         from the vertices.
@@ -733,11 +736,11 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     @PropWithDraw
     def cullFaces():
-        """ Get/Set the culling of faces. 
-        Values can be 'front', 'back', or Non
-        e (default). If 'back', 
+        """ Get/Set the culling of faces.
+        Values can be 'front', 'back', or None (default). If 'back', 
         backfacing faces are not drawn. If 'front', frontfacing faces
-        are not drawn. 
+        are not drawn. The front of the face is defined using the 
+        right-hand-rule.
         """
         def fget(self):
             D = {gl.GL_FRONT:'front', gl.GL_BACK:'back', None:None}
@@ -826,7 +829,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         """
         
         # Get vertices and remove nans
-        vertices = self._vertices
+        vertices = self._vertices.copy()
         I = np.isnan(vertices[:,2]); vertices[I,0] = np.nan
         I = np.isnan(vertices[:,1]); vertices[I,0] = np.nan
         I = (1-np.isnan(vertices[:,0])).astype(np.bool)
@@ -977,13 +980,14 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         
         
         # Set culling (take data aspect into account!)
+        # From visvis v1.6 we use the right hand rule (CCW)
         axes = self.GetAxes()
         tmp = 1
         if axes:
             for i in axes.daspect:
                 if i<0:
                     tmp *= -1
-        gl.glFrontFace({1:gl.GL_CW, -1:gl.GL_CCW}[tmp])
+        gl.glFrontFace({1:gl.GL_CCW, -1:gl.GL_CW}[tmp])
         if self._cullFaces:
             gl.glEnable(gl.GL_CULL_FACE)
             gl.glCullFace(self._cullFaces)

@@ -267,8 +267,10 @@ def lineToMesh(pp, radius, vertex_num, values=None):
     # almost done, determine quad faces ...
     
     # define single faces
-    firstFace = [0, 1, vertex_num+1, vertex_num]    
-    lastFace = [vertex_num-1, 0, vertex_num, 2*vertex_num-1]
+    #firstFace = [0, 1, vertex_num+1, vertex_num]    
+    #lastFace = [vertex_num-1, 0, vertex_num, 2*vertex_num-1]
+    firstFace = [vertex_num, vertex_num+1, 1, 0]    
+    lastFace = [2*vertex_num-1, vertex_num, 0, vertex_num-1]
     
     # define single round    
     oneRound = []
