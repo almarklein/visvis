@@ -49,6 +49,15 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
     if axes is None:
         axes = vv.gca()
     
+    # Accept basemesh instances
+    if isinstance(vertices, vv.BaseMesh):
+        other = vertices
+        vertices = other._vertices
+        faces = other._faces
+        normals = other._normals
+        values = other._values
+        verticesPerFace = other._verticesPerFace
+    
     # Check that vertices is (converted to) a Nx3 array; otherwise user
     # will see odd behavior from Mesh
     try:
