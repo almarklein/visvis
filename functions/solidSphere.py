@@ -144,7 +144,8 @@ def solidSphere(translation=None, scaling=None, direction=None, rotation=None,
     indices = []
     for j in range(M):
         for i in range(N):
-            indices.extend([j*sl+i, j*sl+i+1, (j+1)*sl+i+1, (j+1)*sl+i])
+            #indices.extend([j*sl+i, j*sl+i+1, (j+1)*sl+i+1, (j+1)*sl+i])
+            indices.extend([(j+1)*sl+i, (j+1)*sl+i+1, j*sl+i+1, j*sl+i])
     
     # Make indices a numpy array
     indices = np.array(indices, dtype=np.uint32)

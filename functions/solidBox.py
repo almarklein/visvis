@@ -56,17 +56,17 @@ def solidBox(translation=None, scaling=None, direction=None, rotation=None,
     normals = Pointset(3)
     
     # Create vertices
-    for i in [0,1,2,3]: # Top
+    for i in [3,2,1,0]: # Top
         vertices.append(pp[i]); normals.append(0,0,-1)
-    for i in [4,5,6,7]: # Bottom
+    for i in [7,6,5,4]: # Bottom
         vertices.append(pp[i]); normals.append(0,0,+1)
-    for i in [3,2,6,5]: # Front
+    for i in [5,6,2,3]: # Front
         vertices.append(pp[i]); normals.append(0,+1,0)
-    for i in [0,4,7,1]: # Back
+    for i in [1,7,4,0]: # Back
         vertices.append(pp[i]); normals.append(0,-1,0)
-    for i in [0,3,5,4]: # Left
+    for i in [4,5,3,0]: # Left
         vertices.append(pp[i]); normals.append(-1,0,0)
-    for i in [1,7,6,2]: # Right
+    for i in [2,6,7,1]: # Right
         vertices.append(pp[i]); normals.append(+1,0,0)
     
     

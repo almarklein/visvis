@@ -81,8 +81,8 @@ def calculateNormals(mesh):
 #     print np.isnan(normals).sum(), 'nans'
 #     print 'calculated normals in ', time.time()-t0
     
-    # Store normals (need to flip sign)
-    mesh._normals = normals
+    # Store normals (need to flip sign to follow the right hand rule)
+    mesh._normals = -normals
 
 
 def _vectorsToNormals(a, b, faces, normals):
@@ -101,19 +101,17 @@ def _vectorsToNormals(a, b, faces, normals):
         # Fast and dirty: if an index in faces occurs twice in the same
         # position (0,1,or 2) then only the final one is added.
         # Thanks to Robert Schroll for pointing this out
-        normals[faces[:,0]] += normalsPerFace
-        normals[faces[:,1]] += normalsPerFace
-        normals[faces[:,2]] += normalsPerFace
+        for f in range(faces.shape[1]):
+            normals[faces[:,f]] += normalsPerFace
     else:
         # The right (but slower) way. We could make a cython function of this.
         # On the teapot (6000+ faces) this takes less then 0.1 secs on my
         # i3 laptop. Since this only has to be done once for each Mesh object,
         # that's not too bad, but waiting for over a second can become 
         # iritating.
-        for i in xrange(faces.shape[0]):
-            normals[faces[i,0]] += normalsPerFace[i]
-            normals[faces[i,1]] += normalsPerFace[i]
-            normals[faces[i,2]] += normalsPerFace[i]
+        for f in range(faces.shape[1]):
+            for i in xrange(faces.shape[0]):
+                normals[faces[i,f]] += normalsPerFace[i]
 
 
 def calculateNormals_old(mesh):

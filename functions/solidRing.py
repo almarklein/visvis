@@ -92,7 +92,8 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
     indices = []
     for j in range(N):
         for i in range(M):
-            indices.extend([j*sl+i, j*sl+i+1, (j+1)*sl+i+1, (j+1)*sl+i])
+            #indices.extend([j*sl+i, j*sl+i+1, (j+1)*sl+i+1, (j+1)*sl+i])
+            indices.extend([(j+1)*sl+i, (j+1)*sl+i+1, j*sl+i+1, j*sl+i])
     
     # Make indices a numpy array
     indices = np.array(indices, dtype=np.uint32)
