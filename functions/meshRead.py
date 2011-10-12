@@ -4,6 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
+import os
 import visvis as vv
 import visvis.io.stl
 import visvis.io.wavefront
@@ -56,6 +57,15 @@ def meshRead(fname, check=False):
     
     """
     
+    if not os.path.isfile(fname):
+        # try loading from the resource dir
+        path = visvis.misc.getResourceDir()
+        fname2 = os.path.join(path, fname)
+        if os.path.isfile(fname2):
+            fname = fname2
+        else:
+            raise IOError("Mesh file '%s' does not exist." % fname)
+    
     # Use file extension to read file
     if fname.lower().endswith('.stl'):
         readFunc = vv.io.stl.StlReader.read
@@ -72,10 +82,8 @@ def meshRead(fname, check=False):
     
 if __name__ == '__main__':
     
-    bm = meshRead('/home/almar/projects/test.ssdf')
+    bm = meshRead('bunny.ssdf')
     
     vv.figure(1); vv.clf()
     a = vv.subplot(121)
     m = vv.mesh(bm)
-    #a.SetLimits()
-    

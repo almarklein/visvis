@@ -87,7 +87,7 @@ class WavefrontReader(object):
         """
         
         # Read line
-        line = self._f.readline().decode('ascii')
+        line = self._f.readline().decode('ascii', 'ignore')
         if not line:
             raise EOFError()
         line = line.strip()
@@ -207,6 +207,8 @@ class WavefrontReader(object):
         if self._faces:
             self._faces = np.array(self._faces, 'uint32')
         else:
+            # Use vertices only
+            self._vertices = np.array(self._v, 'float32')
             self._faces = None
         
         return vv.BaseMesh(self._vertices, self._faces, self._normals, self._texcords)
