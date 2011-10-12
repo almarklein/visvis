@@ -200,7 +200,7 @@ class StlAsciiReader(StlReader):
         """
         line = ''
         while not line:
-            line = self._f.readline().decode('ascii').strip()
+            line = self._f.readline().decode('ascii', 'ignore').strip()
         return line
     
     
