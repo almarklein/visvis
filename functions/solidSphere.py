@@ -20,7 +20,7 @@ def getSphere(ndiv=3, radius=1.0):
     
     # Creta vdata
     vdata = Pointset(3)
-    app = vdata.Append
+    app = vdata.append
     app(-X, 0.0, Z); app(X, 0.0, Z); app(-X, 0.0, -Z); app(X, 0.0, -Z)
     app(0.0, Z, X); app(0.0, Z, -X); app(0.0, -Z, X); app(0.0, -Z, -X)
     app(Z, X, 0.0); app(-Z, X, 0.0); app(Z, -X, 0.0); app(-Z, -X, 0.0)
@@ -58,9 +58,9 @@ def getSphere(ndiv=3, radius=1.0):
     
     # Create vertices
     for i in range(20):
-        drawtri(    vdata[tindices[i][0]], 
-                    vdata[tindices[i][1]], 
-                    vdata[tindices[i][2]], 
+        drawtri(    vdata[int(tindices[i][0])], 
+                    vdata[int(tindices[i][1])], 
+                    vdata[int(tindices[i][2])], 
                     ndiv )
     
     # Create normals and scale vertices
