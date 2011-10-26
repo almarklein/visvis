@@ -251,7 +251,7 @@ class StatData:
         
         # Get number of bins according to Freedman-Diaconis rule
         bin_size = 2 * self.IQR * data.size**(-1.0/3)
-        nbins = self.drange / bin_size
+        nbins = self.drange / (bin_size+0.001)
         nbins = max(minbins, min(maxbins, int(nbins)))
         
         # Done

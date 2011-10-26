@@ -43,7 +43,7 @@ def combineMeshes(meshes):
     
     # Combine faces
     faces = None
-    if hasNormals:
+    if hasFaces:
         facesList = []
         startIndex = 0
         for mesh in meshes:            

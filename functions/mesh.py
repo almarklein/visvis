@@ -50,10 +50,11 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
     
     # Check that vertices is (converted to) a Nx3 array; otherwise user
     # will see odd behavior from Mesh
-    try:
-        vertices = checkDimsOfArray(vertices, 3)
-    except ValueError:
-        raise ValueError('vertices must be Nx3 array.')
+    if not isinstance(vertices, vv.BaseMesh):
+        try:
+            vertices = checkDimsOfArray(vertices, 3)
+        except ValueError:
+            raise ValueError('vertices must be Nx3 array.')
     
     # Set the method for coloring
     if values is not None:
