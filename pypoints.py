@@ -972,7 +972,10 @@ class Pointset(BasePoints):
             return Point( self.data[index] )
         else: 
             # Probably some other form of subslicing
-            return Pointset( self.data[index])
+            try:
+                return Pointset( self.data[index])
+            except Exception:
+                return Point( self.data[index])
     
     
     def __delitem__(self, index):
