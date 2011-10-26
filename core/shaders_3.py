@@ -411,7 +411,7 @@ SH_3F_STYLE_ISO = ShaderCodePart('renderstyle', 'iso',
         color3.a += a; // color3.a counts total color contribution.
         
         // Set depth
-        iter_depth_f =  float(i);
+        iter_depth_f = iter_depth_f + float(iter_depth_f==0.0) * float(i);
         
         // Break
         nsamples += 1;
@@ -430,7 +430,9 @@ SH_3F_STYLE_ISO = ShaderCodePart('renderstyle', 'iso',
     
     // Set color
     color3.rgb /= color3.a;
-    color3.a = float(iter_depth_f>0.0);
+    color3.a = min(1.0, color3.a);
+    if (iter_depth_f == 0.0) // discard fragment if we encountered nothing
+        color3 = vec4(0.0, 0.0, 0.0, 0.0);
     gl_FragColor = color3;
     // --post-loop--
     
@@ -472,7 +474,7 @@ SH_3F_STYLE_LITRAY = ShaderCodePart('renderstyle', 'litray',
     color3.a += a; // color3.a counts total color contribution.
     
     // Set depth
-    iter_depth_f =  float(iter_depth==0.0) * float(color3.a>0) * float(i);
+    iter_depth_f = iter_depth_f + float(iter_depth_f==0.0) * float(color3.a>0.5) * float(i);
     // --in-loop--
     
     >>--post-loop--
