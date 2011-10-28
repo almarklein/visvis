@@ -5,6 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import numpy as np
+import visvis as vv
 from visvis.pypoints import Point, Pointset
 from visvis.wobjects.polygonalModeling import BaseMesh
 
