@@ -64,7 +64,7 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
         try:
             vertices = checkDimsOfArray(vertices, 3)
         except ValueError:
-            raise ValueError('vertices must be Nx3 array.')
+            raise ValueError("Vertices should represent an array of 3D vertices.")
     
     # Set the method for coloring
     if values is not None:

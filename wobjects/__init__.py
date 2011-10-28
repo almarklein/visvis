@@ -15,6 +15,7 @@ inserted in the root visvis namespace.
 from visvis.core import (   Wobject, Line, PolarLine, Text )
 
 from visvis.wobjects.textures import BaseTexture, Texture2D, Texture3D
+from visvis.wobjects.textures import MotionTexture2D, MotionTexture3D
 from visvis.wobjects.sliceTextures import SliceTexture, SliceTextureProxy
 from visvis.wobjects.polygonalModeling import Mesh, OrientableMesh
-from visvis.wobjects.motion import MotionDataContainer
+from visvis.wobjects.motion import MotionDataContainer, MotionMixin, MotionSyncer

@@ -39,6 +39,8 @@ def checkDimsOfArray(value, *ndims):
         return value.data
     
     # Try to coerce to numpy array; raise ValueError if anything goes wrong
+    if value is None:
+        raise ValueError('Values for mesh is None.')
     if not isinstance(value, np.ndarray):
         try:
             value = np.array(value, dtype=np.float32)
@@ -128,7 +130,7 @@ class BaseMesh(object):
         self.SetVertices(vertices)
         self.SetFaces(faces)
         self.SetNormals(normals)
-        self.SetValues(values)
+        self.SetValues(values, True) # And set clim to minmax
     
     
     def _test_if_argumens_use_new_style(self, *args, **kwargs):
@@ -240,20 +242,24 @@ class BaseMesh(object):
     
     
     @DrawAfter
-    def SetValues(self, values):
-        """ SetValues(values)
+    def SetValues(self, values, setClim=False):
+        """ SetValues(values, setClim=False)
         
         Set the value data for each vertex. This can be given as:
           * Nx1 array, representing the indices in a colormap
           * Nx2 array, representing the texture coordinates in a texture
           * Nx3 array, representing the RGB values at each vertex
-          * Nx4 array, representing the RGBA va;ues at each vertex
+          * Nx4 array, representing the RGBA values at each vertex
         
         Use None as an argument to remove the values data.
         
         """
+        # _values is the original supplied array (but as float32 or float64)
+        # _values2 is the one used for visualization, corrected by clim
+        
         if values is None:
             self._values = None # User explicitly wants to disable values
+            self._values2 = None
             return
         
         # Make numpy array
@@ -283,15 +289,20 @@ class BaseMesh(object):
             elif values.dtype == np.uint8:
                 values = values.astype(np.float32) / 256.0
             else:
-                mi, ma = minmax(values)
-                values = (values.astype(np.float32) - mi) / (ma-mi)
+                #mi, ma = minmax(values)
+                #values = (values.astype(np.float32) - mi) / (ma-mi)
+                # The clim makes sure the data is scaled
+                values = values.astype(np.float32)
         
         # Store
         self._values = values
         
-        # A bit of a hack... reset clim for Mesh class
+        # A bit of a hack... reset clim for Mesh class so that values2 is created
         if isinstance(self, Colormapable):
-            self.clim = minmax(values)
+            if setClim:
+                self.clim = minmax(values)
+            else:
+                self.clim = self.clim
     
     
     @DrawAfter
@@ -395,7 +406,7 @@ class BaseMesh(object):
 import visvis.processing as processing
 
 class Mesh(Wobject, BaseMesh, Colormapable):
-    """ Mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3)
+    """ Mesh(parent, vertices, faces=None, normals=None, values=None, verticesPerFace=3)
     
     A mesh is a generic object to visualize a 3D object made up of 
     polygons. These polygons can be triangles or quads. The mesh
@@ -930,22 +941,27 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         useTexCords = False
         SH_ALBEIDO = shaders.SH_MF_ALBEIDO_UNIT
         if self._values is not None:
-            values = self._values
+            values = values2 = self._values
             if self._values2 is not None:
-                values = self._values2
+                values2 = self._values2
             if values.shape[1] == 1:
+                # Colormap: use values2
+                values = values2 
                 useTexCords = True
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, values)
                 shader.SetUniform('colormap', self._colormap)
                 SH_ALBEIDO = shaders.SH_MF_ALBEIDO_LUT1
             elif values.shape[1] == 2 and self._texture is not None:
+                # texcords, use original values
                 useTexCords = True
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointerf(values)
                 shader.SetUniform('texture', self._texture)
                 SH_ALBEIDO = shaders.SH_MF_ALBEIDO_LUT2
             elif values.shape[1] in [3,4]:
+                # Color, use values2
+                values = values2 
                 gl.glEnable(gl.GL_COLOR_MATERIAL)
                 gl.glColorMaterial(gl.GL_FRONT_AND_BACK,
                                     gl.GL_AMBIENT_AND_DIFFUSE)

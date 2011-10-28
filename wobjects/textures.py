@@ -32,6 +32,7 @@ from visvis.core.misc import Transform_Translate, Transform_Scale
 from visvis.core import shaders
 #
 from visvis.core import TextureObject
+from visvis.wobjects.motion import MotionMixin
 
 
 # A correction for the clim. For a datatype of uint8, the fragents
@@ -193,138 +194,6 @@ class TextureObjectToVisualize(TextureObject):
         scale = self._climRef.range / r1
         bias = (self._climRef.min - self._clim.min) / r2    
         return scale, bias
-
-
-class DeformTexture(TextureObjectToVisualize):
-    """ DeformTexture(*deforms)
-    
-    Texture to manage a deformation that can be applied to a 
-    texture or mesh.
-    
-    """
-    def __init__(self, *deforms):
-        ndim = len(deforms)
-#         TextureObject.__init__(self, ndim)
-        
-        self._interpolate = True
-        
-        # Build single texture
-        new_shape = deforms[0].shape+(ndim,)
-        deform = np.zeros(new_shape, 'float32')
-        for i in range(ndim):
-            if ndim==1:
-                deform[:,i] = deforms[i]
-            elif ndim==2:
-                deform[:,:,i] = deforms[i]
-            elif ndim==3:
-                deform[:,:,:,i] = deforms[i]
-            else:
-                raise ValueError('DeformTexture only supports 1D, 2D and 3D.')
-        
-        # Store        
-        TextureObjectToVisualize.__init__(self, ndim, deform, True)
-        self.SetData(deform)
-        
-        #self._climRef.Set(*minmax(data)) # Done in TextureObjectToVisualize.__init__
-        #self._clim = shape
-    
-    
-    def _ScaleBias_init(self, datatype):
-        """ Given the climRef (which is set to data.min() and data.max())
-        in constructor, set the scale 
-        and bias for copying data to opengl memory. Correct for the dataype.
-        Also set the default value for clim to the full data range.
-        
-        More info: OpenGL will map the full range of the datatype
-        to 0:1 for unsigned datatypes, and to -1:1 for signed datatypes.
-        For floats, 0:1 is mapped to 0:1. We modify the scale, such that
-        the full range of the data (not the datatype) is scaled between 0:1.
-        This way we can also visualize float data with values other than 0:1.
-        """
-        # store data range as a reference and init clim with that
-        #self._clim = self._climRef.Copy()
-        # calculate scale and bias
-        ran = max(-self._climRef.min, self._climRef.max)
-        if ran==0:
-            ran = 1.0
-        scale = climCorrection[datatype] / ran
-        bias = -self._climRef.min / ran
-        # set transfer functions
-        gl.glPixelTransferf(gl.GL_RED_SCALE, scale)
-        gl.glPixelTransferf(gl.GL_GREEN_SCALE, scale)
-        gl.glPixelTransferf(gl.GL_BLUE_SCALE, scale)
-#         gl.glPixelTransferf(gl.GL_RED_BIAS, bias)
-#         gl.glPixelTransferf(gl.GL_GREEN_BIAS, bias)
-#         gl.glPixelTransferf(gl.GL_BLUE_BIAS, bias)
-
-    def _ScaleBias_get(self):
-        """ Given clim, get scale and bias to apply in shader."""
-#         # ger ranges and correct if zero
-#         r1, r2 = self._clim.range, self._climRef.range
-#         if r1==0:
-#             r1 = 1.0
-#         if r2==0:
-#             r2 = 1.0
-#         # calculate scale and bias
-#         scale = self._climRef.range / r1
-#         bias = 0.0#(self._climRef.min - self._clim.min) / r2    
-#         return scale, bias
-        ran = max(-self._climRef.min, self._climRef.max)
-        if ran==0:
-            ran = 1.0
-        scale =  ran
-        return scale, 0.0
-    
-    
-#     def _UploadTexture(self, data, *args):
-#         """ "Overloaded" method to upload texture data
-#         """
-#         
-#         # Set alignment to 1. It is 4 by default, but my data array has no
-#         # strides, so in order for the image not to be distorted, I set it 
-#         # to 1. I assume graphics cards can still render in hardware. If 
-#         # not, I would have to add one or two rows to my data instead.
-#         gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT,1)
-#         
-#         # init transferfunctions and set clim to full range
-# #         self._ScaleBias_init(data.dtype.name)
-#         
-#         # create texture
-#         TextureObject._UploadTexture(self, data, *args)
-#         
-#         # set interpolation and extrapolation parameters            
-#         tmp1 = gl.GL_NEAREST
-#         tmp2 = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
-#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MIN_FILTER, tmp1)
-#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MAG_FILTER, tmp2)
-#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
-#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
-#         
-#         # reset transfer
-# #         self._ScaleBias_afterUpload()
-#         
-#         # Set clamping. When testing the raycasting, comment these lines!
-#         if self._ndim==3:
-#             gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
-#             gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
-#             gl.glTexParameteri(self._texType, gl.GL_TEXTURE_WRAP_R, gl.GL_CLAMP)
-#     
-#     def _UpdateTexture(self, data, *args):
-#         """ "Overloaded" method to update texture data
-#         """
-#         
-#         # init transferfunctions and set clim to full range
-# #         self._ScaleBias_init(data.dtype.name)
-#         
-#         # create texture
-#         TextureObject._UpdateTexture(self, data, *args)
-#         
-#         # Update interpolation
-#         tmp = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
-#         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MAG_FILTER, tmp)
-#         
-#         # reset transfer
-# #         self._ScaleBias_afterUpload()
 
 
 class BaseTexture(Wobject, Colormapable):
@@ -1130,6 +999,94 @@ class Texture3D(BaseTexture):
             value = float(value)
             # store
             self._isoThreshold = value
+
+
+
+def _interpolateMotionData(self, ii, ww):
+    # Get data via interpolation
+    data = None
+    for i,w in zip(ii, ww):
+        if w != 0:
+            if data is None:
+                data = self._motionData[i] * w
+            else:
+                data += self._motionData[i] * w
+    return data
+
+
+class MotionTexture2D(Texture2D, MotionMixin):
+    """ MotionTexture2D(parent, data)
+    
+    A data type that represents a 2D texture in motion.
+    The given data must be a list of the images that should be shown.
+    
+    The motionIndex (i.e. time) can also be in between two
+    images, in which case interpolation is applied (default linear).
+    
+    """
+    
+    def __init__(self, parent, data, *args, **kwargs):
+        Texture2D.__init__(self, parent, data[0], *args, **kwargs)
+        MotionMixin.__init__(self)
+        
+        # Store motion data
+        self._motionData = [d for d in data]
+    
+    def _GetMotionCount(self):
+        """ _getMotionCount()
+        
+        Get the number of textures that make up the motion texture.
+        
+        """
+        return len(self._motionData)
+  
+    def _SetMotionIndex(self, index, ii, ww):
+        """ _setMotionIndex(index, ii, ww)
+        
+        Make the right child visible.
+        
+        """
+        data = _interpolateMotionData(self, ii, ww)
+        self.SetData(data)
+
+
+class MotionTexture3D(Texture3D, MotionMixin):
+    """ MotionTexture2D(parent, data)
+    
+    A data type that represents a 3D texture in motion.
+    The given data must be a list of the volumes that should be shown.
+    
+    The motionIndex (i.e. time) can also be in between two
+    images, in which case interpolation is applied (default linear).
+    
+    Note that this can be rather slow. For faster display of
+    multiple images, one can also use the MotionDataContainer.
+    
+    """
+    
+    def __init__(self, parent, data, *args, **kwargs):
+        Texture3D.__init__(self, parent, data[0], *args, **kwargs)
+        MotionMixin.__init__(self)
+        
+        # Store motion data
+        self._motionData = [d for d in data]
+    
+    def _GetMotionCount(self):
+        """ _getMotionCount()
+        
+        Get the number of textures that make up the motion texture.
+        
+        """
+        return len(self._motionData)
+  
+    def _SetMotionIndex(self, index, ii, ww):
+        """ _setMotionIndex(index, ii, ww)
+        
+        Make the right child visible.
+        
+        """
+        data = _interpolateMotionData(self, ii, ww)
+        self.SetData(data)
 
 
 class MultiTexture3D(Texture3D):
