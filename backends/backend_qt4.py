@@ -306,11 +306,7 @@ class App(events.App):
     """
     
     def __init__(self):
-        # Instantiate timer
-        self._timer = QtCore.QTimer()
-        self._timer.setInterval(10)
-        self._timer.setSingleShot(False)
-        self._timer.timeout.connect(events.processVisvisEvents)
+        self._timer = None
     
     def _GetNativeApp(self):
         # Get native app in save way
@@ -319,7 +315,13 @@ class App(events.App):
         # or an application may produce error when closed
         QtGui._qApp = app
         # Start timer
-        self._timer.start()
+        if self._timer is None:
+            # Instantiate timer
+            self._timer = QtCore.QTimer()
+            self._timer.setInterval(10)
+            self._timer.setSingleShot(False)
+            self._timer.timeout.connect(events.processVisvisEvents)
+            self._timer.start()
         # Return
         return app
     
