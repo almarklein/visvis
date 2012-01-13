@@ -106,7 +106,7 @@ SH_2F_BASE = ShaderCodePart('base', '2D-fragment-default',
         {
             for (int x=-sze; x<sze+1; x++)
             {   
-                float k = kernel[abs(x)] * kernel[abs(y)];
+                float k = kernel[int(abs(x))] * kernel[int(abs(y))];
                 vec2 dpos = vec2(float(x)*dx, float(y)*dy);
                 color1 += texture2D(texture, pos+dpos) * k;
             }

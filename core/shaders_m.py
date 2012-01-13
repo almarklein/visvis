@@ -109,7 +109,7 @@ _SH_LIGHT = """
     vec3 L;
     
     // Flip normal so it points towards viewer
-    float Nselect = float(dot(N,V) > 0);
+    float Nselect = float(dot(N,V) > 0.0);
     N = (2.0*Nselect - 1.0) * N;  // ==  Nselect * N - (1.0-Nselect)*N;
     
     int nlights = 1;
