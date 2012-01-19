@@ -52,6 +52,7 @@ class MotionMixin(object):
         def fset(self, value):
             self._motionIsCyclic = bool(value)
             self.motionIndex = self.motionIndex
+        return locals()
     
     
     @property
@@ -107,6 +108,8 @@ class MotionMixin(object):
             
             # Apply
             self._SetMotionIndex(self._motionIndex, ii, ww)
+        
+        return locals()
     
     
     def _MotionCorrectIndex(self, i, N, cyclic):
@@ -207,6 +210,7 @@ class MotionMixin(object):
             else:
                 raise ValueError('motionSplineType must be scalar or string.')
             self.motionIndex = self.motionIndex
+        return locals()
     
     
     def _MotionGetCoeff(self, t, spline_type):

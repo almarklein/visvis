@@ -337,6 +337,7 @@ class SliceTexture(BaseTexture):
             # Set and update
             self._index = value
             self._SetData(self._dataRef3D)
+        return locals()
     
     
     @PropWithDraw 
@@ -352,6 +353,7 @@ class SliceTexture(BaseTexture):
             # Set and update index (can now be out of bounds.
             self._axis = value
             self.index = self.index
+        return locals()
     
     
     @PropWithDraw 
@@ -362,6 +364,7 @@ class SliceTexture(BaseTexture):
             return self._edgeColor
         def fset(self, value):
             self._edgeColor = getColor(value)
+        return locals()
     
     
     @PropWithDraw 
@@ -372,7 +375,8 @@ class SliceTexture(BaseTexture):
             return self._edgeColor2
         def fset(self, value):
             self._edgeColor2 = getColor(value)
-
+        return locals()
+    
 
 class SliceTextureProxy(Wobject, Colormapable):
     """ SliceTextureProxy(*sliceTextures)
@@ -428,6 +432,7 @@ class SliceTextureProxy(Wobject, Colormapable):
             return 'None'
         def fset(self, value):
             print 'Warning: SliceTexture instances have no renderStyle.'
+        return locals()
     
     @Property 
     def isoThreshold():
@@ -439,6 +444,7 @@ class SliceTextureProxy(Wobject, Colormapable):
             return 0.0
         def fset(self, value):
             print 'Warning: SliceTexture instances have no isoThreshold.'
+        return locals()
     
     @Property 
     def interpolate():
@@ -450,6 +456,7 @@ class SliceTextureProxy(Wobject, Colormapable):
         def fset(self, value):
             for s in self.children:
                 s.interpolate = value
+        return locals()
     
     @Property 
     def index():
@@ -460,6 +467,7 @@ class SliceTextureProxy(Wobject, Colormapable):
         def fset(self, value):
             for s in self.children:
                 s.index = value
+        return locals()
     
     @Property 
     def axis():
@@ -470,6 +478,7 @@ class SliceTextureProxy(Wobject, Colormapable):
         def fset(self, value):
             for s in self.children:
                 s.axis = value
+        return locals()
     
     @Property 
     def edgeColor():
@@ -480,6 +489,7 @@ class SliceTextureProxy(Wobject, Colormapable):
         def fset(self, value):
             for s in self.children:
                 s.edgeColor = value
+        return locals()
     
     @Property 
     def edgeColor2():
@@ -490,4 +500,4 @@ class SliceTextureProxy(Wobject, Colormapable):
         def fset(self, value):
             for s in self.children:
                 s.edgeColor2 = value
-
+        return locals()

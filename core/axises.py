@@ -61,6 +61,7 @@ class AxisText(Text):
             return self._x
         def fset(self, value):
             self._x = value
+        return locals()
     
     @Property
     def y():
@@ -69,6 +70,7 @@ class AxisText(Text):
             return self._y
         def fset(self, value):
             self._y = value
+        return locals()
     
     @Property
     def z():
@@ -77,6 +79,7 @@ class AxisText(Text):
             return self._z
         def fset(self, value):
             self._z = value
+        return locals()
 
 
 class AxisLabel(AxisText):
@@ -475,6 +478,8 @@ class BaseAxis(base.Wobject):
             return self._showBox
         def fset(self, value):
             self._showBox = bool(value)
+        return locals()
+    
     
     @PropWithDraw
     def axisColor():
@@ -483,6 +488,7 @@ class BaseAxis(base.Wobject):
             return self._axisColor
         def fset(self, value):
             self._axisColor = getColor(value, 'setting axis color')
+        return locals()
     
     
     @PropWithDraw
@@ -492,6 +498,7 @@ class BaseAxis(base.Wobject):
             return self._tickFontSize
         def fset(self, value):
             self._tickFontSize = value
+        return locals()
     
     
     @PropWithDraw
@@ -504,6 +511,7 @@ class BaseAxis(base.Wobject):
             if value not in lineStyles:
                 raise ValueError("Invalid lineStyle for grid lines")
             self._gridLineStyle = value
+        return locals()
     
     
     @PropWithDraw
@@ -513,6 +521,7 @@ class BaseAxis(base.Wobject):
             return self._xgrid
         def fset(self, value):
             self._xgrid = bool(value)
+        return locals()
     
     @PropWithDraw
     def showGridY():
@@ -521,6 +530,7 @@ class BaseAxis(base.Wobject):
             return self._ygrid
         def fset(self, value):
             self._ygrid = bool(value)
+        return locals()
     
     @PropWithDraw
     def showGridZ():
@@ -529,6 +539,7 @@ class BaseAxis(base.Wobject):
             return self._zgrid
         def fset(self, value):
             self._zgrid = bool(value)
+        return locals()
     
     @PropWithDraw
     def showGrid():
@@ -541,6 +552,8 @@ class BaseAxis(base.Wobject):
                 self._xgrid, self._ygrid, self._zgrid = value
             else:
                 self._xgrid = self._ygrid = self._zgrid = bool(value)
+        return locals()
+    
     
     @PropWithDraw
     def showMinorGridX():
@@ -549,6 +562,7 @@ class BaseAxis(base.Wobject):
             return self._xminorgrid
         def fset(self, value):
             self._xminorgrid = bool(value)
+        return locals()
     
     @PropWithDraw
     def showMinorGridY():
@@ -557,6 +571,7 @@ class BaseAxis(base.Wobject):
             return self._yminorgrid
         def fset(self, value):
             self._yminorgrid = bool(value)
+        return locals()
     
     @PropWithDraw
     def showMinorGridZ():
@@ -565,6 +580,7 @@ class BaseAxis(base.Wobject):
             return self._zminorgrid
         def fset(self, value):
             self._zminorgrid = bool(value)
+        return locals()
     
     @PropWithDraw
     def showMinorGrid():
@@ -578,6 +594,7 @@ class BaseAxis(base.Wobject):
             else:
                 tmp = bool(value)
                 self._xminorgrid = self._yminorgrid = self._zminorgrid = tmp
+        return locals()
     
     
     @PropWithDraw
@@ -620,7 +637,8 @@ class BaseAxis(base.Wobject):
                     raise ValueError(m)
             else:
                 raise ValueError(m)
-            
+        return locals()
+    
     
     @PropWithDraw
     def yTicks():
@@ -662,6 +680,8 @@ class BaseAxis(base.Wobject):
                     raise ValueError(m)
             else:
                 raise ValueError(m)
+        return locals()
+    
     
     @PropWithDraw
     def zTicks():
@@ -703,6 +723,7 @@ class BaseAxis(base.Wobject):
                     raise ValueError(m)
             else:
                 raise ValueError(m)
+        return locals()
     
     
     @PropWithDraw
@@ -713,6 +734,7 @@ class BaseAxis(base.Wobject):
             return self._xlabel
         def fset(self, value):
             self._xlabel = value
+        return locals()
     
     @PropWithDraw
     def yLabel():
@@ -722,6 +744,7 @@ class BaseAxis(base.Wobject):
             return self._ylabel
         def fset(self, value):
             self._ylabel = value
+        return locals()
     
     @PropWithDraw
     def zLabel():
@@ -731,6 +754,7 @@ class BaseAxis(base.Wobject):
             return self._zlabel
         def fset(self, value):
             self._zlabel = value
+        return locals()
     
     
     ## Methods for drawing
@@ -930,6 +954,7 @@ class CartesianAxis2D(BaseAxis):
             return self._xTicksAngle
         def fset(self, value):
             self._xTicksAngle = value
+        return locals()
     
     
     def _CreateLinesAndLabels(self, axes):
@@ -2206,6 +2231,7 @@ class PolarAxis2D(BaseAxis):
         def fset(self, value):
             self._angularRefPos = np.pi * int(value) / 180
             self.Draw()
+        return locals()
     
     
     @PropWithDraw
@@ -2225,3 +2251,4 @@ class PolarAxis2D(BaseAxis):
             else:
                 raise Exception("isCW can only be assigned " +
                                 "by a bool (True or False)")
+        return locals()

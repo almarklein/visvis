@@ -164,6 +164,7 @@ class Bars2D(vv.Wobject):
             return self._lc
         def fset(self, value):
             self._lc = vv.misc.getColor(value, 'setting line color')            
+        return locals()
     
     @vv.misc.PropWithDraw
     def lw():
@@ -173,6 +174,7 @@ class Bars2D(vv.Wobject):
             return self._lw
         def fset(self, value):
             self._lw = float(value)
+        return locals()
     
     
     @vv.misc.PropWithDraw
@@ -188,6 +190,7 @@ class Bars2D(vv.Wobject):
         def fset(self, value):
             c = vv.misc.getColor(value)
             self._colors = [c for h in self._hh]
+        return locals()
     
     @vv.misc.PropWithDraw
     def colors():
@@ -200,6 +203,7 @@ class Bars2D(vv.Wobject):
                 raise ValueError('Number of colors should match number of bars.')
             getColor = vv.misc.getColor
             self._colors = [getColor(c) for c in value]
+        return locals()
 
 
 if __name__ == '__main__':

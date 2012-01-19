@@ -39,6 +39,7 @@ class Box(Wibject):
             return self._edgeColor
         def fset(self, value):
             self._edgeColor = misc.getColor(value, 'setting edgeColor')
+        return locals()
     
     @misc.PropWithDraw
     def edgeWidth():
@@ -48,6 +49,7 @@ class Box(Wibject):
             return self._edgeWidth
         def fset(self, value):            
             self._edgeWidth = float(value)
+        return locals()
     
     def _GetBgcolorToDraw(self):
         """ Can be overloaded to indicate mouse over in buttons.         

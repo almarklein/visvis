@@ -229,6 +229,8 @@ class BaseCamera(object):
                 self._daspect = tuple([float(v) for v in value])
             else:            
                 raise Exception("daspect should be a length 2 or 3 sequence!")
+        return locals()
+    
     
     @property
     def daspectNormalized(self):
@@ -247,6 +249,7 @@ class BaseCamera(object):
             self._zoom = float(value)
             for ax in self.axeses:
                 ax.Draw()
+        return locals()
     
     @Property
     def loc():
@@ -264,6 +267,7 @@ class BaseCamera(object):
             self._view_loc = tuple(value)
             for ax in self.axeses:
                 ax.Draw()
+        return locals()
     
     
     def SetLimits(self, xlim, ylim, zlim=None):
@@ -735,6 +739,7 @@ class ThreeDCamera(BaseCamera):
             # Draw
             for ax in self.axeses:
                 ax.Draw()
+        return locals()
     
     @Property
     def elevation():
@@ -754,6 +759,7 @@ class ThreeDCamera(BaseCamera):
             # Draw
             for ax in self.axeses:
                 ax.Draw()
+        return locals()
     
     @Property
     def roll():
@@ -773,6 +779,7 @@ class ThreeDCamera(BaseCamera):
             # Draw
             for ax in self.axeses:
                 ax.Draw()
+        return locals()
     
     @Property
     def fov():
@@ -792,6 +799,7 @@ class ThreeDCamera(BaseCamera):
             # Draw
             for ax in self.axeses:
                 ax.Draw()
+        return locals()
     
     
     def OnResize(self, event):
@@ -1240,6 +1248,7 @@ class FlyCamera(BaseCamera):
             # Draw
             for ax in self.axeses:
                 ax.Draw()
+        return locals()
     
     
     @Property
@@ -1254,6 +1263,7 @@ class FlyCamera(BaseCamera):
             # Draw
             for ax in self.axeses:
                 ax.Draw()
+        return locals()
     
     
     @property

@@ -91,27 +91,47 @@ def Property(function):
     inside the function.
     
     Note that the class to which this is applied must inherit from object!
-    Code from George Sakkis: http://code.activestate.com/recipes/410698/
+    Code based on an example posted by Walker Hale:
+    http://code.activestate.com/recipes/410698/#c6
+    
+    Example
+    -------
+    
+    class Example(object):
+        @Property
+        def myattr():
+            ''' This is the doc string. 
+            '''
+            def fget(self):
+                return self._value
+            def fset(self, value):
+                self._value = value
+            def fdel(self):
+                del self._value
+            return locals()
     
     """
-    # Init
-    keys = 'fget', 'fset', 'fdel'
-    func_locals = {'doc':function.__doc__}
     
-    # Define function to probe the special methods defined in function
-    def probeFunc(frame, event, arg):
-        if event == 'return':
-            locals = frame.f_locals
-            func_locals.update(dict((k,locals.get(k)) for k in keys))
-            sys.settrace(None)
-        return probeFunc
+    # Define known keys
+    known_keys = 'fget', 'fset', 'fdel', 'doc'
     
-    # Probe the function (fills func_locals)
-    sys.settrace(probeFunc)
-    function()
+    # Get elements for defining the property. This should return a dict
+    func_locals = function()
+    if not isinstance(func_locals, dict):
+        raise RuntimeError('Property function should "return locals()".')
+    
+    # Create dict with kwargs for property(). Init doc with docstring.
+    D = {'doc': function.__doc__}
+    
+    # Copy known keys. Check if there are invalid keys
+    for key in func_locals.keys():
+        if key in known_keys:
+            D[key] = func_locals[key]
+        else:
+            raise RuntimeError('Invalid Property element: %s' % key)
     
     # Done
-    return property(**func_locals)
+    return property(**D)
 
 
 def PropWithDraw(function):
@@ -123,35 +143,39 @@ def PropWithDraw(function):
     Same as Property, but calls self.Draw() when using fset.
     
     """
-    # Init
-    keys = 'fget', 'fset', 'fdel'
-    func_locals = {'doc':function.__doc__}
     
-    # Define function to probe the special methods defined in function
-    def probeFunc(frame, event, arg):
-        if event == 'return':
-            locals = frame.f_locals
-            func_locals.update(dict((k,locals.get(k)) for k in keys))
-            sys.settrace(None)
-        return probeFunc
+    # Define known keys
+    known_keys = 'fget', 'fset', 'fdel', 'doc'
     
-    # Probe the function (fills func_locals)
-    sys.settrace(probeFunc)
-    function()
+    # Get elements for defining the property. This should return a dict
+    func_locals = function()
+    if not isinstance(func_locals, dict):
+        raise RuntimeError('Property function should "return locals()".')
+    
+    # Create dict with kwargs for property(). Init doc with docstring.
+    D = {'doc': function.__doc__}
+    
+    # Copy known keys. Check if there are invalid keys
+    for key in func_locals.keys():
+        if key in known_keys:
+            D[key] = func_locals[key]
+        else:
+            raise RuntimeError('Invalid Property element: %s' % key)
     
     # Replace fset
-    fset = func_locals.get('fset',None)
+    fset = D.get('fset', None)
     def fsetWithDraw(self, *args):
         fset(self, *args)
-        self.Draw()
+        if hasattr(self, 'Draw'):
+            self.Draw()
         #print fset._propname, self, time.time()
     if fset:
         fset._propname = function.__name__
-        func_locals['fset'] = fsetWithDraw
+        D['fset'] = fsetWithDraw
     
     # Done
-    return property(**func_locals)
-
+    return property(**D)
+    
 
 def DrawAfter(function):
     """ DrawAfter(function)
@@ -176,37 +200,40 @@ def PropertyForSettings(function):
     fget and fset function. The fset method also calls _Save()
     
     """
-    # Init
-    keys = 'fget', 'fset', 'fdel'
-    func_locals = {'doc':function.__doc__}
     
-    # Define function to probe the special methods defined in function
-    def probeFunc(frame, event, arg):
-        if event == 'return':
-            locals = frame.f_locals
-            func_locals.update(dict((k,locals.get(k)) for k in keys))
-            sys.settrace(None)
-        return probeFunc
+    # Define known keys
+    known_keys = 'fget', 'fset', 'fdel', 'doc'
     
-    # Probe the function (fills func_locals)
-    sys.settrace(probeFunc)
-    function()
+    # Get elements for defining the property. This should return a dict
+    func_locals = function()
+    if not isinstance(func_locals, dict):
+        raise RuntimeError('From visvis version 1.6, Property function should "return locals()".')
+    
+    # Create dict with kwargs for property(). Init doc with docstring.
+    D = {'doc': function.__doc__}
+    
+    # Copy known keys. Check if there are invalid keys
+    for key in func_locals.keys():
+        if key in known_keys:
+            D[key] = func_locals[key]
+        else:
+            raise RuntimeError('Invalid Property element: %s' % key)
     
     # Replace fset and fget
-    fset = func_locals.get('fset',None)
-    fget = func_locals.get('fget',None)
+    fset = D.get('fset', None)
+    fget = D.get('fget', None)
     def fsetWithKey(self, *args):
         fset(self, function.__name__, *args)
         self._Save()
     def fgetWithKey(self, *args):
         return fget(self, function.__name__)
     if fset:
-        func_locals['fset'] = fsetWithKey
+        D['fset'] = fsetWithKey
     if fget:
-        func_locals['fget'] = fgetWithKey
+        D['fget'] = fgetWithKey
     
     # Done
-    return property(**func_locals)
+    return property(**D)
 
 
 ## The range class
@@ -248,6 +275,7 @@ class Range(object):
         def fset(self,value):
             self._min = float(value)
             self._Check()
+        return locals()
     
     @Property # visvis.Property
     def max():
@@ -257,6 +285,7 @@ class Range(object):
         def fset(self,value):
             self._max = float(value)
             self._Check()
+        return locals()
     
     def _Check(self):
         """ Flip min and max if order is wrong. """
@@ -469,6 +498,7 @@ class Settings(object):
                 self._s[key] = value
             else:
                 raise ValueError('Invalid backend specified.')
+        return locals()
     
     @PropertyForSettings
     def preferAlreadyLoadedBackend():
@@ -484,6 +514,7 @@ class Settings(object):
                 return True  # Default value
         def fset(self, key, value):
             self._s[key] = bool(value)
+        return locals()
     
 #     @PropertyForSettings
 #     def defaultInterpolation2D():
@@ -498,6 +529,7 @@ class Settings(object):
 #                 return False  # Default value
 #         def fset(self, key, value):
 #             self._s[key] = bool(value)
+#         return locals()
     
     @PropertyForSettings
     def figureSize():
@@ -514,6 +546,7 @@ class Settings(object):
                 raise ValueError('Figure size must be a 2-element list or tuple.')
             value = [int(i) for i in value]
             self._s[key] = tuple(value)
+        return locals()
     
     @PropertyForSettings
     def volshowPreference():
@@ -533,6 +566,7 @@ class Settings(object):
             if value not in [2,3]:
                 raise ValueError('volshowPreference must be 2 or 3.')
             self._s[key] = int(value)
+        return locals()
     
     @PropertyForSettings
     def defaultFontName():
@@ -549,6 +583,7 @@ class Settings(object):
             if value not in ['mono', 'sans', 'serif']:
                 raise ValueError("defaultFontName must be 'mono', 'sans' or 'serif'.")
             self._s[key] = value
+        return locals()
     
     @PropertyForSettings
     def defaultRelativeFontSize():
@@ -564,6 +599,7 @@ class Settings(object):
                 return 1.0
         def fset(self, key, value):
             self._s[key] = float(value)
+        return locals()
     
     # todo: more? maybe axes bgcolor and axisColor?
 

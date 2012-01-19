@@ -74,6 +74,7 @@ class OrientationForWobjects_mixClass(object):
                 self._scaleTransform.sz = value.z
             else:
                 raise ValueError('Scaling should be a scalar, 3D Point, or 3-element tuple.')
+        return locals()
     
     
     @misc.PropWithDraw
@@ -96,6 +97,7 @@ class OrientationForWobjects_mixClass(object):
                 self._translateTransform.dz = value.z
             else:
                 raise ValueError('Translation should be a 3D Point or 3-element tuple.')
+        return locals()
     
     
     @misc.PropWithDraw
@@ -147,6 +149,7 @@ class OrientationForWobjects_mixClass(object):
                 self._directionTransform.ay = axis.y
                 self._directionTransform.az = axis.z
                 self._directionTransform.angle = angle * 180 / np.pi
+        return locals()
     
     
     @misc.PropWithDraw
@@ -158,3 +161,4 @@ class OrientationForWobjects_mixClass(object):
             return self._rotateTransform.angle
         def fset(self, value):
             self._rotateTransform.angle = float(value)
+        return locals()

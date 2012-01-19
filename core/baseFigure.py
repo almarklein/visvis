@@ -373,6 +373,7 @@ class BaseFigure(_BaseFigure):
             #raise AttributeError("The parent of a figure cannot be set.")
             # do not raise an exception, as the parent is always ste in
             # the constructor of the BaseObject.
+        return locals()
     
     @property
     def nr(self):
@@ -397,6 +398,7 @@ class BaseFigure(_BaseFigure):
                 value = ''
                 self._SetTitle("Figure "+str(self.nr))
             self._title = value
+        return locals()
     
     
     def MakeCurrent(self):
@@ -449,6 +451,9 @@ class BaseFigure(_BaseFigure):
                 self._currentAxes = value.GetWeakref()
             else:
                 raise ValueError('currentAxes must be an Axes instance (or None).')
+        
+        return locals()
+    
     
     @property
     def underMouse(self):
@@ -508,6 +513,8 @@ class BaseFigure(_BaseFigure):
             self._position = base.Position( value[0], value[1], 
                                             value[2], value[3], self)
             self._position._Changed()
+        
+        return locals()
     
     
     def _OnPositionChange(self,event=None):
@@ -558,6 +565,7 @@ class BaseFigure(_BaseFigure):
             # Update all legend objects
             for ob in self.FindObjects(Legend):
                 ob.SetStrings(ob._stringList)
+        return locals()
     
     
     ## Extra methods

@@ -106,6 +106,7 @@ class BaseSlider(Box):
         def fset(self, value):
             self._fullRange = Range(value)
             self._limitRangeAndSetText()
+        return locals()
     
     @PropWithDraw
     def showTicks():
@@ -115,6 +116,7 @@ class BaseSlider(Box):
             return self._showTicks
         def fset(self, value):
             self._showTicks = bool(value)
+        return locals()
     
     
     def _SliderOnEnter(self, event):
@@ -441,6 +443,7 @@ class Slider(BaseSlider):
             #
             self._eventSliderChanged.Set()
             self._eventSliderChanged.Fire()
+        return locals()
     
     def _limitRangeAndSetText(self):
         # Limit
@@ -481,6 +484,7 @@ class RangeSlider(BaseSlider):
             #
             self._eventSliderChanged.Set()
             self._eventSliderChanged.Fire()
+        return locals()
     
     def _limitRangeAndSetText(self):
         # Limit

@@ -529,6 +529,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             return self._ambient
         def fset(self, value):
             self._ambient = _testColor(value)
+        return locals()
     
     
     @PropWithDraw
@@ -546,6 +547,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             return self._diffuse
         def fset(self, value):
             self._diffuse = _testColor(value)
+        return locals()
     
     
     @PropWithDraw
@@ -558,6 +560,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             return self._diffuse
         def fset(self, value):
             self._diffuse = self._ambient = _testColor(value)
+        return locals()
     
     
     @PropWithDraw
@@ -575,6 +578,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             return self._specular
         def fset(self, value):
             self._specular = _testColor(value)
+        return locals()
     
     
     @PropWithDraw
@@ -589,6 +593,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             if value < 0: value = 0
             if value > 128: value = 128
             self._shininess = value
+        return locals()
     
     
     @PropWithDraw
@@ -605,6 +610,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             return self._emission
         def fset(self, value):
             self._emission = _testColor(value)
+        return locals()
     
     
     ## Face and edge shading properties, and culling
@@ -619,6 +625,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             return self._faceColor
         def fset(self, value):
             self._faceColor = _testColor(value, True)
+        return locals()
     
     
     @PropWithDraw
@@ -631,6 +638,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             return self._edgeColor
         def fset(self, value):
             self._edgeColor = _testColor(value, True)
+        return locals()
     
     
     @PropWithDraw    
@@ -646,6 +654,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             return self._useNativeShading
         def fset(self, value):
             self._useNativeShading = bool(value)
+        return locals()
     
     
     @PropWithDraw    
@@ -681,6 +690,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             
             # Apply for shader code
             self._SetShading(self._faceShading, self.faceShader)
+        return locals()
     
     
     @PropWithDraw    
@@ -715,6 +725,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             
             # Apply for shader code
             self._SetShading(self._edgeShading, self.edgeShader)
+        return locals()
     
     
     def _SetShading(self, shading, shader):
@@ -767,6 +778,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
                 self._cullFaces = None
             else:
                 raise ValueError('Invalid value for cullFaces')
+        return locals()
     
     @property
     def faceShader(self):

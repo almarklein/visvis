@@ -383,6 +383,7 @@ class BoxPlot(vv.Wobject):
             lc = vv.misc.getColor(value, 'setting line color')
             for box in self._boxes:
                 box._lc = lc
+        return locals()
     
     @vv.misc.PropWithDraw
     def lw():
@@ -393,6 +394,7 @@ class BoxPlot(vv.Wobject):
         def fset(self, value):
             for box in self._boxes:
                 box._lw = float(value)
+        return locals()
     
     
     @vv.misc.PropWithDraw
@@ -404,6 +406,7 @@ class BoxPlot(vv.Wobject):
         def fset(self, value):
             for box in self._boxes:
                 box.SetWhiskers(value)
+        return locals()
 
 
 if __name__ == '__main__':

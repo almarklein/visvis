@@ -124,6 +124,7 @@ class Light(object):
             return self._color
         def fset(self, value):
             self._color = _testColor(value, True)
+        return locals()
     
     
     @PropWithDraw
@@ -140,6 +141,7 @@ class Light(object):
             return self._ambient
         def fset(self, value):
             self._ambient = _testColor(value)
+        return locals()
     
     
     @PropWithDraw
@@ -153,6 +155,7 @@ class Light(object):
             return self._diffuse
         def fset(self, value):
             self._diffuse = _testColor(value)
+        return locals()
     
     
     @PropWithDraw
@@ -170,6 +173,7 @@ class Light(object):
             return self._specular
         def fset(self, value):
             self._specular = _testColor(value)
+        return locals()
     
     
     @PropWithDraw
@@ -189,6 +193,7 @@ class Light(object):
             else:
                 tmp = "Light position should be a 3 or 4 element sequence."
                 raise ValueError(tmp)
+        return locals()
     
     
     @PropWithDraw
@@ -209,6 +214,7 @@ class Light(object):
             # Set position
             tmp = self._position 
             self._position = tmp[0], tmp[1], tmp[2], fourth
+        return locals()
     
     
     @PropWithDraw
@@ -220,6 +226,7 @@ class Light(object):
             return self._camLight
         def fset(self, value):
             self._camLight = bool(value)
+        return locals()
     
     
     @DrawAfter
