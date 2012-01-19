@@ -413,7 +413,8 @@ class Line(Wobject):
             return self._lw
         def fset(self, value):
             self._lw = self._AsFloat(value, 'lineWidth')
-
+        return locals()
+    
     @PropWithDraw
     def ls():
         """ Get/Set the lineStyle: the style of the line.
@@ -434,7 +435,8 @@ class Line(Wobject):
             elif value not in ['-', '--', ':', '-.', '.-', '+']:
                 raise Exception("Error in lineStyle: unknown line style!")
             self._ls = value
-
+        return locals()
+    
     @PropWithDraw
     def lc():
         """ Get/Set the lineColor: the color of the line, as a 3-element
@@ -446,7 +448,8 @@ class Line(Wobject):
         def fset(self, value):
             value = getColor(value, 'lineColor')
             self._lc = value
-
+        return locals()
+    
 
     @PropWithDraw
     def mw():
@@ -457,7 +460,8 @@ class Line(Wobject):
             return self._mw
         def fset(self, value):
             self._mw = self._AsFloat(value, 'markerWidth')
-
+        return locals()
+    
     @PropWithDraw
     def ms():
         """ Get/Set the markerStyle: the style of the marker.
@@ -481,7 +485,8 @@ class Line(Wobject):
             elif value not in 'sd+x*phfv^><.o':
                 raise Exception("Error in markerStyle: unknown line style!")
             self._ms = value
-
+        return locals()
+    
     @PropWithDraw
     def mc():
         """ Get/Set the markerColor: The color of the face of the marker
@@ -491,7 +496,8 @@ class Line(Wobject):
             return self._mc
         def fset(self, value):
             self._mc = getColor(value, 'markerColor')
-
+        return locals()
+    
     @PropWithDraw
     def mew():
         """ Get/Set the markerEdgeWidth: the width of the edge of the marker.
@@ -501,7 +507,8 @@ class Line(Wobject):
             return self._mew
         def fset(self, value):
             self._mew = self._AsFloat(value, 'markerEdgeWidth')
-
+        return locals()
+    
     @PropWithDraw
     def mec():
         """ Get/Set the markerEdgeColor: the color of the edge of the marker.
@@ -510,7 +517,8 @@ class Line(Wobject):
             return self._mec
         def fset(self, value):
             self._mec = getColor(value, 'markerEdgeColor')
-
+        return locals()
+    
 #     # create aliases
 #     lineWidth = lw
 #     lineStyle = ls
@@ -531,7 +539,8 @@ class Line(Wobject):
             return self._alpha1
         def fset(self, value):
             self._alpha1 = self._AsFloat(value, 'alpha')
-
+        return locals()
+    
     ## Set methods
 
     @DrawAfter

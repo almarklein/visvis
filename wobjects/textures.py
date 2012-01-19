@@ -351,6 +351,7 @@ class BaseTexture(Wobject, Colormapable):
             self._texture1._interpolate = bool(value)
             # Signal update
             self._texture1._uploadFlag = abs(self._texture1._uploadFlag)
+        return locals()
     
     # Overload clim private methods so that the clim property
     # uses the clim of texture1
@@ -621,6 +622,7 @@ class Texture2D(BaseTexture):
                 aa_steps = M[self._aa]
                 # Apply
                 self.shader.fragment.AddOrReplace(aa_steps)
+        return locals()
 
 
 class Texture3D(BaseTexture):
@@ -985,7 +987,7 @@ class Texture3D(BaseTexture):
             # Store style and set color
             self._renderStyle = style
 #             self._fragmentShader.ReplacePart('color', sh_color)
-           
+        return locals()
     
     
     @PropWithDraw
@@ -999,7 +1001,7 @@ class Texture3D(BaseTexture):
             value = float(value)
             # store
             self._isoThreshold = value
-
+        return locals()
 
 
 def _interpolateMotionData(self, ii, ww):

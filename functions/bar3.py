@@ -34,6 +34,7 @@ class Bars3D(vv.Wobject):
         def fset(self, value):
             for child in self.children:
                 child.ambient = value
+        return locals()
     
     @vv.misc.Property
     def diffuse():
@@ -49,6 +50,7 @@ class Bars3D(vv.Wobject):
         def fset(self, value):
             for child in self.children:
                 child.diffuse = value
+        return locals()
     
     @vv.misc.Property
     def specular():
@@ -64,6 +66,7 @@ class Bars3D(vv.Wobject):
         def fset(self, value):
             for child in self.children:
                 child.specular = value
+        return locals()
     
     @vv.misc.Property
     def color():
@@ -78,6 +81,7 @@ class Bars3D(vv.Wobject):
         def fset(self, value):
             for child in self.children:
                 child.faceColor = value
+        return locals()
     
     @vv.misc.Property
     def colors():
@@ -92,7 +96,8 @@ class Bars3D(vv.Wobject):
         def fset(self, value):
             for child, color in zip(self.children, value):
                 child.faceColor = color
-    
+        return locals()
+
 
 
 def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):    

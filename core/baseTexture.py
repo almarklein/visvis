@@ -734,6 +734,7 @@ class Colormapable(object):
             return self._GetColormap()
         def fset(self, value):
             self._SetColormap(value)
+        return locals()
     
     @PropWithDraw
     def clim():
@@ -746,6 +747,7 @@ class Colormapable(object):
             if not isinstance(value, Range):
                 value = Range(value)
             self._SetClim(value)
+        return locals()
     
     def _GetColormap(self):
         return self._colormap.GetMap()

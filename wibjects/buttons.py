@@ -105,6 +105,7 @@ class ToggleButton(PushButton):
             self._Update()
         def fget(self):
             return self._state
+        return locals()
     
     @property
     def eventStateChanged(self):

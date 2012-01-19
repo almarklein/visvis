@@ -376,6 +376,7 @@ class BaseText(object):
                 self._text = value
                 self._Invalidate() # force recalculation
                 self.Draw()
+        return locals()
     
     
     @Property  # Smart draw
@@ -389,6 +390,7 @@ class BaseText(object):
                 self._angle = value
                 self._vertices2 = None # force recalculation
                 self.Draw()
+        return locals()
     
     
     @Property
@@ -402,6 +404,7 @@ class BaseText(object):
                 self._charSpacing = value
                 self._Invalidate() # force recalculation
                 self.Draw()
+        return locals()
     
     
     @Property
@@ -415,6 +418,7 @@ class BaseText(object):
                 self._size = value
                 self._Invalidate() # force recalculation
                 self.Draw()
+        return locals()
     
     
     @Property
@@ -428,6 +432,7 @@ class BaseText(object):
                 self._fontname = value
                 self._Invalidate() # force recalculation
                 self.Draw()
+        return locals()
     
     
     @Property
@@ -441,6 +446,7 @@ class BaseText(object):
             if value != self._color:
                 self._color = value
                 self.Draw()
+        return locals()
     
     
     @Property
@@ -467,6 +473,8 @@ class BaseText(object):
                 self._halign = value
                 self._vertices2 = None # force recalculation
                 self.Draw()
+        return locals()
+    
     
     @Property
     def valign():
@@ -493,6 +501,7 @@ class BaseText(object):
                 self._valign = value
                 self._vertices2 = None # force recalculation
                 self.Draw()
+        return locals()
     
     
     def _Compile(self):
@@ -764,7 +773,8 @@ class Text(Wobject, BaseText):
             return self._x
         def fset(self, value):
             self._x = value
-        
+        return locals()
+    
     @PropWithDraw
     def y():
         """Get/Set the y position of the text.
@@ -773,6 +783,7 @@ class Text(Wobject, BaseText):
             return self._y
         def fset(self, value):
             self._y = value
+        return locals()
     
     @PropWithDraw
     def z():
@@ -782,6 +793,7 @@ class Text(Wobject, BaseText):
             return self._z
         def fset(self, value):
             self._z = value
+        return locals()
     
     
     def OnDraw(self):

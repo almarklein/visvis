@@ -521,6 +521,7 @@ class Axes(base.Wibject):
             # Apply
             colors = [getColor(val, 'setting bgcolors') for val in value]
             self._bgcolors = tuple(colors)
+        return locals()
     
     
     @property
@@ -572,6 +573,7 @@ class Axes(base.Wibject):
                     axis.Destroy()
                 # Add new
                 axisClass(self)
+        return locals()
     
     
     @PropWithDraw
@@ -620,6 +622,7 @@ class Axes(base.Wibject):
                 # Make current and set limits
                 self._camera = camera
                 self.SetLimits()
+        return locals()
     
     
     @PropWithDraw
@@ -649,6 +652,7 @@ class Axes(base.Wibject):
                 self._camera = theCamera
             else:
                 raise ValueError("Unknown camera type!")
+        return locals()
     
     
     @property
@@ -688,6 +692,7 @@ class Axes(base.Wibject):
             # Use camera's daspect, in case a 2-element tuple was used.
             if camera is not None:
                 self._daspect = camera.daspect 
+        return locals()
     
     @property
     def daspectNormalized(self):
@@ -716,6 +721,7 @@ class Axes(base.Wibject):
             # Update daspect if False
             if not value:
                 self.daspect = self._daspect
+        return locals()
     
     
     @PropWithDraw
@@ -727,6 +733,7 @@ class Axes(base.Wibject):
             return self.legendWibject._stringList
         def fset(self, value):            
             self.legendWibject.SetStrings(value)
+        return locals()
     
     @property
     def legendWibject(self):
@@ -764,6 +771,7 @@ class Axes(base.Wibject):
             return self._useBuffer
         def fset(self, value): 
             self._useBuffer = bool(value)
+        return locals()
     
     
     @Property
@@ -777,6 +785,7 @@ class Axes(base.Wibject):
         def fset(self, value): 
             tmp = float(value)
             self._motionBlur = min(max(tmp,0.0),1.0)
+        return locals()
     
     ## Implement methods
     

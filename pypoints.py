@@ -66,22 +66,37 @@ import numpy as np
 import sys
 
 def Property(function):
-    """ A property decorator which allows to define fget, fset and fdel
+    """ Property(function)
+    
+    A property decorator which allows to define fget, fset and fdel
     inside the function.
+    
     Note that the class to which this is applied must inherit from object!
-    Code from George Sakkis: http://code.activestate.com/recipes/410698/
+    Code based on an example posted by Walker Hale:
+    http://code.activestate.com/recipes/410698/#c6
+    
     """
-    keys = 'fget', 'fset', 'fdel'
-    func_locals = {'doc':function.__doc__}
-    def probeFunc(frame, event, arg):
-        if event == 'return':
-            locals = frame.f_locals
-            func_locals.update(dict((k,locals.get(k)) for k in keys))
-            sys.settrace(None)
-        return probeFunc
-    sys.settrace(probeFunc)
-    function()
-    return property(**func_locals)
+    
+    # Define known keys
+    known_keys = 'fget', 'fset', 'fdel', 'doc'
+    
+    # Get elements for defining the property. This should return a dict
+    func_locals = function()
+    if not isinstance(func_locals, dict):
+        raise RuntimeError('Property function should "return locals()".')
+    
+    # Create dict with kwargs for property(). Init doc with docstring.
+    D = {'doc': function.__doc__}
+    
+    # Copy known keys. Check if there are invalid keys
+    for key in func_locals.keys():
+        if key in known_keys:
+            D[key] = func_locals[key]
+        else:
+            raise RuntimeError('Invalid Property element: %s' % key)
+    
+    # Done
+    return property(**D)
 
 
 def nearest_power_of_two(i):
@@ -747,6 +762,7 @@ class Point(BasePoints):
             return self._data[0]
         def fset(self, value):
             self._data[0] = value
+        return locals()
     
     @property
     def xi(self):
@@ -760,6 +776,7 @@ class Point(BasePoints):
             return self._data[1]
         def fset(self, value):
             self._data[1] = value
+        return locals()
        
     @property
     def yi(self):
@@ -773,6 +790,7 @@ class Point(BasePoints):
             return self._data[2]
         def fset(self, value):
             self._data[2] = value
+        return locals()
     
     @property
     def zi(self):

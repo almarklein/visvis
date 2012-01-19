@@ -322,6 +322,8 @@ class BaseObject(object):
             return self._visible
         def fset(self, value):
             self._visible = bool(value)
+        return locals()
+    
     
     @misc.Property
     def hitTest():
@@ -331,6 +333,7 @@ class BaseObject(object):
             return self._hitTest
         def fset(self, value):
             self._hitTest = bool(value)
+        return locals()
     
     
     @misc.PropWithDraw
@@ -395,6 +398,8 @@ class BaseObject(object):
             self._parent = value
             if parentChildren is not None:
                 parentChildren.append(self)
+        
+        return locals()
     
     
     @property
@@ -550,6 +555,7 @@ class Wibject(BaseObject):
             return self._position
         def fset(self, value):
             self._position.Set(value)
+        return locals()
     
     
     @misc.PropWithDraw
@@ -560,6 +566,7 @@ class Wibject(BaseObject):
             return self._bgcolor
         def fset(self, value):
             self._bgcolor = misc.getColor(value, 'setting bgcolor')
+        return locals()
     
     
     def _Transform(self):
@@ -1058,6 +1065,7 @@ class Position(object):
         def fset(self,value):
             self._x = value
             self._Update()
+        return locals()
     
     @misc.PropWithDraw
     def y():
@@ -1070,6 +1078,7 @@ class Position(object):
         def fset(self,value):
             self._y = value
             self._Update()
+        return locals()
     
     @misc.PropWithDraw
     def w():
@@ -1083,6 +1092,7 @@ class Position(object):
         def fset(self,value):
             self._w = value
             self._Update()
+        return locals()
     
     @misc.PropWithDraw
     def h():
@@ -1096,6 +1106,7 @@ class Position(object):
         def fset(self,value):
             self._h = value
             self._Update()
+        return locals()
     
     ## Long names properties expressed in pixels
     
