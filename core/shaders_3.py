@@ -97,6 +97,8 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
 
 SH_3F_BASE = ShaderCodePart('base', '3D-fragment-default',
 """
+    // 3D_FRAGMENT_SHADER (used to recognize that this is a renderStyle)
+    
     // Uniforms obtained from OpenGL
     uniform sampler3D texture; // The 3D texture
     uniform vec3 shape; // And its shape (as in OpenGl)

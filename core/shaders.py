@@ -25,42 +25,6 @@ import visvis as vv
 alwaysShowShaderInfoLog = False
 
 
-def loadShaders():
-    """ loadShaders()
-    
-    load shading code from the files in the resource dir.
-    Returns two dicts with the vertex and fragment shaders, respectively. 
-    
-    """
-    
-    path = getResourceDir()
-    vshaders = {}
-    fshaders = {}
-    for filename in os.listdir(path):
-        
-        # only glsl files
-        if not filename.endswith('.glsl'):
-            continue
-        
-        # read code
-        f = open( os.path.join(path, filename) )
-        tekst = f.read()
-        f.close()
-        
-        # insert into this namespace
-        if filename.endswith('.vertex.glsl'):
-            varname = filename[:-12].lower()
-            vshaders[varname] = tekst
-        elif filename.endswith('.fragment.glsl'):
-            varname = filename[:-14].lower()
-            fshaders[varname] = tekst
-    
-    return vshaders, fshaders
-
-# load shaders
-vshaders, fshaders = loadShaders()
-
-
 class Shader(object):
     """ Shader()
     
@@ -137,6 +101,9 @@ class Shader(object):
           * Applies any static and pending uniforms.
           * Enables all textures that were given as uniforms.
         
+        Returns False when problems occured with the compiling or linking
+        of the shader code. Returns True otherwise.
+        
         """
         
         # Init
@@ -145,13 +112,17 @@ class Shader(object):
         # Update source code?
         dummy = self.hasCode
         
-        # Enable program (compiles if necessary
-        self.program.Enable()
-     
+        # Enable program (compiles if necessary)
+        ok = self.program.Enable()
+        if not ok:
+            return False
+        
         # Apply static and pending uniforms
         # Note that more uniforms can be set after this function returns.
         for name, value in self._GetStaticAndPendingUniforms().items():
             self._ApplyUniform(name, value)
+        
+        return True
     
     
     def EnableTextureOnly(self, *args):
@@ -387,18 +358,20 @@ class GlslProgram:
     
     
     def Enable(self):
-        """ Start using the program. 
+        """ Start using the program. Returns True on success, False otherwise.
         """
         if not self._usable:
-            return
+            return True # Not a compile problem, but simply old drivers.
         
         if (self._fragmentCode or self._vertexCode) and not self._IsCompiled():
             self._CreateProgramAndShaders()
         
         if self._IsCompiled():
             gla.glUseProgramObjectARB(self._programId)
+            return True
         else:
             gla.glUseProgramObjectARB(0)
+            return False
     
     
     def Disable(self):
@@ -479,9 +452,13 @@ class GlslProgram:
                 gla.glCompileShaderARB(myshader)
                 
                 # If it went well, attach!
-                if not self._CheckForErrors(myshader, True, False):
+                if self._CheckForErrors(myshader, True, False):
+                    self._programId = -1
+                    return
+                else:
                     gla.glAttachObjectARB(self._programId, myshader)
-            
+                
+                    
             # link shader and check for errors
             gla.glLinkProgramARB(self._programId)
             if self._CheckForErrors(self._programId, False, True):
@@ -578,8 +555,10 @@ class GlslProgram:
         """
         log = gla.glGetInfoLogARB(glObject)
         if log:
-            print preamble, log            
-    
+            print preamble, log.rstrip()
+            # If this is a renderstyle, notify user to use an alternative    
+            if '3D_FRAGMENT_SHADER' in self._fragmentCode:
+                print('Try using a different render style.')
     
     def DestroyGl(self):
         """ DestroyGl()
