@@ -769,7 +769,12 @@ class Texture3D(BaseTexture):
         
         if self.shader.isUsable and self.shader.hasCode:
             # turn glsl shader on
-            self.shader.Enable() 
+            ok = self.shader.Enable() 
+            if (not ok) and (self.renderStyle != 'mip'):
+                print('Texture3D detected shader problem; ' +
+                    'reverting render style from %s to MIP.' % self.renderStyle)
+                self.renderStyle = 'mip'
+                self.shader.Enable() 
         else:
             # Fixed function pipeline, but does not make sense
             self.shader.EnableTextureOnly('texture')
