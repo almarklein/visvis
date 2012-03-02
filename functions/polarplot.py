@@ -33,7 +33,8 @@ def _SetLimitsAfterDraw(event):
     # Set limits
     fig = event.owner 
     for axis in fig.FindObjects(vv.axises.PolarAxis2D):
-        axis.SetLimits()
+        limits = axis.GetLimits()
+        axis.SetLimits(rangeTheta=limits[0], rangeR=limits[1])
     # Unsubscribe and redraw
     fig.eventAfterDraw.Unbind(_SetLimitsAfterDraw)
     fig.Draw()
