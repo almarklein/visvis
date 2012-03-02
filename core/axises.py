@@ -1726,6 +1726,7 @@ class PolarAxis2D(BaseAxis):
         #self._radialRange = radiusMax_c
         radiusMax_c = self._radialRange.range
 
+
         #==========================================================
         # Apply labels
         #==========================================================
@@ -2038,7 +2039,7 @@ class PolarAxis2D(BaseAxis):
     
     
     def OnKeyDown(self, event):
-        if event.key == 17 and self.ref_but == 0:
+        if event.key == 17 and self.ref_but == 1:
             self.shiftIsDown = True
         elif event.key == 19 and self.ref_but == 0:
             self.controlIsDown = True
@@ -2071,7 +2072,7 @@ class PolarAxis2D(BaseAxis):
         
         axes = event.owner
         mloc = axes.mousepos
-        range = self._radialRange.range
+        Rrange = self._radialRange.range
         if self.ref_but == 1:
             # get distance and convert to world coordinates
             refloc = axes.camera.ScreenToWorld(self.ref_mloc)
@@ -2083,10 +2084,10 @@ class PolarAxis2D(BaseAxis):
             if self.shiftIsDown:
                 minRadius = self.ref_lowerRadius - dy
                 self.SetLimits(rangeR=Range(minRadius, \
-                               minRadius + range))
+                               minRadius + Rrange))
             else:
                 self.angularRefPos = self.ref_angularRefPos - \
-                                 (50 * dx / range)
+                                 (50 * dx / Rrange)
         
         elif self.ref_but == 2:
             # zoom
@@ -2102,9 +2103,9 @@ class PolarAxis2D(BaseAxis):
             factor_y /= axes.position.height
             
             # apply (use only y-factor ).
-            range = range * math.exp(-factor_y)
+            Rrange = Rrange * math.exp(-factor_y)
             self.SetLimits(rangeR=Range(self._radialRange.min, \
-                           self._radialRange.min + range))
+                           self._radialRange.min + Rrange))
             self.ref_mloc = mloc
         self.Draw()
         return True
@@ -2146,6 +2147,7 @@ class PolarAxis2D(BaseAxis):
         
         if rangeTheta != None:
             self._angularRange = rangeTheta
+            
         
         rR = rangeR
         rZ = rangeZ = None
@@ -2185,6 +2187,7 @@ class PolarAxis2D(BaseAxis):
         # default values
         if rR is None:
             rR = Range(-1, 1)
+
         if rZ is None:
             rZ = Range(0, 1)
 
@@ -2207,7 +2210,7 @@ class PolarAxis2D(BaseAxis):
         # apply to each camera
         for cam in axes._cameras.values():
             cam.SetLimits(rX, rY, rZ)
-    
+
     
     def GetLimits(self):
         """ GetLimits()
