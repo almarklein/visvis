@@ -50,6 +50,7 @@ from visvis import guisupport
 from visvis.pypoints import Point, Pointset, Aarray, Quaternion
 from visvis import ssdf
 from visvis import vvmovie
+from visvis import io
 
 # The core
 from visvis.core import *
