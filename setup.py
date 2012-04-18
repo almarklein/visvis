@@ -29,7 +29,7 @@ setup(
     version = __version__,
     author = 'Almar Klein',
     author_email = 'almar.klein at gmail',
-    license = 'BSD',
+    license = '(new) BSD',
     
     url = 'http://code.google.com/p/visvis/',
     download_url = 'http://code.google.com/p/visvis/downloads/list',    
