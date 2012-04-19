@@ -347,7 +347,7 @@ class GlslProgram:
         """ Returns whether the program has any code associated with it.
         If not, you shoul probably not enable it.
         """
-        return self._fragmentCode or self._vertexCode
+        return bool(self._fragmentCode or self._vertexCode)
     
     
     def _IsCompiled(self):
@@ -394,26 +394,6 @@ class GlslProgram:
         """
         self._fragmentCode = code
         self.DestroyGl()
-    
-    
-    def SetVertexShaderFromFile(self, path):
-        try:
-            f = open(path, 'r')
-            code = f.rad()
-            f.close()
-        except Exception, why:
-            print "Could not create shader: ", why            
-        self.SetVertexShader(code)
-    
-    
-    def SetFagmentShaderFromFile(self, path):
-        try:
-            f = open(path, 'r')
-            code = f.read()
-            f.close()            
-        except Exception, why:
-            print "Could not create shader: ", why            
-        self.SetFragmentShader(code)
    
     
     def _CreateProgramAndShaders(self):

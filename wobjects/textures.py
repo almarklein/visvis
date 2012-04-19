@@ -728,10 +728,25 @@ class Texture3D(BaseTexture):
     def OnDraw(self, fast=False):
         # Draw the texture.
         
+        # todo: TEST ON MAC
+        # - t._texture1.DestroyGl -> worked I think
+        # - t.shader.program.DestroyGl()
+        # - try the explicit enabling of texture as shown in this module
+        # - Note that the texture is still there, because we see the edges
+        # - Check if the same result is shown if we use fixed function pipelin
+        # - check opengl version
+        # - check t._texture1._useTexUnit
+        # - Maybe use nonARB version of glUseProgramObjectARB in shaders.py
+        
         # Enable texture, so that it has a corresponding OpenGl texture.
         # Binding is done by the shader
-        self._texture1.Enable(-1)
-        self.shader.SetUniform('texture', self._texture1)
+#         self._texture1.Enable(-1) # -1 means do not bind
+#         self.shader.SetUniform('texture', self._texture1)
+        self._texture1.Enable(5) # -1 means do not bind
+        self.shader.SetUniform('texture', 5)
+        
+        print('_texId: %i  _uploadFlag: %i  _texUnit: %i' % 
+            self._texture1._texId, self._texture1._uploadFlag, self._texture1._texUnit)
         
         # _texture._shape is a good indicator of a valid texture
         if not self._texture1._shape:
@@ -786,6 +801,7 @@ class Texture3D(BaseTexture):
         # clean up
         gl.glFlush()        
         self.shader.Disable()
+        self._texture1.Disable()# todo: !! remove
         #
         gl.glDisable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_LINE_SMOOTH)
