@@ -73,8 +73,11 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
         // Calculate point right behind it
         vec4 refPos2 = refPos1 + vec4(0.0, 0.0, 1.0, 0.0);
         // Project back to world coordinates to calculate ray direction
-        vec4 p1 = gl_ModelViewProjectionMatrixInverse * refPos1 ;
-        vec4 p2 = gl_ModelViewProjectionMatrixInverse * refPos2 ;
+        //vec4 p1 = gl_ModelViewProjectionMatrixInverse * refPos1 ; // does not work on Mac OSX
+        //vec4 p2 = gl_ModelViewProjectionMatrixInverse * refPos2 ;
+        vec4 p1 = gl_ModelViewMatrixInverse * gl_ProjectionMatrixInverse * refPos1;
+        vec4 p2 = gl_ModelViewMatrixInverse * gl_ProjectionMatrixInverse * refPos2;
+        
         ray = (p2.xyz/p2.w) - (p1.xyz/p1.w);
         
         // Normalize ray to unit length.    
@@ -115,7 +118,7 @@ SH_3F_BASE = ShaderCodePart('base', '3D-fragment-default',
     // ----- End of functions -----
     
     void main()
-    {  
+    {   
         // Get current pixel location.
         vec3 edgeLoc = vec3(gl_TexCoord[0]);
         // Get number of steps
