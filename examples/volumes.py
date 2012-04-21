@@ -6,11 +6,7 @@ app = vv.use()
 vv.clf()
 
 # create volume
-# vol = np.zeros((128,128,128), dtype=np.float32)
-# vol[50:70,80:90, 10:100] = 0.2
-# vol[50:70,10:100,80:90] = 0.5
-# vol[10:100,50:70,80:90] = 1
-vol = vv.aVolume()
+vol = vv.aVolume(size=64)
 
 # set labels
 vv.xlabel('x axis')
@@ -25,6 +21,12 @@ t = vv.volshow(vol, renderStyle='mip')
 # This is unfortunately (as far as I know) not possible to detect. 
 # It might help if your data is shaped a power of 2.
 
-vv.ColormapEditor(vv.gca())
+# Get axes and set camera to orthographic mode (with a field of view of 70)
+a = vv.gca()
+a.camera.fov = 70
 
+# Create colormap editor wibject.
+vv.ColormapEditor(a)
+
+# Start app
 app.Run()

@@ -666,6 +666,7 @@ class Texture3D(BaseTexture):
         self._quads = None
         # Also store daspect, if this changes quads should be recalculated
         self._daspectStored = (1,1,1)
+        self._qcountStored = -1
         
         # Set renderstyle
         self.renderStyle = renderStyle
@@ -813,6 +814,21 @@ class Texture3D(BaseTexture):
             shader.fragment.AddOrReplace(SH_LIGHTS)
     
     
+    def _quadPartitionCount(self, fov):
+        if fov < 10:
+            return 0
+        elif fov < 40:
+            return 1
+        elif fov < 70:
+            return 2
+        elif fov < 100:
+            return 3
+        elif fov < 180:
+            return 4
+        else: 
+            return 0 # failsafe not a number?
+    
+    
     def _CreateQuads(self):
         
         axes = self.GetAxes()
@@ -821,6 +837,7 @@ class Texture3D(BaseTexture):
         
         # Store daspect so we can detect it changing
         self._daspectStored = axes.daspect
+        self._qcountStored = self._quadPartitionCount(axes.camera.fov)
         
         # Note that we could determine the world coordinates and use
         # them directly here. However, the way that we do it now (using
@@ -845,47 +862,53 @@ class Texture3D(BaseTexture):
         # using glTexCoord* is the same as glMultiTexCoord*(GL_TEXTURE0)
         # Therefore we need to bind the base texture to 0.
         
-        # draw. So we draw the six planes of the cube (well not a cube,
+        # So we draw the six planes of the cube (well not a cube,
         # a 3d rectangle thingy). The inside is only rendered if the 
         # vertex is facing front, so only 3 planes are rendered at a        
         # time...                
         
         
-        tex_coord, ver_coord = Pointset(3), Pointset(3)
-        indices = [0,1,2,3, 4,5,6,7, 3,2,6,5, 0,4,7,1, 0,3,5,4, 1,7,6,2]
-        
-        
+        # Define the 8 corners of the cube.
+        tex_coord0, ver_coord0 = Pointset(3), Pointset(3)
         # bottom
-        tex_coord.append((t0,t0,t0)); ver_coord.append((x0, y0, z0)) # 0
-        tex_coord.append((t1,t0,t0)); ver_coord.append((x1, y0, z0)) # 1
-        tex_coord.append((t1,t1,t0)); ver_coord.append((x1, y1, z0)) # 2
-        tex_coord.append((t0,t1,t0)); ver_coord.append((x0, y1, z0)) # 3
+        tex_coord0.append((t0,t0,t0)); ver_coord0.append((x0, y0, z0)) # 0
+        tex_coord0.append((t1,t0,t0)); ver_coord0.append((x1, y0, z0)) # 1
+        tex_coord0.append((t1,t1,t0)); ver_coord0.append((x1, y1, z0)) # 2
+        tex_coord0.append((t0,t1,t0)); ver_coord0.append((x0, y1, z0)) # 3
         # top
-        tex_coord.append((t0,t0,t1)); ver_coord.append((x0, y0, z1)) # 4    
-        tex_coord.append((t0,t1,t1)); ver_coord.append((x0, y1, z1)) # 5
-        tex_coord.append((t1,t1,t1)); ver_coord.append((x1, y1, z1)) # 6
-        tex_coord.append((t1,t0,t1)); ver_coord.append((x1, y0, z1)) # 7
+        tex_coord0.append((t0,t0,t1)); ver_coord0.append((x0, y0, z1)) # 4    
+        tex_coord0.append((t0,t1,t1)); ver_coord0.append((x0, y1, z1)) # 5
+        tex_coord0.append((t1,t1,t1)); ver_coord0.append((x1, y1, z1)) # 6
+        tex_coord0.append((t1,t0,t1)); ver_coord0.append((x1, y0, z1)) # 7
         
-        def partition(tex_coord, ver_coord, indices):
-            nQuads = len(indices) / 4
+        # Unwrap the vertices. 4 vertices per side = 24 vertices
+        # Warning: dont mess up the list with indices; theyre carefully
+        # chosen to be front facing.
+        tex_coord, ver_coord = Pointset(3), Pointset(3)
+        for i in [0,1,2,3, 4,5,6,7, 3,2,6,5, 0,4,7,1, 0,3,5,4, 1,7,6,2]:
+            tex_coord.append(tex_coord0[i])
+            ver_coord.append(ver_coord0[i])
+        
+        # Function to partition each quad in four smaller quads
+        def partition(tex_coord1, ver_coord1):
             tex_coord2, ver_coord2 = Pointset(3), Pointset(3)
-            
-            for surface in range(nQuads):
-                io = surface * 4
-                
+            for iQuad in range(len(tex_coord1)/4):
+                io = iQuad * 4
                 for i1 in range(4):
                     for i2 in range(4):
                         i3 = (i1 + i2)%4                    
-                        tex_coord2.append( 0.5*(tex_coord[indices[io+i1]] + tex_coord[indices[io+i3]]) )
-                        ver_coord2.append( 0.5*(ver_coord[indices[io+i1]] + ver_coord[indices[io+i3]]) )
-            
-            indices2 = [i for i in range(len(tex_coord2))]
-            return tex_coord2, ver_coord2, np.array(indices2,dtype=np.uint32)
+                        tex_coord2.append( 0.5*(tex_coord1[io+i1] + tex_coord1[io+i3]) )
+                        ver_coord2.append( 0.5*(ver_coord1[io+i1] + ver_coord1[io+i3]) )
+            #print('partition from %i to %i vertices' % (len(tex_coord1), len(tex_coord2)))
+            return tex_coord2, ver_coord2
         
-        # todo: if partitioning more  than once, surfaces are not shown
-        self._quads = partition(tex_coord, ver_coord, indices)
-        #self._quads = partition(*partition(tex_coord, ver_coord, indices))
+        # Partition quads in smaller quads?
+        for iter in range(self._qcountStored):
+            tex_coord, ver_coord = partition(tex_coord, ver_coord)
         
+        # Store quads data
+        self._quads = tex_coord, ver_coord
+    
     
     def _DrawQuads(self):
         """ Draw the quads of the texture. 
@@ -903,11 +926,14 @@ class Texture3D(BaseTexture):
             return 
         
         # should we create quads?
-        if not self._quads or self._daspectStored != axes.daspect:
+        if (    (not self._quads) or 
+                (self._daspectStored != axes.daspect) or
+                (self._qcountStored != self._quadPartitionCount(axes.camera.fov)) 
+            ):
             self._CreateQuads()
         
         # get data
-        tex_coord, ver_coord, ind = self._quads
+        tex_coord, ver_coord = self._quads
         
         # Set culling (take data aspect into account!)        
         tmp = 1        
@@ -925,7 +951,7 @@ class Texture3D(BaseTexture):
         gl.glTexCoordPointerf(tex_coord.data)
         
         # draw
-        gl.glDrawElements(gl.GL_QUADS, len(ind), gl.GL_UNSIGNED_BYTE, ind)
+        gl.glDrawArrays(gl.GL_QUADS, 0, len(tex_coord))
         
         # disable vertex array        
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
