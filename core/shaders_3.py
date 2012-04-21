@@ -64,17 +64,17 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
         V = (vec4(0.0, 0.0, 1.0, 1.0) * gl_ModelViewMatrix).xyz;
         V = normalize(V);
         
-        // Calculate ray. Not perfect in projective view, 
-        // but quite acceptable
+        // Calculate ray. In projective view the result is ok at the vertices
+        // but in between there can be all kind of non-linear bending of the
+        // rays. To solve this, one should use a denser grid of vertex-texture
+        // pairs. In textures.py, this is done by partitioning the quads.
         
         // Get location of vertex in device coordinates
-        vec4 refPos1 = gl_Position;
-        refPos1 *= refPos1.w; // Not sure why, but this does the trick
+        vec4 refPos1 =  gl_Position * gl_Position.w;
         // Calculate point right behind it
         vec4 refPos2 = refPos1 + vec4(0.0, 0.0, 1.0, 0.0);
         // Project back to world coordinates to calculate ray direction
-        //vec4 p1 = gl_ModelViewProjectionMatrixInverse * refPos1 ; // does not work on Mac OSX
-        //vec4 p2 = gl_ModelViewProjectionMatrixInverse * refPos2 ;
+        // Note: gl_ModelViewProjectionMatrixInverse does not work on Mac OSX
         vec4 p1 = gl_ModelViewMatrixInverse * gl_ProjectionMatrixInverse * refPos1;
         vec4 p2 = gl_ModelViewMatrixInverse * gl_ProjectionMatrixInverse * refPos2;
         
