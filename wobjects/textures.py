@@ -728,25 +728,10 @@ class Texture3D(BaseTexture):
     def OnDraw(self, fast=False):
         # Draw the texture.
         
-        # todo: TEST ON MAC
-        # - t._texture1.DestroyGl -> worked I think
-        # - t.shader.program.DestroyGl()
-        # - try the explicit enabling of texture as shown in this module
-        # - Note that the texture is still there, because we see the edges
-        # - Check if the same result is shown if we use fixed function pipelin
-        # - check opengl version
-        # - check t._texture1._useTexUnit
-        # - Maybe use nonARB version of glUseProgramObjectARB in shaders.py
-        
         # Enable texture, so that it has a corresponding OpenGl texture.
         # Binding is done by the shader
-#         self._texture1.Enable(-1) # -1 means do not bind
-#         self.shader.SetUniform('texture', self._texture1)
-        self._texture1.Enable(5) # -1 means do not bind
-        self.shader.SetUniform('texture', 5)
-        
-        print('_texId: %i  _uploadFlag: %i  _texUnit: %i' % 
-            self._texture1._texId, self._texture1._uploadFlag, self._texture1._texUnit)
+        self._texture1.Enable(-1) # -1 means do not bind right now
+        self.shader.SetUniform('texture', self._texture1)
         
         # _texture._shape is a good indicator of a valid texture
         if not self._texture1._shape:
@@ -801,7 +786,6 @@ class Texture3D(BaseTexture):
         # clean up
         gl.glFlush()        
         self.shader.Disable()
-        self._texture1.Disable()# todo: !! remove
         #
         gl.glDisable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_LINE_SMOOTH)
@@ -866,8 +850,10 @@ class Texture3D(BaseTexture):
         # vertex is facing front, so only 3 planes are rendered at a        
         # time...                
         
+        
         tex_coord, ver_coord = Pointset(3), Pointset(3)
         indices = [0,1,2,3, 4,5,6,7, 3,2,6,5, 0,4,7,1, 0,3,5,4, 1,7,6,2]
+        
         
         # bottom
         tex_coord.append((t0,t0,t0)); ver_coord.append((x0, y0, z0)) # 0
@@ -880,9 +866,26 @@ class Texture3D(BaseTexture):
         tex_coord.append((t1,t1,t1)); ver_coord.append((x1, y1, z1)) # 6
         tex_coord.append((t1,t0,t1)); ver_coord.append((x1, y0, z1)) # 7
         
-        # Store quads
-        self._quads = (tex_coord, ver_coord, np.array(indices,dtype=np.uint8))
-    
+        def partition(tex_coord, ver_coord, indices):
+            nQuads = len(indices) / 4
+            tex_coord2, ver_coord2 = Pointset(3), Pointset(3)
+            
+            for surface in range(nQuads):
+                io = surface * 4
+                
+                for i1 in range(4):
+                    for i2 in range(4):
+                        i3 = (i1 + i2)%4                    
+                        tex_coord2.append( 0.5*(tex_coord[indices[io+i1]] + tex_coord[indices[io+i3]]) )
+                        ver_coord2.append( 0.5*(ver_coord[indices[io+i1]] + ver_coord[indices[io+i3]]) )
+            
+            indices2 = [i for i in range(len(tex_coord2))]
+            return tex_coord2, ver_coord2, np.array(indices2,dtype=np.uint32)
+        
+        # todo: if partitioning more  than once, surfaces are not shown
+        self._quads = partition(tex_coord, ver_coord, indices)
+        #self._quads = partition(*partition(tex_coord, ver_coord, indices))
+        
     
     def _DrawQuads(self):
         """ Draw the quads of the texture. 
