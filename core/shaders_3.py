@@ -70,9 +70,12 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
         // pairs. In textures.py, this is done by partitioning the quads.
         
         // Get location of vertex in device coordinates
-        vec4 refPos1 =  gl_Position * gl_Position.w;
-        // Calculate point right behind it
-        vec4 refPos2 = refPos1 + vec4(0.0, 0.0, 1.0, 0.0);
+        float w = max(1.0, gl_Position.w);
+        vec4 refPos1 = gl_Position * gl_Position.w;
+        // Calculate point right behind it. Distance depends on w-value
+        // to prevent wobly artifacts at low field of views.
+        float zdist = max(1.0, gl_Position.w/10);
+        vec4 refPos2 = refPos1 + vec4(0.0, 0.0, zdist, 0.0);
         // Project back to world coordinates to calculate ray direction
         // Note: gl_ModelViewProjectionMatrixInverse does not work on Mac OSX
         vec4 p1 = gl_ModelViewMatrixInverse * gl_ProjectionMatrixInverse * refPos1;
@@ -89,6 +92,7 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
         
         // Scale ray to take smaller steps.
         ray = ray / stepRatio;
+    
     }
 
 """)
@@ -119,6 +123,7 @@ SH_3F_BASE = ShaderCodePart('base', '3D-fragment-default',
     
     void main()
     {   
+        
         // Get current pixel location.
         vec3 edgeLoc = vec3(gl_TexCoord[0]);
         // Get number of steps
