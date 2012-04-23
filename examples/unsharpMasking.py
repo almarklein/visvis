@@ -64,6 +64,7 @@ def sliderCallback(event):
     t2.shader.SetStaticUniform('amount', slider.value)
     t2.Draw()
 slider = vv.Slider(t2.parent, (0.0, 1.5))
+slider.position = 0.05, 10, 0.9, 40
 slider.eventSliding.Bind(sliderCallback)
 sliderCallback(None) # init uniform
 
