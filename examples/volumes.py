@@ -23,7 +23,7 @@ t = vv.volshow(vol, renderStyle='mip')
 
 # Get axes and set camera to orthographic mode (with a field of view of 70)
 a = vv.gca()
-a.camera.fov = 70
+a.camera.fov = 45
 
 # Create colormap editor wibject.
 vv.ColormapEditor(a)

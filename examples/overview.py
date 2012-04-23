@@ -46,6 +46,9 @@ mesh = vv.solidTeapot((32,32,80), scaling=(50,50,50))
 mesh.faceColor = 0.4, 1, 0.4
 mesh.specular = 'r'
 
+# Set orthographic projection
+a2.camera.fov = 45
+
 # Create labels for the axis
 a2.axis.xLabel = 'x-axis'
 a2.axis.yLabel = 'y-axis'
