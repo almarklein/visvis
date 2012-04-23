@@ -1306,7 +1306,8 @@ class CartesianAxis3D(BaseAxis):
             
             # Calculate tick distance in units (using shortest ridge vector)
             minTickDist = self._minTickDist
-            minTickDist *= norm_c / norm_s
+            if norm_s > 0:
+                minTickDist *= norm_c / norm_s
             
             # Get index of corner to put ticks at.
             # This is determined by chosing the corner which is the lowest
