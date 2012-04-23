@@ -74,7 +74,7 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
         vec4 refPos1 = gl_Position * gl_Position.w;
         // Calculate point right behind it. Distance depends on w-value
         // to prevent wobly artifacts at low field of views.
-        float zdist = max(1.0, gl_Position.w/10);
+        float zdist = max(1.0, gl_Position.w/10.0);
         vec4 refPos2 = refPos1 + vec4(0.0, 0.0, zdist, 0.0);
         // Project back to world coordinates to calculate ray direction
         // Note: gl_ModelViewProjectionMatrixInverse does not work on Mac OSX

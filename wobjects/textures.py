@@ -815,18 +815,19 @@ class Texture3D(BaseTexture):
     
     
     def _quadPartitionCount(self, fov):
-        if fov < 10:
-            return 0
-        elif fov < 40:
-            return 1
-        elif fov < 70:
-            return 2
-        elif fov < 100:
-            return 3
-        elif fov < 180:
-            return 4
-        else: 
-            return 0 # failsafe not a number?
+        """ Select the density of the vertices for the cube to render.
+        Higher field of view yields higher partition-count.
+        """
+        if fov <= 10:
+            return 0  # 24 vertices
+        elif fov <= 20:
+            return 1  # 96 vertices
+        elif fov <= 40:
+            return 2  # 384 vertices
+        elif fov <= 80:
+            return 3  # 1536 vertices
+        else:
+            return 4  # 6144 vertices
     
     
     def _CreateQuads(self):
