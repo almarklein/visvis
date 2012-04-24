@@ -1,5 +1,5 @@
 # This file is part of VISVIS. 
-# Copyright (C) 2010 Almar Klein
+# Copyright (C) 2012 Almar Klein
 
 import visvis as vv
 import numpy as np

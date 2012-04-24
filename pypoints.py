@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2011, Almar Klein
+# Copyright (C) 2012, Almar Klein
 #
 # SSDF is distributed under the terms of the (new) BSD License.
 # See http://www.opensource.org/licenses/bsd-license.php
@@ -54,7 +54,7 @@ More information and license
 ----------------------------
 For more information see the docstrings of the classes.
 
-Copyright (c) 2010, Almar Klein.
+Copyright (C) 2012, Almar Klein.
 This software distributed under the BSD license.
 
 """
