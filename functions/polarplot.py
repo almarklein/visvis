@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010,Keith Smith
+# Copyright (C) 2012, Keith Smith
 #
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
