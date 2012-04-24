@@ -60,10 +60,21 @@ This software distributed under the BSD license.
 """
 
 # Set version number
-__version__ = 2.1
+__version__ = 2.2
 
 import numpy as np
 import sys
+
+
+# todo: mention in next release notes that warning is not displayed by default
+SHOW_SUBTRACTBUG_WARNING = False
+
+
+def getExceptionInstance():
+    type, value, tb = sys.exc_info()
+    del tb
+    return value
+
 
 def Property(function):
     """ Property(function)
@@ -501,7 +512,7 @@ class BasePoints(object):
         p1, p2 = self, p
         
         # Check for the subtract bug ...
-        if p1 is not p3:
+        if SHOW_SUBTRACTBUG_WARNING and p1 is not p3:
             # In previous versions the subtract bug would have occured
             # do not allow...
             try:
@@ -672,10 +683,7 @@ class Point(BasePoints):
             self._data = point._data.astype(np.float32)        
         elif isinstance(point, (tuple,list)):
             # a tuple or list
-            try:
-                self._data = np.array(point, dtype=np.float32)
-            except ValueError, why:
-                raise why        
+            self._data = np.array(point, dtype=np.float32)
         elif isinstance(point, np.ndarray):
             # a numpy array
             self._data = point.astype(np.float32)
@@ -797,6 +805,142 @@ class Point(BasePoints):
         """ Get p[2] rounded to the nearest integer, for indexing. """
         return int(self._data[2]+0.5)
     
+
+class Point2(object):
+    """ Point2(x,y,[z,[...]])
+    
+  
+    """
+    
+    _is_Point = True
+    
+    def __init__(self, *point):
+        
+        if len(point)==0:
+            raise ValueError("Cannot create an 'empty' point.")
+        elif len(point)==1:
+            point = point[0]
+        
+        if is_Point(point):
+            # a point
+            pass
+            # todo: ..
+            #self._data = tuple([v for v in point._data.astype(np.float32)) )   
+        elif isinstance(point, (tuple,list)):
+            # a tuple or list
+            self._data = tuple(point)
+        elif isinstance(point, np.ndarray):
+            # a numpy array
+            self._data = point.astype(np.float32)
+        elif isinstance(point, (float,int)):
+            # 1D point
+            self._data = point,
+            self._data[0] = point
+        else:
+            # otherwise, what were we given?
+            raise ValueError("Cannot create a point with that argument.")
+    
+
+    def copy(self):
+        """ copy()
+        
+        Get a copy of this point. 
+        
+        """
+        return Point2(self._data)
+    
+    # todo: ??
+    @property
+    def data(self):
+        """ Get the point as the (2D) numpy array it is stored in. 
+        """
+        # this is overloaded in the Pointset class
+        data = self._data[:]
+        data.shape = 1, data.shape[0]
+        return data
+    
+
+    ## string representation
+    
+    def __str__(self):
+        """ Return a nice string representation of the point. """
+        s = "<point  "
+        for value in self._data:
+            # '% x.yg': x signif, y length '-1.111e+000'. x = y+7
+            s += "% 12.5g, " % (value)  
+            #str(value).ljust(7,' ') # '%5f' % (value)
+        s = s[:-2] + " >"
+        return s
+
+    __repr__ = __str__
+    
+    ## Comparison
+    
+    def __eq__(self, other):
+        """ Test whether two poins are the same. """
+        if not is_Point(other) or other.ndim != self.ndim:
+            return False
+        return (other.data == self.data).sum() == self.ndim
+    
+    def __ne__(self, other):
+        """ Test whether two poins are NOT the same. """
+        if not is_Point(other) or other.ndim != self.ndim:
+            return True
+        return (other.data == self.data).sum() != self.ndim
+    
+    ## indexing etc
+        
+    # todo: aaah
+    def __setitem__(self,index,value):
+        self._data[index] = value
+
+    def __getitem__(self, index):        
+        return self._data[index]
+    
+    
+    @Property    
+    def x():
+        """ Get/set p[0]. """
+        def fget(self):
+            return self._data[0]
+        def fset(self, value):
+            self._data[0] = value
+        return locals()
+    
+    @property
+    def xi(self):
+        """ Get p[0] rounded to the nearest integer, for indexing. """
+        return int(self._data[0]+0.5)
+    
+    @Property    
+    def y():
+        """ Get/set p[1]. """
+        def fget(self):
+            return self._data[1]
+        def fset(self, value):
+            self._data[1] = value
+        return locals()
+       
+    @property
+    def yi(self):
+        """ Get p[1] rounded to the nearest integer, for indexing. """
+        return int(self._data[1]+0.5)
+    
+    @Property    
+    def z():
+        """ Get/set p[2]. """
+        def fget(self):
+            return self._data[2]
+        def fset(self, value):
+            self._data[2] = value
+        return locals()
+    
+    @property
+    def zi(self):
+        """ Get p[2] rounded to the nearest integer, for indexing. """
+        return int(self._data[2]+0.5)
+    
+
 
 class Pointset(BasePoints):
     """ Pointset(ndim)
@@ -1041,8 +1185,8 @@ class Pointset(BasePoints):
         """
         try:
             p = self._as_point(*p)
-        except Exception, why:
-            raise ValueError(why)
+        except Exception:
+            raise ValueError(str(getExceptionInstance()))
         
         # resize if we need to
         self._resize_if_required(self._len+1)
@@ -1065,8 +1209,8 @@ class Pointset(BasePoints):
         if not is_Pointset(pp):
             try:
                 pp = Pointset(pp)            
-            except Exception, why:
-                raise ValueError(why)
+            except Exception:
+                raise ValueError(str(getExceptionInstance()))
         
         # check whether we can append it
         if self.ndim != pp.ndim:
@@ -1099,8 +1243,8 @@ class Pointset(BasePoints):
         # make sure p is a point
         try:
             p = self._as_point(*p)
-        except Exception, why:
-            raise ValueError(why)
+        except Exception:
+            raise ValueError(str(getExceptionInstance()))
         
         # resize if we need to
         self._resize_if_required(self._len+1)
@@ -1124,8 +1268,8 @@ class Pointset(BasePoints):
         # make sure p is a point
         try:
             p = self._as_point(*p)
-        except Exception, why:
-            raise ValueError(why)
+        except Exception:
+            raise ValueError(str(getExceptionInstance()))
         
         # calculate mask
         mask = np.zeros((len(self),),dtype='uint8')
@@ -1154,8 +1298,8 @@ class Pointset(BasePoints):
         # make sure p is a point
         try:
             p = self._as_point(*p)
-        except Exception, why:
-            raise ValueError(why)
+        except Exception:
+            raise ValueError(str(getExceptionInstance()))
         
         # calculate mask
         mask = np.zeros((len(self),),dtype='uint8')
@@ -1245,8 +1389,8 @@ class Pointset(BasePoints):
         # make sure p is a point
         try:
             p = self._as_point(*p)
-        except Exception, why:
-            raise ValueError(why)
+        except Exception:
+            raise ValueError(str(getExceptionInstance()))
         
         mask = np.zeros((len(self),),dtype='uint8')
         for i in range(self.ndim):
@@ -1450,7 +1594,7 @@ class Aarray(np.ndarray):
         for i in range(len(index2)):
             ind = index2[i]            
             if isinstance(ind, slice):
-                    #print ind.start, ind.step
+                    #print(ind.start, ind.step)
                 if ind.start is None:
                     origin.append( _origin[i] )                    
                 else:
@@ -1933,7 +2077,8 @@ class Quaternion(object):
         # Almost done
         return qx*qy*qz
 
-    
+
+
 ## Main
 
 if __name__ =='__main__':
@@ -1946,9 +2091,8 @@ if __name__ =='__main__':
     pp.append(-0.0031,0.00000498,0)
     pp.append(2,3,4)
     pp.extend(pp)
-    print pp
+    print(pp)
     pp.contains(2,3,4)
     
-    print pp-pp[0]
-    print pp.subtract(pp[0])
-    
+    print(pp-pp[0])
+    print(pp.subtract(pp[0]))
