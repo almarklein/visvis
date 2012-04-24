@@ -43,7 +43,7 @@ For more help, see ...
 
 """
 
-__version__  = '1.5' 
+__version__  = '1.6' 
 
 # Loose sub-modules and sub-packages
 from visvis import guisupport
