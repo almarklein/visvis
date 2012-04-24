@@ -53,4 +53,3 @@ setup(
 # would work for distutils, but not for setuptools...
 # I found this on-line doc very helpful for creating a setup script:
 # http://docs.python.org/distutils/examples.html
-

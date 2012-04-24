@@ -2,5 +2,5 @@ include examples/*.py
 include visvisResources/*
 include io/*.py
 include processing/*.py
-included vvmoview/*.py
+include vvmoview/*.py
 
