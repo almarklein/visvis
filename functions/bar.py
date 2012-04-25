@@ -53,7 +53,7 @@ def bar(data1, data2=None, width=0.75, axesAdjust=True, axes=None):
     if data2 is None:
         # Only height given
         hh = data1
-        xx = range(len(hh))
+        xx = list(range(len(hh)))
     else:
         # All three given
         xx = data1

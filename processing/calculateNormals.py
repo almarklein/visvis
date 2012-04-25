@@ -110,7 +110,7 @@ def _vectorsToNormals(a, b, faces, normals):
         # that's not too bad, but waiting for over a second can become 
         # iritating.
         for f in range(faces.shape[1]):
-            for i in xrange(faces.shape[0]):
+            for i in range(faces.shape[0]):
                 normals[faces[i,f]] += normalsPerFace[i]
 
 

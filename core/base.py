@@ -300,7 +300,7 @@ class BaseObject(object):
         Overload this to clean up any resources other than the GL objects. 
         
         """
-        for att in self.__dict__.values():
+        for att in list(self.__dict__.values()):
             if isinstance(att, events.BaseEvent):
                 att.Unbind()
              

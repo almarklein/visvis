@@ -12,6 +12,7 @@ Defines the class to create animated data.
 
 import visvis as vv
 from visvis import Wobject, Timer
+from visvis.core.misc import basestring
 
 
 class MotionMixin(object):

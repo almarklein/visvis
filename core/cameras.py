@@ -959,8 +959,8 @@ class ThreeDCamera(BaseCamera):
             distz = (refloc[1]-loc[1]) * ar[1]
             
             # calculate translation
-            sro, saz, sel = map(sind, (self._view_ro, self._view_az, self._view_el))
-            cro, caz, cel = map(cosd, (self._view_ro, self._view_az, self._view_el))
+            sro, saz, sel = list(map(sind, (self._view_ro, self._view_az, self._view_el)))
+            cro, caz, cel = list(map(cosd, (self._view_ro, self._view_az, self._view_el)))
             dx = (  distx * (cro * caz + sro * sel * saz) + 
                     distz * (sro * caz - cro * sel * saz) ) / ar[0]
             dy = (  distx * (cro * saz - sro * sel * caz) + 
@@ -1043,8 +1043,8 @@ class ThreeDCamera(BaseCamera):
                 # Zooming in z goes via zoom factor.
                 
                 # Motion to right or top should always zoom in, regardless of rotation
-                sro, saz, sel = map(sind, (self._view_ro, self._view_az, self._view_el))
-                cro, caz, cel = map(cosd, (self._view_ro, self._view_az, self._view_el))
+                sro, saz, sel = list(map(sind, (self._view_ro, self._view_az, self._view_el)))
+                cro, caz, cel = list(map(cosd, (self._view_ro, self._view_az, self._view_el)))
                 dx = ( -factorx * abs(cro * caz + sro * sel * saz) + 
                         factory * abs(sro * caz - cro * sel * saz) )
                 dy = ( -factorx * abs(cro * saz - sro * sel * caz) + 

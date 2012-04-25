@@ -59,7 +59,7 @@ def meshRead(fname, check=False):
     
     if not os.path.isfile(fname):
         # try loading from the resource dir
-        path = visvis.misc.getResourceDir()
+        path = visvis.core.misc.getResourceDir()
         fname2 = os.path.join(path, fname)
         if os.path.isfile(fname2):
             fname = fname2

@@ -9,6 +9,7 @@ import numpy as np
 import OpenGL.GL as gl
 
 from visvis.processing.statistics import StatData
+from visvis.core.misc import basestring
 
 
 # todo: enable notch in boxplot
@@ -66,7 +67,7 @@ def boxplot(data1, data2=None, width=0.75, whiskers=1.5, axesAdjust=True, axes=N
         raise ValueError('Data should be given as a list.')
     #
     if data2 is None:
-        xx = range(len(data_list))
+        xx = list(range(len(data_list)))
     else:
         xx = [float(x) for x in data1]
         if len(data_list) != len(xx):

@@ -14,7 +14,7 @@ import OpenGL.GL as gl
 
 from visvis.pypoints import Pointset, Point
 from visvis.core.events import BaseEvent
-from visvis.core.misc import PropWithDraw, Range
+from visvis.core.misc import PropWithDraw, Range, unichr
 from visvis.core.axises import GetTicks
 from visvis import Box, Label
 
@@ -404,7 +404,7 @@ class BaseSlider(Box):
                 label.position.y = pos2.y + yoffset
             
             # Clean up label pool
-            for label in self._labelPool.values():
+            for label in list(self._labelPool.values()):
                 label.Destroy()
             self._labelPool = newLabelPool
             
@@ -496,5 +496,5 @@ class RangeSlider(BaseSlider):
         
         # Set text
         tmp = self._getformat()
-        tmp = tmp + u'  \u2013  ' + tmp
+        tmp = tmp + '  ' + unichr(8211) + '  ' + tmp
         self._label.text = tmp % (self._range.min, self._range.max)

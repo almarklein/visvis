@@ -42,7 +42,7 @@ def figure(fig=None):
         nr = None
     
     # does a figure with that number already exist?
-    if nr and BaseFigure._figures.has_key(nr):        
+    if nr and nr in BaseFigure._figures:        
         # make current return that
         fig = BaseFigure._figures[nr]
         BaseFigure._currentNr = nr

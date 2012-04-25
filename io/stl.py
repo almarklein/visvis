@@ -181,7 +181,7 @@ class StlWriter(object):
                 writer = StlAsciiWriter(f)
                 writer.writeLine('solid %s' % name)
             # Write vertices
-            for i in xrange(len(vv1)):
+            for i in range(len(vv1)):
                 writer.writeFace(vv1[i], vv2[i], vv3[i])        
             # Write end
             if not bin:

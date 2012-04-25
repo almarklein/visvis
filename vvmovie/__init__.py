@@ -60,10 +60,10 @@ import os, time
 # Python 3 needs absolute import, which makes that this package
 # cannot be a subpackage anymore. We cannot use the dot-notation, 
 # because that doesnt work on Python 2.
-from visvis.images2gif import readGif, writeGif
-from visvis.images2swf import readSwf, writeSwf
-from visvis.images2avi import readAvi, writeAvi
-from visvis.images2ims import readIms, writeIms
+from visvis.vvmovie.images2gif import readGif, writeGif
+from visvis.vvmovie.images2swf import readSwf, writeSwf
+from visvis.vvmovie.images2avi import readAvi, writeAvi
+from visvis.vvmovie.images2ims import readIms, writeIms
 
 videoTypes = ['AVI', 'MPG', 'MPEG', 'MOV', 'FLV']
 imageTypes = ['JPG', 'JPEG', 'PNG', 'TIF', 'TIFF', 'BMP']

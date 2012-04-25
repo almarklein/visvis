@@ -22,7 +22,7 @@ import numpy as np
 import math
 
 from visvis.pypoints import Pointset
-from visvis.core.misc import PropWithDraw, DrawAfter 
+from visvis.core.misc import PropWithDraw, DrawAfter, basestring
 from visvis.core.misc import Range, getColor, getOpenGlCapable
 from visvis.core.base import Wobject
 
@@ -166,7 +166,7 @@ class MarkerManager:
         key = "%s_%i_%i" % (ms, mw, mew)
 
         # if it does not exist, create it!
-        if not self.sprites.has_key(key):
+        if key not in self.sprites:
             self.sprites[key] = self._CreateSprites(ms, mw, mew)
         else:
             # check if it is a valid texture ...
@@ -295,8 +295,7 @@ class MarkerManager:
 
         ## Create face
         I,J = np.where(data2==0)
-        xy = zip(I,J)
-        map(func, xy)
+        map(func, zip(I,J))
 
         ## dilate x times to create edge
         # we add a border to the array to make the dilation possible
@@ -304,7 +303,6 @@ class MarkerManager:
         data3[2:-2,2:-2] = 1
         # retrieve indices.
         I,J = np.where(data3==1)
-        xy = zip(I,J)
         # copy face
         data3[2:-2,2:-2] = data1
         tmp = data3.copy()
@@ -314,7 +312,7 @@ class MarkerManager:
             if tmp[y-1:y+2,x-1:x+2].max():
                 data3[y,x] = 255
         for i in range(int(mew)):
-            map(dilatePixel, xy)
+            map(dilatePixel, zip(I,J))
             tmp = data3.copy()
         # remove border
         data3 = data3[2:-2,2:-2]
@@ -430,7 +428,7 @@ class Line(Wobject):
         def fset(self, value):
             if not value:
                 value = None
-            elif not isinstance(value, (str,unicode)):
+            elif not isinstance(value, basestring):
                 raise Exception("Error in lineStyle: style must be a string!")
             elif value not in ['-', '--', ':', '-.', '.-', '+']:
                 raise Exception("Error in lineStyle: unknown line style!")
@@ -480,7 +478,7 @@ class Line(Wobject):
         def fset(self, value):
             if not value:
                 value = None
-            elif not isinstance(value,(str,unicode)):
+            elif not isinstance(value, basestring):
                 raise Exception("markerstyle (ms) should be a string!")
             elif value not in 'sd+x*phfv^><.o':
                 raise Exception("Error in markerStyle: unknown line style!")

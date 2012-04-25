@@ -25,7 +25,7 @@ def gcf():
     nr = BaseFigure._currentNr    
     if not nr in BaseFigure._figures:
         # erroneous nr
-        nr = BaseFigure._figures.keys()[0]
+        nr = list(BaseFigure._figures.keys())[0]
         BaseFigure._currentNr = nr
     
     return BaseFigure._figures[nr]

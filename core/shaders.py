@@ -18,8 +18,9 @@ import os
 import OpenGL.GL as gl
 import OpenGL.GL.ARB.shader_objects as gla
 
-from visvis.core.misc import getResourceDir, getOpenGlCapable, getExceptionInstance
+from visvis.core.misc import getResourceDir, getOpenGlCapable, getExceptionInstance, basestring
 import visvis as vv
+
 
 # Variable for debugging / developing to display shader info logs always.
 alwaysShowShaderInfoLog = False

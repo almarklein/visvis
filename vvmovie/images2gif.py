@@ -811,7 +811,7 @@ class NeuQuant:
         except KeyError:
             length = rad*2-1
             mid = length/2
-            q = np.array(range(mid-1,-1,-1)+range(-1,mid))
+            q = np.array(list(range(mid-1,-1,-1))+list(range(-1,mid)))
             a = alpha*(rad*rad - q*q)/(rad*rad)
             a[mid] = 0
             self.a_s[(alpha, rad)] = a
@@ -1040,13 +1040,13 @@ class NeuQuant:
                 try:
                     val = memo[key]
                 except KeyError:
-                    val = self.convert(key)
+                    val = self.convert(*key)
                     memo[key] = val
                 px[i,j,0],px[i,j,1],px[i,j,2] = val
         return Image.fromarray(px).convert("RGB").quantize(palette=self.paletteImage())
     
-    def convert(self, (r, g, b)):
-        i = self.inxsearch(r, g, b)
+    def convert(self, *color):
+        i = self.inxsearch(*color)
         return self.colormap[i,:3]
     
     def inxsearch(self, r, g, b):

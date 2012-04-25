@@ -108,7 +108,7 @@ def processFont(fontname):
     ## make lists of the information
 
     # a list of all registered characters
-    charcodes = entries.keys()
+    charcodes = list(entries.keys())
 
     L = max(charcodes)+1
     origin = np.zeros((L,2), dtype=np.uint16)

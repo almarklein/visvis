@@ -48,6 +48,10 @@ For more help, see ...
 # todo: get isFrozen from pyzolib
 # todo: more lazy imports for io and vvmovie
 # todo: check which opengl functions return a string, deal with str and bytes
+# todo: check whether any of the version dependent stuff in misc.py can be removed
+# todo: change events.py to become Python3 compatible, see yoton.events
+# todo: check if everywhere where basestring is used, it is imported
+# todo: try examples/text.py, interesting unicode cases
 
 __version__  = '1.6' 
 

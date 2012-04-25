@@ -75,7 +75,7 @@ from visvis.pypoints import Pointset
 #
 from visvis.core.baseTexture import TextureObject
 from visvis.core.base import Wobject
-from visvis.core.misc import Property, PropWithDraw 
+from visvis.core.misc import Property, PropWithDraw, basestring, unichr 
 from visvis.core.misc import getResourceDir, getColor
 #
 from visvis.core.cameras import depthToZ
@@ -112,7 +112,7 @@ escapes = {
     }
 
 # sort the keys, such that longer names are replaced first
-escapesKeys = escapes.keys()
+escapesKeys = list(escapes.keys())
 escapesKeys.sort( lambda x,y:len(y)-len(x))
 
 

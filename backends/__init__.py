@@ -111,7 +111,7 @@ def testLoaded():
                 continue
             be = filename[:-3]
             modNameFull = 'visvis.backends.' + be
-            if sys.modules.has_key(modNameFull):
+            if modNameFull in sys.modules:
                 i = be.find('_')
                 return be[i+1:]
         # nothing found...

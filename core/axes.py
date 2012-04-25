@@ -19,7 +19,7 @@ import visvis as vv
 from visvis.core import base
 from visvis.core.base import DRAW_NORMAL, DRAW_FAST, DRAW_SHAPE, DRAW_SCREEN
 from visvis.core.misc import Property, PropWithDraw, DrawAfter 
-from visvis.core.misc import Range, getColor
+from visvis.core.misc import Range, getColor, basestring
 #
 from visvis.core.baseWibjects import Box, DraggableBox
 from visvis.core import cameras

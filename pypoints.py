@@ -1238,11 +1238,13 @@ class Pointset(BasePoints):
         self._index = -1
         return self
     
-    def next(self):
+    def __next__(self):
         self._index +=1
         if self._index >= len(self):  raise StopIteration
         return self[self._index]
-   
+    
+    def next(self): # Python 2.x
+        return self.__next__() 
     
     def contains(self, *p):
         """ contains(*p)
