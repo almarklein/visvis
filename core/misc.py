@@ -20,7 +20,7 @@ import numpy as np
 from visvis import ssdf
 import OpenGL.GL as gl
 
-from pypoints import getExceptionInstance
+from visvis.pypoints import getExceptionInstance
 
 
 V2 = sys.version_info[0] == 2
