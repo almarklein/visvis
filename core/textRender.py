@@ -113,7 +113,7 @@ escapes = {
 
 # sort the keys, such that longer names are replaced first
 escapesKeys = list(escapes.keys())
-escapesKeys.sort( lambda x,y:len(y)-len(x))
+escapesKeys.sort( key=len, reverse=True)
 
 
 class Font(TextureObject):

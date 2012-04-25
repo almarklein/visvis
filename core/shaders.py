@@ -426,8 +426,9 @@ class GlslProgram:
                 myshader = gla.glCreateShaderObjectARB(type)
                 self._shaderIds.append(myshader)
                 
-                # set its source            
-                gla.glShaderSourceARB(myshader, [code])
+                # set its source, encode to ascii. PyOpenGL always accepts
+                # bytes (at least that was what was agreed april 2012)
+                gla.glShaderSourceARB(myshader, [code.encode('ascii')])
                 
                 # compile shading code
                 gla.glCompileShaderARB(myshader)
@@ -466,8 +467,8 @@ class GlslProgram:
         # convert to floats
         values = [float(v) for v in values]
         
-        # get loc
-        loc = gla.glGetUniformLocationARB(self._programId, varname)        
+        # get loc, encode varname to ensure it's in byte format
+        loc = gla.glGetUniformLocationARB(self._programId, varname.encode('ascii'))        
         
         try:
             # set values
@@ -497,8 +498,8 @@ class GlslProgram:
         # convert to floats
         values = [int(v) for v in values]
         
-        # get loc
-        loc = gla.glGetUniformLocationARB(self._programId, varname)        
+        # get loc, encode varname to ensure it's in byte format
+        loc = gla.glGetUniformLocationARB(self._programId, varname.encode('ascii'))        
         
         # set values
         if len(values) == 1:
@@ -535,9 +536,11 @@ class GlslProgram:
     def _PrintInfoLog(self, glObject, preamble=""):
         """ Print the info log. 
         """
-        log = str(gla.glGetInfoLogARB(glObject))
+        log = gla.glGetInfoLogARB(glObject)
+        if not isinstance(log, str):
+            log = log.decode('ascii') # Make it work on Python 3
         if log:
-            print(str(preamble) + ' ' + log.rstrip())
+            print(preamble + ' ' + log.rstrip())
             # If this is a renderstyle, notify user to use an alternative    
             if '3D_FRAGMENT_SHADER' in self._fragmentCode:
                 print('Try using a different render style.')

@@ -24,8 +24,7 @@ import OpenGL.GLU as glu
 import math
 
 import visvis as vv
-from visvis.core.misc import Property 
-from visvis.core.misc import Range
+from visvis.core.misc import Property, Range, basestring
 from visvis.core import constants
 from visvis.pypoints import Quaternion, Point
 
