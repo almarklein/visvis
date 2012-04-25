@@ -37,7 +37,7 @@ http://linux.die.net/man/1/ffmpeg
 
 import os, time
 import subprocess, shutil
-import images2ims
+from visvis.vvmovie import images2ims
 
 
 def _cleanDir(tempDir):

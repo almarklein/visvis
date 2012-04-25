@@ -71,4 +71,4 @@ from visvis.processing.statistics import StatData
 
 # Do this last
 import backends
-from functions import *
+from visvis.functions import *

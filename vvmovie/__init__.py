@@ -57,10 +57,13 @@ More information about compression and limitations:
 
 import os, time
 
-from images2gif import readGif, writeGif
-from images2swf import readSwf, writeSwf
-from images2avi import readAvi, writeAvi
-from images2ims import readIms, writeIms
+# Python 3 needs absolute import, which makes that this package
+# cannot be a subpackage anymore. We cannot use the dot-notation, 
+# because that doesnt work on Python 2.
+from visvis.images2gif import readGif, writeGif
+from visvis.images2swf import readSwf, writeSwf
+from visvis.images2avi import readAvi, writeAvi
+from visvis.images2ims import readIms, writeIms
 
 videoTypes = ['AVI', 'MPG', 'MPEG', 'MOV', 'FLV']
 imageTypes = ['JPG', 'JPEG', 'PNG', 'TIF', 'TIFF', 'BMP']
