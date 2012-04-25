@@ -49,7 +49,7 @@ def _cleanDir(tempDir):
         else:
             break
     else:
-        print "Oops, could not fully clean up temporary files."
+        print("Oops, could not fully clean up temporary files.")
 
 
 def writeAvi(filename, images, duration=0.1, encoding='mpeg4', 
@@ -106,8 +106,8 @@ def writeAvi(filename, images, duration=0.1, encoding='mpeg4',
     
     if S.wait():    
         # An error occured, show
-        print outPut
-        print S.stderr.read() 
+        print(outPut)
+        print(S.stderr.read())
         # Clean up
         _cleanDir(tempDir)
         raise RuntimeError("Could not write avi.")
@@ -151,8 +151,8 @@ def readAvi(filename, asNumpy=True):
     
     if S.wait():    
         # An error occured, show
-        print outPut
-        print S.stderr.read() 
+        print(outPut)
+        print(S.stderr.read())
         # Clean up
         _cleanDir(tempDir)
         raise RuntimeError("Could not read avi.")

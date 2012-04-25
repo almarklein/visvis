@@ -3,10 +3,17 @@
 
 """
 Implementation of the command-line I{pyflakes} tool.
-"""
 
-import compiler, sys
+AK: I made this Py3k compatible, but Pyflakes is not!
+
+"""
+import sys
 import os
+try:
+    from compiler import parse
+except ImportError:
+    from ast import parse # py3k
+
 
 from pyflakes import checker
 
@@ -36,7 +43,7 @@ def check(codeString, filename):
             if sys.version_info[:2] == (2, 4):
                 raise SyntaxError(None)
             raise
-    except (SyntaxError, IndentationError), value:
+    except (SyntaxError, IndentationError) as value:
         msg = value.args[0]
 
         (lineno, offset, text) = value.lineno, value.offset, value.text
@@ -46,24 +53,24 @@ def check(codeString, filename):
             # Avoid using msg, since for the only known case, it contains a
             # bogus message that claims the encoding the file declared was
             # unknown.
-            print >> sys.stderr, "%s: problem decoding source" % (filename, )
+            print("%s: problem decoding source" % (filename, ))
         else:
             line = text.splitlines()[-1]
 
             if offset is not None:
                 offset = offset - (len(text) - len(line))
 
-            print >> sys.stderr, '%s:%d: %s' % (filename, lineno, msg)
-            print >> sys.stderr, line
+            print('%s:%d: %s' % (filename, lineno, msg))
+            print(line)
 
             if offset is not None:
-                print >> sys.stderr, " " * offset, "^"
+                print(" " * offset, "^")
 
         return 1
     else:
         # Okay, it's syntactically valid.  Now parse it into an ast and check
         # it.
-        tree = compiler.parse(codeString)
+        tree = parse(codeString)
         w = checker.Checker(tree, filename)
         w.messages.sort(lambda a, b: cmp(a.lineno, b.lineno))
         warnings = []
@@ -78,7 +85,7 @@ def check(codeString, filename):
             if not ignore_warning:
                 warnings.append(warning)
         for warning in warnings:
-            print warning
+            print(warning)
         return len(warnings)
 
 IGNORE_STRINGS = []
@@ -104,8 +111,8 @@ def checkPath(filename):
     """
     try:
         return check(file(filename, 'U').read() + '\n', filename)
-    except IOError, msg:
-        print >> sys.stderr, "%s: %s" % (filename, msg.args[1])
+    except IOError as msg:
+        print(sys.stderr, "%s: %s" % (filename, msg.args[1]))
         return 1
 
 
@@ -145,5 +152,4 @@ if __name__ == '__main__':
                 text = file(filename, 'U').read() + '\n'
                 warnings += check(text, filename_short)
     
-    print 'pyflakes found %i warnings.' % warnings
-    
+    print('pyflakes found %i warnings.' % warnings)

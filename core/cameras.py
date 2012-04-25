@@ -386,7 +386,7 @@ class BaseCamera(object):
         # translate it
         x, y = x + self._view_loc[0], y + self._view_loc[1]
         
-        #print x, y
+        #print(x, y)
         return x,y
     
     
@@ -1009,7 +1009,7 @@ class ThreeDCamera(BaseCamera):
                 self._view_el = -90
             if self._view_el > 90:
                 self._view_el = 90
-            #print self._view_az, self._view_el
+            #print(self._view_az, self._view_el)
         
         elif constants.KEY_SHIFT in event.modifiers and self._ref_but==2:
             # Change FoV

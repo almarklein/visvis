@@ -126,7 +126,7 @@ def plot(data1, data2=None, data3=None,
         if data2 is None:
             if d3 is not None:
                 tmp = "third argument in plot() ignored, as second not given."
-                print "Warning: " + tmp
+                print("Warning: " + tmp)
             # y data is given, xdata must be a range starting from 1
             data2 = data1
             data1 = np.arange(1,data2.shape[0]+1)

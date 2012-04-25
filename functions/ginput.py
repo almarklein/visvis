@@ -140,4 +140,4 @@ def ginput(N=0, axes=None, ms='+', **kwargs):
 
 
 if __name__ == '__main__':
-    print vv.ginput(3)
+    print(vv.ginput(3))

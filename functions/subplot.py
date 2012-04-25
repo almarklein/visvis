@@ -116,4 +116,4 @@ if __name__ == "__main__":
     a3=vv.subplot(221)
     a3=vv.subplot(333)
     f.Draw()
-    print a1 is a3
+    print(a1 is a3)

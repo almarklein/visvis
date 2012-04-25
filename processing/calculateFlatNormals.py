@@ -55,7 +55,7 @@ def calculateFlatNormals(mesh):
 #         b.append(i0)
 #         for i in ii:
 #             flatNormals[i0,:] += normals[i,:] / verticesPerFace
-#     print len(a), len(b)
+#     print(len(a), len(b))
     
     
     # Store

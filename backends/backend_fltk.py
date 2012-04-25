@@ -150,7 +150,7 @@ class GLWidget(fltk.Fl_Gl_Window):
             return KEYMAP[key], ''
         else:
             # other key, try producing text            
-            #print key, self._shiftDown
+            #print(key, self._shiftDown)
             if (97 <= key <= 122) and fltk.Fl.event_shift():
                 key -= 32                
             try:

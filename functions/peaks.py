@@ -21,7 +21,7 @@ if False:
     data = data.tostring()
     data = zlib.compress(data)
     text = base64.encodestring(data)
-    print text
+    print(text)
 
 def peaks():
     """ peaks()

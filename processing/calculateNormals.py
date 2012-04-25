@@ -78,8 +78,8 @@ def calculateNormals(mesh):
     normals[I,1] = 0
     normals[I,2] = 1
     
-#     print np.isnan(normals).sum(), 'nans'
-#     print 'calculated normals in ', time.time()-t0
+#     print('%i nans' % np.isnan(normals).sum())
+#     print('calculated normals in %1.2 s' % (time.time()-t0))
     
     # Store normals (need to flip sign to follow the right hand rule)
     mesh._normals = -normals
@@ -156,7 +156,7 @@ def calculateNormals_old(mesh):
         if np.isnan(tmp).sum():
             tmp = defaultNormal
         normals[i,:] = -tmp
-    print 'calculated normals in ', time.time()-t0
+    print('calculated normals in %1.2 s' % (time.time()-t0))
     
     # Store normals
     mesh._normals = normals

@@ -431,7 +431,7 @@ class SliceTextureProxy(Wobject, Colormapable):
         def fget(self):
             return 'None'
         def fset(self, value):
-            print 'Warning: SliceTexture instances have no renderStyle.'
+            print('Warning: SliceTexture instances have no renderStyle.')
         return locals()
     
     @Property 
@@ -443,7 +443,7 @@ class SliceTextureProxy(Wobject, Colormapable):
         def fget(self):
             return 0.0
         def fset(self, value):
-            print 'Warning: SliceTexture instances have no isoThreshold.'
+            print('Warning: SliceTexture instances have no isoThreshold.')
         return locals()
     
     @Property 

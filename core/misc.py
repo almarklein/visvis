@@ -20,6 +20,24 @@ import numpy as np
 from visvis import ssdf
 import OpenGL.GL as gl
 
+from pypoints import getExceptionInstance
+
+
+V2 = sys.version_info[0] == 2
+if V2:
+    D = __builtins__
+    if not isinstance(D, dict):
+        D = D.__dict__
+    bytes = D['str']
+    str = D['unicode']
+    xrange = D['xrange']
+    basestring = basestring
+else:
+    basestring = str  # to check if instance is string
+    bytes, str = bytes, str
+    long = int # for the port
+    xrange = range
+
 
 ## For info about OpenGL version
 
@@ -38,10 +56,10 @@ def getOpenGlInfo():
     """
     
     if not _glInfo[0]:
-        _glInfo[0] = gl.glGetString(gl.GL_VERSION)
-        _glInfo[1] = gl.glGetString(gl.GL_VENDOR)
-        _glInfo[2] = gl.glGetString(gl.GL_RENDERER)
-        _glInfo[3] = gl.glGetString(gl.GL_EXTENSIONS)
+        _glInfo[0] = str(gl.glGetString(gl.GL_VERSION))
+        _glInfo[1] = str(gl.glGetString(gl.GL_VENDOR))
+        _glInfo[2] = str(gl.glGetString(gl.GL_RENDERER))
+        _glInfo[3] = str(gl.glGetString(gl.GL_EXTENSIONS))
     return tuple(_glInfo)
 
 _glLimitations = {}
@@ -71,13 +89,13 @@ def getOpenGlCapable(version, what=None):
     if curVersion >= version :
         return True
     else:
-        # print message?
+        # show message?
         if what and (what not in _glLimitations):
             _glLimitations[what] = True
             tmp = "Warning: the OpenGl version on this system is too low "
             tmp += "to support " + what + ". "
             tmp += "Try updating your drivers or buy a new video card."
-            print tmp
+            print(tmp)
         return False
 
 
@@ -168,7 +186,7 @@ def PropWithDraw(function):
         fset(self, *args)
         if hasattr(self, 'Draw'):
             self.Draw()
-        #print fset._propname, self, time.time()
+        #print(fset._propname, self, time.time())
     if fset:
         fset._propname = function.__name__
         D['fset'] = fsetWithDraw

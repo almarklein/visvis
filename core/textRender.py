@@ -230,7 +230,7 @@ class Glyph(object):
         
         # do we have that char?
         if ac not in info.charcodes:#ac < 32 or ac > 255:
-            print "Warning: Cannot draw character %i! " % ord(char)
+            print("Warning: Cannot draw character %i! " % ord(char))
             ac = 32 # make space
         
         # default

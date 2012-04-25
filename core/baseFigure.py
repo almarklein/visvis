@@ -33,7 +33,7 @@ from visvis.core.axes import _BaseFigure, AxesContainer, Axes, Legend
 from visvis.core.axes import _Screenshot
 
 
-# a variable to indicate whether to print FPS, for testing
+# a variable to indicate whether to show FPS, for testing
 printFPS = False
 
 
@@ -104,7 +104,7 @@ class ObjectPickerHelper(object):
         items = [figure]  # figure is always at the bottom
         if id:
             self._walkTree(id, figure._children, items)
-            #print id
+            #print(id)
         
         # return result
         return items
@@ -715,7 +715,7 @@ class BaseFigure(_BaseFigure):
             dt = time.time() - self._drawtime
             self._drawtime = time.time()
             if printFPS:
-                print 'FPS: ', 1.0/dt  # for testing
+                print('FPS: %1.1f' % (1.0/dt))  # for testing
             
             # get whether to draw fast and reset drawWell flag
             fast = self._drawWell == 0

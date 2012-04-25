@@ -61,8 +61,8 @@ def _insertFunctions():
         # import module
         mod = __import__("visvis.functions."+funname, fromlist=[funname])
         if not hasattr(mod,funname):
-            print "module %s does not have a function with the same name!" % (
-                funname)
+            print("module %s does not have a function with the same name!" % (
+                funname))
         else:
             # insert into THIS namespace
             g = globals()

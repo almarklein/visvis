@@ -18,7 +18,7 @@ import os
 import OpenGL.GL as gl
 import OpenGL.GL.ARB.shader_objects as gla
 
-from visvis.core.misc import getResourceDir, getOpenGlCapable
+from visvis.core.misc import getResourceDir, getOpenGlCapable, getExceptionInstance
 import visvis as vv
 
 # Variable for debugging / developing to display shader info logs always.
@@ -284,7 +284,7 @@ class Shader(object):
             elif isinstance(value[0], int):
                 self.program.SetUniformi(name, value)        
         elif isinstance(value, vv.core.baseTexture.TextureObject):
-            #print 'uniform texture', name, 'at', self._textureId
+            #print('uniform texture', name, 'at', self._textureId)
             # Enable and register as uniform
             value.Enable(self._textureId)
             self.program.SetUniformi(name, [self._textureId])
@@ -444,9 +444,10 @@ class GlslProgram:
             if self._CheckForErrors(self._programId, False, True):
                 self._programId = -1
         
-        except Exception, why:
+        except Exception:
             self._programId = -1
-            print "Unable to initialize shader code.", why
+            why = str(getExceptionInstance())
+            print("Unable to initialize shader code. %s" % why)
     
     
     def SetUniformf(self, varname, values):
@@ -477,8 +478,8 @@ class GlslProgram:
                 gl.glUniform3f(loc, values[0], values[1], values[2])
             elif len(values) == 4:
                 gl.glUniform4f(loc, values[0], values[1], values[2], values[3])
-        except:
-            print 'Could not set uniform in shader. "%s": %s' % (varname, repr(values))
+        except Exception:
+            print('Could not set uniform in shader. "%s": %s' % (varname, repr(values)))
     
     def SetUniformi(self, varname, values):
         """ SetUniformi(varname, values)
@@ -533,9 +534,9 @@ class GlslProgram:
     def _PrintInfoLog(self, glObject, preamble=""):
         """ Print the info log. 
         """
-        log = gla.glGetInfoLogARB(glObject)
+        log = str(gla.glGetInfoLogARB(glObject))
         if log:
-            print preamble, log.rstrip()
+            print(str(preamble) + ' ' + log.rstrip())
             # If this is a renderstyle, notify user to use an alternative    
             if '3D_FRAGMENT_SHADER' in self._fragmentCode:
                 print('Try using a different render style.')
@@ -846,7 +847,7 @@ class ShaderCode(object):
         Print the code with line numbers, and limiting long lines.
         Can be useful when debugging glsl code.
         
-        When part is given, only print the lines that belong to the
+        When part is given, only display the lines that belong to the
         given part name. The 'part' argument can also be a string with
         the part name.
         
@@ -878,7 +879,7 @@ class ShaderCode(object):
                 line2 = line2[:columnLimit-3] + '...'
             if (not name) or (name == partName):
                 lines.append(line2)
-        print '\n'.join(lines)
+        print('\n'.join(lines))
     
     
     def _Compile(self):
@@ -919,7 +920,7 @@ class ShaderCode(object):
                 
                 # Section present?
                 if len(splittedCode) == 1:
-                    #print 'Warning: code section <%s> not known.' % section
+                    #print('Warning: code section <%s> not known.' % section)
                     continue
                 
                 # For every occurance ...
@@ -1117,5 +1118,5 @@ if __name__ == '__main__':
     s = ShaderCode()
     s.AddPart(S1)
     s.AddPart(S2)
-    print s.GetCode()
+    print(s.GetCode())
 
