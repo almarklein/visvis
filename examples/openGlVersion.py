@@ -13,7 +13,7 @@ print('Information about the OpenGl version on this system:\n')
 print('version:    ' + version)
 print('vendor:     ' + vendor)
 print('renderer:   ' + renderer)
-print('extensions: ' + len(ext.split()),'different extensions')
+print('extensions: ' + str(len(ext.split())) + ' different extensions')
 
 # Wait
 try:

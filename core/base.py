@@ -16,6 +16,7 @@ import numpy as np
 import weakref
 
 from visvis.core import misc
+from visvis.core.misc import basestring
 from visvis.core.misc import (Transform_Base, Transform_Translate, 
                                     Transform_Scale, Transform_Rotate)
 from visvis.core import events

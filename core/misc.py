@@ -25,22 +25,11 @@ from visvis.pypoints import getExceptionInstance
 
 V2 = sys.version_info[0] == 2
 if V2:
-    D = __builtins__
-    if not isinstance(D, dict):
-        D = D.__dict__
-#     bytes = D['str']
-#     str = D['unicode']
-#     xrange = D['xrange']
-#     str = str
     unichr = unichr
     basestring = basestring
 else:
     basestring = str
     unichr = chr
-#     str = str  # to check if instance is string
-#     bytes, str = bytes, str
-#     long = int # for the port
-#     xrange = range
 
 
 ## For info about OpenGL version
@@ -48,6 +37,13 @@ else:
 
 # To store openGl info
 _glInfo = [None]*4
+
+
+def ensureString(s):
+    if isinstance(s, str):
+        return s
+    else:
+        return s.decode('ascii')
 
 def getOpenGlInfo():
     """ getOpenGlInfo()
@@ -60,10 +56,10 @@ def getOpenGlInfo():
     """
     
     if not _glInfo[0]:
-        _glInfo[0] = str(gl.glGetString(gl.GL_VERSION))
-        _glInfo[1] = str(gl.glGetString(gl.GL_VENDOR))
-        _glInfo[2] = str(gl.glGetString(gl.GL_RENDERER))
-        _glInfo[3] = str(gl.glGetString(gl.GL_EXTENSIONS))
+        _glInfo[0] = ensureString(gl.glGetString(gl.GL_VERSION))
+        _glInfo[1] = ensureString(gl.glGetString(gl.GL_VENDOR))
+        _glInfo[2] = ensureString(gl.glGetString(gl.GL_RENDERER))
+        _glInfo[3] = ensureString(gl.glGetString(gl.GL_EXTENSIONS))
     return tuple(_glInfo)
 
 _glLimitations = {}
