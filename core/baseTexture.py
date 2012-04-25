@@ -617,7 +617,7 @@ class Colormap(TextureObject):
             # DICT
             
             # Allow several color names
-            for key in args.keys():
+            for key in list(args.keys()):
                 if key.lower() in ['r', 'red']:
                     args['r'] = args[key]
                 elif key.lower() in ['g', 'green']:

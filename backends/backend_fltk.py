@@ -11,6 +11,7 @@
 
 import visvis
 from visvis import BaseFigure, events, constants
+from visvis.core.misc import basestring
 
 import fltk
 
@@ -143,7 +144,7 @@ class GLWidget(fltk.Fl_Gl_Window):
         Also produce text version.
         return key, text. """
         key = fltk.Fl.event_key()
-        if isinstance(key,basestring):
+        if isinstance(key, basestring):
             key = ord(key)
         # special cases for shift control and alt -> map to 17 18 19
         if key in KEYMAP:

@@ -1,10 +1,14 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """ This example illustrate using text and formatting for text
 world objects and labels.
 """
 
 import visvis as vv
+
+# The next import is just to create a Unicode char in a way that works on Python2 and Python3
+from visvis.core.misc import unichr 
 
 # Create figure and figure
 fig = vv.figure()
@@ -23,7 +27,7 @@ label0 = vv.Label(a, 'These are texts in widget coordinates:')
 label0.position = 10, 20
 label1 = vv.Label(a, 'Sub_{script} and super^{script} are easy as pi^2.')
 label1.position = 10, 40
-label2 = vv.Label(a, u'You can use many Unicode characters: \\u0183 = \u0183')
+label2 = vv.Label(a, 'You can use many Unicode characters: \\u0183 = ' + unichr(387))
 label2.position = 10, 60
 label3 = vv.Label(a, 'And can use many Latex like commands: \\alpha \\Alpha' +
                     '\\approx, \sigma, \pi, ')

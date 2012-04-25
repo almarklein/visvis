@@ -171,7 +171,7 @@ class BitArray:
             bits = str(bits)
         if isinstance(bits, int):
             bits = str(bits)
-        if not isinstance(bits, basestring):
+        if not isinstance(bits, str):
             raise ValueError("Append bits as strings or integers!")
         
         # add bits

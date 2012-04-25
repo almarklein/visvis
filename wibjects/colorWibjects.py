@@ -191,10 +191,10 @@ class ColormapEditor(BaseMapableEditor):
         self._nodeWidget.position = 55,35,-80,-40 # 80 = 55+25
         
         # Create buttons
-        self._rBut = RadioButton(self, 'R'); self._rBut.position = 05,35, 12,14
+        self._rBut = RadioButton(self, 'R'); self._rBut.position =  5,35, 12,14
         self._gBut = RadioButton(self, 'G'); self._gBut.position = 20,35, 12,14
         self._bBut = RadioButton(self, 'B'); self._bBut.position = 35,35, 12,14
-        self._aBut = RadioButton(self, 'A'); self._aBut.position = 05,52, 12,14
+        self._aBut = RadioButton(self, 'A'); self._aBut.position =  5,52, 12,14
         self._aBut.state = True
         
         # Create colorbar wibject
@@ -313,7 +313,7 @@ class ColormapEditor(BaseMapableEditor):
         
         elif isinstance(nodeData, dict):
             # Allow several color names
-            for key in nodeData.keys():
+            for key in list(nodeData.keys()):
                 if key.lower() in ['r', 'red']:
                     nodeData['r'] = nodeData[key]
                 elif key.lower() in ['g', 'green']:
@@ -747,7 +747,7 @@ class Colorbar(Box):
                 label.position.y = pos2.y + yoffset
             
             # Clean up label pool
-            for label in self._labelPool.values():
+            for label in list(self._labelPool.values()):
                 label.Destroy()
             self._labelPool = newLabelPool
             

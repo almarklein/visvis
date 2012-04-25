@@ -153,7 +153,7 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
     if data2 is None and data3 is None:
         # Only height given
         hh = data1
-        xx = range(len(hh))
+        xx = list(range(len(hh)))
         yy = [0] * len(hh)
     elif data3 is None:
         # Height and x given

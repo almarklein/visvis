@@ -26,7 +26,7 @@ import math
 from visvis.pypoints import Pointset, Point
 #
 from visvis.core import base
-from visvis.core.misc import Range, getColor
+from visvis.core.misc import Range, getColor, basestring
 from visvis.core.misc import Property, PropWithDraw, DrawAfter 
 #
 from visvis.core.textRender import Text
@@ -327,7 +327,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
     elif isinstance(givenTicks, dict):
         # Use given ticks in dict
         
-        for tickValue in givenTicks.keys():
+        for tickValue in givenTicks:
             if tickValue >= lim.min and tickValue <= lim.max:
                 tickText = givenTicks[tickValue]
                 tickValues.append(tickValue)                
@@ -619,7 +619,7 @@ class BaseAxis(base.Wobject):
             elif isinstance(value, dict):
                 try:
                     ticks = {}
-                    for key in value.keys():
+                    for key in value:
                         ticks[key] = str(value[key])
                     self._xticks = ticks
                 except Exception:
@@ -662,7 +662,7 @@ class BaseAxis(base.Wobject):
             elif isinstance(value, dict):
                 try:
                     ticks = {}
-                    for key in value.keys():
+                    for key in value:
                         ticks[key] = str(value[key])
                     self._yticks = ticks
                 except Exception:
@@ -705,7 +705,7 @@ class BaseAxis(base.Wobject):
             elif isinstance(value, dict):
                 try:
                     ticks = {}
-                    for key in value.keys():
+                    for key in value:
                         ticks[key] = str(value[key])
                     self._zticks = ticks
                 except Exception:
@@ -1178,7 +1178,7 @@ class CartesianAxis2D(BaseAxis):
         
         # Clean up the text objects that are left
         for tmp in self._textDicts:
-            for t in tmp.values():
+            for t in list(tmp.values()):
                 t.Destroy()
 
         # Store text object dictionaries for next time ...
@@ -1450,7 +1450,7 @@ class CartesianAxis3D(BaseAxis):
         
         # Clean up the text objects that are left
         for tmp in self._textDicts:
-            for t in tmp.values():
+            for t in list(tmp.values()):
                 t.Destroy()
 
         # Store text object dictionaries for next time ...
@@ -1976,7 +1976,7 @@ class PolarAxis2D(BaseAxis):
 
         # Clean up the text objects that are left
         for tmp in self._textDicts:
-            for t in tmp.values():
+            for t in list(tmp.values()):
                 t.Destroy()
 
         # Store text object dictionaries for next time ...

@@ -28,15 +28,19 @@ if V2:
     D = __builtins__
     if not isinstance(D, dict):
         D = D.__dict__
-    bytes = D['str']
-    str = D['unicode']
-    xrange = D['xrange']
+#     bytes = D['str']
+#     str = D['unicode']
+#     xrange = D['xrange']
+#     str = str
+    unichr = unichr
     basestring = basestring
 else:
-    basestring = str  # to check if instance is string
-    bytes, str = bytes, str
-    long = int # for the port
-    xrange = range
+    basestring = str
+    unichr = chr
+#     str = str  # to check if instance is string
+#     bytes, str = bytes, str
+#     long = int # for the port
+#     xrange = range
 
 
 ## For info about OpenGL version
@@ -142,7 +146,7 @@ def Property(function):
     D = {'doc': function.__doc__}
     
     # Copy known keys. Check if there are invalid keys
-    for key in func_locals.keys():
+    for key in list(func_locals.keys()):
         if key in known_keys:
             D[key] = func_locals[key]
         else:
@@ -174,7 +178,7 @@ def PropWithDraw(function):
     D = {'doc': function.__doc__}
     
     # Copy known keys. Check if there are invalid keys
-    for key in func_locals.keys():
+    for key in list(func_locals.keys()):
         if key in known_keys:
             D[key] = func_locals[key]
         else:
@@ -231,7 +235,7 @@ def PropertyForSettings(function):
     D = {'doc': function.__doc__}
     
     # Copy known keys. Check if there are invalid keys
-    for key in func_locals.keys():
+    for key in list(func_locals.keys()):
         if key in known_keys:
             D[key] = func_locals[key]
         else:
@@ -389,7 +393,7 @@ def getColor(value, descr='getColor'):
     tmp = ""
     if not value:
         value = None
-    elif isinstance(value, (str, unicode)):
+    elif isinstance(value, basestring):
         if value not in 'rgbycmkw':
             tmp = "string color must be one of 'rgbycmkw' !"
         else:

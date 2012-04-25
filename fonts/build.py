@@ -76,4 +76,4 @@ for font in fonts:
         # call fontgen
         status = os.system(fontGenApp + ' -optfile ' + fname)
         if status != 0:
-            raw_input('an error occured, press enter to continue')
+            input('an error occured, press enter to continue')

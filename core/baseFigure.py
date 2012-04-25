@@ -259,7 +259,7 @@ class BaseFigure(_BaseFigure):
         """ 
         
         # get keys
-        nrs = BaseFigure._figures.keys()        
+        nrs = list(BaseFigure._figures.keys())        
         nrs.sort()
         nr = 0 # the number...
         # check if a spot was prepared for us (override if so)
@@ -634,7 +634,7 @@ class BaseFigure(_BaseFigure):
     
     def OnDestroy(self):
         # remove from list
-        for nr in BaseFigure._figures.keys():
+        for nr in list(BaseFigure._figures.keys()):
             if BaseFigure._figures[nr] is self:
                 BaseFigure._figures.pop(nr)
                 BaseFigure._currentFigure = None

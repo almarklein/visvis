@@ -16,4 +16,8 @@ print('renderer:   ' + renderer)
 print('extensions: ' + len(ext.split()),'different extensions')
 
 # Wait
-raw_input('\nPress enter to continue...')
+try:
+    input('\nPress enter to continue...') # Python 3
+except NameError:
+    raw_input('\nPress enter to continue...') # Python 2
+    
