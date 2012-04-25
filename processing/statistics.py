@@ -348,7 +348,7 @@ class StatData:
             totalSplats += nSplats
         
         # Check (should be equal)
-        #print totalSplats, xxi.size
+        #print(totalSplats, xxi.size)
         
         if False:
             # Analog algoritm, better readable perhaps, but much slower:

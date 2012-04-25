@@ -514,7 +514,7 @@ class DoActionTag(Tag):
             elif action == 'play':
                 bb += '\x06'
             else:
-                print "warning, unkown action: %s" % action
+                print("warning, unkown action: %s" % action)
         
         bb += intToUint8(0)
         self.bytes = bb
@@ -836,7 +836,7 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
         fp.close()
     t2 =  time.time()
     
-    #print "Writing SWF took %1.2f and %1.2f seconds" % (t1-t0, t2-t1)
+    #print("Writing SWF took %1.2f and %1.2f seconds" % (t1-t0, t2-t1) )
     
 
 def _readPixels(bb, i, tagType, L1):
@@ -855,7 +855,7 @@ def _readPixels(bb, i, tagType, L1):
     
     # If we can, get pixeldata and make nunmpy array
     if format != 5:
-        print "Can only read 24bit or 32bit RGB(A) lossless images."
+        print("Can only read 24bit or 32bit RGB(A) lossless images.")
     else:
         # Read byte data
         offset = 2+1+2+2 # all the info bits
@@ -872,7 +872,7 @@ def _readPixels(bb, i, tagType, L1):
                 a.shape = height, width, 3
             except Exception:
                 # Byte align stuff might cause troubles
-                print "Cannot read image due to byte alignment"
+                print("Cannot read image due to byte alignment")
         if tagType == 36:
             # DefineBitsLossless2 - ARGB data
             a.shape = height, width, 4
@@ -950,9 +950,9 @@ def readSwf(filename, asNumpy=True):
             # Determine type and length
             T, L1, L2 = getTypeAndLen( head )
             if not L2:
-                print 'Invalid tag length, could not proceed'
+                print('Invalid tag length, could not proceed')
                 break
-            #print T, L2
+            #print(T, L2)
             
             # Read image if we can
             if T in [20, 36]:
@@ -960,7 +960,7 @@ def readSwf(filename, asNumpy=True):
                 if im is not None:
                     images.append(im)
             elif T in [6, 21, 35, 90]:
-                print 'Ignoring JPEG image: cannot read JPEG.'
+                print('Ignoring JPEG image: cannot read JPEG.')
             else:
                 pass # Not an image tag 
             

@@ -349,7 +349,8 @@ class GifWriter:
             xy.append((x0,y0))
         
         # Done
-        #print '%1.2f seconds to determine subrectangles of  %i images' % (time.time()-t0, len(ims2))
+        #print('%1.2f seconds to determine subrectangles of  %i images' % 
+        #    (time.time()-t0, len(ims2)) )
         return ims2, xy
     
     
@@ -892,9 +893,9 @@ class NeuQuant:
         rad = biasRadius >> self.RADIUSBIASSHIFT
         if rad <= 1:
             rad = 0
-    
-        print "Beginning 1D learning: samplepixels =",samplepixels," rad =", rad
-    
+        
+        print("Beginning 1D learning: samplepixels = %1.2f  rad = %i" %
+                                                    (samplepixels, rad) )
         step = 0
         pos = 0
         if lengthcount%NeuQuant.PRIME1 != 0:
@@ -912,7 +913,7 @@ class NeuQuant:
             if i%100 == 99:
                 tmp = '\b'*len(printed_string)
                 printed_string = str((i+1)*100/samplepixels)+"%\n"
-                print tmp + printed_string,
+                print(tmp + printed_string)
             p = self.pixels[pos]
             r = (p >> 16) & 0xff
             g = (p >>  8) & 0xff
@@ -940,7 +941,9 @@ class NeuQuant:
                 rad = biasRadius >> self.RADIUSBIASSHIFT
                 if rad <= 1:
                     rad = 0
-        print "Finished 1D learning: final alpha =",(1.0*alpha)/self.INITALPHA,"!"
+        
+        finalAlpha = (1.0*alpha)/self.INITALPHA
+        print("Finished 1D learning: final alpha = %1.2f!" % finalAlpha)
     
     def fix(self):
         for i in range(self.NETSIZE):
@@ -1005,7 +1008,7 @@ class NeuQuant:
         if get_cKDTree():
             return self.quantize_with_scipy(image)
         else:
-            print 'Scipy not available, falling back to slower version.'
+            print('Scipy not available, falling back to slower version.')
             return self.quantize_without_scipy(image)
     
     
@@ -1018,7 +1021,7 @@ class NeuQuant:
         kdtree = cKDTree(self.colormap[:,:3],leafsize=10)
         result = kdtree.query(px2)
         colorindex = result[1]
-        print "Distance:", (result[0].sum()/(w*h))
+        print("Distance: %1.2f" % (result[0].sum()/(w*h)) )
         px2[:] = self.colormap[colorindex,:3]
         
         return Image.fromarray(px).convert("RGB").quantize(palette=self.paletteImage())

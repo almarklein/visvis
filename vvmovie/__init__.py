@@ -182,8 +182,8 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     dt = t1-t0
     
     # Notify    
-    print "Wrote %i frames to %s in %1.2f seconds (%1.0f ms/frame)" % (
-                        len(images), EXT, dt, 1000*dt/len(images))
+    print("Wrote %i frames to %s in %1.2f seconds (%1.0f ms/frame)" % 
+                        (len(images), EXT, dt, 1000*dt/len(images)) )
 
 
 def movieRead(filename, asNumpy=True, **kwargs):
@@ -234,10 +234,10 @@ def movieRead(filename, asNumpy=True, **kwargs):
     
     # Notify 
     if images:
-        print "Read %i frames from %s in %1.2f seconds (%1.0f ms/frame)" % (
-                        len(images), EXT, dt, 1000*dt/len(images))
+        print("Read %i frames from %s in %1.2f seconds (%1.0f ms/frame)" % 
+                    (len(images), EXT, dt, 1000*dt/len(images)) )
     else:
-        print "Could not read any images."
+        print("Could not read any images.")
     
     # Done
     return images

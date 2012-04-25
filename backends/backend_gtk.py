@@ -268,7 +268,7 @@ def newFigure():
     try:
         iconfile = os.path.join(getResourceDir(), 'visvis_icon_gtk.png')
         window.set_icon_from_file(iconfile)
-    except Exception as e:
+    except Exception:
         pass
     
     # From GTKGL example

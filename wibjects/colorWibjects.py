@@ -95,7 +95,7 @@ class BaseMapableEditor(DraggableBox):
             if isinstance(arg, (BaseFigure,Axes)) or isinstance(arg, Colormapable):
                 self._mapables.append( weakref.ref(arg) )
             else:
-                print 'Warning object is not mappable: ', arg 
+                print('Warning object is not mappable: %s' % str(arg))
 
 
 class ClimEditor(BaseMapableEditor):

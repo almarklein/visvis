@@ -1943,7 +1943,7 @@ class PolarAxis2D(BaseAxis):
             else:
                 t = AxisText(self, text, ptxt.x, ptxt.y, ptxt.z)
             # Add to dict
-            #print tick, '=>',text, 'but', t.text
+            #print(tick, '=>',text, 'but', t.text)
             newTextDicts[qIndx][tickXformed] = t
            # Set other properties right
             t._visible = True

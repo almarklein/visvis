@@ -143,7 +143,7 @@ class BaseEvent:
         # check -> warn
         for c in self._handlers:
             if cnew.compare(c):
-                print "Warning: handler %s already present for %s" %(func, self)
+                print("Warning: handler %s already present for %s" %(func, self))
                 return
         
         # add the handler
@@ -210,11 +210,11 @@ class BaseEvent:
                 list = traceback.format_list(tblist[2:]) # remove "Fire"
                 list.extend( traceback.format_exception_only(type, value) )
                 # print
-                print "ERROR calling '%s':" % s
+                print("ERROR calling '%s':" % s)
                 tmp = ""                
                 for i in list:
                     tmp += i
-                print tmp
+                print(tmp)
 
 
 class MouseEvent(BaseEvent):

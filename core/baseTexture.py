@@ -218,8 +218,8 @@ class TextureObject(object):
         # check if ok now
         if not gl.glIsTexture(self._texId):
             if not troubleLastTime:
-                tmp = " (Hiding message for future draws.)"
-                print "Warning enabling texture, the texture is not valid."+tmp
+                print("Warning enabling texture, the texture is not valid. " + 
+                        "(Hiding message for future draws.)")
             return
         
         # Enable texturing, and bind to texture
@@ -354,7 +354,7 @@ class TextureObject(object):
                 data2 = makePowerOfTwo(data, self._ndim)
                 if data2 is not data:
                     data = data2
-                    print "Warning: the data was padded to make it a power of two."
+                    print("Warning: the data was padded to make it a power of two.")
             
             # test whether it fits, downsample if necessary
             ok, count = False, 0

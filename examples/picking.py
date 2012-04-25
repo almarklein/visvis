@@ -32,16 +32,16 @@ a = vv.gca()
 a.daspectAuto = True
 
 def picker(event):
-    print "Picking (%i,%i) (%3.2f, %3.2f)" % (event.x, event.y, 
-            event.x2d, event.y2d), event.owner
+    print("Picking (%i,%i) (%3.2f, %3.2f)" % (event.x, event.y, 
+            event.x2d, event.y2d), event.owner)
 def entering(event):
-    print "Entering", event.x,event.y, event.owner
+    print("Entering", event.x, event.y, event.owner)
     if hasattr(event.owner, 'lc'):
         event.owner.picker_lc = event.owner.lc
         event.owner.lc = 'y'
 
 def leaving(event):
-    print "Leaving", event.x,event.y, event.owner
+    print("Leaving", event.x,event.y, event.owner)
     if hasattr(event.owner, 'picker_lc'):
         event.owner.lc = event.owner.picker_lc
 

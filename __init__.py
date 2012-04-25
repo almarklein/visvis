@@ -43,6 +43,12 @@ For more help, see ...
 
 """
 
+# todo: get ssdf from elsewhere
+# todo: get pypoints from elsewhere?
+# todo: get isFrozen from pyzolib
+# todo: more lazy imports for io and vvmovie
+# todo: check which opengl functions return a string, deal with str and bytes
+
 __version__  = '1.6' 
 
 # Loose sub-modules and sub-packages

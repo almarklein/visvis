@@ -429,4 +429,4 @@ if __name__ == '__main__':
     vv.bar(bins2, values2)#, lc='r', ms='.', mc='r')
     vv.plot(bins3, values3)#, lc='g', ms='.', mc='g')
     vv.plot(bins1, values1, lc='b', ms='.', mc='b', ls=':', mw=4)
-    #print abs(bins1-bins2).sum()
+    #print(abs(bins1-bins2).sum())

@@ -133,7 +133,7 @@ class BaseObject(object):
         
         # are we alive
         if self._destroyed:
-            print "Warning, cannot draw destroyed object:", self
+            print("Warning, cannot draw destroyed object: %s" % str(self))
             return 
         
         # only draw if visible
@@ -888,7 +888,7 @@ class Position(object):
         if owner and owner._position is self:           
             if hasattr(owner, 'eventPosition'):
                 owner.eventPosition.Fire()
-                #print 'firing position event for', owner
+                #print('firing position event for', owner)
             for child in owner._children:
                 if hasattr(child, '_position'):
                     child._position._Update()
@@ -934,7 +934,7 @@ class Position(object):
                             " if the position instance is owned by a wibject!")
         # else, the owner must have a parent...
         if owner.parent is None:
-            print owner
+            print(owner)
             raise Exception("Can only calculate the position in pixels"+
                             " if the owner has a parent!")
         

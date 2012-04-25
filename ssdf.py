@@ -765,7 +765,7 @@ class Struct(object):
         for key in self:
             c = max(c, len(key))
         
-        # How many chars left (to print on less than 80 lines)
+        # How many chars left (to display on less than 80 lines)
         charsLeft = 79 - (c+4) # 2 spaces and ': '
         
         s = 'Elements in SSDF struct:\n'

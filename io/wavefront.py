@@ -78,7 +78,7 @@ class WavefrontReader(object):
         
         # Done
         mesh = reader.finish()
-        #print 'reading mesh took', time.time()-t0, 'seconds'
+        #print('reading mesh took ' + str(time.time()-t0) + ' seconds')
         return mesh
     
     

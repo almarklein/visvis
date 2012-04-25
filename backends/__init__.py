@@ -51,7 +51,7 @@ The backend is chosen/selected as follows:
 import os, sys
 import imp
 import visvis
-from visvis.core.misc import isFrozen
+from visvis.core.misc import isFrozen, getExceptionInstance
 
 # The order in which to try loading a backend (foo is a dummy backend)
 backendOrder = ['qt4', 'wx', 'gtk', 'fltk', 'foo'] # I'd love to put tk in this list
@@ -147,11 +147,12 @@ def _loadBackend(name):
         else:
             module = imp.load_source(modNameFull, modFileName)
         globals()[modName] = module
-    except Exception, why:
+    except Exception:
         if not isFrozen():
             # Only show if not frozen. If frozen, it can easily happen that
             # the GUI toolkit is available, but the visvis backend is not.
-            print 'Error importing %s backend:' % name, why
+            why = str(getExceptionInstance())
+            print('Error importing %s backend: %s' % (name, why))
         return False
     
     # Do some tests
@@ -189,7 +190,7 @@ def use(backendName=None):
     
     # Prevent resetting the backend to use
     if loadedName and backendName and loadedName != backendName:
-        print "Warning: changing backend while %s already loaded." % loadedName
+        print("Warning: changing backend while %s already loaded." % loadedName)
         #raise RuntimeError("Cannot change backend, %s already loaded." % loadedName)
     
     # Process
