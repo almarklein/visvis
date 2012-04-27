@@ -17,54 +17,85 @@ import traceback
 import weakref
 
 
-class CallableObject:
+# todo: I could try to make the event systems of yoton and visvis more the same
+# the CallableObject class is now equal
+
+class CallableObject(object):
     """ CallableObject(callable)
     
-    A class to hold a callable using weak references.
-    It can distinguish between functions and methods. 
+    A class to hold a callable. If it is a plain function, its reference
+    is held (because it might be a closure). If it is a method, we keep
+    the function name and a weak reference to the object. In this way,
+    having for instance a signal bound to a method, the object is not
+    prevented from being cleaned up.
     
     """
+    __slots__ = ['_ob', '_func']  # Use __slots__ to reduce memory footprint
+    
     def __init__(self, c):
-        if hasattr(c,'im_func'):
-            self._func = weakref.ref(c.im_func)
+        
+        # Check
+        if not hasattr(c, '__call__'):
+            raise ValueError('Error: given callback is not callable.')
+        
+        # Store funcion and object
+        if hasattr(c, '__self__'):
+            # Method, store object and method name
+            self._ob = weakref.ref(c.__self__)
+            self._func = c.__func__.__name__
+        elif hasattr(c, 'im_self'): 
+            # Method in older Python
             self._ob = weakref.ref(c.im_self)
+            self._func = c.im_func.__name__
         else:
-            self._func = weakref.ref(c)
+            # Plain function
+            self._func = c
             self._ob = None
     
     def isdead(self):
         """ Get whether the weak ref is dead. 
         """
-        if self._func() is None or (self._ob and self._ob() is None):
-            return True
+        if self._ob:
+            # Method
+            return self._ob() is None
         else:
             return False
-    
-    def call(self, *args):
-        """ Call the callable.
-        """
-        func = self._func()
-        if self._ob:
-            return func(self._ob(), *args)
-        else:
-            return func(*args)
     
     def compare(self, other):
         """ compare this instance with another.
         """
-        # compare func
-        if self._func() is not other._func():
-            return False
-        # compare object
-        if self._ob and other._ob and self._ob() is other._ob():
-            return True
-        elif self._ob is None and other._ob is None:
-            return True
+        if self._ob and other._ob:
+            return (self._ob() is other._ob()) and (self._func == other._func)
+        elif not (self._ob or other._ob):
+            return self._func == other._func
         else:
             return False
     
     def __str__(self):
-        return self._func().__str__()
+        return self._func.__str__()
+    
+    def call(self, *args, **kwargs):
+        """ call(*args, **kwargs)
+        Call the callable. Exceptions are caught and printed.
+        """
+        if self.isdead():
+            return
+        
+        # Get function
+        try:
+            if self._ob:
+                func = getattr(self._ob(), self._func)
+            else:
+                func = self._func
+        except Exception:
+            return
+        
+        # Call it
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            print('Exception while handling event:')
+            print(getErrorMsg())
 
 
 class BaseEvent:

@@ -48,8 +48,6 @@ For more help, see ...
 # todo: get isFrozen from pyzolib
 # todo: more lazy imports for io and vvmovie
 
-# todo: check which opengl functions return a string, deal with str and bytes
-# todo: change events.py to become Python3 compatible, see yoton.events
 # todo: test vvMovie import and exports, they probably need encoding stuff
 
 __version__  = '1.6' 
