@@ -893,7 +893,7 @@ class Texture3D(BaseTexture):
         # Function to partition each quad in four smaller quads
         def partition(tex_coord1, ver_coord1):
             tex_coord2, ver_coord2 = Pointset(3), Pointset(3)
-            for iQuad in range(len(tex_coord1)/4):
+            for iQuad in range(int(len(tex_coord1)/4)):
                 io = iQuad * 4
                 for i1 in range(4):
                     for i2 in range(4):

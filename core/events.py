@@ -91,11 +91,7 @@ class CallableObject(object):
             return
         
         # Call it
-        try:
-            return func(*args, **kwargs)
-        except Exception:
-            print('Exception while handling event:')
-            print(getErrorMsg())
+        return func(*args, **kwargs)
 
 
 class BaseEvent:
