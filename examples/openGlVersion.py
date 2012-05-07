@@ -3,10 +3,32 @@
 import visvis as vv
 app = vv.use()
 
+def ensureString(s):
+    if isinstance(s, str):
+        return s
+    else:
+        return s.decode('ascii')
+        
+import OpenGL.GL as gl
+# a = ensureString(gl.glGetString(gl.GL_VERSION))
+# print(a)
+
+
+
+    
 # get info
+print(vv.misc._glInfo[0])
 version, vendor, renderer, ext = vv.getOpenGlInfo()
+print(vv.misc._glInfo[0])
 if not ext:
     ext = ''
+
+
+# from OpenGL import extensions
+# print(extensions.CURRENT_GL_VERSION)
+# print(extensions.getGLVersion())
+# print(extensions.CURRENT_GL_VERSION)
+
 
 # print!
 print('Information about the OpenGl version on this system:\n')
