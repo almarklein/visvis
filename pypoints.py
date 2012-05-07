@@ -590,7 +590,7 @@ class BasePoints(object):
             return Point(data)
     
     
-    def __div__(self, value):
+    def __truediv__(self, value):
         """ Scale vectors. """
         
         p1, p2 = self, None
@@ -620,7 +620,7 @@ class BasePoints(object):
         return self.__mul__(value)
     
     
-    def __rdiv__(self, value):
+    def __rtruediv__(self, value):
         """ Inverse scale vectors. """
         
         p1, p2 = self, None
@@ -642,6 +642,9 @@ class BasePoints(object):
             return Pointset(data)
         else:
             return Point(data)
+    
+    __div__ = __truediv__ # For Python 2.x
+    __rdiv__ = __rtruediv__
 
 
 class Point(BasePoints):
