@@ -99,7 +99,7 @@ class Sprite:
         sizeRange = gl.glGetFloatv(gl.GL_ALIASED_POINT_SIZE_RANGE)
         gl.glPointParameterf( gl.GL_POINT_SIZE_MIN, sizeRange[0] );
         gl.glPointParameterf( gl.GL_POINT_SIZE_MAX, sizeRange[1] );
-
+        
         # enable sprites and set params
         gl.glEnable(gl.GL_POINT_SPRITE)
 
@@ -278,6 +278,7 @@ class MarkerManager:
                 data2[y,x] = 255
         def triangleRight(xy):
             x,y = xy
+            print('oef', x, y)
             if y >= 0.5*x and y <= mw-0.5*(x+1):
                 data2[y,x] = 255
 
@@ -292,11 +293,12 @@ class MarkerManager:
             func = funcs[ms]
         except KeyError:
             func = circle
-
+        
         ## Create face
         I,J = np.where(data2==0)
-        map(func, zip(I,J))
-
+        for xy in zip(I,J):
+            func(xy)
+        
         ## dilate x times to create edge
         # we add a border to the array to make the dilation possible
         data3 = np.zeros((d+4,d+4), dtype=np.uint8)
@@ -312,7 +314,8 @@ class MarkerManager:
             if tmp[y-1:y+2,x-1:x+2].max():
                 data3[y,x] = 255
         for i in range(int(mew)):
-            map(dilatePixel, zip(I,J))
+            for xy in zip(I,J):
+                dilatePixel(xy)
             tmp = data3.copy()
         # remove border
         data3 = data3[2:-2,2:-2]
@@ -321,7 +324,7 @@ class MarkerManager:
 
         sprite1 = Sprite(data1, mw)
         sprite2 = Sprite(data3-data1, mw+2*mew)
-
+        
         return d, sprite1, sprite2
 
 

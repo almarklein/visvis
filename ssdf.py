@@ -508,7 +508,7 @@ def _isvalidname(name):
     name2 = name.lower()
     if name2[0] not in namechars[0:-10]:
         return None
-    tmp = map(lambda x: x not in namechars, name2[2:])
+    tmp = list(map(lambda x: x not in namechars, name2[2:]))
     
     # Return
     if sum(tmp)==0:
