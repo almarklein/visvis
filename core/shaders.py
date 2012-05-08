@@ -426,10 +426,8 @@ class GlslProgram:
                 myshader = gla.glCreateShaderObjectARB(type)
                 self._shaderIds.append(myshader)
                 
-                # set its source
-                # todo: encode, or not to encode?
+                # Set its source, pyopengl accepts the code as a string.
                 gla.glShaderSourceARB(myshader, [code])
-#                 gla.glShaderSourceARB(myshader, [code.encode('ascii')])
                 
                 # compile shading code
                 gla.glCompileShaderARB(myshader)
@@ -468,7 +466,9 @@ class GlslProgram:
         # convert to floats
         values = [float(v) for v in values]
         
-        # get loc, encode varname to ensure it's in byte format       
+        # get loc, encode varname to ensure it's in byte format  
+        # (pyopengl will support both bytes and str as input, but at the time
+        #  of writing this is not yet implemented.)   
         loc = gla.glGetUniformLocationARB(self._programId, varname.encode('ascii'))        
         
         try:
@@ -499,7 +499,9 @@ class GlslProgram:
         # convert to floats
         values = [int(v) for v in values]
         
-        # get loc, encode varname to ensure it's in byte format       
+        # get loc, encode varname to ensure it's in byte format  
+        # (pyopengl will support both bytes and str as input, but at the time
+        #  of writing this is not yet implemented.)        
         loc = gla.glGetUniformLocationARB(self._programId, varname.encode('ascii'))        
         
         # set values
