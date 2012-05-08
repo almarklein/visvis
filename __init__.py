@@ -50,7 +50,7 @@ For more help, see ...
 
 # todo: test vvMovie import and exports, they probably need encoding stuff
 
-__version__  = '1.6' 
+__version__  = '1.6.dev' 
 
 # Loose sub-modules and sub-packages
 from visvis import guisupport
