@@ -34,6 +34,10 @@ depthBits = [0]
 sind = lambda q: math.sin(q*math.pi/180)
 cosd = lambda q: math.cos(q*math.pi/180)
 
+# The cmp function is gone in Py3k
+cmp = lambda a,b: (a > b) - (a < b)
+
+
 def getDepthValue():
     """ Get the depth value.
     
