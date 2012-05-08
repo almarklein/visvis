@@ -13,6 +13,12 @@ try:
 except ImportError:
     PIL = None
 
+# todo: I'm not sure about the status of FreeImage.
+try:
+    import FreeImage
+except ImportError:
+    FreeImage = None
+
 
 def imread(filename):
     """ imread(filename) 
@@ -21,7 +27,7 @@ def imread(filename):
     
     """
     
-    if PIL is None:
+    if PIL is None and FreeImage is None:
         raise RuntimeError("visvis.imread requires the PIL package.")
     
     if not os.path.isfile(filename):
@@ -33,15 +39,32 @@ def imread(filename):
         else:
             raise IOError("Image '%s' does not exist." % filename)
     
-    # Get Pil image and convert if we need to
-    im = PIL.Image.open(filename)
-    if im.mode == 'P':
-        im = im.convert()
+    if PIL:
+        # Get Pil image and convert if we need to
+        im = PIL.Image.open(filename)
+        if im.mode == 'P':
+            im = im.convert()
+        
+        # Make numpy array
+        a = np.asarray(im)
+        if len(a.shape)==0:
+            raise MemoryError("Too little memory to convert PIL image to array")
+        
+        del im
     
-    # Make numpy array
-    a = np.asarray(im)
-    if len(a.shape)==0:
-        raise MemoryError("Too little memory to convert PIL image to array")
+    elif FreeImage:
+        # Get image as a numpy array
+        im = FreeImage.read(filename)
+        
+        # Reshape, because FreeImage uses fortran indices, arg!
+        if im.ndim == 2:
+            a = im.T.copy()
+        else:
+            s = im.shape[1:] + (im.ndim,)
+            a = np.zeros(s, im.dtype)
+            for i in range(im.ndim):
+                a[:,:,i] = im[i,:,:].T
+        
+        del im
     
-    del im
     return a
