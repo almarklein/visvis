@@ -499,7 +499,7 @@ class Settings(object):
     @PropertyForSettings
     def preferredBackend():
         """ The preferred backend GUI toolkit to use 
-        ('qt4', 'wx', 'gtk', 'fltk'). 
+        ('pyside', 'pyqt4', 'wx', 'gtk', 'fltk'). 
           * If the selected backend is not available, another one is selected.
           * If preferAlreadyLoadedBackend is True, will prefer a backend that 
             is already imported.
@@ -509,10 +509,11 @@ class Settings(object):
             if key in self._s:
                 return self._s[key]
             else:
-                return 'qt4'  # Default value
+                return 'pyside'  # Default value
         def fset(self, key, value):
+            # Note that 'qt4' in valid for backward compatibility
             value = value.lower()
-            if value in ['qt4', 'wx', 'gtk', 'fltk', 'foo']:
+            if value in ['pyside', 'qt4', 'pyqt4', 'wx', 'gtk', 'fltk', 'foo']:
                 self._s[key] = value
             else:
                 raise ValueError('Invalid backend specified.')

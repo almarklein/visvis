@@ -32,7 +32,7 @@ def use(backendName=None):
     # Near the end of the script:
     
     # Get app instance and create native app
-    app = vv.use('qt4')
+    app = vv.use('pyside')
     app.Create() 
     
     # Create window

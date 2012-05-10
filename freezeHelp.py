@@ -14,6 +14,9 @@ Helps freezing apps made using visvis.
 import visvis as vv
 import os, shutil, sys
 
+backendAliases = {'qt4': 'pyqt4'}
+
+
 def copyResources(destPath):   
     """ copyResources(destinationPath)
     
@@ -46,12 +49,15 @@ def getIncludes(backendName):
     """
     # init
     includes = []
+    backendName = backendAliases.get(backendName, backendName)
     
     # backend
     backendModule = 'visvis.backends.backend_'+ backendName
     includes.append(backendModule)
-    if backendName == 'qt4':
-        includes.extend(["sip", "PyQt4.QtCore", "PyQt4.QtGui"])
+    if backendName == 'pyqt4':
+        includes.extend(["sip", "PyQt4.QtCore", "PyQt4.QtGui", "PyQt4.QtOpenGL"])
+    elif backendName == 'pyside':
+        includes.extend(["PySide.QtCore", "PySide.QtGui", "PySide.QtOpenGL"])
     
     # functions
     for funcName in vv.functions._functionNames:
@@ -92,10 +98,15 @@ def getExcludes(backendName):
     
     # init
     excludes = []
+    backendName = backendAliases.get(backendName, backendName)
     
-    # Neglect qt4
-    if 'qt4' != backendName:
+    # Neglect pyqt4
+    if 'pyqt4' != backendName:
         excludes.extend(["sip", "PyQt4", "PyQt4.QtCore", "PyQt4.QtGui"])
+    
+    # Neglect PySide
+    if 'pyside' != backendName:
+        excludes.extend(["PySide", "PySide.QtCore", "PySide.QtGui"])
     
     # Neglect wx
     if 'wx' != backendName:
