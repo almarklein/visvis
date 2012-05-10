@@ -54,12 +54,19 @@ import visvis
 from visvis.core.misc import isFrozen, getExceptionInstance
 
 # The order in which to try loading a backend (foo is a dummy backend)
-backendOrder = ['qt4', 'wx', 'gtk', 'fltk', 'foo'] # I'd love to put tk in this list
-backendMap = {'qt4':'PyQt4', 'wx':'wx', 'gtk':'gtk', 'fltk':'fltk', 'foo':'foo'}
+backendOrder = ['pyside', 'pyqt4', 'wx', 'gtk', 'fltk'] 
+backendMap = {'pyside':'PySide', 'pyqt4':'PyQt4', 'wx':'wx', 'gtk':'gtk', 'fltk':'fltk',}
+
+# Define aliases for backend names (for backward compatibility)
+backendAliases = {'qt4': 'pyqt4'}
+
+# Set Qt lib to empty string (will be set by backend_pyside or backend_pyqt4)
+qtlib = ''
 
 # Put the preferredBackend in front
 if True:
     be = visvis.settings.preferredBackend
+    be = backendAliases.get(be, be)
     if be in backendOrder:
         backendOrder.remove(be)
         backendOrder.insert(0,be)
@@ -105,7 +112,7 @@ def testLoaded():
         files = os.listdir(path)
         
         for filename in files:
-            if filename.startswith('__'):
+            if not filename.startswith('backend_'):
                 continue
             if not filename.endswith('.py'):
                 continue
@@ -162,6 +169,7 @@ def _loadBackend(name):
         raise Exception("Backend %s does not implement Figure class!" % be)
     else:
         # All good (as far as I can tell). Update stuff if name does not match.
+        module.app._backend = name
         if currentBackend.name != name:
             currentBackend.name = name
             currentBackend.newFigure = module.newFigure
@@ -181,7 +189,8 @@ def use(backendName=None):
     
     # Make case insensitive and check
     if backendName:
-        backendName = backendName.lower()    
+        backendName = backendName.lower()   
+        backendName = backendAliases.get(backendName, backendName) 
         if backendName not in backendOrder:
             raise RuntimeError('Invalid backend name given: "%s".'%backendName)
     
