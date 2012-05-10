@@ -3,12 +3,18 @@
 This example illustrates embedding a visvis figure in a Qt application.
 """
 
-from PyQt4 import QtGui, QtCore
+try:
+    from PySide import QtGui, QtCore
+    backend = 'pyside'
+except ImportError:
+    from PyQt4 import QtGui, QtCore
+    backend = 'pyqt4'
+
 import visvis as vv
 
 # Create a visvis app instance, which wraps a qt4 application object.
 # This needs to be done *before* instantiating the main window. 
-app = vv.use('qt4')
+app = vv.use(backend)
 
 class MainWindow(QtGui.QWidget):
     def __init__(self, *args):
@@ -20,7 +26,10 @@ class MainWindow(QtGui.QWidget):
         but.setText('Push me')
         
         # Make figure using "self" as a parent
-        self.fig = vv.backends.backend_qt4.Figure(self)
+        if backend == 'pyside':
+            self.fig = vv.backends.backend_pyside.Figure(self)
+        else:
+            self.fig = vv.backends.backend_pyqt4.Figure(self)
         
         # Make sizer and embed stuff
         self.sizer = QtGui.QHBoxLayout(self)
@@ -35,7 +44,7 @@ class MainWindow(QtGui.QWidget):
         
         # Finish
         self.resize(560, 420)
-        self.setWindowTitle('Embedding in Qt')
+        self.setWindowTitle('Embedding in Qt (%s)' % backend)
         self.show()
     
     
