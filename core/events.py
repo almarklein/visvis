@@ -640,6 +640,25 @@ class App:
     
     """
     
+    def __repr__(self):
+        name = self.Backend()
+        if not name:
+            name = 'undefined'
+        return '<Visvis app that wraps the %s GUI toolkit>' % name
+    
+    
+    def Backend(self):
+        """ Backend()
+        
+        Get the name of the GUI backend that this app wraps.
+        
+        """
+        if hasattr(self, '_backend'):
+            return self._backend
+        else:
+            return ''
+    
+    
     def Create(self):
         """ Create()
         
