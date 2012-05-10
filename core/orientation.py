@@ -129,7 +129,7 @@ class OrientationForWobjects_mixClass(object):
             # in a vector normal to both vectors. This is the axis of rotation
             # over which the minimal rotation is achieved.
             axis = self._direction.cross(refPoint)
-            if axis.norm() < 0.1:
+            if axis.norm() < 0.01:
                 if self._direction.z > 0:
                     # No rotation
                     self._directionTransform.ax = 0.0
@@ -141,7 +141,7 @@ class OrientationForWobjects_mixClass(object):
                     self._directionTransform.ax = 1.0
                     self._directionTransform.ay = 0.0
                     self._directionTransform.az = 0.0
-                    self._directionTransform.angle = np.pi
+                    self._directionTransform.angle = 180.0
             else:
                 axis = axis.normalize()
                 angle = -refPoint.angle(self._direction)
