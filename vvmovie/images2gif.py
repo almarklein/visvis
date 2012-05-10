@@ -63,6 +63,7 @@ Usefull links
   * http://www.w3.org/Graphics/GIF/spec-gif89a.txt
 
 """
+# todo: use FreeImage instead of PIL
 
 import os, time
 
