@@ -20,7 +20,8 @@ class MainWindow(fltk.Fl_Window):
         but.callback(self._Plot)
         
         # Make figure to draw stuff in
-        self.fig = vv.backends.backend_fltk.Figure(100,10,560-110,420-20, "")
+        Figure = app.GetFigureClass()
+        self.fig = Figure(100,10,560-110,420-20, "")
         
         # Make box for resizing
         box = fltk.Fl_Box(fltk.FL_NO_BOX,100,50, 560-110,420-60,"")

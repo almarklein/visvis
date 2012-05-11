@@ -22,7 +22,8 @@ class MainWindow(gtk.Window):
         vbox.pack_start(button, False, False, 0)
         
         # Cteate visvis figure
-        self.figure = vv.backends.backend_gtk.Figure()
+        Figure = app.GetFigureClass()
+        self.figure = Figure()
         hbox.pack_start(self.figure._widget, True, True, 0)
         
         # Connect signals

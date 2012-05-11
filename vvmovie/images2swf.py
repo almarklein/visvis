@@ -83,6 +83,7 @@ except ImportError:
 
 # True if we are running on Python 3.
 # Code taken from six.py by Benjamin Peterson (MIT licensed)
+import types
 PY3 = sys.version_info[0] == 3
 if PY3:
     string_types = str,

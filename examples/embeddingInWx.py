@@ -20,7 +20,8 @@ class MainWindow(wx.Frame):
         but = wx.Button(self.panel, -1, 'Click me')
         
         # Make figure using "self" as a parent
-        self.fig = vv.backends.backend_wx.Figure(self)
+        Figure = app.GetFigureClass()
+        self.fig = Figure(self)
         
         # Make sizer and embed stuff
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
