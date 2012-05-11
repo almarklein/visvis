@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """ 
 This example illustrates embedding a visvis figure in a Qt application.
+This example works for the pyqt4 and pyside backends.
 """
 
 try:
@@ -26,10 +27,8 @@ class MainWindow(QtGui.QWidget):
         but.setText('Push me')
         
         # Make figure using "self" as a parent
-        if backend == 'pyside':
-            self.fig = vv.backends.backend_pyside.Figure(self)
-        else:
-            self.fig = vv.backends.backend_pyqt4.Figure(self)
+        Figure = app.GetFigureClass()
+        self.fig = Figure(self)
         
         # Make sizer and embed stuff
         self.sizer = QtGui.QHBoxLayout(self)

@@ -641,14 +641,14 @@ class App:
     """
     
     def __repr__(self):
-        name = self.Backend()
+        name = self.GetBackendName()
         if not name:
             name = 'undefined'
         return '<Visvis app that wraps the %s GUI toolkit>' % name
     
     
-    def Backend(self):
-        """ Backend()
+    def GetBackendName(self):
+        """ GetBackendName()
         
         Get the name of the GUI backend that this app wraps.
         
@@ -657,6 +657,16 @@ class App:
             return self._backend
         else:
             return ''
+    
+    
+    def GetFigureClass(self):
+        """ GetFigureClass()
+        
+        Get the Figure class for this backend.
+        
+        """
+        backendModule = sys.modules[self.__module__]
+        return backendModule.Figure
     
     
     def Create(self):
