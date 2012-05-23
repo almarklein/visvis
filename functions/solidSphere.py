@@ -71,6 +71,81 @@ def getSphere(ndiv=3, radius=1.0):
     return vertices, normals
 
 
+# Alternative implementation bu subdeivinding a tetrahedon,
+# but not as good for mapping textures.
+# This version uses faces to reuse vertices.
+def getSphereWithFaces(ndiv=3, radius=1.0):
+    # Example taken from the Red book, end of chaper 2.
+    
+    # Define constants
+    X = 0.525731112119133606 
+    Z = 0.850650808352039932
+    
+    # Creta vdata
+    vdata = Pointset(3)
+    app = vdata.append
+    app(-X, 0.0, Z); app(X, 0.0, Z); app(-X, 0.0, -Z); app(X, 0.0, -Z)
+    app(0.0, Z, X); app(0.0, Z, -X); app(0.0, -Z, X); app(0.0, -Z, -X)
+    app(Z, X, 0.0); app(-Z, X, 0.0); app(Z, -X, 0.0); app(-Z, -X, 0.0)
+    
+    # Create faces
+    tindices = [
+        [0,4,1], [0,9,4], [9,5,4], [4,5,8], [4,8,1],    
+        [8,10,1], [8,3,10], [5,3,8], [5,2,3], [2,7,3],    
+        [7,10,3], [7,6,10], [7,11,6], [11,0,6], [0,1,6], 
+        [6,1,10], [9,0,11], [9,11,2], [9,2,5], [7,2,11] ]
+    tindices = np.array(tindices, dtype=np.uint32)
+    
+    # Init vertex array with existing points, init faces as empty list
+    vertices = vdata.copy()
+    faces = []
+    
+    # Define function to recursively create vertices and normals
+    def drawtri(ia, ib, ic, div):
+        a, b, c = vertices[ia] , vertices[ib], vertices[ic]
+        if (div<=0):
+            # Store faces here
+            faces.extend([ia, ib, ic])
+        else:
+            # Create new points
+            ab = Point(0,0,0)
+            ac = Point(0,0,0)
+            bc = Point(0,0,0)
+            for i in range(3):
+                ab[i]=(a[i]+b[i])/2.0;
+                ac[i]=(a[i]+c[i])/2.0;
+                bc[i]=(b[i]+c[i])/2.0;
+            ab = ab.normalize(); ac = ac.normalize(); bc = bc.normalize()
+            # Add new points
+            i_offset = len(vertices)
+            vertices.append(ab)
+            vertices.append(ac)
+            vertices.append(bc)
+            iab, iac, ibc = i_offset+0, i_offset+1, i_offset+2
+            #
+            drawtri(ia, iab, iac, div-1)
+            drawtri(ib, ibc, iab, div-1)
+            drawtri(ic, iac, ibc, div-1)
+            drawtri(iab, ibc, iac, div-1)
+    
+    # Create vertices
+    for i in range(20):
+        drawtri(    int(tindices[i][0]), 
+                    int(tindices[i][1]), 
+                    int(tindices[i][2]), 
+                    ndiv )
+    
+    # Create normals and scale vertices
+    normals = vertices.copy()
+    vertices *= radius
+    
+    # Create faces
+    faces = np.array(faces, dtype='uint32')
+    
+    # Done
+    return vertices, faces, normals
+
+
 def solidSphere(translation=None, scaling=None, direction=None, rotation=None,
                 N=16, M=16, axesAdjust=True, axes=None):
     """ solidSphere(translation=None, scaling=None, direction=None, rotation=None,
