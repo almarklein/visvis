@@ -717,8 +717,7 @@ class Wobject(BaseObject):
         
         # Transform these points
         for i in range(len(pp)):
-            # Update
-            pp[i] = self.transformPoint(pp[i])
+            pp[i] = self.TransformPoint(pp[i])
         
         # Return limits
         xlim = misc.Range( pp[:,0].min(), pp[:,0].max() )
@@ -744,7 +743,8 @@ class Wobject(BaseObject):
         wobject = self
         
         # Iterate over wobjects until we reach the Axes or None
-        while isinstance(wobject, Wobject):
+        #while isinstance(wobject, Wobject):
+        if True:
             # Iterate over all transformations
             for t in reversed(wobject._transformations):
                 if isinstance(t, Transform_Translate):
