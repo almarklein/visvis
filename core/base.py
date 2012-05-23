@@ -20,7 +20,7 @@ from visvis.core.misc import basestring
 from visvis.core.misc import (Transform_Base, Transform_Translate, 
                                     Transform_Scale, Transform_Rotate)
 from visvis.core import events
-from visvis.pypoints import Pointset, Quaternion
+from visvis.pypoints import Pointset, Quaternion, is_Point
 
 
 # Define draw modes
@@ -717,8 +717,36 @@ class Wobject(BaseObject):
         
         # Transform these points
         for i in range(len(pp)):
-            p = pp[i]
-            for t in reversed(self._transformations):
+            # Update
+            pp[i] = self.transformPoint(pp[i])
+        
+        # Return limits
+        xlim = misc.Range( pp[:,0].min(), pp[:,0].max() )
+        ylim = misc.Range( pp[:,1].min(), pp[:,1].max() )
+        zlim = misc.Range( pp[:,2].min(), pp[:,2].max() )
+        return xlim, ylim, zlim
+    
+    
+    def TransformPoint(self, p):
+        """ TransformPoint(p)
+        
+        Transform a point in the local coordinate system of this wobject
+        to the global coordinate system of the axes.
+        
+        This is done by taking into account the transformations applied
+        to this wobject and all of its parent wobjects.
+        
+        """
+        if not (is_Point(p) and p.ndim==3):
+            raise ValueError('TransformPoint only accepts a 3D point')
+        
+        # Init wobject as itself. Next round it will be its parent, etc.
+        wobject = self
+        
+        # Iterate over wobjects until we reach the Axes or None
+        while isinstance(wobject, Wobject):
+            # Iterate over all transformations
+            for t in reversed(wobject._transformations):
                 if isinstance(t, Transform_Translate):
                     p.x += t.dx
                     p.y += t.dy
@@ -731,14 +759,11 @@ class Wobject(BaseObject):
                     angle = float(t.angle * np.pi / 180.0)
                     q = Quaternion.create_from_axis_angle(angle, t.ax, t.ay, t.az)
                     p = q.rotate_point(p)
-            # Update
-            pp[i] = p
+            # Move to parent
+            wobject = wobject.parent
         
-        # Return limits
-        xlim = misc.Range( pp[:,0].min(), pp[:,0].max() )
-        ylim = misc.Range( pp[:,1].min(), pp[:,1].max() )
-        zlim = misc.Range( pp[:,2].min(), pp[:,2].max() )
-        return xlim, ylim, zlim
+        # Done
+        return p
     
     
     def _Transform(self):
