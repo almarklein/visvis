@@ -219,7 +219,7 @@ def use(backendName=None):
             if _loadBackend(name):
                 break
         else:
-            tmp = "Install PyQt4, wxPython, GTK, or fltk."
+            tmp = "Install PySide, PyQt4, wxPython, GTK, or fltk."
             raise RuntimeError("None of the backends could be loaded. "+tmp)
     
     # Return instance

@@ -1391,7 +1391,12 @@ class _Block:
             tmp = repr(value)
             if len(tmp) > 64:
                 tmp = tmp[:64] + '...'
-            print("SSDF: unknown object: " + tmp) 
+            if name is not None:
+                print("SSDF: %s is unknown object: %s %s" % 
+                                    (name, tmp, repr(type(value)) ))
+            else:
+                print("SSDF: unknown object: %s %s" % 
+                                    (tmp, repr(type(value)) ))
         
         # Done
         return self
