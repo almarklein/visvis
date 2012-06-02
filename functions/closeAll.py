@@ -13,5 +13,5 @@ def closeAll():
     
     """
     
-    for fig in vv.BaseFigure._figures.values():
+    for fig in [fig for fig in vv.BaseFigure._figures.values()]:
         fig.Destroy()
