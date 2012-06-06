@@ -55,6 +55,9 @@ def getOpenGlInfo():
     
     """
     
+    if gl.glGetString(gl.GL_VERSION) is None:
+        raise RuntimeError('There is currently no OpenGL context')
+    
     if not _glInfo[0]:
         _glInfo[0] = ensureString(gl.glGetString(gl.GL_VERSION))
         _glInfo[1] = ensureString(gl.glGetString(gl.GL_VENDOR))
