@@ -551,7 +551,7 @@ class Line(Wobject):
         Set the x coordinates of the points of the line.
         
         """
-        self._points[0,:] = data
+        self._points[:,0] = data
     
     @DrawAfter
     def SetYdata(self, data):
@@ -560,7 +560,7 @@ class Line(Wobject):
         Set the y coordinates of the points of the line.
         
         """
-        self._points[1,:] = data
+        self._points[:,1] = data
 
     @DrawAfter
     def SetZdata(self, data):
@@ -569,7 +569,7 @@ class Line(Wobject):
         Set the z coordinates of the points of the line.
         
         """
-        self._points[2,:] = data
+        self._points[:,2] = data
 
     @DrawAfter
     def SetPoints(self, points):
