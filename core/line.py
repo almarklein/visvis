@@ -21,7 +21,7 @@ import OpenGL.GL as gl
 import numpy as np
 import math
 
-from visvis.pypoints import Pointset
+from visvis.pypoints import Pointset, is_Pointset
 from visvis.core.misc import PropWithDraw, DrawAfter, basestring
 from visvis.core.misc import Range, getColor, getOpenGlCapable
 from visvis.core.base import Wobject
@@ -575,15 +575,39 @@ class Line(Wobject):
     def SetPoints(self, points):
         """ SetPoints(points)
         
-        Set x,y (and optionally z) data at once
-        using a Pointset object. The data is copied, so changes to the given
-        points object will not affect the visualized points.
-        If you do want this, use the ._points attribute, but note that it
-        should always have three dimensions.
+        Set x,y (and optionally z) data. The given argument can be anything
+        that can be converted to a pointset. (From version 1.7 this method
+        also works with 2D pointsets.)
+        
+        The data is copied, so changes to original data will not affect 
+        the visualized points. If you do want this, use the points property.
         
         """
-        self._points = points.copy()
-
+        
+        # Try make it a (copied) pointset
+        if not is_Pointset(points):
+            points = vv.Pointset(points) # Already does a copy
+        else:
+            points = points.copy() # Make a copy
+        
+        # add z dimension to points if not available
+        if points.ndim == 2:
+            tmp = points._data, 0.1*np.ones((len(points._data),1), dtype='float32')
+            points._data = np.concatenate(tmp,1)
+        
+        # Store
+        self._points = points
+    
+    
+    @property
+    def points(self):
+        """ Get a reference to the internal Pointset used to draw the line
+        object. Note that this pointset is always 3D. One can modify
+        this pointset in place, but note that a call to Draw() may be
+        required to update the screen. (New in version 1.7.)
+        """
+        return self._points
+    
 
     ## Draw methods
 
