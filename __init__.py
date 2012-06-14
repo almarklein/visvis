@@ -43,7 +43,6 @@ For more help, see ...
 
 """
 
-# todo: get ssdf from elsewhere
 # todo: get pypoints from elsewhere?
 # todo: get isFrozen from pyzolib
 # todo: more lazy imports for io and vvmovie
@@ -53,7 +52,7 @@ For more help, see ...
 __version__  = '1.6.dev' 
 
 # Loose sub-modules and sub-packages
-from visvis import guisupport
+import visvis.guisupport
 from visvis.pypoints import Point, Pointset, Aarray, Quaternion
 from visvis.utils import ssdf
 from visvis import vvmovie

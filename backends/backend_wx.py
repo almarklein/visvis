@@ -19,7 +19,7 @@ import os
 import visvis
 from visvis import BaseFigure, events, constants
 from visvis.core.misc import getResourceDir
-from visvis import guisupport
+from visvis.utils import guisupport
 
 import wx
 from wx.glcanvas import GLCanvas
