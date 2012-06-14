@@ -15,7 +15,7 @@ import OpenGL.GL as gl
 import numpy as np
 import weakref
 
-from visvis.pypoints import Point, Pointset
+from visvis.utils.pypoints import Point, Pointset
 from visvis import Colormapable
 #
 from visvis import Box, DraggableBox

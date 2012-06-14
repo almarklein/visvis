@@ -6,7 +6,7 @@
 
 import visvis as vv
 import numpy as np
-from visvis.pypoints import Pointset
+from visvis.utils.pypoints import Pointset
 
 
 def solidCylinder(translation=None, scaling=None, direction=None, rotation=None,

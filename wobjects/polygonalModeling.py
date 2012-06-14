@@ -15,7 +15,7 @@ import sys
 import numpy as np
 import OpenGL.GL as gl
 
-from visvis.pypoints import is_Pointset
+from visvis.utils.pypoints import is_Pointset
 from visvis.core.misc import PropWithDraw, DrawAfter, basestring
 from visvis import Wobject, Colormapable, OrientationForWobjects_mixClass
 from visvis.core.light import _testColor, _getColor

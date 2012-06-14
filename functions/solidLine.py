@@ -5,7 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-from visvis.pypoints import Pointset, is_Pointset
+from visvis.utils.pypoints import Pointset, is_Pointset
 from visvis.processing import lineToMesh
 
 def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):

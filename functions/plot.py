@@ -4,7 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-from visvis.pypoints import  Pointset, is_Point, is_Pointset
+from visvis.utils.pypoints import  Pointset, is_Point, is_Pointset
 import numpy as np
 
 import visvis as vv

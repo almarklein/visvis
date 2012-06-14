@@ -23,7 +23,7 @@ import OpenGL.GLU as glu
 import numpy as np
 import math
 
-from visvis.pypoints import Pointset, Point
+from visvis.utils.pypoints import Pointset, Point
 #
 from visvis.core import base
 from visvis.core.misc import Range, getColor, basestring

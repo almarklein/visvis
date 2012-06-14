@@ -16,6 +16,7 @@ The intended way to import utilities is: "from visvis.utils import utilname".
 The currrent utilities are:
 
   * ssdf - simple structured data format.
+  * pypoints - Representnig points, pointsets, anisotropic arrays and quaternions.
   * graph - Representing points/nodes that are connected by edges.
 
 """

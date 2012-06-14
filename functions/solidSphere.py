@@ -6,7 +6,7 @@
 
 import visvis as vv
 import numpy as np
-from visvis.pypoints import Point, Pointset
+from visvis.utils.pypoints import Point, Pointset
 
 
 # Alternative implementation bu subdeivinding a tetrahedon,
