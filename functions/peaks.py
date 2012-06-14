@@ -32,7 +32,7 @@ def peaks():
     """
     
     # Decode z data
-    data = base64.decodestring(zData)
+    data = base64.decodestring(zData.encode('ascii'))
     data = zlib.decompress(data)
     z = np.frombuffer(data, dtype=np.float32 )
     z.shape = 49, 49
