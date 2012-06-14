@@ -12,7 +12,7 @@ Implements a few slider widgets.
 
 import OpenGL.GL as gl
 
-from visvis.pypoints import Pointset, Point
+from visvis.utils.pypoints import Pointset, Point
 from visvis.core.events import BaseEvent
 from visvis.core.misc import PropWithDraw, Range, unichr
 from visvis.core.axises import GetTicks

@@ -14,7 +14,7 @@ import OpenGL.GL as gl
 
 from visvis.core import Wibject
 from visvis.core import misc
-from visvis.pypoints import Pointset
+from visvis.utils.pypoints import Pointset
 
 
 class Box(Wibject):

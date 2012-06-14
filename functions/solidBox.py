@@ -5,7 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-from visvis.pypoints import Pointset
+from visvis.utils.pypoints import Pointset
 
 
 def solidBox(translation=None, scaling=None, direction=None, rotation=None,

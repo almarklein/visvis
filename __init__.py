@@ -52,8 +52,8 @@ For more help, see ...
 __version__  = '1.6.dev' 
 
 # Loose sub-modules and sub-packages
-import visvis.guisupport
-from visvis.pypoints import Point, Pointset, Aarray, Quaternion
+import visvis.utils.guisupport
+from visvis.utils.pypoints import Point, Pointset, Aarray, Quaternion
 from visvis.utils import ssdf
 from visvis import vvmovie
 from visvis import io

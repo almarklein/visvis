@@ -13,7 +13,7 @@ Defines texture wobjects for visualizing slices in 3D volumes.
 import OpenGL.GL as gl
 import OpenGL.GLU as glu
 
-from visvis.pypoints import Point
+from visvis.utils.pypoints import Point
 from visvis import Wobject, Colormapable
 from visvis.core.misc import Property, PropWithDraw, getColor
 from visvis.core import shaders

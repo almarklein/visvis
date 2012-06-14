@@ -6,7 +6,7 @@
 
 import numpy as np
 import visvis as vv
-from visvis.pypoints import Point, Pointset
+from visvis.utils.pypoints import Point, Pointset
 from visvis.wobjects.polygonalModeling import BaseMesh
 
 def getSpanVectors(normal, c, d):
@@ -134,7 +134,7 @@ def lineToMesh(pp, radius, vertex_num, values=None):
         if values.shape[0] != len(pp):
             raise ValueError('There must be as many values as points.')
         vvalues = Pointset(values.shape[1])
-    elif vv.pypoints.is_Pointset(values):
+    elif vv.utils.pypoints.is_Pointset(values):
         if values.ndim > 4:
             raise ValueError('Can specify one to four values per point.')
         if len(values) != len(pp):

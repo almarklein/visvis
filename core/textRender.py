@@ -71,7 +71,7 @@ import numpy as np
 
 import visvis
 from visvis import ssdf
-from visvis.pypoints import Pointset
+from visvis.utils.pypoints import Pointset
 #
 from visvis.core.baseTexture import TextureObject
 from visvis.core.base import Wobject

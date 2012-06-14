@@ -26,7 +26,7 @@ import math
 import visvis as vv
 from visvis.core.misc import Property, Range, basestring
 from visvis.core import constants
-from visvis.pypoints import Quaternion, Point
+from visvis.utils.pypoints import Quaternion, Point
 
 # Global to store depth Bits
 depthBits = [0]

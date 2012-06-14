@@ -153,7 +153,7 @@ class StlWriter(object):
                 vv1 = mesh._vertices[0::3]
                 vv2 = mesh._vertices[1::3]
                 vv3 = mesh._vertices[2::3]
-        elif vv.pypoints.is_Pointset(mesh):
+        elif vv.utils.pypoints.is_Pointset(mesh):
             if mesh.ndim != 3:
                 raise ValueError('Mesh vertices must be 3D.')
             vv1 = mesh[0::3]

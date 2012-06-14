@@ -10,7 +10,7 @@ the mesh objects.
 
 import numpy as np
 import visvis as vv
-from visvis.pypoints import Point, Pointset
+from visvis import Point, Pointset
 vv.figure()
 a = vv.gca()
 

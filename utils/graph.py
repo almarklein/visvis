@@ -11,7 +11,7 @@ if required.
 This module also defines functions and classes to compare graphs.
 
 Note that there is also a package called "graphine". The main difference
-of visvis.utils.graph is that it is based on visvis.pypoints and the nodes
+of visvis.utils.graph is that it is based on visvis.Point's and the nodes
 explicitly have a location in a 2D or 3D space.
 
 Example
@@ -46,7 +46,7 @@ print(g.GetEdges())
 
 import numpy as np
 import visvis as vv
-from visvis.pypoints import Point, Pointset
+from visvis import Point, Pointset
 from visvis import ssdf
 
 

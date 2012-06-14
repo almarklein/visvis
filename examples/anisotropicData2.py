@@ -8,7 +8,7 @@ correct scale and position.
 """
 
 import visvis as vv
-from visvis.pypoints import Aarray
+from visvis import Aarray
 app = vv.use()
 
 # Load image and make Aarray

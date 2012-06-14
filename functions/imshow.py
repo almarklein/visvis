@@ -110,7 +110,7 @@ def imshow(im, clim=None, aa=2, interpolate=False, cm=None,
 
 if __name__ == "__main__":
     import numpy as np
-    from visvis.pypoints import Aarray
+    from visvis import Aarray
     
     im = np.zeros((100,100), dtype=np.float32)
     im[40:-20,10:-5] = 0.4

@@ -6,7 +6,7 @@
 
 import visvis as vv
 import numpy as np
-from visvis.pypoints import Point, Pointset
+from visvis.utils.pypoints import Point, Pointset
 
 
 def solidRing(translation=None, scaling=None, direction=None, rotation=None,

@@ -21,7 +21,7 @@ import OpenGL.GL as gl
 import numpy as np
 import math
 
-from visvis.pypoints import Pointset, is_Pointset
+from visvis.utils.pypoints import Pointset, is_Pointset
 from visvis.core.misc import PropWithDraw, DrawAfter, basestring
 from visvis.core.misc import Range, getColor, getOpenGlCapable
 from visvis.core.base import Wobject

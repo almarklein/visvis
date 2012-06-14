@@ -9,7 +9,7 @@
 import numpy as np
 import visvis as vv
 
-from visvis.pypoints import Pointset, is_Point, is_Pointset
+from visvis.utils.pypoints import Pointset, is_Point, is_Pointset
 from visvis import PolarLine
 
 

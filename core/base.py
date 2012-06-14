@@ -20,7 +20,7 @@ from visvis.core.misc import basestring
 from visvis.core.misc import (Transform_Base, Transform_Translate, 
                                     Transform_Scale, Transform_Rotate)
 from visvis.core import events
-from visvis.pypoints import Pointset, Quaternion, is_Point
+from visvis.utils.pypoints import Pointset, Quaternion, is_Point
 
 
 # Define draw modes

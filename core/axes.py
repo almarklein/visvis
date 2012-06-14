@@ -13,7 +13,7 @@ by the Axes.
 
 import OpenGL.GL as gl
 
-from visvis.pypoints import Pointset
+from visvis.utils.pypoints import Pointset
 #
 import visvis as vv
 from visvis.core import base

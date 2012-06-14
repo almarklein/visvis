@@ -2,7 +2,7 @@
 
 import numpy as np
 import visvis as vv
-from visvis.pypoints import Point, Pointset
+from visvis import Point, Pointset
 app = vv.use()
 
 # create random points

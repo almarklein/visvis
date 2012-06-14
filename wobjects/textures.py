@@ -24,7 +24,7 @@ import OpenGL.GL as gl
 import numpy as np
 import math
 
-from visvis.pypoints import Pointset, is_Aarray
+from visvis.utils.pypoints import Pointset, is_Aarray
 #
 from visvis import Range, Wobject, Colormapable
 from visvis.core.misc import PropWithDraw, DrawAfter
