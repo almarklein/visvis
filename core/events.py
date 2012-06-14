@@ -17,7 +17,6 @@ import traceback
 import weakref
 
 
-# todo: I could try to make the event systems of yoton and visvis more the same
 # the CallableObject class is now equal
 
 class CallableObject(object):

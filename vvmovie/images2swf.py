@@ -99,7 +99,7 @@ else:
     binary_type = str
 
 
-# todo: use PIL or FreeImage to support reading JPEG images from SWF?
+# todo: use imageio/FreeImage to support reading JPEG images from SWF?
 
 
 def checkImages(images):
