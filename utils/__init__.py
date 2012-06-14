@@ -18,5 +18,6 @@ The currrent utilities are:
   * ssdf - simple structured data format.
   * pypoints - Representnig points, pointsets, anisotropic arrays and quaternions.
   * graph - Representing points/nodes that are connected by edges.
+  * cropper - small app based on visvis controls to crop 3D data
 
 """
