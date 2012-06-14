@@ -13,12 +13,8 @@ try:
 except ImportError:
     PIL = None
 
-# todo: I'm not sure about the status of FreeImage.
-try:
-    import FreeImage
-except ImportError:
-    FreeImage = None
-
+# todo: use imageio
+imageio = None
 
 def imread(filename):
     """ imread(filename) 
@@ -27,7 +23,7 @@ def imread(filename):
     
     """
     
-    if PIL is None and FreeImage is None:
+    if PIL is None and imageio is None:
         raise RuntimeError("visvis.imread requires the PIL package.")
     
     if not os.path.isfile(filename):
@@ -52,19 +48,8 @@ def imread(filename):
         
         del im
     
-    elif FreeImage:
+    elif imageio:
         # Get image as a numpy array
-        im = FreeImage.read(filename)
-        
-        # Reshape, because FreeImage uses fortran indices, arg!
-        if im.ndim == 2:
-            a = im.T.copy()
-        else:
-            s = im.shape[1:] + (im.ndim,)
-            a = np.zeros(s, im.dtype)
-            for i in range(im.ndim):
-                a[:,:,i] = im[i,:,:].T
-        
-        del im
+        a = imageio.imread(filename)
     
     return a
