@@ -27,7 +27,7 @@ from visvis.core.misc import getOpenGlInfo
 from visvis.core import events
 #
 from visvis.core.cameras import ortho
-from visvis.core.textRender import FontManager, BaseText
+from visvis.text import FontManager, BaseText
 from visvis.core.line import MarkerManager 
 from visvis.core.axes import _BaseFigure, AxesContainer, Axes, Legend
 from visvis.core.axes import _Screenshot
@@ -561,7 +561,7 @@ class BaseFigure(_BaseFigure):
             self._relativeFontSize = float(value)
             # Update all text objects            
             for ob in self.FindObjects(BaseText):
-                ob._vertices2 = None
+                ob.Invalidate()
             # Update all legend objects
             for ob in self.FindObjects(Legend):
                 ob.SetStrings(ob._stringList)
