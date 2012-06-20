@@ -814,10 +814,15 @@ class Texture3D(BaseTexture):
             shader.fragment.AddOrReplace(SH_LIGHTS)
     
     
-    def _quadPartitionCount(self, fov):
+    def _quadPartitionCount(self, camera):
         """ Select the density of the vertices for the cube to render.
         Higher field of view yields higher partition-count.
         """
+        if hasattr(camera, 'fov'):
+            fov = camera.fov
+        else:
+            return 0
+        
         if fov <= 10:
             return 0  # 24 vertices
         elif fov <= 20:
@@ -838,7 +843,7 @@ class Texture3D(BaseTexture):
         
         # Store daspect so we can detect it changing
         self._daspectStored = axes.daspect
-        self._qcountStored = self._quadPartitionCount(axes.camera.fov)
+        self._qcountStored = self._quadPartitionCount(axes.camera)
         
         # Note that we could determine the world coordinates and use
         # them directly here. However, the way that we do it now (using
@@ -929,7 +934,7 @@ class Texture3D(BaseTexture):
         # should we create quads?
         if (    (not self._quads) or 
                 (self._daspectStored != axes.daspect) or
-                (self._qcountStored != self._quadPartitionCount(axes.camera.fov)) 
+                (self._qcountStored != self._quadPartitionCount(axes.camera)) 
             ):
             self._CreateQuads()
         
