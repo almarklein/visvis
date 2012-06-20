@@ -29,7 +29,7 @@ from visvis.core import base
 from visvis.core.misc import Range, getColor, basestring
 from visvis.core.misc import Property, PropWithDraw, DrawAfter 
 #
-from visvis.core.textRender import Text
+from visvis.text import Text
 from visvis.core.line import lineStyles, PolarLine
 from visvis.core.cameras import depthToZ, TwoDCamera, FlyCamera
 
@@ -127,11 +127,12 @@ class AxisLabel(AxisText):
         for text in self._textDict.values():
             if text is self:
                 continue
-            if text._vertices2 is None or not len(text._vertices2):
+            if not text.isPositioned:
                 continue # Only consider drawn text objects
             x,y = text._screenx, text._screeny
-            xmin, xmax = text._deltax
-            ymin, ymax = text._deltay
+            deltax, deltay = text.GetVertexLimits()
+            xmin, xmax = deltax
+            ymin, ymax = deltay
             alpha.append( project(Point(x+xmin, y+ymin), normal) )
             alpha.append( project(Point(x+xmin, y+ymax), normal) )
             alpha.append( project(Point(x+xmax, y+ymin), normal) )
@@ -1101,7 +1102,7 @@ class CartesianAxis2D(BaseAxis):
                 # Set other properties right
                 t._visible = True
                 t.fontSize = self._tickFontSize
-                t._color = self._axisColor
+                t._color = self._axisColor # Use private attr for performance
                 if d==1:
                     t.halign = 1
                     t.valign = 0
@@ -1115,18 +1116,14 @@ class CartesianAxis2D(BaseAxis):
             
             # We should hide this last tick if it sticks out
             if d==0 and len(ticks):
-                # Prepare text object to produce _vertices2 and _screenx
-                t._Compile()
-                t._PositionText()
-                t.OnDraw()
                 # Get positions
                 fig = axes.GetFigure()
                 if fig:
                     tmp1 = fig.position.width
-                    tmp2 = t._screenx + t._vertices2[:,0].max()
-#                     tmp2 = t._vertices2[:,0].max() / 2
+                    tmp2 = glu.gluProject(t.x, t.y, t.z)[0] 
+                    tmp2 += t.GetVertexLimits()[0][1] # Max of x
                     # Apply
-                    if t._vertices1 and tmp1 < tmp2:
+                    if tmp1 < tmp2:
                         t._visible = False
             
             # Get gridlines
@@ -1384,7 +1381,7 @@ class CartesianAxis3D(BaseAxis):
                 t._visible = True
                 if t.fontSize != self._tickFontSize:
                     t.fontSize = self._tickFontSize
-                t._color = self._axisColor
+                t._color = self._axisColor  # Use private attr for performance
                 if d==2:
                     t.valign = 0
                     t.halign = 1
@@ -1434,7 +1431,7 @@ class CartesianAxis3D(BaseAxis):
                 t.fontSize=10
             newTextDicts[d][key] = t
             t.halign = 0
-            t._color = self._axisColor
+            t._color = self._axisColor  # Use private attr for performance
             # Move to back such that they can position themselves right
             if not t in self._children[-3:]:
                 self._children.remove(t)
@@ -1765,7 +1762,7 @@ class PolarAxis2D(BaseAxis):
                 t.fontSize = 10
             newTextDicts[d][key] = t
             t.halign = 0
-            t._color = self._axisColor
+            t._color = self._axisColor  # Use private attr for performance
             # Move to back
             if not t in self._children[-3:]:
                 self._children.remove(t)
@@ -1854,7 +1851,7 @@ class PolarAxis2D(BaseAxis):
             t._visible = True
             if t.fontSize != self._tickFontSize:
                 t.fontSize = self._tickFontSize
-            t._color = self._axisColor
+            t._color = self._axisColor  # Use private attr for performance
             t.halign = 0
             t.valign = 0
         #===================================================================
@@ -1949,7 +1946,7 @@ class PolarAxis2D(BaseAxis):
             t._visible = True
             if t.fontSize != self._tickFontSize:
                 t.fontSize = self._tickFontSize
-            t._color = self._axisColor
+            t._color = self._axisColor  # Use private attr for performance
             t.halign = 1
             t.valign = 0
 

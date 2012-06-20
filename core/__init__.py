@@ -46,4 +46,4 @@ from visvis.core.axes import AxesContainer, Axes, Legend
 from visvis.core.baseFigure import BaseFigure
 from visvis.core.line import Line, PolarLine
 from visvis.core.baseWibjects import Box, DraggableBox
-from visvis.core.textRender import Text, Label
+from visvis.text import Text, Label

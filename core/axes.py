@@ -24,7 +24,7 @@ from visvis.core.misc import Range, getColor, basestring
 from visvis.core.baseWibjects import Box, DraggableBox
 from visvis.core import cameras
 from visvis.core.cameras import ortho
-from visvis.core.textRender import Label
+from visvis.text import Label
 from visvis.core.line import Line 
 from visvis.core.axises import BaseAxis, CartesianAxis, PolarAxis2D
 from visvis.core.light import Light
@@ -1149,10 +1149,9 @@ class Legend(DraggableBox):
         label = Label(self, text)
         label.bgcolor = ''        
         label.position = self._xoffset*2 + twoPoints*self._linelen, y
-        label._Compile()
-        label._PositionText()
+        deltax, deltay = label.GetVertexLimits()
         #y2 = label.position.h / 2
-        y2 = (label._deltay[1] - label._deltay[0]) / 2 
+        y2 = (deltay[1] - deltay[0]) / 2 
         # create 2-element pointset
         pp = Pointset(2)        
         pp.append(self._xoffset, y + y2)
@@ -1225,7 +1224,8 @@ class Legend(DraggableBox):
             line.ms, line.mc, line.mw = lineProps[3:6]
             line.mec, line.mew = lineProps[6:8]
             # correct label size and store max
-            label.position.w = (label._deltax[1]-label._deltax[0])+2
+            deltax, deltay = label.GetVertexLimits()
+            label.position.w = (deltax[1]-deltax[0])+2
             maxWidth = max([maxWidth, label.position.w ])
         
         # make own size ok
@@ -1233,7 +1233,8 @@ class Legend(DraggableBox):
             pos = label.position
             self.position.w = maxWidth + pos.x + self._xoffset
             #self.position.h = pos.bottom + self._yoffset
-            labelHeight = label._deltay[1] - label._deltay[0]
+            deltax, deltay = label.GetVertexLimits()
+            labelHeight = deltay[1] - deltay[0]
             self.position.h = pos.top + labelHeight + self._yoffset
             self.visible = True
         else:
