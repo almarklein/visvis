@@ -67,5 +67,7 @@ from .text_base import AtlasTexture, FontManager, BaseText
 from .text_base import Text, Label
 
 from .text_prerendered import PrerenderedFontManager
+from .text_freetype import FreeTypeFontManager
 
+# FontManager = FreeTypeFontManager
 FontManager = PrerenderedFontManager
