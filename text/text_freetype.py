@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-# todo: copyright notices for Nicolas and Robert
+# Copyright (C) 2011, Nicolas P. Rougier
+# Copyright (C) 2012, Robert Schroll
+# Copyright (C) 2012, Almar Klein
+#
+# This module contains code taken from freetype-py, which was modified
+# to integrate with visvis.
 
 import sys
 import math
@@ -15,6 +20,12 @@ from .freetype import ( Face, Vector, Matrix,
                         FT_KERNING_UNSCALED,
                       )
 import subprocess
+
+try:
+    n2_16 = long(0x10000)
+except Exception:
+    n2_16 = 0x10000
+
 
 class FreeTypeAtlas(AtlasTexture):
     '''
@@ -539,8 +550,8 @@ class TextureFont:
 
         for charcode in charcodes:
             face.set_char_size( int(self.size * 64), 0, hres, 72 )
-            matrix = Matrix( int((hscale) * 0x10000L), int((0.0) * 0x10000L),
-                             int((0.0)    * 0x10000L), int((1.0) * 0x10000L) )
+            matrix = Matrix( int((hscale) * n2_16), int((0.0) * n2_16),
+                             int((0.0)    * n2_16), int((1.0) * n2_16) )
             face.set_transform( matrix, pen )
             if charcode in self.glyphs.keys():
                 continue
@@ -559,7 +570,7 @@ class TextureFont:
 
             x,y,w,h = self.atlas.get_region(width/self.depth+2, rows+2)
             if x < 0:
-                print 'Missed !'
+                print('Missed !')
                 continue
             x,y = x+1, y+1
             w,h = w-2, h-2
