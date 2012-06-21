@@ -145,7 +145,7 @@ class PrerenderedFontManager(FontManager):
             x1 = x1 + g.width + 1     
         
         # store calculations
-        textObject._SetInitialData(texCords, vertices)
+        textObject._SetCompiledData(vertices, texCords)
     
     
     def Position(self, textObject):
@@ -155,7 +155,7 @@ class PrerenderedFontManager(FontManager):
         FontManager.Position(self, textObject)
         
         # get vertices
-        texCords, vertices = textObject._GetInitialData()
+        vertices, texCords = textObject._GetCompiledData()
         if vertices is None:
             return
         vertices = vertices.copy()
@@ -226,7 +226,7 @@ class PrerenderedFontManager(FontManager):
             vertices[:,1] = vertices[:,1] + anchory
         
         # store 
-        textObject._SetFinalData(texCords, vertices)       
+        textObject._SetFinalData(vertices, texCords)       
     
     
     def Draw(self, textObject, x=0, y=0, z=0):
@@ -235,7 +235,7 @@ class PrerenderedFontManager(FontManager):
         FontManager.Draw(self, textObject)
         
         # Get texCords and vertices
-        texCords, vertices = textObject._GetFinalData()
+        vertices, texCords = textObject._GetFinalData()
         if texCords is None or vertices is None:
             return
         

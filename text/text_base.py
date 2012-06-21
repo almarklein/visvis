@@ -84,13 +84,42 @@ class AtlasTexture(TextureObject):
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP)
 
-
+    
+    def _UpdateTexture(self, data, *args):
+        """ Overload to make it an alpha map. 
+        """
+        # Add lumincance channel
+        data2 = np.zeros((data.shape[0],data.shape[1],2), dtype=np.uint8)
+        data2[:,:,0] = 255
+        data2[:,:,1] = data
+        
+        shape = data.shape
+        gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0,0, shape[1],shape[0],
+            gl.GL_LUMINANCE_ALPHA, gl.GL_UNSIGNED_BYTE, data2)
 
 
 class FontManager(object):
     """ The font manager is a class that can generate text.
     There is one fontmanager per context (i.e. Figure).
     """
+    
+    # To create a font manager, subclass this class and implement the 
+    # Compile, Position and Draw methods that each have a textObject
+    # (Text or Label instance) as the first argument.
+    #
+    # * In Compile() the text should be compiled. This function is called
+    #   as little as possible; do most of the heavy lifting here.
+    #   Use BaseText._SetCompiledData() to buffer the result.
+    #
+    # * In Position() one can implement the final positioning of the text.
+    #   Use BaseText._GetCompiledData() to get the buffered data and use
+    #   BaseText._SetFinalData() to buffer the result.
+    #
+    # * In Draw() the text should be drawn to the screen. Use
+    #   BaseText._GetFinalData() to get the data for drawing.
+    #
+    # The _SetXxxData and _GetXxxData may contain any values.
+    # The only restriction is that the first argument is the array of vertices.
     
     def ConvertEscapedText(self, tt):
         tt = tt.replace(r'\\', unichr(0))
@@ -130,11 +159,11 @@ class FontManager(object):
         pass
     
     def Position(self, textObject):
-        if textObject._texCords1 is None or textObject._vertices1 is None:
+        if textObject._compiledData is None:
             self.Compile(textObject)
     
     def Draw(self, textObject, x=0, y=0, z=0):
-        if textObject._texCords2 is None or textObject._vertices2 is None:
+        if textObject._finalData is None:
             self.Position(textObject)
     
 
@@ -147,9 +176,10 @@ class BaseText(object):
     the vv.settings.defaultFontName is used.
     """
     
-    # The idea is that the FontManager produces the _texCords and _vertices1
+    # The idea is that the FontManager produces the _compiledData 
     # for this object in its Compile method. In its Position method it 
-    # will create _verticices 
+    # will create _finalData 
+    
     def __init__(self, text='', fontName=None, fontSize=9, color='k'):
         
         # Check fontname
@@ -168,13 +198,8 @@ class BaseText(object):
         self._valign = 0
         self._angle = 0
         
-        # The data used for drawing. 
-        # 1) The preliminary (relative) vertex coordinates
-        # 2) The final (absolute) vertex coordinates
-        self._texCords1 = None
-        self._texCords2 = None 
-        self._vertices1 = None 
-        self._vertices2 = None
+        # Initialize some attributes
+        self.Invalidate()
         
         # Try getting the font manager now
         self._lastFontManager = None
@@ -196,25 +221,31 @@ class BaseText(object):
         """ Invalidate this object, such that the text is recompiled
         the next time it is drawn. 
         """
-        self._texCords1 = None
-        self._texCords2 = None
-        self._vertices1 = None
-        self._vertices2 = None
+        
+        # Data for drawing
+        self._compiledData = None    # The preliminary (relative) vertex coordinates etc
+        self._finalData = None      # The final (absolute) vertex coordinates etc
+        
+        # Buffered values to store the limits of the vertices 
+        self._deltax = 0, 0
+        self._deltay = 0, 0
     
-    def _SetInitialData(self, texCords, vertices):
-        self._texCords1 = texCords
-        self._vertices1 = vertices
+    def _SetCompiledData(self, *args):
+        self._compiledData = args
     
-    def _GetInitialData(self):
-        return self._texCords1, self._vertices1
+    def _GetCompiledData(self):
+        return self._compiledData
     
-    def _SetFinalData(self, texCords, vertices):
-        self._texCords2 = texCords
-        self._vertices2 = vertices
-    
+    def _SetFinalData(self, *args):
+        self._finalData = args
+        
+        vertices = args[0]
+        if vertices is not None and len(vertices):
+            self._deltax = vertices[:,0].min(), vertices[:,0].max()
+            self._deltay = vertices[:,1].min(), vertices[:,1].max() 
     
     def _GetFinalData(self):
-        return self._texCords2, self._vertices2
+        return self._finalData
     
     
     def GetVertexLimits(self):
@@ -222,16 +253,9 @@ class BaseText(object):
         Returns (xmin, xmax), (ymin, ymax)
         """
         # Make sure we have vertices
-        if self._vertices2 is None:
+        if self._finalData is None:
             self.UpdatePosition()
-        vertices = self._vertices2
-        # Return the limits or a dummy
-        if vertices is not None and len(vertices):
-            deltax = vertices[:,0].min(), vertices[:,0].max()
-            deltay = vertices[:,1].min(), vertices[:,1].max() 
-            return deltax, deltay
-        else:
-            return (0,0), (0,0)
+        return self._deltax, self._deltay
         
     
     def UpdatePosition(self, *args):
@@ -243,11 +267,11 @@ class BaseText(object):
     
     @property
     def isCompiled(self):
-        return self._vertices1 is not None and len(self._vertices1)
+        return self._compiledData is not None and len(self._compiledData[0])
     
     @property
     def isPositioned(self):
-        return self._vertices2 is not None and len(self._vertices2)
+        return self._finalData is not None and len(self._finalData[0])
     
     
     @Property # Smart draw
@@ -273,7 +297,7 @@ class BaseText(object):
         def fset(self, value):
             if value != self._angle:
                 self._angle = value
-                self._vertices2 = None # force recalculation
+                self._finalData = None # force recalculation
                 self.Draw()
         return locals()
     
@@ -355,7 +379,7 @@ class BaseText(object):
             value = int(value>0) - int(value<0)
             if value != self._halign:
                 self._halign = value
-                self._vertices2 = None # force recalculation
+                self._finalData = None # force recalculation
                 self.Draw()
         return locals()
     
@@ -383,7 +407,7 @@ class BaseText(object):
             value = int(value>0) - int(value<0)
             if value != self._valign:
                 self._valign = value
-                self._vertices2 = None # force recalculation
+                self._finalData = None # force recalculation
                 self.Draw()
         return locals()
 
