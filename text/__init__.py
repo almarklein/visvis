@@ -67,7 +67,13 @@ from .text_base import AtlasTexture, FontManager, BaseText
 from .text_base import Text, Label
 
 from .text_prerendered import PrerenderedFontManager
-from .text_freetype import FreeTypeFontManager
+
+# Try importing the freetype font manager
+try:
+  from .text_freetype import FreeTypeFontManager
+except RuntimeError:
+  FreeTypeFontManager = None
+
 
 # FontManager = FreeTypeFontManager
 FontManager = PrerenderedFontManager
