@@ -26,6 +26,12 @@ from .ft_errors import *
 from .ft_structs import *
 import ctypes.util
 
+import sys
+PY3 = sys.version_info[0] == 3
+if PY3:
+    string_types = str,
+else:
+    string_types = basestring,
 
 __dll__    = None
 __handle__ = None
@@ -1089,7 +1095,7 @@ class Face( object ):
         correspond to the internal indices used within the file. This is done
         to ensure that value 0 always corresponds to the 'missing glyph'.
         '''
-        if type( charcode ) in (str,unicode):
+        if isinstance(charcode, string_types):
             charcode = ord( charcode )
         return FT_Get_Char_Index( self._FT_Face, charcode )
 
