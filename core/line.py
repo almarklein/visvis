@@ -586,7 +586,7 @@ class Line(Wobject):
         
         # Try make it a (copied) pointset
         if not is_Pointset(points):
-            points = vv.Pointset(points) # Already does a copy
+            points = Pointset(points) # Already does a copy
         else:
             points = points.copy() # Make a copy
         
