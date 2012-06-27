@@ -11,6 +11,10 @@ import math
 import numpy as np
 import OpenGL.GL as gl
 
+import subprocess
+
+from ..core.shaders import Shader, ShaderCodePart
+
 from .text_base import AtlasTexture, FontManager, Text, Label
 from .text_base import correctVertices, simpleTextureDraw
 
@@ -20,7 +24,7 @@ from .freetype import ( Face, Vector, Matrix,
                         FT_LOAD_FORCE_AUTOHINT, FT_LOAD_TARGET_LCD, 
                         FT_KERNING_UNSCALED, FT_KERNING_UNFITTED
                       )
-import subprocess
+
 
 try:
     n2_16 = long(0x10000)
@@ -33,6 +37,47 @@ except Exception:
 # I suspect that when we apply the full screen aliasing, the text will look
 # great!
 TEX_SCALE = 2.0
+
+
+VERTEX_SHADER = """
+
+"""
+FRAGMENT_SHADER = """
+// Uniforms obtained from OpenGL
+    uniform sampler2D texture; // The 3D texture
+    uniform vec2 shape; // And its shape (as in OpenGl)
+    
+    void main()
+    {    
+        // Get centre location
+        vec2 pos = gl_TexCoord[0].xy;
+        
+        // Init value
+        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0); 
+        
+        // Init kernel and number of steps
+        //vec4 kernel = vec4 (0.5, 0.2, 0.05 , 0.0);
+        vec4 kernel = vec4 (0.5, 0.25, 0.0 , 0.0);
+        int sze = 1; // Overwritten in aa-steps part
+        
+        // Init step size in tex coords
+        float dx = 1.0/shape.x;
+        float dy = 1.0/shape.y;
+        
+        // Convolve
+        for (int y=-sze; y<sze+1; y++)
+        {
+            for (int x=-sze; x<sze+1; x++)
+            {   
+                float k = kernel[int(abs(float(x)))] * kernel[int(abs(float(y)))];
+                vec2 dpos = vec2(float(x)*dx, float(y)*dy);
+                color1 += texture2D(texture, pos+dpos) * k;
+            }
+        }
+        gl_FragColor = color1 * gl_Color;
+        
+    }
+"""
 
 class FreeTypeAtlas(AtlasTexture):
     '''
@@ -236,6 +281,25 @@ class FreeTypeFontManager(FontManager):
         self._font_names = {}
         self._fonts = {}
         self.atlas = FreeTypeAtlas(1024, 1024, 1)
+        
+        # Create shader
+        self._shader = None
+    
+    @property
+    def shader(self):
+        if self._shader is None:
+            # Create shader
+            self._shader = Shader()
+            # Set fragment code, vertex code is empty
+            self._shader.vertex.Clear()
+            fragment = ShaderCodePart('textaa', '', FRAGMENT_SHADER)
+            self._shader.fragment.AddPart(fragment)
+            # Set uniform
+            shape = self.atlas.data.shape[:2]
+            uniform_shape = [float(s) for s in reversed(list(shape))]
+            self.shader.SetStaticUniform('shape', uniform_shape)
+        
+        return self._shader
     
     def GetFont(self, fontname, size, bold=False, italic=False):
         fontfile = self.get_font_file(fontname, bold, italic)
@@ -394,7 +458,9 @@ class FreeTypeFontManager(FontManager):
             gl.glTranslatef(x, y, z)
         
         # Draw
+        self.shader.Enable()
         simpleTextureDraw(vertices, texCords, self.atlas, textObject.textColor)
+        self.shader.Disable()
         
         # Un-translate
         if x or y or z:
