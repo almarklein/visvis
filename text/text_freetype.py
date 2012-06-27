@@ -12,12 +12,13 @@ import numpy as np
 import OpenGL.GL as gl
 
 from .text_base import AtlasTexture, FontManager, Text, Label
+from .text_base import correctVertices, simpleTextureDraw
 
 from .freetype import ( Face, Vector, Matrix,
                         set_lcd_filter,
                         FT_LOAD_RENDER, FT_LCD_FILTER_LIGHT, 
                         FT_LOAD_FORCE_AUTOHINT, FT_LOAD_TARGET_LCD, 
-                        FT_KERNING_UNSCALED,
+                        FT_KERNING_UNSCALED, FT_KERNING_UNFITTED
                       )
 import subprocess
 
@@ -73,8 +74,8 @@ class FreeTypeAtlas(AtlasTexture):
                                dtype=np.uint8)
         
         self.used   = 0
-            
-
+    
+    
     def upload(self):
         '''
         Upload atlas data into video memory.
@@ -140,7 +141,7 @@ class FreeTypeAtlas(AtlasTexture):
 
         if best_index == -1:
             return -1,-1,0,0
-
+        
         node = region[0], region[1]+height, width
         self.nodes.insert(best_index, node)
 
@@ -228,7 +229,7 @@ class FreeTypeFontManager(FontManager):
         
         self._font_names = {}
         self._fonts = {}
-        self.atlas = FreeTypeAtlas(512, 512, 3)
+        self.atlas = FreeTypeAtlas(1024, 1024, 3)
     
     def GetFont(self, fontname, size, bold=False, italic=False):
         fontfile = self.get_font_file(fontname, bold, italic)
@@ -264,8 +265,14 @@ class FreeTypeFontManager(FontManager):
         pen = [0,0]
         prev = None
         
+        # Calculate font size
+        fontSize = textObject.fontSize
+        fig = textObject.GetFigure()
+        if fig:
+            fontSize *= fig._relativeFontSize
+        textObject._actualFontSize = fontSize
         
-        fonts = [(self.GetFont(textObject.fontName, textObject.fontSize), 0, False, False)]
+        fonts = [(self.GetFont(textObject.fontName, fontSize), 0, False, False)]
         font, voffset, bold, italic = fonts[-1]
         escaped = False
         for i,charcode in enumerate(tt):
@@ -301,7 +308,9 @@ class FreeTypeFontManager(FontManager):
                         escaped = True
                         continue
             glyph = font[charcode]
-            kerning = glyph.get_kerning(prev)/64.0/72*font.size
+            if glyph is None:
+                continue # Character not available
+            kerning = glyph.get_kerning(prev)
             x0 = pen[0] + glyph.offset[0] + kerning
             y0 = pen[1] + glyph.offset[1] + voffset
             x1 = x0 + glyph.size[0]
@@ -327,16 +336,19 @@ class FreeTypeFontManager(FontManager):
             font, voffset, bold, italic = fonts[-1]
             escaped = False
         
-        if isinstance(textObject, Label):
-            vertices *= (1, -1, 1)
+        # Flip and shift vertices
+        vertices *= (1, -1, 1)
+        vertices += (0, font.ascender, 0)
         
-        # todo: rename ._width
-        textObject.width = pen[0]-glyph.advance[0]/64.0+glyph.size[0] if tt else 0
+        # Store width
+        if False: #glyph is not None: # Not used
+            textObject.width = pen[0]-glyph.advance[0]/64.0+glyph.size[0] if tt else 0
         
         # Update dynamic texture
         self.atlas.upload()
         
-        # Store data
+        # Store data. 
+        # todo: Why did we calculate indices anc colors. We dont need these, right?
         textObject._SetCompiledData(vertices, indices, texcoords, colors)
     
     
@@ -344,48 +356,14 @@ class FreeTypeFontManager(FontManager):
         FontManager.Position(self, textObject)
         
         # Get data
-        # todo: think of a nice way to return if data is unavailable somehow
         vertices, indices, texcoords, colors = textObject._GetCompiledData()
+        vertices = vertices.copy()
         
-        if vertices is None:
-            return
+        # Use default algorithm to correct the vertices for alginment and angle
+        font = self.GetFont(textObject.fontName, textObject._actualFontSize)
+        correctVertices(textObject, vertices, font.height)
         
-        # Get font
-        font = self.GetFont(textObject.fontName, textObject.fontSize)
-        
-        # Handle alignment
-        if textObject.valign == -1: # top
-            dy = -round(font.ascender) # < 0
-        elif textObject.valign == 0: # center
-            dy = +round(-font.height/2-font.descender)
-        elif textObject.valign == 1: # bottom
-            dy = -round(font.descender) # > 0
-        else: # baseline
-            dy = 0
-        #
-        if textObject.halign == 1: # right
-            dx = -textObject.width/1.0
-        elif textObject.halign == 0: # center
-            dx = -textObject.width/2.0
-        else: # left
-            dx = 0
-        
-        # Determine x offset
-        textObject._xoffset = 0
-        if isinstance(textObject, Label):
-            dy *= -1
-            x, y, w, h = textObject.position
-            dx += w * (textObject.halign + 1)/2
-            if textObject.valign == 2:
-                # Put baseline at bottom of box.  (Is this desired?)
-                dy += h
-            else:
-                dy += h * (textObject.valign + 1)/2
-            textObject._xoffset = x - np.floor(x)
-        textObject._shift = dx, round(dy)
-        
-        # Store data
-        # todo: also store shift, xoffset and width here?
+        # Store
         textObject._SetFinalData(vertices, indices, texcoords, colors)
     
     
@@ -400,32 +378,39 @@ class FreeTypeFontManager(FontManager):
             gl.glPushMatrix()
             gl.glTranslatef(x, y, z)
         
-        # Enable texture atlas
-        self.atlas.Enable()
+        # Draw
+        simpleTextureDraw(vertices, texCords, self.atlas, textObject.textColor)
         
-        # init vertex and texture array
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        gl.glVertexPointerf(vertices)
-        gl.glTexCoordPointerf(texCords)
-        
-        gl.glColorPointer(4, gl.GL_FLOAT, 0, colors)
-        
-        # draw
-        if textObject.textColor and len(vertices):
-            clr = textObject.textColor
-            gl.glColor(clr[0], clr[1], clr[2])
-            #gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
-            gl.glDrawElements(gl.GL_TRIANGLES, len(indices),
-                          gl.GL_UNSIGNED_INT, indices)
-            gl.glFlush()
-        
-        # disable texture and clean up     
+        # Un-translate
         if x or y or z:
             gl.glPopMatrix()   
-        self.atlas.Disable()
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        
+#         # Enable texture atlas
+#         self.atlas.Enable()
+#         
+#         # init vertex and texture array
+#         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+#         gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+#         gl.glVertexPointerf(vertices)
+#         gl.glTexCoordPointerf(texCords)
+#         
+#         gl.glColorPointer(4, gl.GL_FLOAT, 0, colors)
+#         
+#         # draw
+#         if textObject.textColor and len(vertices):
+#             clr = textObject.textColor
+#             gl.glColor(clr[0], clr[1], clr[2])
+#             gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
+#             #gl.glDrawElements(gl.GL_TRIANGLES, len(indices),
+#             #              gl.GL_UNSIGNED_INT, indices)
+#             gl.glFlush()
+#         
+#         # disable texture and clean up     
+#         if x or y or z:
+#             gl.glPopMatrix()   
+#         self.atlas.Disable()
+#         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+#         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
     
     
     def Draw_sub(self, textObject, x=0, y=0, z=0):
@@ -530,7 +515,7 @@ class TextureFont:
         '''
         if charcode not in self.glyphs.keys():
             self.load('%c' % charcode)
-        return self.glyphs[charcode]
+        return self.glyphs.get(charcode, None)
 
  
     def load(self, charcodes = ''):
@@ -598,12 +583,14 @@ class TextureFont:
 
             # Generate kerning
             for g in self.glyphs.values():
-                kerning = face.get_kerning(g.charcode, charcode, mode=FT_KERNING_UNSCALED)
+                # 64 * 64 because of 26.6 encoding AND the transform matrix used
+                # in texture_font_load_face (hres = 64)
+                kerning = face.get_kerning(g.charcode, charcode, mode=FT_KERNING_UNFITTED)
                 if kerning.x != 0:
-                    glyph.kerning[g.charcode] = kerning.x
-                kerning = face.get_kerning(charcode, g.charcode, mode=FT_KERNING_UNSCALED)
+                    glyph.kerning[g.charcode] = kerning.x/(64.0*64.0)
+                kerning = face.get_kerning(charcode, g.charcode, mode=FT_KERNING_UNFITTED)
                 if kerning.x != 0:
-                    g.kerning[charcode] = kerning.x
+                    g.kerning[charcode] = kerning.x/(64.0*64.0)
 
             # High resolution advance.x calculation
             # gindex = face.get_char_index( charcode )

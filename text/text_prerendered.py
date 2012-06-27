@@ -12,6 +12,7 @@ from visvis.core.misc import basestring , getResourceDir
 from visvis.core.baseWibjects import Box
 
 from .text_base import AtlasTexture, FontManager, Text, Label
+from .text_base import correctVertices, simpleTextureDraw
 
 
 class PrerenderedAtlas(AtlasTexture):
@@ -27,7 +28,7 @@ class Font:
         self.atlas = PrerenderedAtlas()
         self.atlas.SetData(info.data)
 
-
+# todo: we changed some unicode symbols, are they unavailable now in this renderer?
 class PrerenderedFontManager(FontManager):
     
     def __init__(self):
@@ -144,6 +145,11 @@ class PrerenderedFontManager(FontManager):
             # prepare for next glyph
             x1 = x1 + g.width + 1     
         
+        # Scale text according to global text size property
+        fig = textObject.GetFigure()
+        if fig:
+            vertices *= fig._relativeFontSize
+        
         # store calculations
         textObject._SetCompiledData(vertices, texCords)
     
@@ -154,79 +160,15 @@ class PrerenderedFontManager(FontManager):
         """
         FontManager.Position(self, textObject)
         
-        # get vertices
-        vertices, texCords = textObject._GetCompiledData()
-        if vertices is None:
-            return
+        # Get data
+        vertices, texcoords = textObject._GetCompiledData()
         vertices = vertices.copy()
         
-        # scale text according to global text size property
-        # todo: this should probably just set fontSize somewhere
-        fig = textObject.GetFigure()
-        if fig:
-            vertices *= fig._relativeFontSize
-        
-        # obtain dimensions
-        if len(vertices):
-            x1, x2 = vertices[:,0].min(), vertices[:,0].max()
-        else:
-            x1, x2 = 0,0
-        y1, y2 = 0, textObject._xglyph.sizey
-        
-        # set anchor
-        if textObject.halign < 0:  anchorx = x1
-        elif textObject.halign > 0:  anchorx = x2
-        else: anchorx = x1 + (x2-x1)/2.0
-        #
-        if textObject.valign < 0:  anchory = y1
-        elif textObject.valign > 0:  anchory = y2
-        else: anchory = y1 + (y2-y1)/2.0
-        
-        # apply anchor
-        angle = textObject.textAngle
-        if isinstance(textObject, Text):
-            # Text is a wobject, so must be flipped on y axis
-            vertices[:,0] = vertices[:,0] - anchorx
-            vertices[:,1] = -(vertices[:,1] - anchory)
-        
-        elif isinstance(textObject, Label):
-            angle = -textObject.textAngle
-            vertices[:,0] = vertices[:,0] - anchorx
-            vertices[:,1] = vertices[:,1] - anchory
-        
-        # apply angle
-        if angle != 0.0:
-            cos_angle = np.cos(angle*np.pi/180.0)
-            sin_angle = np.sin(angle*np.pi/180.0)
-            vertices[:,0], vertices[:,1] = (
-                vertices[:,0] * cos_angle - vertices[:,1] * sin_angle,
-                vertices[:,0] * sin_angle + vertices[:,1] * cos_angle)
-        
-        # Move anchor in label
-        if isinstance(textObject, Label):
-            w,h = textObject.position.size
-            # determine whether the text is vertical or horizontal
-            halign, valign = textObject.halign, textObject.valign
-            if textObject.textAngle > 135 or textObject.textAngle < -135:
-                halign, valign = -halign, valign
-            elif textObject.textAngle > 45:
-                halign, valign = valign, -halign
-            elif textObject.textAngle < -45:
-                halign, valign = valign, halign
-            # set anchor y
-            if valign < 0:  anchory = 0
-            elif valign > 0:  anchory = h
-            else:  anchory = h/2.0
-            # set anchor x
-            if halign < 0:  anchorx = 0
-            elif halign > 0:  anchorx = w
-            else:  anchorx = w/2.0
-            # apply
-            vertices[:,0] = vertices[:,0] + anchorx
-            vertices[:,1] = vertices[:,1] + anchory
-        
-        # store 
-        textObject._SetFinalData(vertices, texCords)       
+        # Use default algorithm to correct the vertices for alginment and angle
+        correctVertices(textObject, vertices, textObject._xglyph.sizey)
+                
+        # Store
+        textObject._SetFinalData(vertices, texcoords)
     
     
     def Draw(self, textObject, x=0, y=0, z=0):
@@ -234,42 +176,21 @@ class PrerenderedFontManager(FontManager):
         """
         FontManager.Draw(self, textObject)
         
-        # Get texCords and vertices
+        # Get data
         vertices, texCords = textObject._GetFinalData()
-        if texCords is None or vertices is None:
-            return
         
         # Translate
         if x or y or z:
             gl.glPushMatrix()
             gl.glTranslatef(x, y, z)
         
-        # Get atlas
+        # Draw
         atlas = self.GetFont(textObject.fontName).atlas
+        simpleTextureDraw(vertices, texCords, atlas, textObject.textColor)
         
-        # Enable texture atlas
-        atlas.Enable()
-        
-        # init vertex and texture array
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        gl.glVertexPointerf(vertices.data)
-        gl.glTexCoordPointerf(texCords.data)
-        
-        # draw
-        if textObject.textColor and len(vertices):
-            clr = textObject.textColor
-            gl.glColor(clr[0], clr[1], clr[2])
-            gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
-            gl.glFlush()
-        
-        # disable texture and clean up     
+        # Un-translate
         if x or y or z:
-            gl.glPopMatrix()   
-        atlas.Disable()
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-
+            gl.glPopMatrix()
 
 
 class Glyph(object):
