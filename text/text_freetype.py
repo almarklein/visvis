@@ -239,6 +239,8 @@ class FreeTypeFontManager(FontManager):
         return self._fonts[sig]
     
     def get_font_file(self, fontname, bold, italic):
+        if fontname == 'sans':
+            fontname = 'freesans'
         sig = (fontname, bold, italic)
         if not sig in self._font_names:
             weight = 200 if bold else 80
@@ -266,13 +268,19 @@ class FreeTypeFontManager(FontManager):
         prev = None
         
         # Calculate font size
-        fontSize = textObject.fontSize
+        # todo: I can also imagine doing it the other way around;
+        # textSize becomes as FreeType sees it, and we scale the fonts
+        # in the prerendered text renderer. We'd have to change all the 
+        # uses fontSize though.
+        fontSize = textObject.fontSize * 1.4
         fig = textObject.GetFigure()
         if fig:
             fontSize *= fig._relativeFontSize
-        textObject._actualFontSize = fontSize
         
-        fonts = [(self.GetFont(textObject.fontName, fontSize), 0, False, False)]
+        # Store integer fontsize and residu
+        textObject._actualFontSize = int(round(fontSize)) 
+        
+        fonts = [(self.GetFont(textObject.fontName, textObject._actualFontSize), 0, False, False)]
         font, voffset, bold, italic = fonts[-1]
         escaped = False
         for i,charcode in enumerate(tt):

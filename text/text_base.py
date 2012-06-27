@@ -246,6 +246,9 @@ def simpleTextureDraw(vertices, texcords, texture, color):
     # Enable texture 
     texture.Enable()
     
+    # Allow overlapping quads to overwrite the empty part of another.
+    gl.glDepthFunc(gl.GL_LEQUAL)
+    
     # init vertex and texture array
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
     gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
@@ -260,6 +263,7 @@ def simpleTextureDraw(vertices, texcords, texture, color):
     
     # disable texture and clean up     
     texture.Disable()
+    gl.glDepthFunc(gl.GL_LESS)
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
     gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
