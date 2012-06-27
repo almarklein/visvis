@@ -38,7 +38,9 @@ except Exception:
 # great!
 TEX_SCALE = 2.5
 
-
+# todo: test on Windows, make sure the falling back works smooth
+# todo: FreeType lib is installed on Mac, but in different place?
+# todo: have pyzo shop freeType lib on Windows and use that if possible.
 # todo: When we implement full screen antialiasing, we can remove the shader here
 
 FRAGMENT_SHADER_ADVANCED = """
@@ -324,6 +326,7 @@ class FreeTypeFontManager(FontManager):
     
     @property
     def shader(self):
+        # todo: disable when opengl version < 2.0
         if self._shader is None:
             # Create shader
             self._shader = Shader()
