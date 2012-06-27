@@ -16,7 +16,7 @@ from .text_base import correctVertices, simpleTextureDraw
 
 from .freetype import ( Face, Vector, Matrix,
                         set_lcd_filter,
-                        FT_LOAD_RENDER, FT_LCD_FILTER_LIGHT, 
+                        FT_LOAD_RENDER, FT_LCD_FILTER_LIGHT, FT_LCD_FILTER_NONE,
                         FT_LOAD_FORCE_AUTOHINT, FT_LOAD_TARGET_LCD, 
                         FT_KERNING_UNSCALED, FT_KERNING_UNFITTED
                       )
@@ -27,6 +27,12 @@ try:
 except Exception:
     n2_16 = 0x10000
 
+# The scale factor for textures. The texture glyphs are made TEX_SCALE times
+# bigger than the screen resolution. This means that we prevent very blurry
+# pieces for small text. The text becomes a bit too crisp I think, but 
+# I suspect that when we apply the full screen aliasing, the text will look
+# great!
+TEX_SCALE = 2.0
 
 class FreeTypeAtlas(AtlasTexture):
     '''
@@ -229,7 +235,7 @@ class FreeTypeFontManager(FontManager):
         
         self._font_names = {}
         self._fonts = {}
-        self.atlas = FreeTypeAtlas(1024, 1024, 3)
+        self.atlas = FreeTypeAtlas(1024, 1024, 1)
     
     def GetFont(self, fontname, size, bold=False, italic=False):
         fontfile = self.get_font_file(fontname, bold, italic)
@@ -272,7 +278,7 @@ class FreeTypeFontManager(FontManager):
         # textSize becomes as FreeType sees it, and we scale the fonts
         # in the prerendered text renderer. We'd have to change all the 
         # uses fontSize though.
-        fontSize = textObject.fontSize * 1.4
+        fontSize = textObject.fontSize * 1.4 * TEX_SCALE
         fig = textObject.GetFigure()
         if fig:
             fontSize *= fig._relativeFontSize
@@ -345,8 +351,9 @@ class FreeTypeFontManager(FontManager):
             escaped = False
         
         # Flip and shift vertices
+        vertices /= TEX_SCALE
         vertices *= (1, -1, 1)
-        vertices += (0, font.ascender, 0)
+        vertices += (0, font.ascender/TEX_SCALE, 0)
         
         # Store width
         if False: #glyph is not None: # Not used
@@ -369,7 +376,7 @@ class FreeTypeFontManager(FontManager):
         
         # Use default algorithm to correct the vertices for alginment and angle
         font = self.GetFont(textObject.fontName, textObject._actualFontSize)
-        correctVertices(textObject, vertices, font.height)
+        correctVertices(textObject, vertices, font.height/TEX_SCALE)
         
         # Store
         textObject._SetFinalData(vertices, indices, texcoords, colors)
@@ -514,7 +521,7 @@ class TextureFont:
         self.height    = metrics.height/64.0
         self.linegap   = self.height - self.ascender + self.descender
         self.depth = atlas.depth
-        set_lcd_filter(FT_LCD_FILTER_LIGHT)
+        set_lcd_filter(FT_LCD_FILTER_NONE)
 
 
     def __getitem__(self, charcode):
@@ -551,7 +558,7 @@ class TextureFont:
 
             self.dirty = True
             flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT
-            flags |= FT_LOAD_TARGET_LCD
+            #flags |= FT_LOAD_TARGET_LCD
 
             face.load_char( charcode, flags )
             bitmap = face.glyph.bitmap
@@ -570,7 +577,7 @@ class TextureFont:
             data = []
             for i in range(rows):
                 data.extend(bitmap.buffer[i*pitch:i*pitch+width])
-            data = np.array(data,dtype=np.ubyte).reshape(h,w,3)
+            data = np.array(data,dtype=np.ubyte).reshape(h,w,self.depth)
             gamma = 1.5
             Z = ((data/255.0)**(gamma))
             data = (Z*255).astype(np.ubyte)
