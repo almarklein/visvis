@@ -77,8 +77,8 @@ class AtlasTexture(TextureObject):
         #    gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data)
             gl.GL_LUMINANCE_ALPHA, gl.GL_UNSIGNED_BYTE, data2)
         
-        tmp1 = gl.GL_LINEAR
-        tmp2 = gl.GL_LINEAR
+        tmp1, tmp2 = gl.GL_LINEAR, gl.GL_LINEAR
+        #tmp1, tmp2 = gl.GL_NEAREST, gl.GL_NEAREST
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, tmp1)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, tmp2)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP)
