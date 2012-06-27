@@ -18,24 +18,41 @@ a.daspectAuto = True
 a.SetLimits((0,8), (-1,10))
 
 # Create text inside the axes
-t1 = vv.Text(a, 'These are texts living in the scene:', 1, 3)
-t2 = vv.Text(a, 'Text can be made \b{bold} easil\by!', 1, 2)
-t3 = vv.Text(a, 'Text can be made \i{italic} easil\iy!', 1, 1)
+
+t1 = vv.Text(a, 'Visvis text', 0.2, 9, 0, 'mono', 30)
+t2 = vv.Text(a, '... with FreeType!', 1, 8, 0, 'serif', 12)
+t3 = vv.Text(a, u'... and Unicode: Привет пустошь!', 1, 7)
+t3 = vv.Text(a, '\Gamma\rho\epsilon\epsilon\kappa letters and ' + 
+                ' \rightarrow math \otimes symbols', 1, 6)
+
+t2 = vv.Text(a, '\b{bold}, \i{italic}, and \b{\i{bolditalic}} \bfon\its!', 1, 5, 0, 'serif')
+t3 = vv.Text(a, 'Look, I\'m at an angle!', 1, 4)
+t3.textAngle = -20
+t3.fontSize = 12
+
 
 # Create text labels
-label0 = vv.Label(a, 'These are texts in widget coordinates:')
-label0.position = 10, 20
-label1 = vv.Label(a, 'Sub_{script} and super^{script} are easy as pi^2.')
-label1.position = 10, 40
-label2 = vv.Label(a, 'You can use many Unicode characters: \\u0183 = ' + unichr(387))
-label2.position = 10, 60
-label3 = vv.Label(a, 'And can use many Latex like commands: \\alpha \\Alpha' +
-                    '\\approx, \sigma, \pi, ')
-label3.position = 10, 80
+label1 = vv.Label(a, 'This is a Label')
+label1.position = 10, 0.9
+label1.bgcolor = (0.5, 1, 0.5)
 
-for label in [label0, label1, label2, label3]:
-    label.bgcolor = (0.5, 1, 0.5)
-    label.position.w = 400
+## A quick brown fox jumps over the lazy dog
+
+testText = 'A quick brown fox jumps over the lazy dog'
+
+# Create figure and figure
+fig = vv.figure()
+a = vv.cla()
+a.cameraType = '2d'
+
+vv.title(testText)
+# Create text labels
+for i in range(20):
+    offset = 0.1 * i
+    label = vv.Label(a, '| ' + testText + ' - %1.2f pixels offset' % offset)
+    label.bgcolor = None
+    label.position = 10 + 0.1*i, 10 + i*15
+
 
 # Enter main loop
 app = vv.use()
