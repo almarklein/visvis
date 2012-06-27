@@ -10,7 +10,7 @@ import OpenGL.GLU as glu
 
 import numpy as np
 
-import visvis
+import visvis as vv
 #
 from visvis.core.baseTexture import TextureObject
 from visvis.core.base import Wobject
@@ -161,11 +161,108 @@ class FontManager(object):
     def Position(self, textObject):
         if textObject._compiledData is None:
             self.Compile(textObject)
-    
+        
     def Draw(self, textObject, x=0, y=0, z=0):
         if textObject._finalData is None:
             self.Position(textObject)
+
     
+def correctVertices( textObject, vertices, charHeigh):
+    """ Provides a default algorithm that can be used 
+    in the FontManager.Position() method to correct the vertices
+    for alignment and angle.
+    """
+    
+    # obtain dimensions
+    if len(vertices):
+        x1, x2 = vertices[:,0].min(), vertices[:,0].max()
+    else:
+        x1, x2 = 0,0
+    y1, y2 = 0, charHeigh
+    
+    # set anchor
+    if textObject.halign < 0:  anchorx = x1
+    elif textObject.halign > 0:  anchorx = x2
+    else: anchorx = x1 + (x2-x1)/2.0
+    #
+    if textObject.valign < 0:  anchory = y1
+    elif textObject.valign > 0:  anchory = y2
+    else: anchory = y1 + (y2-y1)/2.0
+    
+    # apply anchor
+    angle = textObject.textAngle
+    if isinstance(textObject, Text):
+        # Text is a wobject, so must be flipped on y axis
+        vertices[:,0] = vertices[:,0] - anchorx
+        vertices[:,1] = -(vertices[:,1] - anchory)
+    
+    elif isinstance(textObject, Label):
+        angle = -textObject.textAngle
+        vertices[:,0] = vertices[:,0] - anchorx
+        vertices[:,1] = vertices[:,1] - anchory
+    
+    # apply angle
+    if angle != 0.0:
+        cos_angle = np.cos(angle*np.pi/180.0)
+        sin_angle = np.sin(angle*np.pi/180.0)
+        vertices[:,0], vertices[:,1] = (
+            vertices[:,0] * cos_angle - vertices[:,1] * sin_angle,
+            vertices[:,0] * sin_angle + vertices[:,1] * cos_angle)
+    
+    # Move anchor in label
+    if isinstance(textObject, Label):
+        w,h = textObject.position.size
+        # determine whether the text is vertical or horizontal
+        halign, valign = textObject.halign, textObject.valign
+        if textObject.textAngle > 135 or textObject.textAngle < -135:
+            halign, valign = -halign, valign
+        elif textObject.textAngle > 45:
+            halign, valign = valign, -halign
+        elif textObject.textAngle < -45:
+            halign, valign = valign, halign
+        # set anchor y
+        if valign < 0:  anchory = 0
+        elif valign > 0:  anchory = h
+        else:  anchory = h/2.0
+        # set anchor x
+        if halign < 0:  anchorx = 0
+        elif halign > 0:  anchorx = w
+        else:  anchorx = w/2.0
+        # apply
+        vertices[:,0] = vertices[:,0] + anchorx
+        vertices[:,1] = vertices[:,1] + anchory
+
+
+def simpleTextureDraw(vertices, texcords, texture, color):
+    """ Simply draw characters, given vertices, texcords, a texture
+    and a color.
+    """ 
+    # Make arrays
+    if isinstance(vertices, vv.Pointset):
+        vertices = vertices.data
+    if isinstance(texcords, vv.Pointset):
+        texcords = texcords.data
+    
+    # Enable texture 
+    texture.Enable()
+    
+    # init vertex and texture array
+    gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+    gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+    gl.glVertexPointerf(vertices)
+    gl.glTexCoordPointerf(texcords)
+    
+    # draw
+    if color and len(vertices):
+        gl.glColor(color[0], color[1], color[2])
+        gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
+        gl.glFlush()
+    
+    # disable texture and clean up     
+    texture.Disable()
+    gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+    gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+
 
 
 class BaseText(object):
@@ -184,7 +281,7 @@ class BaseText(object):
         
         # Check fontname
         if fontName is None:
-            fontName = visvis.settings.defaultFontName
+            fontName = vv.settings.defaultFontName
         
         # Store arguments
         self._text = text
