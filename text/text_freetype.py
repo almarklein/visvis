@@ -38,6 +38,7 @@ except Exception:
 # great!
 TEX_SCALE = 2.5
 
+# todo: Use subprocess.Popen().communicate(). and test on Py < 2.7
 # todo: test on Windows, make sure the falling back works smooth
 # todo: FreeType lib is installed on Mac, but in different place?
 # todo: have pyzo shop freeType lib on Windows and use that if possible.
