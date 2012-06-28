@@ -839,7 +839,11 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             if value.min==0 and value.max==1:
                 self._values2 = self._values
             else:
-                self._values2 = (self._values - value.min) * (1.0/(value.range))
+                if value.range == 0:
+                    scale = 1.0
+                else:
+                    scale = 1.0/(value.range)
+                self._values2 = (self._values - value.min) * scale
     
     
     ## Method implementations to function as a proper wobject
