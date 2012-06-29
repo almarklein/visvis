@@ -74,6 +74,7 @@ try:
 except RuntimeError:
   FreeTypeFontManager = None
 
-
-# FontManager = FreeTypeFontManager
-FontManager = PrerenderedFontManager
+if FreeTypeFontManager is not None:
+  FontManager = FreeTypeFontManager
+else:
+  FontManager = PrerenderedFontManager

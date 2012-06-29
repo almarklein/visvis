@@ -35,7 +35,11 @@ else:
 
 __dll__    = None
 __handle__ = None
+
+
 FT_Library_filename = ctypes.util.find_library('freetype')
+if not FT_Library_filename:
+    FT_Library_filename = ctypes.util.find_library('freetype6')
 if not FT_Library_filename:
     try:
         __dll__ = ctypes.CDLL('libfreetype.so.6')
@@ -44,7 +48,11 @@ if not FT_Library_filename:
 if not FT_Library_filename and not __dll__:
     raise RuntimeError('Freetype library not found')
 if not __dll__:
-  __dll__ = ctypes.CDLL(FT_Library_filename)
+    if sys.platform.startswith('win'):
+        #__dll__ = ctypes.windll.LoadLibrary(FT_Library_filename)
+        __dll__ = ctypes.cdll.LoadLibrary(FT_Library_filename)
+    else:
+        __dll__ = ctypes.CDLL(FT_Library_filename)
 
 
 
@@ -143,7 +151,6 @@ FT_Get_X11_Font_Format.restype = c_char_p
 FT_Get_Sfnt_Name_Count = __dll__.FT_Get_Sfnt_Name_Count
 FT_Get_Sfnt_Name       = __dll__.FT_Get_Sfnt_Name
 FT_Get_Advance         = __dll__.FT_Get_Advance
-
 
 FT_Outline_GetInsideBorder  = __dll__.FT_Outline_GetInsideBorder
 FT_Outline_GetOutsideBorder = __dll__.FT_Outline_GetOutsideBorder
