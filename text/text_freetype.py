@@ -49,7 +49,7 @@ except Exception:
 # pieces for small text. The text becomes a bit too crisp I think, but 
 # I suspect that when we apply the full screen aliasing, the text will look
 # great!
-TEX_SCALE = 3.0
+TEX_SCALE = 2.5
 
 # todo: Use subprocess.Popen().communicate(). and test on Py < 2.7
 # todo: test on Windows, make sure the falling back works smooth
@@ -106,8 +106,8 @@ FRAGMENT_SHADER = """
         // Define kernel. Chose such that k0+2*k1 == 1
         // k0 >> k1 is sharp   k0 ~ k1 is blurry
         // Optimal values depend on TEX_SCALE too!
-        float k0 = 0.4;
-        float k1 = 0.3;
+        float k0 = 0.5;
+        float k1 = 0.25;
         
         // Init step size in tex coords
         float dx = 1.0/shape.x;
