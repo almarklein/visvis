@@ -756,13 +756,17 @@ class TextureFont:
             width  = face.glyph.bitmap.width
             rows   = face.glyph.bitmap.rows
             pitch  = face.glyph.bitmap.pitch
-
-            x,y,w,h = self.atlas.get_region(width/self.depth+4, rows+4)
+            padding = 1 # Extra space for neighboring pixels to join in aa
+            margin = 1 # Extra space to prevent overlap from other glyphs
+            padmarg = padding + margin
+            
+            x,y,w,h = self.atlas.get_region(width/self.depth+2*padmarg, 
+                                                        rows+2*padmarg)
             if x < 0:
                 print('Missed !')
                 continue
-            x,y = x+2, y+2
-            w,h = w-4, h-4
+            x,y = x+padmarg, y+padmarg
+            w,h = w-2*padmarg, h-2*padmarg
             data = []
             for i in range(rows):
                 data.extend(bitmap.buffer[i*pitch:i*pitch+width])
@@ -772,11 +776,13 @@ class TextureFont:
             data = (Z*255).astype(np.ubyte)
             if True: # Add an extra pixel, otherwise there's no room for the aa
                 # Note that we can do this because we asked for a larger region anyway
-                data2 = np.zeros((data.shape[0]+2, data.shape[1]+2, data.shape[2]), np.ubyte)
-                data2[1:-1,1:-1,:] = data
+                data2 = np.zeros((  data.shape[0]+2*padding, 
+                                    data.shape[1]+2*padding, 
+                                    data.shape[2]), np.ubyte)
+                data2[padding:-padding,padding:-padding,:] = data
                 data = data2
-                x,y = x-1, y-1
-                w,h = w+2, h+2
+                x,y = x-padding, y-padding
+                w,h = w+2*padding, h+2*padding
                 
             self.atlas.set_region((x,y,w,h), data)
 
