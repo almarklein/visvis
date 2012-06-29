@@ -6,10 +6,23 @@
 # This module contains code taken from freetype-py, which was modified
 # to integrate with visvis.
 
+""" Text rendering using the FreeType font renderer.
+
+A note about availability of fonts:
+  * We make sure that there is always a "sans" font by shipping it with visvis.
+    This also makes for consistent looks.
+  * We try our best to also provide a "serif" and "mono" font.
+  * Any other font requires fc-match (which is usually available on Linux)
+
+"""
+
+import os
 import sys
 import math
 import numpy as np
 import OpenGL.GL as gl
+
+from visvis.core.misc import getResourceDir
 
 import subprocess
 
@@ -36,7 +49,7 @@ except Exception:
 # pieces for small text. The text becomes a bit too crisp I think, but 
 # I suspect that when we apply the full screen aliasing, the text will look
 # great!
-TEX_SCALE = 2.5
+TEX_SCALE = 3.0
 
 # todo: Use subprocess.Popen().communicate(). and test on Py < 2.7
 # todo: test on Windows, make sure the falling back works smooth
@@ -44,7 +57,7 @@ TEX_SCALE = 2.5
 # todo: have pyzo shop freeType lib on Windows and use that if possible.
 # todo: When we implement full screen antialiasing, we can remove the shader here
 
-FRAGMENT_SHADER_ADVANCED = """
+FRAGMENT_SHADER_ = """
 // Uniforms obtained from OpenGL
     uniform sampler2D texture; // The 3D texture
     uniform vec2 shape; // And its shape (as in OpenGl)
@@ -58,9 +71,9 @@ FRAGMENT_SHADER_ADVANCED = """
         vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0); 
         
         // Init kernel and number of steps
-        vec4 kernel = vec4 (0.5, 0.2, 0.05 , 0.1);
+        vec4 kernel = vec4 (0.2, 0.2, 0.1 , 0.1);
         //vec4 kernel = vec4 (0.3, 0.2, 0.1 , 0.0);
-        int sze = 2;
+        int sze = 3;
         
         // Init step size in tex coords
         float dx = 1.0/shape.x;
@@ -350,17 +363,83 @@ class FreeTypeFontManager(FontManager):
         return self._fonts[sig]
     
     def get_font_file(self, fontname, bold, italic):
-        if fontname == 'sans':
-            fontname = 'freesans'
+        
         sig = (fontname, bold, italic)
         if not sig in self._font_names:
-            weight = 200 if bold else 80
-            slant = 100 if italic else 0
-            # todo: ship freeSans etc.
-            self._font_names[sig] = subprocess.check_output(['fc-match', '-f', '%{file}',
-                                        '%s:weight=%i:slant=%i' % (fontname, weight, slant)])
+            
+            # Did we ship this font with visvis?
+            if True:
+                fname = self.get_font_file_in_resources(fontname, bold, italic)
+            
+            # Try getting it in a smarter way (platform dependent)
+            if not fname:
+                if sys.platform.startswith('win'):
+                   fname = self.get_font_file_with_windows(fontname, bold, italic)
+                else:
+                    fname = self.get_font_file_with_fcmatch(fontname, bold, italic)
+            
+            # Check. If not known, use sans
+            if not fname:
+                print('Warning: cannot retrieve font file fole for %s.' % fontname)
+                fname = self.get_font_file('sans', bold, italic)
+            
+            # Store
+            self._font_names[sig] = fname
+        
+        # Done
         return self._font_names[sig]
-
+    
+    def get_font_file_in_resources(self, fontname, bold, italic):
+        
+        # Normalize name and attributes
+        fontname = fontname[0].upper() + fontname[1:].lower()
+        bold = 'Bold' if bold else ''
+        italic = 'Oblique' if italic else ''
+        
+        # Build filename
+        fname = 'Free' + fontname + bold + italic + '.otf'
+        fname = os.path.join( getResourceDir(), fname )
+        
+        # Check if exist
+        if os.path.exists(fname):
+            return fname
+        else:
+            return ''
+    
+    def get_font_file_with_fcmatch(self, fontname, bold, italic):
+        
+        weight = 200 if bold else 80
+        slant = 100 if italic else 0
+        try:
+            fname = subprocess.check_output(['fc-match', '-f', '%{file}',
+                                    '%s:weight=%i:slant=%i' % (fontname, weight, slant)])
+            return fname.decode('utf-8') # Return as string
+        except OSError:
+            return ''
+        
+    def get_font_file_with_windows(self, fontname, bold, italic):
+        
+        # On Windows we know some fonts
+        M = {'sans': 'arial', 'serif': 'times', 'mono': 'cour'}
+        
+        # Prepare
+        postfix = ''
+        if bold and italic: postfix = 'bi'
+        elif bold: postfix = 'bd' # What is the d for?
+        elif italic: postfix = 'i'
+        
+        # Select
+        fname = M.get(fontname.lower(), '')
+        if fname:
+            fname = 'C:/Windows/Fonts/' + fname + postfix + '.ttf'
+        else:
+            # Just use the given name
+            fname = 'C:/Windows/Fonts/' + fontname + '.ttf'
+        
+        # Check and return
+        if not os.path.isfile(fname):
+            fname = ''
+        return fname
     
     def Compile(self, textObject):
         
@@ -616,7 +695,7 @@ class TextureFont:
             Font size
         '''
         self.atlas = atlas
-        self.filename = filename
+        self.filename = filename.encode('utf-8') # Make bytes
         self.size = size
         self.glyphs = {}
         face = Face( self.filename )
@@ -628,7 +707,10 @@ class TextureFont:
         self.height    = metrics.height/64.0
         self.linegap   = self.height - self.ascender + self.descender
         self.depth = atlas.depth
-        set_lcd_filter(FT_LCD_FILTER_NONE)
+        try:
+            set_lcd_filter(FT_LCD_FILTER_NONE)
+        except Exception:
+            pass
 
 
     def __getitem__(self, charcode):
@@ -675,12 +757,12 @@ class TextureFont:
             rows   = face.glyph.bitmap.rows
             pitch  = face.glyph.bitmap.pitch
 
-            x,y,w,h = self.atlas.get_region(width/self.depth+2, rows+2)
+            x,y,w,h = self.atlas.get_region(width/self.depth+4, rows+4)
             if x < 0:
                 print('Missed !')
                 continue
-            x,y = x+1, y+1
-            w,h = w-2, h-2
+            x,y = x+2, y+2
+            w,h = w-4, h-4
             data = []
             for i in range(rows):
                 data.extend(bitmap.buffer[i*pitch:i*pitch+width])
@@ -688,6 +770,14 @@ class TextureFont:
             gamma = 1.5
             Z = ((data/255.0)**(gamma))
             data = (Z*255).astype(np.ubyte)
+            if True: # Add an extra pixel, otherwise there's no room for the aa
+                # Note that we can do this because we asked for a larger region anyway
+                data2 = np.zeros((data.shape[0]+2, data.shape[1]+2, data.shape[2]), np.ubyte)
+                data2[1:-1,1:-1,:] = data
+                data = data2
+                x,y = x-1, y-1
+                w,h = w+2, h+2
+                
             self.atlas.set_region((x,y,w,h), data)
 
             # Build glyph

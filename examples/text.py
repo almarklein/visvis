@@ -10,6 +10,14 @@ import visvis as vv
 # The next import is just to create a Unicode char in a way that works on Python2 and Python3
 from visvis.core.misc import unichr 
 
+# Define a piece of Unicode text in a py2.x py3.x compatible manner
+# On Py3.x you should do: hello = 'Привет пустошь'
+# On Py3.x you should do: hello = u'Привет пустошь'
+hello = 'Привет пустошь'
+if hasattr(hello, 'decode'):
+    hello = hello.decode('utf-8')
+
+
 # Create figure and figure
 fig = vv.figure()
 a = vv.cla()
@@ -18,14 +26,14 @@ a.daspectAuto = True
 a.SetLimits((0,8), (-1,10))
 
 # Create text inside the axes
-
 t1 = vv.Text(a, 'Visvis text', 0.2, 9, 0, 'mono', 30)
 t2 = vv.Text(a, '... with FreeType!', 1, 8, 0, 'serif', 12)
-t3 = vv.Text(a, u'... and Unicode: Привет пустошь!', 1, 7)
+t3 = vv.Text(a, '... and Unicode: %s!' % hello, 1, 7)
 t3 = vv.Text(a, '\Gamma\rho\epsilon\epsilon\kappa letters and ' + 
                 ' \rightarrow math \otimes symbols', 1, 6)
 
-t2 = vv.Text(a, '\b{bold}, \i{italic}, and \b{\i{bolditalic}} \bfon\its!', 1, 5, 0, 'serif')
+t2 = vv.Text(a, '\b{bold}, \i{italic}, and \b{\i{bolditalic}} \bfon\its' +
+                ' and sup^{script} and sub_{script}', 1, 5, 0, 'serif')
 t3 = vv.Text(a, 'Look, I\'m at an angle!', 1, 4)
 t3.textAngle = -20
 t3.fontSize = 12
