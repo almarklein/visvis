@@ -6,7 +6,7 @@ Provides functionality to crop data.
 import os, time, sys
 import numpy as np
 import visvis as vv
-from points import Point, Pointset, Aarray
+from visvis.utils.pypoints import Point, Pointset, Aarray
 
 import OpenGL.GL as gl
 import OpenGL.GLU as glu
@@ -336,25 +336,25 @@ class RangeWobject2D(vv.Wobject):
         # Make coords
         pp = Pointset(2)
         #
-        pp.Append(x1, y1)
-        pp.Append(x1, y2)
-        pp.Append(x2, y2)
-        pp.Append(x2, y1)
+        pp.append(x1, y1)
+        pp.append(x1, y2)
+        pp.append(x2, y2)
+        pp.append(x2, y1)
         #
-        pp.Append(x1-xd, y1)
-        pp.Append(x1-xd, y2)
-        pp.Append(x1, y2+yd)
-        pp.Append(x2, y2+yd)
+        pp.append(x1-xd, y1)
+        pp.append(x1-xd, y2)
+        pp.append(x1, y2+yd)
+        pp.append(x2, y2+yd)
         #
-        pp.Append(x2+xd, y2)
-        pp.Append(x2+xd, y1)
-        pp.Append(x2, y1-yd)
-        pp.Append(x1, y1-yd)
+        pp.append(x2+xd, y2)
+        pp.append(x2+xd, y1)
+        pp.append(x2, y1-yd)
+        pp.append(x1, y1-yd)
         #
-        pp.Append(x1-xd, y1-yd)
-        pp.Append(x1-xd, y2+yd)
-        pp.Append(x2+xd, y2+yd)
-        pp.Append(x2+xd, y1-yd)
+        pp.append(x1-xd, y1-yd)
+        pp.append(x1-xd, y2+yd)
+        pp.append(x2+xd, y2+yd)
+        pp.append(x2+xd, y1-yd)
         
         # Done
         self._cordsBuffer = pp
@@ -565,7 +565,6 @@ def crop3d(vol, fig=None):
     can then use the mouse to select a 3D range to crop the data to.
     """
     app = vv.use()
-    QtGui = sys.modules[app.__module__].QtGui
     
     # Create figure?    
     if fig is None:        
