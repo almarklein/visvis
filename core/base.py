@@ -716,8 +716,9 @@ class Wobject(BaseObject):
                     pp.append(x,y,z)
         
         # Transform these points
+        parent = self.parent
         for i in range(len(pp)):
-            pp[i] = self.TransformPoint(pp[i])
+            pp[i] = self.TransformPoint(pp[i], parent)
         
         # Return limits
         xlim = misc.Range( pp[:,0].min(), pp[:,0].max() )
@@ -726,14 +727,15 @@ class Wobject(BaseObject):
         return xlim, ylim, zlim
     
     
-    def TransformPoint(self, p):
-        """ TransformPoint(p)
+    def TransformPoint(self, p, base=None):
+        """ TransformPoint(p, base=None)
         
         Transform a point in the local coordinate system of this wobject
-        to the global coordinate system of the axes.
+        to the coordinate system of the given parent wobject, or to
+        the global (Axes) coordinate system if not given.
         
         This is done by taking into account the transformations applied
-        to this wobject and all of its parent wobjects.
+        to this wobject and its parent wobjects.
         
         """
         if not (is_Point(p) and p.ndim==3):
@@ -743,8 +745,7 @@ class Wobject(BaseObject):
         wobject = self
         
         # Iterate over wobjects until we reach the Axes or None
-        #while isinstance(wobject, Wobject):
-        if True:
+        while isinstance(wobject, Wobject):
             # Iterate over all transformations
             for t in reversed(wobject._transformations):
                 if isinstance(t, Transform_Translate):
@@ -761,6 +762,9 @@ class Wobject(BaseObject):
                     p = q.rotate_point(p)
             # Move to parent
             wobject = wobject.parent
+            # Break if this is the base object
+            if wobject is base:
+                break
         
         # Done
         return p
