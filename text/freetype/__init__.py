@@ -25,6 +25,7 @@ from .ft_enums import *
 from .ft_errors import *
 from .ft_structs import *
 import ctypes.util
+import struct
 
 import sys
 PY3 = sys.version_info[0] == 3
@@ -38,8 +39,9 @@ __handle__ = None
 
 
 FT_Library_filename = ctypes.util.find_library('freetype')
-if not FT_Library_filename:
-    FT_Library_filename = ctypes.util.find_library('freetype6')
+if not FT_Library_filename and sys.platform.startswith('win'):
+    NBITS = 8 * struct.calcsize("P")
+    FT_Library_filename = ctypes.util.find_library('freetype6_'+str(NBITS))
 if not FT_Library_filename:
     try:
         __dll__ = ctypes.CDLL('libfreetype.so.6')
@@ -48,12 +50,14 @@ if not FT_Library_filename:
 if not FT_Library_filename and not __dll__:
     raise RuntimeError('Freetype library not found')
 if not __dll__:
-    if sys.platform.startswith('win'):
-        #__dll__ = ctypes.windll.LoadLibrary(FT_Library_filename)
-        __dll__ = ctypes.cdll.LoadLibrary(FT_Library_filename)
-    else:
-        __dll__ = ctypes.CDLL(FT_Library_filename)
-
+    try:
+        if sys.platform.startswith('win'):
+            #__dll__ = ctypes.windll.LoadLibrary(FT_Library_filename)
+            __dll__ = ctypes.cdll.LoadLibrary(FT_Library_filename)
+        else:
+            __dll__ = ctypes.CDLL(FT_Library_filename)
+    except OSError:
+        raise RuntimeError('Freetype library could not be loaded.')
 
 
 # -----------------------------------------------------------------------------
