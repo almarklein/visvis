@@ -716,9 +716,8 @@ class Wobject(BaseObject):
                     pp.append(x,y,z)
         
         # Transform these points
-        parent = self.parent
         for i in range(len(pp)):
-            pp[i] = self.TransformPoint(pp[i], parent)
+            pp[i] = self.TransformPoint(pp[i], self)
         
         # Return limits
         xlim = misc.Range( pp[:,0].min(), pp[:,0].max() )
@@ -727,15 +726,19 @@ class Wobject(BaseObject):
         return xlim, ylim, zlim
     
     
-    def TransformPoint(self, p, base=None):
-        """ TransformPoint(p, base=None)
+    def TransformPoint(self, p, baseWobject=None):
+        """ TransformPoint(p, baseWobject=None)
         
         Transform a point in the local coordinate system of this wobject
-        to the coordinate system of the given parent wobject, or to
-        the global (Axes) coordinate system if not given.
+        to the coordinate system of the given baseWobject (which should be
+        a parent of this wobject), or to the global (Axes) coordinate 
+        system if not given.
         
         This is done by taking into account the transformations applied
         to this wobject and its parent wobjects.
+        
+        If baseWobject is the current wobject itself, only the tranformations
+        of this wobject are applied.
         
         """
         if not (is_Point(p) and p.ndim==3):
@@ -760,11 +763,11 @@ class Wobject(BaseObject):
                     angle = float(t.angle * np.pi / 180.0)
                     q = Quaternion.create_from_axis_angle(angle, t.ax, t.ay, t.az)
                     p = q.rotate_point(p)
-            # Move to parent
-            wobject = wobject.parent
-            # Break if this is the base object
-            if wobject is base:
+            # Done or move to next parent?
+            if wobject is baseWobject:
                 break
+            else:
+                wobject = wobject.parent
         
         # Done
         return p
