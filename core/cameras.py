@@ -660,6 +660,11 @@ class TwoDCamera(BaseCamera):
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
+        # Set camera lights
+        for light in self.axes._lights:
+            if light.isCamLight:                
+                light._Apply()
+        
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
         ndaspect = self.daspectNormalized
         gl.glScale( ndaspect[0], ndaspect[1], ndaspect[2] )
@@ -668,6 +673,11 @@ class TwoDCamera(BaseCamera):
         # Do this first because otherwise the translation is not in world 
         # coordinates.
         gl.glTranslate(-self._view_loc[0], -self._view_loc[1], 0.0)
+        
+        # Set non-camera lights
+        for light in self.axes._lights:
+            if not light.isCamLight:
+                light._Apply()
 
 
 # todo: FOV: properly setting which axis has ticks, the tick spacing, and which axes to show when showBox is False.
