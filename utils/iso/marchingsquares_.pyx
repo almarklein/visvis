@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# Copyright (C) 2012, Almar Klein
+
 # Cython specific imports
 import numpy as np
 cimport numpy as np
@@ -11,10 +14,11 @@ cdef extern from "math.h":
 ctypedef np.float32_t FLOAT32_T
 ctypedef np.float64_t FLOAT64_T
 ctypedef np.int32_t INT32_T
+ctypedef np.int8_t INT8_T
 FLOAT32 = np.float32
 FLOAT64 = np.float64
 INT32 = np.float32
-
+INT8 = np.int8
 
 # Floor operator (deal with negative numbers)
 cdef inline int floor(double a): return <int>a if a>=0.0 else (<int>a)-1
@@ -22,6 +26,9 @@ cdef inline int floor(double a): return <int>a if a>=0.0 else (<int>a)-1
 cdef inline double fabs(double a): return a if a>=0 else -a
 
 
+# todo: include functionality to group line pieces that belong to the same contour.
+ 
+ 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def marching_squares(im, isovalue, 
@@ -31,9 +38,9 @@ def marching_squares(im, isovalue,
     edges = np.zeros((im.size,2), 'float32')
     
     # Define maps as array types
-    cdef np.ndarray[INT32_T, ndim=2] edgeToRelativePosX_ = edgeToRelativePosX
-    cdef np.ndarray[INT32_T, ndim=2] edgeToRelativePosY_ = edgeToRelativePosY
-    cdef np.ndarray[INT32_T, ndim=2] cellToEdge_ = cellToEdge
+    cdef np.ndarray[INT8_T, ndim=2] edgeToRelativePosX_ = edgeToRelativePosX
+    cdef np.ndarray[INT8_T, ndim=2] edgeToRelativePosY_ = edgeToRelativePosY
+    cdef np.ndarray[INT8_T, ndim=2] cellToEdge_ = cellToEdge
     
     # Define other arrays
     cdef np.ndarray[FLOAT32_T, ndim=2] im_ = im
@@ -104,25 +111,3 @@ def marching_squares(im, isovalue,
     
     # Done
     return edges[:edgeCount,:]
-
-
-# @cython.boundscheck(False)
-# @cython.wraparound(False)
-# cdef int correct_index(int index, int y, int x, float value, float isovalue_):
-#     cdef float tmpf
-#     cdef int dy1, dx1, dy2, dx2
-#      
-#     if index == 5 or index == 10:
-#         # Calculate value of cell center (i.e. average of corners)
-#         tmpf = 0.0
-#         for dy1 in range(2):
-#             for dx1 in range(2):
-#                 tmpf += value
-#         tmpf /= 4
-#         # If below isovalue, swap
-#         if tmpf <= isovalue_:
-#             if index == 5:
-#                 index = 10
-#             else:
-#                 index = 5
-#     return index

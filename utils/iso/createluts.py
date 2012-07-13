@@ -69,7 +69,7 @@ def create_luts(fname):
         else:
             lines2.extend(more_lines)
     
-    print('\n'.join(lines2))
+    return '\n'.join(lines2)
 
 
 def get_table(lines1, needle, i):
@@ -115,7 +115,7 @@ def get_table(lines1, needle, i):
     array = eval(code)
     array64 = base64encode(array.tostring()).decode('utf-8')
     # Reverse: bytes = base64decode(text.encode('utf-8'))
-    text = '%s = toArray(%s, """\n%s""")' % (name, str(array.shape), array64)
+    text = '%s = %s, """\n%s"""' % (name, str(array.shape), array64)
     
     # Build actual lines
     lines2 = []
@@ -155,7 +155,12 @@ if __name__ == '__main__':
     fname = os.path.join(os.getcwd(), 'reference', 'LookUpTable.h')
     
     if True:
-        create_luts(fname)
+        with open(os.path.join(os.getcwd(), 'mcluts.py'), 'w') as f:
+            f.write('# -*- coding: utf-8 -*-\n')
+            f.write('# Copyright (C) 2012, Almar Klein\n# Copyright (C) 2002, Thomas Lewiner\n\n')
+            f.write('# This file was auto-generated from LookUpTable.h by createluts.py.\n\n')
+            f.write(create_luts(fname))
+        
     else:
         for prefix in ['TILING', 'TEST']:
             tmp = ['luts.'+a for a in getLutNames(prefix)]
