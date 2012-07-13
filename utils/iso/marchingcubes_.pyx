@@ -1,3 +1,22 @@
+# -*- coding: utf-8 -*-
+# Copyright (C) 2012, Almar Klein
+# Copyright (C) 2002, Thomas Lewiner
+
+"""  
+This is an implementation of the marching cubes algorithm proposed in:
+    
+Efficient implementation of Marching Cubes' cases with topological guarantees.
+Thomas Lewiner, Helio Lopes, Antonio Wilson Vieira and Geovan Tavares.
+Journal of Graphics Tools 8(2): pp. 1-15 (december 2003)
+
+I selected this algorithm because it provides topologically correct results,
+and because the algorithms implementation is relatively simple. Most of
+the magic is in the lookup tables, which are provided as open source.
+
+I'm not sure yet about the license of the original algorithm.
+
+""" 
+
 # Cython specific imports
 import numpy as np
 cimport numpy as np
@@ -23,6 +42,10 @@ cdef double FLT_EPSILON = 0.0000001
 
 # Define abs function for doubles
 cdef inline double dabs(double a): return a if a>=0 else -a
+
+
+# todo: allow dynamic isovalue?
+# todo: can we disable Cython from checking for zero division? Sometimes we know that it never happens!
 
 
 cdef class Cell:
@@ -63,14 +86,14 @@ cdef class Cell:
     
     # Reference to LUTS object
     cdef LutProvider luts
-    
-    # iso value (only to correct value)
-    cdef double isovalue
-    
+        
     # Location of cube
     cdef int x
     cdef int y
     cdef int z
+    
+    # Stepsize
+    cdef int step
     
     # Values of cube corners (isovalue subtracted)
     cdef double v0
@@ -341,7 +364,7 @@ cdef class Cell:
             self.faceLayer2[i] = -1
     
     
-    cdef void set_cube(self,    double isovalue, int x, int y, int z,
+    cdef void set_cube(self,    double isovalue, int x, int y, int z, int step,
                                 double v0, double v1, double v2, double v3, 
                                 double v4, double v5, double v6, double v7):
         """ Set the cube to the new location.  
@@ -354,13 +377,11 @@ cdef class Cell:
         cases (i.e. cell.index).
         """ 
         
-        # Store iso value
-        self.isovalue = isovalue
-        
-        # Set location
+        # Set location and step
         self.x = x
         self.y = y
         self.z = z
+        self.step = step
         
         # Set values
         self.v0 = v0 - isovalue
@@ -443,6 +464,7 @@ cdef class Cell:
         cdef int index1, index2
         cdef double tmpf1, tmpf2
         cdef double fx, fy, fz, ff
+        cdef double stp = <double>self.step
         
         # Get index in the face layer and corresponding vertex number
         indexInFaceLayer = self.get_index_in_facelayer(vi)
@@ -495,9 +517,9 @@ cdef class Cell:
                 fx += <double>dx2 * tmpf2;  fy += <double>dy2 * tmpf2;  fz += <double>dz2 * tmpf2;  ff += tmpf2
                 # Add vertex
                 indexInVertexArray = self.add_vertex( 
-                                <double>self.x + fx/ff, # todo: * self.step
-                                <double>self.y + fy/ff,
-                                <double>self.z + fz/ff )
+                                <double>self.x + stp*fx/ff, 
+                                <double>self.y + stp*fy/ff,
+                                <double>self.z + stp*fz/ff )
                 # Update face layer
                 self.faceLayer[indexInFaceLayer] = indexInVertexArray
                 # Add face and gradient
@@ -560,10 +582,10 @@ cdef class Cell:
             # Calculate actual index based on edge 
             #if vi == 0: pass  # no step
             if vi == 1:  # step in x
-                i += 1
+                i += self.step
                 j = 1
             elif vi == 2:  # step in y
-                i += self.nx
+                i += self.nx * self.step
             elif vi == 3:  # no step
                 j = 1  
         
@@ -574,11 +596,11 @@ cdef class Cell:
             
             #if vi == 8: pass # no step
             if vi == 9:   # step in x
-                i += 1 
+                i += self.step
             elif vi == 10:   # step in x and y
-                i += self.nx + 1 
+                i += self.nx * self.step + self.step 
             elif vi == 11:  # step in y
-                i += self.nx 
+                i += self.nx * self.step
         
         else:
             # center vertex
@@ -612,13 +634,11 @@ cdef class Cell:
         cdef double vmin, vmax
         vmin, vmax = 0.0, 0.0
         for i in range(8):
-            #self.vmax += self.vv[i] * 0.125
             if self.vv[i] > vmax:
                 vmax = self.vv[i]
             if self.vv[i] < vmin:
                 vmin = self.vv[i]
         self.vmax = vmax-vmin
-        
         
         # Calculate gradients
         # Derivatives, selected to always point in same direction.
@@ -643,7 +663,6 @@ cdef class Cell:
         fx, fy, fz, ff = 0.0, 0.0, 0.0, 0.0
         
         # Define "strength" of each corner of the cube that we need
-        # todo: can we disable Cython from checking for zero division? Because it never happens!
         v0 = 1.0 / (FLT_EPSILON + dabs(self.v0))
         v1 = 1.0 / (FLT_EPSILON + dabs(self.v1))
         v2 = 1.0 / (FLT_EPSILON + dabs(self.v2))
@@ -664,9 +683,10 @@ cdef class Cell:
         fx += 0.0*v7;  fy += 1.0*v7;  fz += 1.0*v7;  ff += v7
         
         # Store
-        self.v12_x = self.x + fx / ff
-        self.v12_y = self.y + fy / ff
-        self.v12_z = self.z + fz / ff
+        cdef double stp = <double>self.step
+        self.v12_x = self.x + stp * fx / ff
+        self.v12_y = self.y + stp * fy / ff
+        self.v12_z = self.z + stp * fz / ff
         
         # Also pre-calculate gradient of center
         # note that prepare_for_adding_triangles() must have been called for
@@ -868,11 +888,16 @@ cdef class LutProvider:
         self.SUBCONFIG13 = Lut(SUBCONFIG13)
 
 
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def marching_cubes(im, isovalue, LutProvider luts):
+def marching_cubes(im, double isovalue, LutProvider luts, int st=1, int classic=0):
+    """ marching_cubes(im, double isovalue, LutProvider luts, int st=1, int classic=0)
+    This is the main entry to apply marching cubes.
+    Returns (vertices, faces, normals, values)
+    """ 
     
-    # Define image as numpy array
+    # Typdedef image
     cdef np.ndarray[FLOAT32_T, ndim=3] im_ = im
     
     # Get dimemsnions
@@ -882,312 +907,343 @@ def marching_cubes(im, isovalue, LutProvider luts):
     # Create cell to use throughout
     cdef Cell cell = Cell(luts, Nx, Ny, Nz)
     
+    # Typedef variables
     cdef int x, y, z
-    cdef int dx1, dy1, dz1, dx2, dy2, dz2
-    cdef int i, j, k
-    cdef int index
-    cdef double tmpf, tmpf1, tmpf2
-    cdef double isovalue_ = isovalue
-    
     cdef int nt
     cdef int case, config, subconfig
     
-    cdef double edgeCount = 0
+    # Unfortunately, using a step in the for loops degregades performance.
+    # Quick and dirty trick below ...
     
-    # todo: allow a stepsize, this algorithm should work with that
-    # todo: allow using original alg
-    # todo: allow dynamic isovalue?
+    if st == 1:
+        
+        for z in range(0,Nz-1):
+            cell.new_z_value() # Indicate that we enter a new layer
+            for y in range(0,Ny-1):
+                for x in range(0,Nx-1):
+                    
+                    # Initialize cell
+                    cell.set_cube(isovalue, x, y, z, st,
+                        im_[z   ,y, x], im_[z   ,y, x+st], im_[z   ,y+st, x+st], im_[z   ,y+st, x],
+                        im_[z+st,y, x], im_[z+st,y, x+st], im_[z+st,y+st, x+st], im_[z+st,y+st, x] )
+                    
+                    # Do classic!
+                    if clasic:
+                        # Determine number of vertices
+                        nt = 0
+                        while luts.CASESCLASSIC.get2(cell.index, 3*nt) != -1:
+                            nt += 1
+                        # Add triangles
+                        if nt > 0:
+                            cell.add_triangles(luts.CASESCLASSIC, cell.index, nt)
+                    else:
+                        # Get case, if non-nul, enter the big switch
+                        case = luts.CASES.get2(cell.index, 0)
+                        if case > 0:
+                            config = luts.CASES.get2(cell.index, 1)
+                            the_big_switch(luts, cell, case, config)
     
-    for z in range(Nz-1):
-        cell.new_z_value() # Indicate that we enter a new layer
-        for y in range(Ny-1):
-            for x in range(Nx-1):
-                
-                # Initialize cell
-                cell.set_cube(isovalue_, x, y, z,
-                    im_[z  ,y  , x  ], im_[z  ,y  , x+1], im_[z  ,y+1, x+1], im_[z  ,y+1, x  ],
-                    im_[z+1,y  , x  ], im_[z+1,y  , x+1], im_[z+1,y+1, x+1], im_[z+1,y+1, x  ] )
-                
-                # Do classic!
-                if False:
-                    # Determine number of vertices
-                    nt = 0
-                    while luts.CASESCLASSIC.get2(cell.index, 3*nt) != -1:
-                        nt += 1
-                    # Add triangles
-                    cell.add_triangles(luts.CASESCLASSIC, cell.index, nt)
-                else:
-                    # Get case and config
-                    case = luts.CASES.get2(cell.index, 0)
-                    config = luts.CASES.get2(cell.index, 1)
-                    subconfig = 0
+    else:
+        
+        for z in range(0,Nz-st,st):
+            cell.new_z_value() # Indicate that we enter a new layer
+            for y in range(0,Ny-st,st):
+                for x in range(0,Nx-st,st):
                     
-                    # Sinatures for tests
-                    #test_face(cell, luts.TESTX.get1(config)):
-                    #test_internal(cell, luts, case, config, subconfig, luts.TESTX.get1(config)):
-                    #cell.add_triangles(luts.TILINGX, config, N)
+                    # Initialize cell
+                    cell.set_cube(isovalue, x, y, z, st,
+                        im_[z   ,y, x], im_[z   ,y, x+st], im_[z   ,y+st, x+st], im_[z   ,y+st, x],
+                        im_[z+st,y, x], im_[z+st,y, x+st], im_[z+st,y+st, x+st], im_[z+st,y+st, x] )
                     
-                    # The big switch
-                    if case == 0:
-                        pass
-                    
-                    elif case == 1:
-                        cell.add_triangles(luts.TILING1, config, 1)
-                    
-                    elif case == 2:
-                        cell.add_triangles(luts.TILING2, config, 2)
-                    
-                    elif case == 3:
-                        if test_face(cell, luts.TEST3.get1(config)):
-                            cell.add_triangles(luts.TILING3_2, config, 4)
-                        else:
-                            cell.add_triangles(luts.TILING3_1, config, 2)
-                    
-                    elif case == 4 :
-                        if test_internal(cell, luts, case, config, subconfig, luts.TEST4.get1(config)):
-                            cell.add_triangles(luts.TILING4_1, config, 2)
-                        else:
-                            cell.add_triangles(luts.TILING4_2, config, 6)
-                    
-                    elif case == 5 :
-                        cell.add_triangles(luts.TILING5, config, 3)
-                    
-                    elif case == 6 :
-                        if test_face(cell, luts.TEST6.get2(config,0)):
-                            cell.add_triangles(luts.TILING6_2, config, 5)
-                        else:
-                            if test_internal(cell, luts, case, config, subconfig, luts.TEST6.get2(config,1)):
-                                cell.add_triangles(luts.TILING6_1_1, config, 3)
-                            else:
-                                #cell.calculate_center_vertex() # v12 needed
-                                cell.add_triangles(luts.TILING6_1_2, config, 9)
-                    
-                    elif case == 7 :
-                        # Get subconfig
-                        if test_face(cell, luts.TEST7.get2(config,0)): subconfig += 1
-                        if test_face(cell, luts.TEST7.get2(config,1)): subconfig += 2
-                        if test_face(cell, luts.TEST7.get2(config,2)): subconfig += 4
-                        # Behavior depends on subconfig
-                        if subconfig == 0: cell.add_triangles(luts.TILING7_1, config, 3)
-                        elif subconfig == 1: cell.add_triangles2(luts.TILING7_2, config, 0, 5)
-                        elif subconfig == 2: cell.add_triangles2(luts.TILING7_2, config, 1, 5)
-                        elif subconfig == 3: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING7_3, config, 0, 9)
-                        elif subconfig == 4: cell.add_triangles2(luts.TILING7_2, config, 2, 5)
-                        elif subconfig == 5: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING7_3, config, 1, 9)
-                        elif subconfig == 6: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING7_3, config, 2, 9)
-                        elif subconfig == 7: 
-                            if test_internal(cell, luts, case, config, subconfig, luts.TEST7.get2(config,3)):
-                                cell.add_triangles(luts.TILING7_4_2, config, 9)
-                            else:
-                                cell.add_triangles(luts.TILING7_4_1, config, 5)
-                    
-                    elif case == 8 :
-                        cell.add_triangles(luts.TILING8, config, 2)
-                    
-                    elif case == 9 :
-                        cell.add_triangles(luts.TILING9, config, 4)
-                    
-                    elif case == 10 :
-                        if test_face(cell, luts.TEST10.get2(config,0)):
-                            if test_face(cell, luts.TEST10.get2(config,1)):
-                                cell.add_triangles(luts.TILING10_1_1_, config, 4)
-                            else:
-                                #cell.calculate_center_vertex() # v12 needed
-                                cell.add_triangles(luts.TILING10_2, config, 8)
-                        else:
-                            if test_face(cell, luts.TEST10.get2(config,1)):
-                                #cell.calculate_center_vertex() # v12 needed
-                                cell.add_triangles(luts.TILING10_2_, config, 8)
-                            else:
-                                if test_internal(cell, luts, case, config, subconfig, luts.TEST10.get2(config,2)):
-                                    cell.add_triangles(luts.TILING10_1_1, config, 4)
-                                else:
-                                    cell.add_triangles(luts.TILING10_1_2, config, 8)
-                    
-                    elif case == 11 :
-                        cell.add_triangles(luts.TILING11, config, 4)
-                    
-                    elif case == 12 :
-                        if test_face(cell, luts.TEST12.get2(config,0)):
-                            if test_face(cell, luts.TEST12.get2(config,1)):
-                                cell.add_triangles(luts.TILING12_1_1_, config, 4)
-                            else:
-                                #cell.calculate_center_vertex() # v12 needed
-                                cell.add_triangles(luts.TILING12_2, config, 8)
-                        else:
-                            if test_face(cell, luts.TEST12.get2(config,1)):
-                                #cell.calculate_center_vertex() # v12 needed
-                                cell.add_triangles(luts.TILING12_2_, config, 8)
-                            else:
-                                if test_internal(cell, luts, case, config, subconfig, luts.TEST12.get2(config,2)):
-                                    cell.add_triangles(luts.TILING12_1_1, config, 4)
-                                else:
-                                    cell.add_triangles(luts.TILING12_1_2, config, 8)
-                    
-                    elif case == 13 :
-                        # Calculate subconfig
-                        if test_face(cell, luts.TEST13.get2(config,0)): subconfig += 1
-                        if test_face(cell, luts.TEST13.get2(config,1)): subconfig += 2
-                        if test_face(cell, luts.TEST13.get2(config,2)): subconfig += 4
-                        if test_face(cell, luts.TEST13.get2(config,3)): subconfig += 8
-                        if test_face(cell, luts.TEST13.get2(config,4)): subconfig += 16
-                        if test_face(cell, luts.TEST13.get2(config,5)): subconfig += 32
-                        
-                        # Map via LUT
-                        subconfig = luts.SUBCONFIG13.get1(subconfig)
-                        
-                        # Behavior depends on subconfig
-                        if subconfig==0:    cell.add_triangles(luts.TILING13_1, config, 4)
-                        elif subconfig==1:  cell.add_triangles2(luts.TILING13_2, config, 0, 6)
-                        elif subconfig==2:  cell.add_triangles2(luts.TILING13_2, config, 1, 6)
-                        elif subconfig==3:  cell.add_triangles2(luts.TILING13_2, config, 2, 6)
-                        elif subconfig==4:  cell.add_triangles2(luts.TILING13_2, config, 3, 6)
-                        elif subconfig==5:  cell.add_triangles2(luts.TILING13_2, config, 4, 6)
-                        elif subconfig==6:  cell.add_triangles2(luts.TILING13_2, config, 5, 6)
-                        #
-                        elif subconfig==7: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 0, 10)
-                        elif subconfig==8: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 1, 10)
-                        elif subconfig==9:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 2, 10)
-                        elif subconfig==10: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 3, 10)
-                        elif subconfig==11: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 4, 10)
-                        elif subconfig==12: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 5, 10)
-                        elif subconfig==13: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 6, 10)
-                        elif subconfig==14: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 7, 10)
-                        elif subconfig==15:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 8, 10)
-                        elif subconfig==16: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 9, 10)
-                        elif subconfig==17: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 10, 10)
-                        elif subconfig==18: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3, config, 11, 10)
-                        #
-                        elif subconfig==19: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_4, config, 0, 12)
-                        elif subconfig==20: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_4, config, 1, 12)
-                        elif subconfig==21:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_4, config, 2, 12)
-                        elif subconfig==22:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_4, config, 3, 12)
-                        #
-                        elif subconfig==23: 
-                            subconfig = 0 # Note: the original source code sets the subconfig, without apparent reason
-                            if test_internal(cell, luts, case, config, subconfig, luts.TEST13.get2(config,6)):
-                                cell.add_triangles2(luts.TILING13_5_1, config, 0, 6)
-                            else:
-                                cell.add_triangles2(luts.TILING13_5_2, config, 0, 10)
-                        elif subconfig==24: 
-                            subconfig = 1
-                            if test_internal(cell, luts, case, config, subconfig, luts.TEST13.get2(config,6)):
-                                cell.add_triangles2(luts.TILING13_5_1, config, 1, 6)
-                            else:
-                                cell.add_triangles2(luts.TILING13_5_2, config, 1, 10)
-                        elif subconfig==25: 
-                            subconfig = 2 ;
-                            if test_internal(cell, luts, case, config, subconfig, luts.TEST13.get2(config,6)):
-                                cell.add_triangles2(luts.TILING13_5_1, config, 2, 6)
-                            else:
-                                cell.add_triangles2(luts.TILING13_5_2, config, 2, 10)
-                        elif subconfig==26: 
-                            subconfig = 3 ;
-                            if test_internal(cell, luts, case, config, subconfig, luts.TEST13.get2(config,6)):
-                                cell.add_triangles2(luts.TILING13_5_1, config, 3, 6)
-                            else:
-                                cell.add_triangles2(luts.TILING13_5_2, config, 3, 10)
-                        #
-                        elif subconfig==27: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 0, 10)
-                        elif subconfig==28: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 1, 10)
-                        elif subconfig==29:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 2, 10)
-                        elif subconfig==30:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 3, 10)
-                        elif subconfig==31:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 4, 10)
-                        elif subconfig==32:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 5, 10)
-                        elif subconfig==33: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config,6, 10)
-                        elif subconfig==34: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 7, 10)
-                        elif subconfig==35:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 8, 10)
-                        elif subconfig==36: 
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 9, 10)
-                        elif subconfig==37:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 10, 10)
-                        elif subconfig==38:
-                            #cell.calculate_center_vertex() # v12 needed
-                            cell.add_triangles2(luts.TILING13_3_, config, 11, 10)
-                        #
-                        elif subconfig==39: 
-                            cell.add_triangles2(luts.TILING13_2_, config, 0, 6)
-                        elif subconfig==40: 
-                            cell.add_triangles2(luts.TILING13_2_, config, 1, 6)
-                        elif subconfig==41: 
-                            cell.add_triangles2(luts.TILING13_2_, config, 2, 6)
-                        elif subconfig==42: 
-                            cell.add_triangles2(luts.TILING13_2_, config, 3, 6)
-                        elif subconfig==43: 
-                            cell.add_triangles2(luts.TILING13_2_, config, 4, 6)
-                        elif subconfig==44: 
-                            cell.add_triangles2(luts.TILING13_2_, config, 5, 6)
-                        #
-                        elif subconfig==45: 
-                            cell.add_triangles(luts.TILING13_1_, config, 4)
-                        #
-                        else:
-                            print("Marching Cubes: Impossible case 13?" )
-                    
-                    elif case == 14 :
-                        cell.add_triangles(luts.TILING14, config, 4)
+                    # Do classic!
+                    if clasic:
+                        # Determine number of vertices
+                        nt = 0
+                        while luts.CASESCLASSIC.get2(cell.index, 3*nt) != -1:
+                            nt += 1
+                        # Add triangles
+                        if nt > 0:
+                            cell.add_triangles(luts.CASESCLASSIC, cell.index, nt)
+                    else:
+                        # Get case, if non-nul, enter the big switch
+                        case = luts.CASES.get2(cell.index, 0)
+                        if case > 0:
+                            config = luts.CASES.get2(cell.index, 1)
+                            the_big_switch(luts, cell, case, config)
+        
     
     # Done
     return cell.get_vertices(), cell.get_faces(), cell.get_normals(), cell.get_values()
-#     return edges[:edgeCount,:]
+
+
+
+cdef void the_big_switch(LutProvider luts, Cell cell, int case, int config):
+    """ The big switch (i.e. if-statement) that I meticulously ported from
+    the source code provided by Lewiner et. al.
+    
+    Together with all the look-up tables, this is where the magic is ...
+    """ 
+    
+    cdef int subconfig = 0
+    
+    # Sinatures for tests
+    #test_face(cell, luts.TESTX.get1(config)):
+    #test_internal(cell, luts, case, config, subconfig, luts.TESTX.get1(config)):
+    #cell.add_triangles(luts.TILINGX, config, N)
+    
+    if case == 1:
+        cell.add_triangles(luts.TILING1, config, 1)
+    
+    elif case == 2:
+        cell.add_triangles(luts.TILING2, config, 2)
+    
+    elif case == 3:
+        if test_face(cell, luts.TEST3.get1(config)):
+            cell.add_triangles(luts.TILING3_2, config, 4)
+        else:
+            cell.add_triangles(luts.TILING3_1, config, 2)
+    
+    elif case == 4 :
+        if test_internal(cell, luts, case, config, subconfig, luts.TEST4.get1(config)):
+            cell.add_triangles(luts.TILING4_1, config, 2)
+        else:
+            cell.add_triangles(luts.TILING4_2, config, 6)
+    
+    elif case == 5 :
+        cell.add_triangles(luts.TILING5, config, 3)
+    
+    elif case == 6 :
+        if test_face(cell, luts.TEST6.get2(config,0)):
+            cell.add_triangles(luts.TILING6_2, config, 5)
+        else:
+            if test_internal(cell, luts, case, config, subconfig, luts.TEST6.get2(config,1)):
+                cell.add_triangles(luts.TILING6_1_1, config, 3)
+            else:
+                #cell.calculate_center_vertex() # v12 needed
+                cell.add_triangles(luts.TILING6_1_2, config, 9)
+    
+    elif case == 7 :
+        # Get subconfig
+        if test_face(cell, luts.TEST7.get2(config,0)): subconfig += 1
+        if test_face(cell, luts.TEST7.get2(config,1)): subconfig += 2
+        if test_face(cell, luts.TEST7.get2(config,2)): subconfig += 4
+        # Behavior depends on subconfig
+        if subconfig == 0: cell.add_triangles(luts.TILING7_1, config, 3)
+        elif subconfig == 1: cell.add_triangles2(luts.TILING7_2, config, 0, 5)
+        elif subconfig == 2: cell.add_triangles2(luts.TILING7_2, config, 1, 5)
+        elif subconfig == 3: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING7_3, config, 0, 9)
+        elif subconfig == 4: cell.add_triangles2(luts.TILING7_2, config, 2, 5)
+        elif subconfig == 5: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING7_3, config, 1, 9)
+        elif subconfig == 6: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING7_3, config, 2, 9)
+        elif subconfig == 7: 
+            if test_internal(cell, luts, case, config, subconfig, luts.TEST7.get2(config,3)):
+                cell.add_triangles(luts.TILING7_4_2, config, 9)
+            else:
+                cell.add_triangles(luts.TILING7_4_1, config, 5)
+    
+    elif case == 8 :
+        cell.add_triangles(luts.TILING8, config, 2)
+    
+    elif case == 9 :
+        cell.add_triangles(luts.TILING9, config, 4)
+    
+    elif case == 10 :
+        if test_face(cell, luts.TEST10.get2(config,0)):
+            if test_face(cell, luts.TEST10.get2(config,1)):
+                cell.add_triangles(luts.TILING10_1_1_, config, 4)
+            else:
+                #cell.calculate_center_vertex() # v12 needed
+                cell.add_triangles(luts.TILING10_2, config, 8)
+        else:
+            if test_face(cell, luts.TEST10.get2(config,1)):
+                #cell.calculate_center_vertex() # v12 needed
+                cell.add_triangles(luts.TILING10_2_, config, 8)
+            else:
+                if test_internal(cell, luts, case, config, subconfig, luts.TEST10.get2(config,2)):
+                    cell.add_triangles(luts.TILING10_1_1, config, 4)
+                else:
+                    cell.add_triangles(luts.TILING10_1_2, config, 8)
+    
+    elif case == 11 :
+        cell.add_triangles(luts.TILING11, config, 4)
+    
+    elif case == 12 :
+        if test_face(cell, luts.TEST12.get2(config,0)):
+            if test_face(cell, luts.TEST12.get2(config,1)):
+                cell.add_triangles(luts.TILING12_1_1_, config, 4)
+            else:
+                #cell.calculate_center_vertex() # v12 needed
+                cell.add_triangles(luts.TILING12_2, config, 8)
+        else:
+            if test_face(cell, luts.TEST12.get2(config,1)):
+                #cell.calculate_center_vertex() # v12 needed
+                cell.add_triangles(luts.TILING12_2_, config, 8)
+            else:
+                if test_internal(cell, luts, case, config, subconfig, luts.TEST12.get2(config,2)):
+                    cell.add_triangles(luts.TILING12_1_1, config, 4)
+                else:
+                    cell.add_triangles(luts.TILING12_1_2, config, 8)
+    
+    elif case == 13 :
+        # Calculate subconfig
+        if test_face(cell, luts.TEST13.get2(config,0)): subconfig += 1
+        if test_face(cell, luts.TEST13.get2(config,1)): subconfig += 2
+        if test_face(cell, luts.TEST13.get2(config,2)): subconfig += 4
+        if test_face(cell, luts.TEST13.get2(config,3)): subconfig += 8
+        if test_face(cell, luts.TEST13.get2(config,4)): subconfig += 16
+        if test_face(cell, luts.TEST13.get2(config,5)): subconfig += 32
+        
+        # Map via LUT
+        subconfig = luts.SUBCONFIG13.get1(subconfig)
+        
+        # Behavior depends on subconfig
+        if subconfig==0:    cell.add_triangles(luts.TILING13_1, config, 4)
+        elif subconfig==1:  cell.add_triangles2(luts.TILING13_2, config, 0, 6)
+        elif subconfig==2:  cell.add_triangles2(luts.TILING13_2, config, 1, 6)
+        elif subconfig==3:  cell.add_triangles2(luts.TILING13_2, config, 2, 6)
+        elif subconfig==4:  cell.add_triangles2(luts.TILING13_2, config, 3, 6)
+        elif subconfig==5:  cell.add_triangles2(luts.TILING13_2, config, 4, 6)
+        elif subconfig==6:  cell.add_triangles2(luts.TILING13_2, config, 5, 6)
+        #
+        elif subconfig==7: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 0, 10)
+        elif subconfig==8: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 1, 10)
+        elif subconfig==9:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 2, 10)
+        elif subconfig==10: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 3, 10)
+        elif subconfig==11: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 4, 10)
+        elif subconfig==12: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 5, 10)
+        elif subconfig==13: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 6, 10)
+        elif subconfig==14: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 7, 10)
+        elif subconfig==15:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 8, 10)
+        elif subconfig==16: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 9, 10)
+        elif subconfig==17: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 10, 10)
+        elif subconfig==18: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3, config, 11, 10)
+        #
+        elif subconfig==19: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_4, config, 0, 12)
+        elif subconfig==20: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_4, config, 1, 12)
+        elif subconfig==21:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_4, config, 2, 12)
+        elif subconfig==22:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_4, config, 3, 12)
+        #
+        elif subconfig==23: 
+            subconfig = 0 # Note: the original source code sets the subconfig, without apparent reason
+            if test_internal(cell, luts, case, config, subconfig, luts.TEST13.get2(config,6)):
+                cell.add_triangles2(luts.TILING13_5_1, config, 0, 6)
+            else:
+                cell.add_triangles2(luts.TILING13_5_2, config, 0, 10)
+        elif subconfig==24: 
+            subconfig = 1
+            if test_internal(cell, luts, case, config, subconfig, luts.TEST13.get2(config,6)):
+                cell.add_triangles2(luts.TILING13_5_1, config, 1, 6)
+            else:
+                cell.add_triangles2(luts.TILING13_5_2, config, 1, 10)
+        elif subconfig==25: 
+            subconfig = 2 ;
+            if test_internal(cell, luts, case, config, subconfig, luts.TEST13.get2(config,6)):
+                cell.add_triangles2(luts.TILING13_5_1, config, 2, 6)
+            else:
+                cell.add_triangles2(luts.TILING13_5_2, config, 2, 10)
+        elif subconfig==26: 
+            subconfig = 3 ;
+            if test_internal(cell, luts, case, config, subconfig, luts.TEST13.get2(config,6)):
+                cell.add_triangles2(luts.TILING13_5_1, config, 3, 6)
+            else:
+                cell.add_triangles2(luts.TILING13_5_2, config, 3, 10)
+        #
+        elif subconfig==27: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 0, 10)
+        elif subconfig==28: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 1, 10)
+        elif subconfig==29:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 2, 10)
+        elif subconfig==30:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 3, 10)
+        elif subconfig==31:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 4, 10)
+        elif subconfig==32:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 5, 10)
+        elif subconfig==33: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config,6, 10)
+        elif subconfig==34: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 7, 10)
+        elif subconfig==35:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 8, 10)
+        elif subconfig==36: 
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 9, 10)
+        elif subconfig==37:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 10, 10)
+        elif subconfig==38:
+            #cell.calculate_center_vertex() # v12 needed
+            cell.add_triangles2(luts.TILING13_3_, config, 11, 10)
+        #
+        elif subconfig==39: 
+            cell.add_triangles2(luts.TILING13_2_, config, 0, 6)
+        elif subconfig==40: 
+            cell.add_triangles2(luts.TILING13_2_, config, 1, 6)
+        elif subconfig==41: 
+            cell.add_triangles2(luts.TILING13_2_, config, 2, 6)
+        elif subconfig==42: 
+            cell.add_triangles2(luts.TILING13_2_, config, 3, 6)
+        elif subconfig==43: 
+            cell.add_triangles2(luts.TILING13_2_, config, 4, 6)
+        elif subconfig==44: 
+            cell.add_triangles2(luts.TILING13_2_, config, 5, 6)
+        #
+        elif subconfig==45: 
+            cell.add_triangles(luts.TILING13_1_, config, 4)
+        #
+        else:
+            print("Marching Cubes: Impossible case 13?" )
+    
+    elif case == 14 :
+        cell.add_triangles(luts.TILING14, config, 4)
 
 
 cdef int test_face(Cell cell, int face):

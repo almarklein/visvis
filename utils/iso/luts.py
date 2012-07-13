@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012, Almar Klein
+# Copyright (C) 2002, Thomas Lewiner
 
 """ Definition of lookup tables for the marching cubes algorithm.
 
@@ -16,6 +17,7 @@ else:
     base64decode = base64.decodestring
 
 def toArray(shape, text):
+    return shape, text
     byts = base64decode(text.encode('utf-8'))
     ar = np.frombuffer(byts, dtype='int8')
     ar.shape = shape
