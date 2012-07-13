@@ -30,7 +30,36 @@ cdef class Cell:
     """ Class to keep track of some stuff during the whole cube marching
     procedure. 
     
-    Also has methods to add triangles, etc.
+    This "struct" keeps track of the current cell location, and the values
+    of corners of the cube. Gradients for the cube corners are calculated
+    when needed.
+    
+    Additionally, it keeps track of the array of vertices, faces and normals.
+    
+    Notes on vertices
+    -----------------
+    The vertices are stored in a C-array that is increased in size with
+    factors of two if needed. The same applies to the faces and normals.
+    
+    Notes on faces
+    --------------
+    To keep track of the vertices already defined, this class maintains
+    two faceLayer arrays. faceLayer1 is of the current layer (z-value)
+    and faceLayer2 is of the next. Both face layers have 4 elements per
+    cell in that layer, 1 for each unique edge per cell (see 
+    get_index_in_facelayer). These are initialized as -1, and set to the
+    index in the vertex array when a new vertex is created.
+    In summary, this allows us to keep track of the already created
+    vertices without keeping a very big array.
+    
+    Notes on normals
+    ----------------
+    The normal is simply defined as the gradient. Each time that a face is
+    created, we also add the gradient of that vertex position to the 
+    normals array. The gradients are all calculated from the differences between
+    the 8 corners of the current cube, but because the final value of a normal
+    was contributed from multiple cells, the normals are quite accurate.
+    
     """
     
     # Reference to LUTS object
@@ -51,13 +80,19 @@ cdef class Cell:
     cdef double v6
     cdef double v7
     
-    # Small array to store the above values in (allowing indexing)
+    # Small arrays to store the above values in (allowing indexing)
+    # and also the gradient at these points
     cdef double *vv
+    cdef double *vg
     
     # Vertex position of center of cube (only calculated if needed)
     cdef double v12_x
     cdef double v12_y
     cdef double v12_z
+    # And corresponding gradient
+    cdef double v12_xg
+    cdef double v12_yg
+    cdef double v12_zg
     
     # The index value, our magic 256 bit word
     cdef int index
@@ -74,6 +109,7 @@ cdef class Cell:
     
     # Stuff to store the output vertices
     cdef float *_vertices
+    cdef float *_normals
     cdef int _vertexCount
     cdef int _vertexMaxCount
     
@@ -99,8 +135,9 @@ cdef class Cell:
     
     def __cinit__(self):
         
-        # Init tiny array
+        # Init tiny arrays for vertices and gradients at the vertices
         self.vv = <double *>malloc(8 * sizeof(double))
+        self.vg = <double *>malloc(8*3 * sizeof(double))
         
         # Init face layers
         self.faceLayer1 = NULL
@@ -110,6 +147,7 @@ cdef class Cell:
         self._vertexCount = 0
         self._vertexMaxCount = 8
         self._vertices = <float *>malloc(self._vertexMaxCount*3 * sizeof(float))
+        self._normals = <float *>malloc(self._vertexMaxCount*3 * sizeof(float))
         
         # Init faces
         self._faceCount = 0
@@ -120,12 +158,16 @@ cdef class Cell:
     def __dealloc__(self):
         if self.vv is not NULL:
             free(self.vv)
+        if self.vg is not NULL:
+            free(self.vg)
         if self.faceLayer1 is not NULL:
             free(self.faceLayer1)
         if self.faceLayer2 is not NULL:
             free(self.faceLayer2)
         if self._vertices is not NULL:
             free(self._vertices)
+        if self._normals is not NULL:
+            free(self._normals)
         if self._faces is not NULL:
             free(self._faces)
     
@@ -136,13 +178,19 @@ cdef class Cell:
         # Allocate new array
         cdef int newMaxCount = self._vertexMaxCount * 2
         cdef float *newVertices = <float *>malloc(newMaxCount*3 * sizeof(float))
-        # Copy
+        cdef float *newNormals = <float *>malloc(newMaxCount*3 * sizeof(float))
+        # Clear and copy
         cdef int i
+        for i in range(self._vertexCount*3, newMaxCount):
+            newNormals[i] = 0.0
         for i in range(self._vertexCount*3):
             newVertices[i] = self._vertices[i]
+            newNormals[i] = self._normals[i]
         # Apply
         free(self._vertices)
         self._vertices = newVertices
+        free(self._normals)
+        self._normals = newNormals
         self._vertexMaxCount = newMaxCount
     
     
@@ -176,6 +224,22 @@ cdef class Cell:
         return self._vertexCount -1 
     
     
+    cdef void add_gradient(self, int vertexIndex, float gx, float gy, float gz):
+        """ Add a gradient value to the vertex corresponding to the given index.
+        """ 
+        self._normals[vertexIndex*3+0] += gx
+        self._normals[vertexIndex*3+1] += gy
+        self._normals[vertexIndex*3+2] += gz
+    
+    
+    cdef void add_gradient_from_index(self, int vertexIndex, int i, float strength):
+        """ Add a gradient value to the vertex corresponding to the given index.
+        vertexIndex is the index in the large array of vertices that is returned.
+        i is the index of the array of vertices 0-7 for the current cell.
+        """ 
+        self.add_gradient(vertexIndex, self.vg[i*3+0] * strength, self.vg[i*3+1] * strength, self.vg[i*3+2] * strength)
+    
+    
     cdef add_face(self, int index):
         """ Add a face to the result.
         """
@@ -197,6 +261,24 @@ cdef class Cell:
             for j in range(3):
                 vertices_[i,j] = self._vertices[i*3+j]
         return vertices
+    
+    def get_normals(self):
+        """ Get the final normals array. 
+        The normals are normalized to unit length.
+        """
+        normals = np.empty((self._vertexCount,3),'float32')
+        cdef np.ndarray[FLOAT32_T, ndim=2] normals_ = normals
+        cdef int i, j
+        cdef double length
+        for i in range(self._vertexCount):
+            length = 0.0
+            for j in range(3):
+                length += self._normals[i*3+j] * self._normals[i*3+j]
+            if length > 0.0:
+                length = 1.0 / length**0.5
+            for j in range(3):
+                normals_[i,j] = self._normals[i*3+j] * length
+        return normals
     
     def get_faces(self):
         faces = np.empty((self._faceCount),'int32')
@@ -368,20 +450,21 @@ cdef class Cell:
         self.v7 = v7 - isovalue
     
     
-    def calculate_gradients(self):
-        # todo: process this further to add normals to the result
-        
+    cdef void calculate_gradients(self):
+        """ Calculate the gradient at each corner of this cube. 
+        Use add_gradient to add the gradient to define a vertex normal.
+        """ 
         # Derivatives, selected to always point in same direction.
         # Note that many corners have the same components as other points,
         # by interpolating  and averaging the normals this is solved.
-        self.dx0, self.dy0, self.dz0 = self.v0-self.v1, self.v0-self.v3, self.v0-self.v4
-        self.dx1, self.dy1, self.dz1 = self.v0-self.v1, self.v1-self.v2, self.v1-self.v5
-        self.dx2, self.dy2, self.dz2 = self.v3-self.v2, self.v1-self.v2, self.v2-self.v6
-        self.dx3, self.dy3, self.dz3 = self.v3-self.v2, self.v0-self.v3, self.v3-self.v7
-        self.dx4, self.dy4, self.dz4 = self.v4-self.v5, self.v4-self.v7, self.v0-self.v4
-        self.dx5, self.dy5, self.dz5 = self.v4-self.v5, self.v5-self.v6, self.v1-self.v5
-        self.dx6, self.dy6, self.dz6 = self.v7-self.v6, self.v5-self.v6, self.v2-self.v6
-        self.dx7, self.dy7, self.dz7 = self.v7-self.v6, self.v4-self.v7, self.v3-self.v7
+        self.vg[0*3+0], self.vg[0*3+1], self.vg[0*3+2] = self.v0-self.v1, self.v0-self.v3, self.v0-self.v4
+        self.vg[1*3+0], self.vg[1*3+1], self.vg[1*3+2] = self.v0-self.v1, self.v1-self.v2, self.v1-self.v5
+        self.vg[2*3+0], self.vg[2*3+1], self.vg[2*3+2] = self.v3-self.v2, self.v1-self.v2, self.v2-self.v6
+        self.vg[3*3+0], self.vg[3*3+1], self.vg[3*3+2] = self.v3-self.v2, self.v0-self.v3, self.v3-self.v7
+        self.vg[4*3+0], self.vg[4*3+1], self.vg[4*3+2] = self.v4-self.v5, self.v4-self.v7, self.v0-self.v4
+        self.vg[5*3+0], self.vg[5*3+1], self.vg[5*3+2] = self.v4-self.v5, self.v5-self.v6, self.v1-self.v5
+        self.vg[6*3+0], self.vg[6*3+1], self.vg[6*3+2] = self.v7-self.v6, self.v5-self.v6, self.v2-self.v6
+        self.vg[7*3+0], self.vg[7*3+1], self.vg[7*3+2] = self.v7-self.v6, self.v4-self.v7, self.v3-self.v7
     
     
     cdef void calculate_index(self):
@@ -432,6 +515,15 @@ cdef class Cell:
         self.v12_x = self.x + fx / ff
         self.v12_y = self.y + fy / ff
         self.v12_z = self.z + fz / ff
+        
+        # Also pre-calculate gradient of center
+        self.calculate_gradients()
+        self.v12_xg = ( v0*self.vg[0*3+0] + v1*self.vg[1*3+0] + v2*self.vg[2*3+0] + v3*self.vg[3*3+0] + 
+                        v4*self.vg[4*3+0] + v5*self.vg[5*3+0] + v6*self.vg[6*3+0] + v7*self.vg[7*3+0] )
+        self.v12_yg = ( v0*self.vg[0*3+1] + v1*self.vg[1*3+1] + v2*self.vg[2*3+1] + v3*self.vg[3*3+1] + 
+                        v4*self.vg[4*3+1] + v5*self.vg[5*3+1] + v6*self.vg[6*3+1] + v7*self.vg[7*3+1] )
+        self.v12_xg = ( v0*self.vg[0*3+2] + v1*self.vg[1*3+2] + v2*self.vg[2*3+2] + v3*self.vg[3*3+2] + 
+                        v4*self.vg[4*3+2] + v5*self.vg[5*3+2] + v6*self.vg[6*3+2] + v7*self.vg[7*3+2] )
     
     
     cdef void add_triangles(self, Lut lut, int lutIndex, int nt):
@@ -459,11 +551,13 @@ cdef class Cell:
         self.vv[6] =self.v7#
         self.vv[7] =self.v6#
         
+        self.calculate_gradients()
+        
         for i in range(nt):
             for j in range(3):
                 # Get two sides for each element in this vertex
                 vi = lut.get2(lutIndex, i*3+j)
-                self._add_triangle(vi)
+                self._add_face_from_edge_index(vi)
     
     cdef void add_triangles2(self, Lut lut, int lutIndex, int lutIndex2, int nt):
         """ Same as add_triangles, except that now the geometry is in a LUT
@@ -475,20 +569,22 @@ cdef class Cell:
         
         # Copy values in array so we can index them. Note the misalignment
         # because the numbering does not correspond with bitwise OR of xyz.
-        self.vv[0] =self.v0 
-        self.vv[1] =self.v1
-        self.vv[2] =self.v3#
-        self.vv[3] =self.v2#
-        self.vv[4] =self.v4
-        self.vv[5] =self.v5
-        self.vv[6] =self.v7#
-        self.vv[7] =self.v6#
+        self.vv[0] = self.v0 
+        self.vv[1] = self.v1
+        self.vv[2] = self.v3#
+        self.vv[3] = self.v2#
+        self.vv[4] = self.v4
+        self.vv[5] = self.v5
+        self.vv[6] = self.v7#
+        self.vv[7] = self.v6#
+        
+        self.calculate_gradients()
         
         for i in range(nt):
             for j in range(3):
                 # Get two sides for each element in this vertex
                 vi = lut.get3(lutIndex, lutIndex2, i*3+j)
-                self._add_triangle(vi)
+                self._add_face_from_edge_index(vi)
     
         
     cdef void _add_face_from_edge_index(self, int vi):
@@ -508,17 +604,29 @@ cdef class Cell:
         # Get index in the face layer and corresponding vertex number
         indexInFaceLayer = self.get_index_in_facelayer(vi)
         indexInVertexArray = self.faceLayer[indexInFaceLayer]
-        if indexInVertexArray >= 0:
-            # We're done quick!
-            self.add_face(indexInVertexArray)
-            return
         
-        # Vertex not calculated before; calculate now ...
+        # If we have the center vertex, we have things pre-calculated,
+        # otherwise we need to interpolate.
+        # In both cases we distinguish between having this vertex already
+        # or not.
         
-        if vi == 12:
-            # Add precalculated center vertex position (is interpolated)
-            indexInVertexArray = self.add_vertex( self.v12_x, self.v12_y, self.v12_z)
+        if vi == 12: # center vertex
+            
+            if indexInVertexArray >= 0:
+                # Vertex already calculated, only need to add face and gradient
+                self.add_face(indexInVertexArray)
+                self.add_gradient(indexInVertexArray, self.v12_xg, self.v12_yg, self.v12_zg)
+            else:
+                # Add precalculated center vertex position (is interpolated)
+                indexInVertexArray = self.add_vertex( self.v12_x, self.v12_y, self.v12_z)
+                # Update face layer
+                self.faceLayer[indexInFaceLayer] = indexInVertexArray
+                # Add face and gradient
+                self.add_face(indexInVertexArray)
+                self.add_gradient(indexInVertexArray, self.v12_xg, self.v12_yg, self.v12_zg)
+        
         else:
+            
             # Get relative edge indices for x, y and z
             dx1, dx2 = self.luts.EDGESRELX.get2(vi,0), self.luts.EDGESRELX.get2(vi,1)
             dy1, dy2 = self.luts.EDGESRELY.get2(vi,0), self.luts.EDGESRELY.get2(vi,1)
@@ -529,25 +637,36 @@ cdef class Cell:
             # Define strength of both corners
             tmpf1 = 1.0 / (FLT_EPSILON + dabs(self.vv[index1]))
             tmpf2 = 1.0 / (FLT_EPSILON + dabs(self.vv[index2]))
-            # Apply a kind of center-of-mass method
-            fx, fy, fz, ff = 0.0, 0.0, 0.0, 0.0
-            fx += <double>dx1 * tmpf1;  fy += <double>dy1 * tmpf1;  fz += <double>dz1 * tmpf1;  ff += tmpf1
-            fx += <double>dx2 * tmpf2;  fy += <double>dy2 * tmpf2;  fz += <double>dz2 * tmpf2;  ff += tmpf2
-            indexInVertexArray = self.add_vertex( 
-                            <double>self.x + fx/ff, # todo: * self.step
-                            <double>self.y + fy/ff,
-                            <double>self.z + fz/ff )
-        
-        # Store vertex
-        self.faceLayer[indexInFaceLayer] = indexInVertexArray
-        self.add_face(indexInVertexArray)
+            
+            if indexInVertexArray >= 0:
+                # Vertex already calculated, only need to add face and gradient
+                self.add_face(indexInVertexArray)
+                self.add_gradient_from_index(indexInVertexArray, index1, tmpf1)
+                self.add_gradient_from_index(indexInVertexArray, index2, tmpf2)
+            
+            else:
+                # Interpolate by applying a kind of center-of-mass method
+                fx, fy, fz, ff = 0.0, 0.0, 0.0, 0.0
+                fx += <double>dx1 * tmpf1;  fy += <double>dy1 * tmpf1;  fz += <double>dz1 * tmpf1;  ff += tmpf1
+                fx += <double>dx2 * tmpf2;  fy += <double>dy2 * tmpf2;  fz += <double>dz2 * tmpf2;  ff += tmpf2
+                # Add vertex
+                indexInVertexArray = self.add_vertex( 
+                                <double>self.x + fx/ff, # todo: * self.step
+                                <double>self.y + fy/ff,
+                                <double>self.z + fz/ff )
+                # Update face layer
+                self.faceLayer[indexInFaceLayer] = indexInVertexArray
+                # Add face and gradient
+                self.add_face(indexInVertexArray)
+                self.add_gradient_from_index(indexInVertexArray, index1, tmpf1)
+                self.add_gradient_from_index(indexInVertexArray, index2, tmpf2)
+
         
 #         # Create vertex non-interpolated
 #         self.add_vertex( self.x + 0.5* dx1 + 0.5 * dx2,
 #                         self.y + 0.5* dy1 + 0.5 * dy2,
 #                         self.z + 0.5* dz1 + 0.5 * dz2 )
 
-    
 
 
 
@@ -1060,7 +1179,7 @@ def marching_cubes(im, isovalue, LutProvider luts):
                         cell.add_triangles(luts.TILING14, config, 4)
     
     # Done
-    return cell.get_vertices(), cell.get_faces()
+    return cell.get_vertices(), cell.get_faces(), cell.get_normals()
 #     return edges[:edgeCount,:]
 
 
