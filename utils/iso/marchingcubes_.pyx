@@ -25,7 +25,6 @@ cdef double FLT_EPSILON = 0.0000001
 cdef inline double dabs(double a): return a if a>=0 else -a
 
 
-
 cdef class Cell:
     """ Class to keep track of some stuff during the whole cube marching
     procedure. 
@@ -65,6 +64,9 @@ cdef class Cell:
     # Reference to LUTS object
     cdef LutProvider luts
     
+    # iso value (only to correct value)
+    cdef double isovalue
+    
     # Location of cube
     cdef int x
     cdef int y
@@ -85,6 +87,9 @@ cdef class Cell:
     cdef double *vv
     cdef double *vg
     
+    # Max value of the eight corners
+    cdef double vmax
+    
     # Vertex position of center of cube (only calculated if needed)
     cdef double v12_x
     cdef double v12_y
@@ -93,6 +98,7 @@ cdef class Cell:
     cdef double v12_xg
     cdef double v12_yg
     cdef double v12_zg
+    cdef int v12_calculated # a boolean 
     
     # The index value, our magic 256 bit word
     cdef int index
@@ -110,6 +116,7 @@ cdef class Cell:
     # Stuff to store the output vertices
     cdef float *_vertices
     cdef float *_normals
+    cdef float *_values
     cdef int _vertexCount
     cdef int _vertexMaxCount
     
@@ -148,6 +155,13 @@ cdef class Cell:
         self._vertexMaxCount = 8
         self._vertices = <float *>malloc(self._vertexMaxCount*3 * sizeof(float))
         self._normals = <float *>malloc(self._vertexMaxCount*3 * sizeof(float))
+        self._values = <float *>malloc(self._vertexMaxCount * sizeof(float))
+        # Clear normals and values
+        cdef int i, j
+        for i in range(self._vertexMaxCount):
+            self._values[i] = 0.0
+            for j in range(3):
+                self._normals[i*3+j] = 0.0
         
         # Init faces
         self._faceCount = 0
@@ -168,6 +182,8 @@ cdef class Cell:
             free(self._vertices)
         if self._normals is not NULL:
             free(self._normals)
+        if self._values is not NULL:
+            free(self._values)
         if self._faces is not NULL:
             free(self._faces)
     
@@ -179,18 +195,23 @@ cdef class Cell:
         cdef int newMaxCount = self._vertexMaxCount * 2
         cdef float *newVertices = <float *>malloc(newMaxCount*3 * sizeof(float))
         cdef float *newNormals = <float *>malloc(newMaxCount*3 * sizeof(float))
-        # Clear and copy
-        cdef int i
-        for i in range(self._vertexCount*3, newMaxCount):
-            newNormals[i] = 0.0
-        for i in range(self._vertexCount*3):
-            newVertices[i] = self._vertices[i]
-            newNormals[i] = self._normals[i]
+        cdef float *newValues = <float *>malloc(newMaxCount * sizeof(float))
+        # Clear 
+        cdef int i, j
+        for i in range(self._vertexCount, newMaxCount):
+            newValues[i] = 0.0
+            for j in range(3):
+                newNormals[i*3+j] = 0.0
+        # Copy
+        for i in range(self._vertexCount):
+            newValues[i] = self._values[i]
+            for j in range(3):
+                newVertices[i*3+j] = self._vertices[i*3+j]
+                newNormals[i*3+j] = self._normals[i*3+j]
         # Apply
-        free(self._vertices)
-        self._vertices = newVertices
-        free(self._normals)
-        self._normals = newNormals
+        free(self._vertices); self._vertices = newVertices
+        free(self._normals); self._normals = newNormals
+        free(self._values); self._values = newValues
         self._vertexMaxCount = newMaxCount
     
     
@@ -209,6 +230,8 @@ cdef class Cell:
         self._faces = newFaces
         self._faceMaxCount = newMaxCount
     
+    
+    ## Adding results
     
     cdef int add_vertex(self, float x, float y, float z):
         """ Add a vertex to the result. Return index in vertex array.
@@ -241,7 +264,7 @@ cdef class Cell:
     
     
     cdef add_face(self, int index):
-        """ Add a face to the result.
+        """ Add a face to the result. Also updates the value.
         """
         # Check if array is large enough
         if self._faceCount >= self._faceMaxCount:
@@ -249,7 +272,12 @@ cdef class Cell:
         # Add face
         self._faces[self._faceCount] = index
         self._faceCount += 1
+        # Also update value
+        if self.vmax > self._values[index]:
+            self._values[index] = self.vmax
     
+    
+    ## Getting results
     
     def get_vertices(self):
         """ Get the final vertex array.
@@ -268,12 +296,14 @@ cdef class Cell:
         """
         normals = np.empty((self._vertexCount,3),'float32')
         cdef np.ndarray[FLOAT32_T, ndim=2] normals_ = normals
+        
         cdef int i, j
-        cdef double length
+        cdef double length, dtmp
         for i in range(self._vertexCount):
             length = 0.0
             for j in range(3):
-                length += self._normals[i*3+j] * self._normals[i*3+j]
+                dtmp = self._normals[i*3+j] # Make it double before taking **2!
+                length +=  dtmp*dtmp
             if length > 0.0:
                 length = 1.0 / length**0.5
             for j in range(3):
@@ -281,13 +311,23 @@ cdef class Cell:
         return normals
     
     def get_faces(self):
-        faces = np.empty((self._faceCount),'int32')
+        faces = np.empty((self._faceCount,),'int32')
         cdef np.ndarray[INT32_T, ndim=1] faces_ = faces
         cdef int i, j
         for i in range(self._faceCount):
             faces_[i] = self._faces[i]
         return faces
     
+    def get_values(self):
+        values = np.empty((self._vertexCount,),'float32')
+        cdef np.ndarray[FLOAT32_T, ndim=1] values_ = values
+        cdef int i, j
+        for i in range(self._vertexCount):
+            values_[i] = self._values[i]
+        return values
+    
+    
+    ## Called from marching cube function
     
     cdef void new_z_value(self):
         """ This method should be called each time a new z layer is entered.
@@ -301,145 +341,28 @@ cdef class Cell:
             self.faceLayer2[i] = -1
     
     
-    cdef int get_index_in_facelayer(self, int vi):
-        """ 
-        Get the index of a vertex position, given the edge on which it lies.
-        We keep a list of faces so we can reuse vertices. This improves
-        speed because we need less interpolation, and the result is more
-        compact and can be visualized better because normals can be 
-        interpolated.
+    cdef void set_cube(self,    double isovalue, int x, int y, int z,
+                                double v0, double v1, double v2, double v3, 
+                                double v4, double v5, double v6, double v7):
+        """ Set the cube to the new location.  
         
-        For each cell, we store 4 vertex indices; all other edges can be 
-        represented as the edge of another cell.  The fourth is the center vertex.
+        Set the values of the cube corners. The isovalue is subtracted
+        from them, such that in further calculations the isovalue can be 
+        taken as zero.
         
-        This method returns -1 if no vertex has been defined yet.
-        
-        
-              vertices              edes                edge-indices per cell
-        *         7 ________ 6           _____6__             ________
-        *         /|       /|         7/|       /|          /|       /|
-        *       /  |     /  |        /  |     /5 |        /  |     /  |
-        *   4 /_______ /    |      /__4____ /    10     /_______ /    |
-        *    |     |  |5    |     |    11  |     |     |     |  |     |
-        *    |    3|__|_____|2    |     |__|__2__|     |     |__|_____|
-        *    |    /   |    /      8   3/   9    /      2    /   |    /
-        *    |  /     |  /        |  /     |  /1       |  1     |  /
-        *    |/_______|/          |/___0___|/          |/___0___|/
-        *   0          1        0          1
-        */
+        This method also calculated the magic 256 word to identify the 
+        cases (i.e. cell.index).
         """ 
         
-        # Init indices, both are corrected below
-        cdef int i = self.nx * self.y + self.x  # Index of cube to get vertex at
-        cdef int j = 0 # Vertex number for that cell
-        cdef int vi_ = vi
+        # Store iso value
+        self.isovalue = isovalue
         
-        cdef int *faceLayer
-        
-        if False:
-            # Select either upper or lower half
-            if vi < 8:
-                #  8 horizontal edges
-                if vi < 4:
-                    faceLayer = self.faceLayer2
-                else:
-                    vi -= 4
-                    faceLayer = self.faceLayer1
-                
-                # Calculate actual index based on edge 
-                if vi == 0:
-                    i += self.nx
-                elif vi == 1:
-                    j = 1
-                elif vi == 2:
-                    pass
-                elif vi == 3: 
-                    i += 1
-                    j = 1  
-            
-            elif vi<12:
-                # four vertical edges
-                faceLayer = self.faceLayer1
-                j = 2
-                
-                if vi == 8:
-                    i += self.nx + 1
-                elif vi == 9:   # step in x
-                    i += self.nx
-                elif vi == 10:   # step in x and y
-                    pass
-                elif vi == 11:  # step in y
-                    i += 1
-            
-            else:
-                # center vertex
-                faceLayer = self.faceLayer1
-                j = 3
-        else:
-            
-            # Select either upper or lower half
-            if vi < 8:
-                #  8 horizontal edges
-                if vi < 4:
-                    faceLayer = self.faceLayer1
-                else:
-                    vi -= 4
-                    faceLayer = self.faceLayer2
-                
-                # Calculate actual index based on edge 
-                #if vi == 0: pass  # no step
-                if vi == 1:  # step in x
-                    i += 1
-                    j = 1
-                elif vi == 2:  # step in y
-                    i += self.nx
-                elif vi == 3:  # no step
-                    j = 1  
-            
-            elif vi<12:
-                # four vertical edges
-                faceLayer = self.faceLayer1
-                j = 2
-                
-                #if vi == 8: pass # no step
-                if vi == 9:   # step in x
-                    i += 1 
-                elif vi == 10:   # step in x and y
-                    i += self.nx + 1 
-                elif vi == 11:  # step in y
-                    i += self.nx 
-            
-            else:
-                # center vertex
-                faceLayer = self.faceLayer1
-                j = 3
-        
-#         print(vi_, i, j)
-#         if (4*i + j) >= self.nx*self.ny:
-#             print('woops!', i, j, self.z, self.nx, self.ny)
-#             i, j = 0,0
-        
-        # Store facelayer and return index
-        self.faceLayer = faceLayer # Dirty way of returning a value
-        return 4*i + j
-    
-    
-    cdef void set_location(self, int x, int y, int z):
-        """ Set the current location of the cell.
-        Dont forget to also set v0-v7.
-        """
+        # Set location
         self.x = x
         self.y = y
         self.z = z
-    
-    
-    cdef void set_cube(self,    double isovalue, 
-                                double v0, double v1, double v2, double v3, 
-                                double v4, double v5, double v6, double v7):
-        """  Set the values of the cube corners. The isovalue is subtracted
-        from them, such that in further calculations the isovalue can be 
-        taken as zero.
-        """ 
+        
+        # Set values
         self.v0 = v0 - isovalue
         self.v1 = v1 - isovalue
         self.v2 = v2 - isovalue
@@ -448,32 +371,9 @@ cdef class Cell:
         self.v5 = v5 - isovalue
         self.v6 = v6 - isovalue
         self.v7 = v7 - isovalue
-    
-    
-    cdef void calculate_gradients(self):
-        """ Calculate the gradient at each corner of this cube. 
-        Use add_gradient to add the gradient to define a vertex normal.
-        """ 
-        # Derivatives, selected to always point in same direction.
-        # Note that many corners have the same components as other points,
-        # by interpolating  and averaging the normals this is solved.
-        self.vg[0*3+0], self.vg[0*3+1], self.vg[0*3+2] = self.v0-self.v1, self.v0-self.v3, self.v0-self.v4
-        self.vg[1*3+0], self.vg[1*3+1], self.vg[1*3+2] = self.v0-self.v1, self.v1-self.v2, self.v1-self.v5
-        self.vg[2*3+0], self.vg[2*3+1], self.vg[2*3+2] = self.v3-self.v2, self.v1-self.v2, self.v2-self.v6
-        self.vg[3*3+0], self.vg[3*3+1], self.vg[3*3+2] = self.v3-self.v2, self.v0-self.v3, self.v3-self.v7
-        self.vg[4*3+0], self.vg[4*3+1], self.vg[4*3+2] = self.v4-self.v5, self.v4-self.v7, self.v0-self.v4
-        self.vg[5*3+0], self.vg[5*3+1], self.vg[5*3+2] = self.v4-self.v5, self.v5-self.v6, self.v1-self.v5
-        self.vg[6*3+0], self.vg[6*3+1], self.vg[6*3+2] = self.v7-self.v6, self.v5-self.v6, self.v2-self.v6
-        self.vg[7*3+0], self.vg[7*3+1], self.vg[7*3+2] = self.v7-self.v6, self.v4-self.v7, self.v3-self.v7
-    
-    
-    cdef void calculate_index(self):
-        """ Calculate the index value for the current cell.
-        The values v0-v7 should be set.
-        """
-        cdef int index
         
-        index = 0
+        # Calculate index
+        cdef int index = 0
         if self.v0 > 0.0:   index += 1
         if self.v1 > 0.0:   index += 2
         if self.v2 > 0.0:   index += 4
@@ -483,47 +383,9 @@ cdef class Cell:
         if self.v6 > 0.0:   index += 64
         if self.v7 > 0.0:   index += 128
         self.index = index
-    
-    
-    cdef void calculate_center_vertex(self):
-        cdef double v0, v1, v2, v3, v4, v5, v6, v7
-        cdef double fx, fy, fz, ff
-        fx, fy, fz, ff = 0.0, 0.0, 0.0, 0.0
         
-        # Define "strength" of each corner of the cube that we need
-        # todo: can we disable Cython from checking for zero division? Because it never happens!
-        v0 = 1.0 / (FLT_EPSILON + dabs(self.v0))
-        v1 = 1.0 / (FLT_EPSILON + dabs(self.v1))
-        v2 = 1.0 / (FLT_EPSILON + dabs(self.v2))
-        v3 = 1.0 / (FLT_EPSILON + dabs(self.v3))
-        v4 = 1.0 / (FLT_EPSILON + dabs(self.v4))
-        v5 = 1.0 / (FLT_EPSILON + dabs(self.v5))
-        v6 = 1.0 / (FLT_EPSILON + dabs(self.v6))
-        v7 = 1.0 / (FLT_EPSILON + dabs(self.v7))
-        
-        # Apply a kind of center-of-mass method
-        fx += 0.0*v0;  fy += 0.0*v0;  fz += 0.0*v0;  ff += v0
-        fx += 1.0*v1;  fy += 0.0*v1;  fz += 0.0*v1;  ff += v1
-        fx += 1.0*v2;  fy += 1.0*v2;  fz += 0.0*v2;  ff += v2
-        fx += 0.0*v3;  fy += 1.0*v3;  fz += 0.0*v3;  ff += v3
-        fx += 0.0*v4;  fy += 0.0*v4;  fz += 1.0*v4;  ff += v4
-        fx += 1.0*v5;  fy += 0.0*v5;  fz += 1.0*v5;  ff += v5
-        fx += 1.0*v6;  fy += 1.0*v6;  fz += 1.0*v6;  ff += v6
-        fx += 0.0*v7;  fy += 1.0*v7;  fz += 1.0*v7;  ff += v7
-        
-        # Store
-        self.v12_x = self.x + fx / ff
-        self.v12_y = self.y + fy / ff
-        self.v12_z = self.z + fz / ff
-        
-        # Also pre-calculate gradient of center
-        self.calculate_gradients()
-        self.v12_xg = ( v0*self.vg[0*3+0] + v1*self.vg[1*3+0] + v2*self.vg[2*3+0] + v3*self.vg[3*3+0] + 
-                        v4*self.vg[4*3+0] + v5*self.vg[5*3+0] + v6*self.vg[6*3+0] + v7*self.vg[7*3+0] )
-        self.v12_yg = ( v0*self.vg[0*3+1] + v1*self.vg[1*3+1] + v2*self.vg[2*3+1] + v3*self.vg[3*3+1] + 
-                        v4*self.vg[4*3+1] + v5*self.vg[5*3+1] + v6*self.vg[6*3+1] + v7*self.vg[7*3+1] )
-        self.v12_xg = ( v0*self.vg[0*3+2] + v1*self.vg[1*3+2] + v2*self.vg[2*3+2] + v3*self.vg[3*3+2] + 
-                        v4*self.vg[4*3+2] + v5*self.vg[5*3+2] + v6*self.vg[6*3+2] + v7*self.vg[7*3+2] )
+        # Reset c12
+        self.v12_calculated = 0
     
     
     cdef void add_triangles(self, Lut lut, int lutIndex, int nt):
@@ -538,20 +400,9 @@ cdef class Cell:
         """
         
         cdef int i, j
-        cdef int vi#, nt
+        cdef int vi
         
-        # Copy values in array so we can index them. Note the misalignment
-        # because the numbering does not correspond with bitwise OR of xyz.
-        self.vv[0] =self.v0 
-        self.vv[1] =self.v1
-        self.vv[2] =self.v3#
-        self.vv[3] =self.v2#
-        self.vv[4] =self.v4
-        self.vv[5] =self.v5
-        self.vv[6] =self.v7#
-        self.vv[7] =self.v6#
-        
-        self.calculate_gradients()
+        self.prepare_for_adding_triangles()
         
         for i in range(nt):
             for j in range(3):
@@ -559,26 +410,16 @@ cdef class Cell:
                 vi = lut.get2(lutIndex, i*3+j)
                 self._add_face_from_edge_index(vi)
     
+    
     cdef void add_triangles2(self, Lut lut, int lutIndex, int lutIndex2, int nt):
         """ Same as add_triangles, except that now the geometry is in a LUT
         with 3 dimensions, and an extra index is provided.
         
         """
         cdef int i, j
-        cdef int vi#, nt
+        cdef int vi
         
-        # Copy values in array so we can index them. Note the misalignment
-        # because the numbering does not correspond with bitwise OR of xyz.
-        self.vv[0] = self.v0 
-        self.vv[1] = self.v1
-        self.vv[2] = self.v3#
-        self.vv[3] = self.v2#
-        self.vv[4] = self.v4
-        self.vv[5] = self.v5
-        self.vv[6] = self.v7#
-        self.vv[7] = self.v6#
-        
-        self.calculate_gradients()
+        self.prepare_for_adding_triangles()
         
         for i in range(nt):
             for j in range(3):
@@ -586,7 +427,9 @@ cdef class Cell:
                 vi = lut.get3(lutIndex, lutIndex2, i*3+j)
                 self._add_face_from_edge_index(vi)
     
-        
+    
+    ## Used internally
+     
     cdef void _add_face_from_edge_index(self, int vi):
         """ Add one face from an edge index. Only adds a face if the
         vertex already exists. Otherwise also adds a vertex and applies
@@ -611,7 +454,8 @@ cdef class Cell:
         # or not.
         
         if vi == 12: # center vertex
-            
+            if self.v12_calculated == 0:
+                self.calculate_center_vertex()
             if indexInVertexArray >= 0:
                 # Vertex already calculated, only need to add face and gradient
                 self.add_face(indexInVertexArray)
@@ -667,6 +511,175 @@ cdef class Cell:
 #                         self.y + 0.5* dy1 + 0.5 * dy2,
 #                         self.z + 0.5* dz1 + 0.5 * dz2 )
 
+    
+    
+    cdef int get_index_in_facelayer(self, int vi):
+        """ 
+        Get the index of a vertex position, given the edge on which it lies.
+        We keep a list of faces so we can reuse vertices. This improves
+        speed because we need less interpolation, and the result is more
+        compact and can be visualized better because normals can be 
+        interpolated.
+        
+        For each cell, we store 4 vertex indices; all other edges can be 
+        represented as the edge of another cell.  The fourth is the center vertex.
+        
+        This method returns -1 if no vertex has been defined yet.
+        
+        
+              vertices              edes                edge-indices per cell
+        *         7 ________ 6           _____6__             ________
+        *         /|       /|         7/|       /|          /|       /|
+        *       /  |     /  |        /  |     /5 |        /  |     /  |
+        *   4 /_______ /    |      /__4____ /    10     /_______ /    |
+        *    |     |  |5    |     |    11  |     |     |     |  |     |
+        *    |    3|__|_____|2    |     |__|__2__|     |     |__|_____|
+        *    |    /   |    /      8   3/   9    /      2    /   |    /
+        *    |  /     |  /        |  /     |  /1       |  1     |  /
+        *    |/_______|/          |/___0___|/          |/___0___|/
+        *   0          1        0          1
+        */
+        """ 
+        
+        # Init indices, both are corrected below
+        cdef int i = self.nx * self.y + self.x  # Index of cube to get vertex at
+        cdef int j = 0 # Vertex number for that cell
+        cdef int vi_ = vi
+        
+        cdef int *faceLayer
+        
+        # Select either upper or lower half
+        if vi < 8:
+            #  8 horizontal edges
+            if vi < 4:
+                faceLayer = self.faceLayer1
+            else:
+                vi -= 4
+                faceLayer = self.faceLayer2
+            
+            # Calculate actual index based on edge 
+            #if vi == 0: pass  # no step
+            if vi == 1:  # step in x
+                i += 1
+                j = 1
+            elif vi == 2:  # step in y
+                i += self.nx
+            elif vi == 3:  # no step
+                j = 1  
+        
+        elif vi<12:
+            # four vertical edges
+            faceLayer = self.faceLayer1
+            j = 2
+            
+            #if vi == 8: pass # no step
+            if vi == 9:   # step in x
+                i += 1 
+            elif vi == 10:   # step in x and y
+                i += self.nx + 1 
+            elif vi == 11:  # step in y
+                i += self.nx 
+        
+        else:
+            # center vertex
+            faceLayer = self.faceLayer1
+            j = 3
+        
+        # Store facelayer and return index
+        self.faceLayer = faceLayer # Dirty way of returning a value
+        return 4*i + j
+    
+    
+    cdef void prepare_for_adding_triangles(self):
+        """ Calculates some things to help adding the triangles:
+        array with corner values, max corner value, gradient at each corner.
+        """ 
+        
+        cdef int i
+        
+        # Copy values in array so we can index them. Note the misalignment
+        # because the numbering does not correspond with bitwise OR of xyz.
+        self.vv[0] = self.v0 
+        self.vv[1] = self.v1
+        self.vv[2] = self.v3#
+        self.vv[3] = self.v2#
+        self.vv[4] = self.v4
+        self.vv[5] = self.v5
+        self.vv[6] = self.v7#
+        self.vv[7] = self.v6#
+        
+        # Calculate max
+        cdef double vmin, vmax
+        vmin, vmax = 0.0, 0.0
+        for i in range(8):
+            #self.vmax += self.vv[i] * 0.125
+            if self.vv[i] > vmax:
+                vmax = self.vv[i]
+            if self.vv[i] < vmin:
+                vmin = self.vv[i]
+        self.vmax = vmax-vmin
+        
+        
+        # Calculate gradients
+        # Derivatives, selected to always point in same direction.
+        # Note that many corners have the same components as other points,
+        # by interpolating  and averaging the normals this is solved.
+        # todo: we can potentially reuse these similar to how we store vertex indices in face layers
+        self.vg[0*3+0], self.vg[0*3+1], self.vg[0*3+2] = self.v0-self.v1, self.v0-self.v3, self.v0-self.v4
+        self.vg[1*3+0], self.vg[1*3+1], self.vg[1*3+2] = self.v0-self.v1, self.v1-self.v2, self.v1-self.v5
+        self.vg[2*3+0], self.vg[2*3+1], self.vg[2*3+2] = self.v3-self.v2, self.v1-self.v2, self.v2-self.v6
+        self.vg[3*3+0], self.vg[3*3+1], self.vg[3*3+2] = self.v3-self.v2, self.v0-self.v3, self.v3-self.v7
+        self.vg[4*3+0], self.vg[4*3+1], self.vg[4*3+2] = self.v4-self.v5, self.v4-self.v7, self.v0-self.v4
+        self.vg[5*3+0], self.vg[5*3+1], self.vg[5*3+2] = self.v4-self.v5, self.v5-self.v6, self.v1-self.v5
+        self.vg[6*3+0], self.vg[6*3+1], self.vg[6*3+2] = self.v7-self.v6, self.v5-self.v6, self.v2-self.v6
+        self.vg[7*3+0], self.vg[7*3+1], self.vg[7*3+2] = self.v7-self.v6, self.v4-self.v7, self.v3-self.v7
+    
+    
+    cdef void calculate_center_vertex(self):
+        """ Calculate interpolated center vertex and its gradient.
+        """ 
+        cdef double v0, v1, v2, v3, v4, v5, v6, v7
+        cdef double fx, fy, fz, ff
+        fx, fy, fz, ff = 0.0, 0.0, 0.0, 0.0
+        
+        # Define "strength" of each corner of the cube that we need
+        # todo: can we disable Cython from checking for zero division? Because it never happens!
+        v0 = 1.0 / (FLT_EPSILON + dabs(self.v0))
+        v1 = 1.0 / (FLT_EPSILON + dabs(self.v1))
+        v2 = 1.0 / (FLT_EPSILON + dabs(self.v2))
+        v3 = 1.0 / (FLT_EPSILON + dabs(self.v3))
+        v4 = 1.0 / (FLT_EPSILON + dabs(self.v4))
+        v5 = 1.0 / (FLT_EPSILON + dabs(self.v5))
+        v6 = 1.0 / (FLT_EPSILON + dabs(self.v6))
+        v7 = 1.0 / (FLT_EPSILON + dabs(self.v7))
+        
+        # Apply a kind of center-of-mass method
+        fx += 0.0*v0;  fy += 0.0*v0;  fz += 0.0*v0;  ff += v0
+        fx += 1.0*v1;  fy += 0.0*v1;  fz += 0.0*v1;  ff += v1
+        fx += 1.0*v2;  fy += 1.0*v2;  fz += 0.0*v2;  ff += v2
+        fx += 0.0*v3;  fy += 1.0*v3;  fz += 0.0*v3;  ff += v3
+        fx += 0.0*v4;  fy += 0.0*v4;  fz += 1.0*v4;  ff += v4
+        fx += 1.0*v5;  fy += 0.0*v5;  fz += 1.0*v5;  ff += v5
+        fx += 1.0*v6;  fy += 1.0*v6;  fz += 1.0*v6;  ff += v6
+        fx += 0.0*v7;  fy += 1.0*v7;  fz += 1.0*v7;  ff += v7
+        
+        # Store
+        self.v12_x = self.x + fx / ff
+        self.v12_y = self.y + fy / ff
+        self.v12_z = self.z + fz / ff
+        
+        # Also pre-calculate gradient of center
+        # note that prepare_for_adding_triangles() must have been called for
+        # the gradient data to exist. 
+        self.v12_xg = ( v0*self.vg[0*3+0] + v1*self.vg[1*3+0] + v2*self.vg[2*3+0] + v3*self.vg[3*3+0] + 
+                        v4*self.vg[4*3+0] + v5*self.vg[5*3+0] + v6*self.vg[6*3+0] + v7*self.vg[7*3+0] )
+        self.v12_yg = ( v0*self.vg[0*3+1] + v1*self.vg[1*3+1] + v2*self.vg[2*3+1] + v3*self.vg[3*3+1] + 
+                        v4*self.vg[4*3+1] + v5*self.vg[5*3+1] + v6*self.vg[6*3+1] + v7*self.vg[7*3+1] )
+        self.v12_xg = ( v0*self.vg[0*3+2] + v1*self.vg[1*3+2] + v2*self.vg[2*3+2] + v3*self.vg[3*3+2] + 
+                        v4*self.vg[4*3+2] + v5*self.vg[5*3+2] + v6*self.vg[6*3+2] + v7*self.vg[7*3+2] )
+        
+        # Set flag that this stuff is calculated
+        self.v12_calculated = 1
 
 
 
@@ -884,22 +897,16 @@ def marching_cubes(im, isovalue, LutProvider luts):
     # todo: allow a stepsize, this algorithm should work with that
     # todo: allow using original alg
     # todo: allow dynamic isovalue?
-    # todo: return gradient or something so we can color the mesh too
     
     for z in range(Nz-1):
         cell.new_z_value() # Indicate that we enter a new layer
-#         print('Z: ', z)
-#         import time
-#         time.sleep(0.1)
         for y in range(Ny-1):
             for x in range(Nx-1):
                 
                 # Initialize cell
-                cell.set_location(x, y, z)
-                cell.set_cube(isovalue_,
+                cell.set_cube(isovalue_, x, y, z,
                     im_[z  ,y  , x  ], im_[z  ,y  , x+1], im_[z  ,y+1, x+1], im_[z  ,y+1, x  ],
                     im_[z+1,y  , x  ], im_[z+1,y  , x+1], im_[z+1,y+1, x+1], im_[z+1,y+1, x  ] )
-                cell.calculate_index()
                 
                 # Do classic!
                 if False:
@@ -952,7 +959,7 @@ def marching_cubes(im, isovalue, LutProvider luts):
                             if test_internal(cell, luts, case, config, subconfig, luts.TEST6.get2(config,1)):
                                 cell.add_triangles(luts.TILING6_1_1, config, 3)
                             else:
-                                cell.calculate_center_vertex() # v12 needed
+                                #cell.calculate_center_vertex() # v12 needed
                                 cell.add_triangles(luts.TILING6_1_2, config, 9)
                     
                     elif case == 7 :
@@ -965,14 +972,14 @@ def marching_cubes(im, isovalue, LutProvider luts):
                         elif subconfig == 1: cell.add_triangles2(luts.TILING7_2, config, 0, 5)
                         elif subconfig == 2: cell.add_triangles2(luts.TILING7_2, config, 1, 5)
                         elif subconfig == 3: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING7_3, config, 0, 9)
                         elif subconfig == 4: cell.add_triangles2(luts.TILING7_2, config, 2, 5)
                         elif subconfig == 5: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING7_3, config, 1, 9)
                         elif subconfig == 6: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING7_3, config, 2, 9)
                         elif subconfig == 7: 
                             if test_internal(cell, luts, case, config, subconfig, luts.TEST7.get2(config,3)):
@@ -991,11 +998,11 @@ def marching_cubes(im, isovalue, LutProvider luts):
                             if test_face(cell, luts.TEST10.get2(config,1)):
                                 cell.add_triangles(luts.TILING10_1_1_, config, 4)
                             else:
-                                cell.calculate_center_vertex() # v12 needed
+                                #cell.calculate_center_vertex() # v12 needed
                                 cell.add_triangles(luts.TILING10_2, config, 8)
                         else:
                             if test_face(cell, luts.TEST10.get2(config,1)):
-                                cell.calculate_center_vertex() # v12 needed
+                                #cell.calculate_center_vertex() # v12 needed
                                 cell.add_triangles(luts.TILING10_2_, config, 8)
                             else:
                                 if test_internal(cell, luts, case, config, subconfig, luts.TEST10.get2(config,2)):
@@ -1011,11 +1018,11 @@ def marching_cubes(im, isovalue, LutProvider luts):
                             if test_face(cell, luts.TEST12.get2(config,1)):
                                 cell.add_triangles(luts.TILING12_1_1_, config, 4)
                             else:
-                                cell.calculate_center_vertex() # v12 needed
+                                #cell.calculate_center_vertex() # v12 needed
                                 cell.add_triangles(luts.TILING12_2, config, 8)
                         else:
                             if test_face(cell, luts.TEST12.get2(config,1)):
-                                cell.calculate_center_vertex() # v12 needed
+                                #cell.calculate_center_vertex() # v12 needed
                                 cell.add_triangles(luts.TILING12_2_, config, 8)
                             else:
                                 if test_internal(cell, luts, case, config, subconfig, luts.TEST12.get2(config,2)):
@@ -1045,53 +1052,53 @@ def marching_cubes(im, isovalue, LutProvider luts):
                         elif subconfig==6:  cell.add_triangles2(luts.TILING13_2, config, 5, 6)
                         #
                         elif subconfig==7: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 0, 10)
                         elif subconfig==8: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 1, 10)
                         elif subconfig==9:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 2, 10)
                         elif subconfig==10: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 3, 10)
                         elif subconfig==11: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 4, 10)
                         elif subconfig==12: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 5, 10)
                         elif subconfig==13: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 6, 10)
                         elif subconfig==14: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 7, 10)
                         elif subconfig==15:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 8, 10)
                         elif subconfig==16: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 9, 10)
                         elif subconfig==17: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 10, 10)
                         elif subconfig==18: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3, config, 11, 10)
                         #
                         elif subconfig==19: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_4, config, 0, 12)
                         elif subconfig==20: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_4, config, 1, 12)
                         elif subconfig==21:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_4, config, 2, 12)
                         elif subconfig==22:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_4, config, 3, 12)
                         #
                         elif subconfig==23: 
@@ -1120,40 +1127,40 @@ def marching_cubes(im, isovalue, LutProvider luts):
                                 cell.add_triangles2(luts.TILING13_5_2, config, 3, 10)
                         #
                         elif subconfig==27: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 0, 10)
                         elif subconfig==28: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 1, 10)
                         elif subconfig==29:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 2, 10)
                         elif subconfig==30:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 3, 10)
                         elif subconfig==31:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 4, 10)
                         elif subconfig==32:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 5, 10)
                         elif subconfig==33: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config,6, 10)
                         elif subconfig==34: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 7, 10)
                         elif subconfig==35:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 8, 10)
                         elif subconfig==36: 
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 9, 10)
                         elif subconfig==37:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 10, 10)
                         elif subconfig==38:
-                            cell.calculate_center_vertex() # v12 needed
+                            #cell.calculate_center_vertex() # v12 needed
                             cell.add_triangles2(luts.TILING13_3_, config, 11, 10)
                         #
                         elif subconfig==39: 
@@ -1179,7 +1186,7 @@ def marching_cubes(im, isovalue, LutProvider luts):
                         cell.add_triangles(luts.TILING14, config, 4)
     
     # Done
-    return cell.get_vertices(), cell.get_faces(), cell.get_normals()
+    return cell.get_vertices(), cell.get_faces(), cell.get_normals(), cell.get_values()
 #     return edges[:edgeCount,:]
 
 
