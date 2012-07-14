@@ -103,8 +103,8 @@ def isocontour(im, isovalue=None):
 
 
 
-def isosurface(im, isovalue=None, step=1, useclassic=False, usevalues=False):
-    """ isosurface(vol, isovalue=None, step=1, useclassic=False, usevalues=False)
+def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
+    """ isosurface(vol, isovalue=None, step=1, useClassic=False, useValues=False)
     
     Calculate the isosurface for the given 3D image. 
     Returns a vv.BaseMesh object.
@@ -172,17 +172,21 @@ def isosurface(im, isovalue=None, step=1, useclassic=False, usevalues=False):
         raise ValueError('step must be at least one.')
     
     # Remaining args
-    useclassic = bool(useclassic)
-    usevalues = bool(usevalues)
+    useClassic = bool(useClassic)
+    useValues = bool(useValues)
     
     # Get LutProvider class (reuse if possible) 
     L = _getMCLuts()
     
     # Apply algorithm
-    vertices, faces , normals, values = marchingcubes_.marching_cubes(im, isovalue, L, step, useclassic)
+    vertices, faces , normals, values = marchingcubes_.marching_cubes(im, isovalue, L, step, useClassic)
+    
+    # Check
+    if not len(vertices):
+        raise RuntimeError('No surface found at the given iso value.')
     
     # Done
-    if usevalues:
+    if useValues:
         return vv.BaseMesh(vertices, faces, normals, values)
     else:
         return vv.BaseMesh(vertices, faces, normals)
