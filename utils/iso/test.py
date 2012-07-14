@@ -13,7 +13,7 @@ import visvis as vv
 import numpy as np
 import time
 from visvis.utils.iso import isosurface, isocontour 
-
+from visvis.utils import iso
 
 if __name__ == '__main__':
     
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     
     
     # Create test volume
-    SELECT = 1
+    SELECT = 3
     if SELECT == 0:
         import pirt
         vol = np.zeros((100,100,100), 'float32')
@@ -50,21 +50,37 @@ if __name__ == '__main__':
     elif SELECT == 2:
         vol = vv.aVolume(20, 256) # Different every time
         isovalue = 0.2
+    elif SELECT == 3:
+        n = 48
+        a, b = 2.5/n, -1.25
+        isovalue = 0.0
+        #
+        vol = np.empty((n,n,n), 'float32')
+        for iz in range(vol.shape[0]):
+            for iy in range(vol.shape[1]):
+                for ix in range(vol.shape[2]):
+                    z, y, x = float(iz)*a+b, float(iy)*a+b, float(ix)*a+b
+                    vol[iz,iy,ix] = ( ( 
+                        (8*x)**2 + (8*y-2)**2 + (8*z)**2 + 16 - 1.85*1.85 ) * ( (8*x)**2 +
+                        (8*y-2)**2 + (8*z)**2 + 16 - 1.85*1.85 ) - 64 * ( (8*x)**2 + (8*y-2)**2 )
+                        ) * ( ( (8*x)**2 + ((8*y-2)+4)*((8*y-2)+4) + (8*z)**2 + 16 - 1.85*1.85 )
+                        * ( (8*x)**2 + ((8*y-2)+4)*((8*y-2)+4) + (8*z)**2 + 16 - 1.85*1.85 ) -
+                        64 * ( ((8*y-2)+4)*((8*y-2)+4) + (8*z)**2 
+                        ) ) + 1025
+        # Uncommenting the line below will yield different results for classic MC
+        #vol = -vol
     
-    # Get surface mesh
+    # Get surface meshes
+    bm1 = isosurface(vol, isovalue, 1, useClassic=True)
     t0 = time.time()
-    bm = isosurface(vol, isovalue, 1)
+    bm2 = isosurface(vol, isovalue, 1)
     print('finding surface took %1.0f ms' % (1000*(time.time()-t0)) )
     
     # Show
     vv.figure(1); vv.clf()
     vv.subplot(121); vv.imshow(im); vv.plot(pp, ls='+', lc='r', lw=2)
-    a1=vv.subplot(222); t=vv.volshow(vol)
-    a2=vv.subplot(224); m=vv.mesh(bm)
+    a1=vv.subplot(222); m1=vv.mesh(bm1) #t=vv.volshow(vol)
+    a2=vv.subplot(224); m2=vv.mesh(bm2)
     a1.camera = a2.camera
-    t.colormap = (1,1,1), (1,1,1)
-    
-    t.renderStyle = 'iso'
-    t.isoThreshold = isovalue
 
         
