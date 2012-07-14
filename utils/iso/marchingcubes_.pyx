@@ -13,7 +13,7 @@ I selected this algorithm because it provides topologically correct results,
 and because the algorithms implementation is relatively simple. Most of
 the magic is in the lookup tables, which are provided as open source.
 
-I'm not sure yet about the license of the original algorithm.
+This code is distributed under the terms of the (new) BSD License.
 
 """ 
 
