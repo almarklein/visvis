@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012, Almar Klein
+# This code is distributed under the terms of the (new) BSD License.
 
 """
 This package provides two functions:
