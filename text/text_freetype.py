@@ -725,6 +725,17 @@ class TextureFont:
             Set of characters to be represented
         '''
         face = Face( self.filename )
+        try:
+            return self._load(charcodes, face)
+        finally:
+            # Make sure to clear the face. I've seen some pretty bad
+            # crashes on Windows when an exception was thrown in the code
+            # in _load(), because the hold all the variables, preventing the
+            # face from being cleared.
+            face.__del__()
+            face._FT_Face = None
+    
+    def _load(self, charcodes, face):
         pen = Vector(0,0)
         hres = 16*72
         hscale = 1.0/16
