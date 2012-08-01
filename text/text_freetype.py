@@ -31,12 +31,8 @@ from ..core.shaders import Shader, ShaderCodePart
 from .text_base import AtlasTexture, FontManager, Text, Label
 from .text_base import correctVertices, simpleTextureDraw
 
-from .freetype import ( Face, Vector, Matrix,
-                        set_lcd_filter,
-                        FT_LOAD_RENDER, FT_LCD_FILTER_LIGHT, FT_LCD_FILTER_NONE,
-                        FT_LOAD_FORCE_AUTOHINT, FT_LOAD_TARGET_LCD, 
-                        FT_KERNING_UNSCALED, FT_KERNING_UNFITTED
-                      )
+from .freetype import ( Face, Vector, Matrix, FT_KERNING_UNFITTED,
+                        FT_LOAD_RENDER, FT_LOAD_FORCE_AUTOHINT )
 
 
 try:
@@ -707,11 +703,7 @@ class TextureFont:
         self.height    = metrics.height/64.0
         self.linegap   = self.height - self.ascender + self.descender
         self.depth = atlas.depth
-        try:
-            set_lcd_filter(FT_LCD_FILTER_NONE)
-        except Exception:
-            pass
-
+    
 
     def __getitem__(self, charcode):
         '''
@@ -736,7 +728,7 @@ class TextureFont:
         pen = Vector(0,0)
         hres = 16*72
         hscale = 1.0/16
-
+        # todo: use set_pixel_sizes?
         for charcode in charcodes:
             face.set_char_size( int(self.size * 64), 0, hres, 72 )
             matrix = Matrix( int((hscale) * n2_16), int((0.0) * n2_16),
@@ -747,7 +739,6 @@ class TextureFont:
 
             self.dirty = True
             flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT
-            #flags |= FT_LOAD_TARGET_LCD
 
             face.load_char( charcode, flags )
             bitmap = face.glyph.bitmap
@@ -783,7 +774,7 @@ class TextureFont:
                 data = data2
                 x,y = x-padding, y-padding
                 w,h = w+2*padding, h+2*padding
-                
+            
             self.atlas.set_region((x,y,w,h), data)
 
             # Build glyph
