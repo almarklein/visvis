@@ -38,6 +38,7 @@ from .ft_structs import (  FT_Face, FT_Glyph, FT_Matrix, FT_Vector,
 
 ## The actual library wrapper
 
+
 class FreeTypeWrapper(object):
     """ Class to find and load the FreeType dll.
     """
@@ -48,11 +49,22 @@ class FreeTypeWrapper(object):
         self._dll = None
         self._handle = None
         
-        self.load_library()
+        fname = self.find_library()
+        self.load_library(fname)
     
-    def load_library(self):
+    def find_library(self):
         
-        # Try to find the freetype library
+        # Search in resources (only when frozen)
+        if getattr(sys, 'frozen', None):
+            from visvis.core.misc import getResourceDir
+            import os
+            for fname in os.listdir(getResourceDir()):
+                if fname.lower().startswith('freetype'):
+                    return os.path.join(getResourceDir(), fname)
+        
+        # todo: try pyzo library dir
+        
+        # Try if ctypes knows where to find the freetype library
         fname = ctypes.util.find_library('freetype')
         
         # Try harder 
@@ -63,13 +75,15 @@ class FreeTypeWrapper(object):
             else:
                 fname = 'libfreetype.so.6'
         
-        # todo: try pyzo library dir
-        
         # So far so good?
-        if not fname:
+        if fname:
+            return fname
+        else:
             raise RuntimeError('Freetype library could not be found.')
-            
-        #  Try loading it
+    
+    def load_library(self, fname):
+         
+        # Try loading it
         try:
             if sys.platform.startswith('win'):
                 #dll = ctypes.windll.LoadLibrary(fname)
@@ -103,6 +117,11 @@ class FreeTypeWrapper(object):
     def __del__(self):
         self.del_library()
 
+    @property
+    def filename(self):
+        return self._fname
+    
+    @property
     def version(self):
         '''
         Return the version of the FreeType library being used as a tuple of
