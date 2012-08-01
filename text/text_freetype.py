@@ -48,9 +48,8 @@ except Exception:
 TEX_SCALE = 2.5
 
 # todo: Use subprocess.Popen().communicate(). and test on Py < 2.7
-# todo: test on Windows, make sure the falling back works smooth
 # todo: FreeType lib is installed on Mac, but in different place?
-# todo: have pyzo shop freeType lib on Windows and use that if possible.
+# todo: have pyzo ship freeType lib on Windows and use that if possible.
 # todo: When we implement full screen antialiasing, we can remove the shader here
 
 FRAGMENT_SHADER_ = """
