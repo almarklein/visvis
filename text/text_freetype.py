@@ -47,7 +47,6 @@ except Exception:
 # great!
 TEX_SCALE = 2.5
 
-# todo: Use subprocess.Popen().communicate(). and test on Py < 2.7
 # todo: FreeType lib is installed on Mac, but in different place?
 # todo: have pyzo ship freeType lib on Windows and use that if possible.
 # todo: When we implement full screen antialiasing, we can remove the shader here
@@ -406,12 +405,14 @@ class FreeTypeFontManager(FontManager):
         weight = 200 if bold else 80
         slant = 100 if italic else 0
         try:
-            fname = subprocess.check_output(['fc-match', '-f', '%{file}',
-                                    '%s:weight=%i:slant=%i' % (fontname, weight, slant)])
+            args = ['fc-match', '-f', '%{file}', 
+                        '%s:weight=%i:slant=%i' % (fontname, weight, slant)]
+            fname, err = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()
+            #py3k only: fname = subprocess.check_output(args)
             return fname.decode('utf-8') # Return as string
         except OSError:
             return ''
-        
+    
     def get_font_file_with_windows(self, fontname, bold, italic):
         
         # On Windows we know some fonts
