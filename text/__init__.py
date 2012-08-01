@@ -69,6 +69,10 @@ from .text_base import Text, Label
 from .text_prerendered import PrerenderedFontManager
 
 # Try importing the freetype font manager
+# Note that FreeType must be installed. On Linux this would usually be
+# the case, otherwise you can install it via the package manager.
+# For Windows users there is a simple installer on the Visvis website.
+# For Mac I'm not sure yet.
 try:
   from .text_freetype import FreeTypeFontManager
 except RuntimeError:
