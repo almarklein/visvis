@@ -413,7 +413,6 @@ class Face( object ):
         '''
         if self._FT_Face is not None:
             FT_Done_Face( self._FT_Face )
-        # todo: take care to delete the face where it is used
     
     def set_char_size( self, width=0, height=0, hres=72, vres=72 ):
         '''
