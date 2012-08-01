@@ -31,12 +31,8 @@ from ..core.shaders import Shader, ShaderCodePart
 from .text_base import AtlasTexture, FontManager, Text, Label
 from .text_base import correctVertices, simpleTextureDraw
 
-from .freetype import ( Face, Vector, Matrix,
-                        set_lcd_filter,
-                        FT_LOAD_RENDER, FT_LCD_FILTER_LIGHT, FT_LCD_FILTER_NONE,
-                        FT_LOAD_FORCE_AUTOHINT, FT_LOAD_TARGET_LCD, 
-                        FT_KERNING_UNSCALED, FT_KERNING_UNFITTED
-                      )
+from .freetype import ( Face, Vector, Matrix, FT_KERNING_UNFITTED,
+                        FT_LOAD_RENDER, FT_LOAD_FORCE_AUTOHINT )
 
 
 try:
@@ -51,10 +47,8 @@ except Exception:
 # great!
 TEX_SCALE = 2.5
 
-# todo: Use subprocess.Popen().communicate(). and test on Py < 2.7
-# todo: test on Windows, make sure the falling back works smooth
 # todo: FreeType lib is installed on Mac, but in different place?
-# todo: have pyzo shop freeType lib on Windows and use that if possible.
+# todo: have pyzo ship freeType lib on Windows and use that if possible.
 # todo: When we implement full screen antialiasing, we can remove the shader here
 
 FRAGMENT_SHADER_ = """
@@ -411,12 +405,14 @@ class FreeTypeFontManager(FontManager):
         weight = 200 if bold else 80
         slant = 100 if italic else 0
         try:
-            fname = subprocess.check_output(['fc-match', '-f', '%{file}',
-                                    '%s:weight=%i:slant=%i' % (fontname, weight, slant)])
+            args = ['fc-match', '-f', '%{file}', 
+                        '%s:weight=%i:slant=%i' % (fontname, weight, slant)]
+            fname, err = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()
+            #py3k only: fname = subprocess.check_output(args)
             return fname.decode('utf-8') # Return as string
         except OSError:
             return ''
-        
+    
     def get_font_file_with_windows(self, fontname, bold, italic):
         
         # On Windows we know some fonts
@@ -707,11 +703,7 @@ class TextureFont:
         self.height    = metrics.height/64.0
         self.linegap   = self.height - self.ascender + self.descender
         self.depth = atlas.depth
-        try:
-            set_lcd_filter(FT_LCD_FILTER_NONE)
-        except Exception:
-            pass
-
+    
 
     def __getitem__(self, charcode):
         '''
@@ -733,10 +725,21 @@ class TextureFont:
             Set of characters to be represented
         '''
         face = Face( self.filename )
+        try:
+            return self._load(charcodes, face)
+        finally:
+            # Make sure to clear the face. I've seen some pretty bad
+            # crashes on Windows when an exception was thrown in the code
+            # in _load(), because the hold all the variables, preventing the
+            # face from being cleared.
+            face.__del__()
+            face._FT_Face = None
+    
+    def _load(self, charcodes, face):
         pen = Vector(0,0)
         hres = 16*72
         hscale = 1.0/16
-
+        # todo: use set_pixel_sizes?
         for charcode in charcodes:
             face.set_char_size( int(self.size * 64), 0, hres, 72 )
             matrix = Matrix( int((hscale) * n2_16), int((0.0) * n2_16),
@@ -747,7 +750,6 @@ class TextureFont:
 
             self.dirty = True
             flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT
-            #flags |= FT_LOAD_TARGET_LCD
 
             face.load_char( charcode, flags )
             bitmap = face.glyph.bitmap
@@ -783,7 +785,7 @@ class TextureFont:
                 data = data2
                 x,y = x-padding, y-padding
                 w,h = w+2*padding, h+2*padding
-                
+            
             self.atlas.set_region((x,y,w,h), data)
 
             # Build glyph
