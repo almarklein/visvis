@@ -34,7 +34,14 @@ def copyResources(destPath):
         if file.startswith('.') or file.startswith('_'):
             continue
         shutil.copy(os.path.join(path,file), os.path.join(destPath,file))
-
+    # copy FreeType library to resource dir
+    try:
+        ft_filename = vv.text.freetype.FT.filename
+    except Exception:
+        ft_filename = None
+    if ft_filename:
+        fname = os.path.split(ft_filename)[1]
+        shutil.copy(ft_filename, os.path.join(destPath,fname))
 
 def getIncludes(backendName):
     """ getIncludes(backendName)
