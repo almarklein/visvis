@@ -108,12 +108,10 @@ class FreeTypeWrapper(object):
     
     def del_library(self):
         if self._handle:
-            try:
-                self._dll.FT_Done_FreeType(byref(self._handle))
-                self._handle = None
-            except:
-                pass
-        
+            # No need to try-catch; an exception in a __del__ is never shown anyway
+            self._dll.FT_Done_FreeType(self._handle)
+            self._handle = None
+    
     def __del__(self):
         self.del_library()
 
