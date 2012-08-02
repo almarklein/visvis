@@ -360,6 +360,7 @@ def newFigure():
     # Apply a draw, so that OpenGl can initialize before we will really
     # do some drawing. Otherwis textures end up showing in black.
     figure.DrawNow()
+    app.ProcessEvents() # Fixes issue 43
     return figure
 
 
