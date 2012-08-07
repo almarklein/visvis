@@ -27,7 +27,7 @@ from visvis.core.misc import getOpenGlInfo
 from visvis.core import events
 #
 from visvis.core.cameras import ortho
-from visvis.text import FontManager, BaseText
+from visvis.text import BaseText
 from visvis.core.line import MarkerManager 
 from visvis.core.axes import _BaseFigure, AxesContainer, Axes, Legend
 from visvis.core.axes import _Screenshot
@@ -219,7 +219,7 @@ class BaseFigure(_BaseFigure):
         self._underMouse = []
         
         # To store the fonts used in this figure.
-        self._fontManager = FontManager()
+        self._fontManager = visvis.text.FontManager()
         self._relativeFontSize = visvis.settings.defaultRelativeFontSize
         
         # To store the markers used in this figure
