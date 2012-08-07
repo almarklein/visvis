@@ -46,5 +46,5 @@ def grid(*args, **kwargs):
 
 if __name__ == '__main__':
     vv.figure()
-    m = grid(vv.peaks())
+    m = vv.grid(vv.peaks())
     m.colormap = vv.CM_HOT    

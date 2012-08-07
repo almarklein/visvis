@@ -185,8 +185,8 @@ def plot(data1, data2=None, data3=None,
 if __name__ == '__main__':
     vv.figure()
     vv.subplot(311)
-    vv.plot([3,4,5],[7,5,4])
+    vv.plot([1,3,1,4,1,5,1,6,1,7,6,5,4,3,2,1]) # Passing 1D data
     vv.subplot(312)
-    vv.plot([1,3,1,4,1,5,1,6,1,7,6,5,4,3,2,1])
+    vv.plot([3,4,6,7],[7,5,4,6]) # Passing 2D data
     vv.subplot(313)
-    vv.plot([3,4,5],[7,5,4], [1,2,3])
+    vv.plot([3,4,6,7],[7,5,4,6], [1,2,3,2]) # Passing 3D data

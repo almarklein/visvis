@@ -108,16 +108,9 @@ def imshow(im, clim=None, aa=2, interpolate=False, cm=None,
     return t
 
 
-if __name__ == "__main__":
-    import numpy as np
-    from visvis import Aarray
-    
-    im = np.zeros((100,100), dtype=np.float32)
-    im[40:-20,10:-5] = 0.4
-    im[30:50,40:70] = 0.4
-    im2 = Aarray(im,sampling=(0.5,1), origin=(0,105))
-    im2[:] += 0.1
-    im2[0,0] = 0
-    imshow(im)
-    imshow(im2)
-    
+
+if __name__ == '__main__':
+    im = vv.imread('lena.png')
+    im = vv.Aarray(im[:,::4,:], (1,4,1)) # Keep every 4th pixel and make them wide
+    # imshow knows about anisotropic arrays!
+    t = vv.imshow(im)

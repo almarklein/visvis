@@ -54,3 +54,8 @@ def axis(command, axes=None):
         axes.daspect = da[0], abs(da[1]), da[2]
     else:
         raise ValueError('Unknown command in vv.axis().')
+
+
+if __name__ == '__main__':
+    l = vv.plot([1,2,3,1,4,0])
+    vv.axis('off')

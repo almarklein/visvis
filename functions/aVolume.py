@@ -56,5 +56,6 @@ def aVolume(N=5, size=64):
 
 
 if __name__ == '__main__':
-    vv.figure()
-    t=vv.volshow(aVolume())
+    vol = vv.aVolume()
+    t = vv.volshow(vol)
+    t.renderStyle = 'mip' # maximum intensity projection (is the default) 

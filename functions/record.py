@@ -93,3 +93,20 @@ def record(ob):
     
     # create recorder
     return Recorder(ob)    
+
+
+if __name__ == '__main__':
+    import time
+    l = vv.plot([1,2,3,1,4])
+    rec = vv.record(vv.gcf())
+    for i in range(20):
+        l.SetYdata([1+i/10.0, 2,3,1,4])
+        vv.processEvents() # Process gui events
+        time.sleep(0.1)
+    # Export to swf, gif or avi
+    fname = 'recordExample' # note: set location to an existing directory
+    for ext in ['.swf', '.gif', '.avi']:
+        try:
+            rec.Export(fname+ext)
+        except Exception:
+            print('could not do %s' % ext)

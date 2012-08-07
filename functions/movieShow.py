@@ -44,3 +44,8 @@ def movieShow(images, clim=None, duration=0.1, axesAdjust=True, axes=None):
     
     # Return container object
     return m
+
+
+if __name__ == '__main__':
+    ims = vv.movieRead('newtonscradle.gif')
+    vv.movieShow(ims)

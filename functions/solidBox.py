@@ -101,7 +101,7 @@ def solidBox(translation=None, scaling=None, direction=None, rotation=None,
 
 
 if __name__ == '__main__':
-    vv.figure()
-    a = vv.gca()
-    m1 = solidBox((3,1,1), (2,2,1), rotation=-20)
-    m2 = solidBox((1,1,0), (1,1,1.5), direction=(1,0.4,0.2))
+    m1 = vv.solidBox((3,1,1), (2,2,1), rotation=-20)
+    m2 = vv.solidBox((1,1,0), (1,1,1.5), direction=(1,0.4,0.2))
+    m1.faceColor = 'r'
+    m2.faceColor = 'g'

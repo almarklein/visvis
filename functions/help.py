@@ -18,4 +18,4 @@ def help():
     webbrowser.open("http://code.google.com/p/visvis/wiki/Documentation")
 
 if __name__ == '__main__':
-    help()
+    vv.help()

@@ -16,3 +16,9 @@ def cla():
     a.Clear()
     return a
 
+
+if __name__ == '__main__':
+    # Show plot
+    vv.plot([1,2,3,1,4])
+    # Clear the plot
+    vv.cla()

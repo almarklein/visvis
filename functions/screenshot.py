@@ -167,5 +167,11 @@ def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
         vv.imwrite(filename, im3, format)
     else:
         return im3
-        
-    #vv.screenshot('d:/almar/projects/ims/test0.png', vv.gcf())
+
+
+if __name__ == '__main__':
+    # Make plot
+    vv.plot([1,2,3,1,4,2,3], ms='.')
+    # Take screenshot, twice enlarged, on a white background
+    vv.screenshot('screenshot.jpg', vv.gcf(), sf=2, bg='w')
+    

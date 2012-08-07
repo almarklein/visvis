@@ -411,23 +411,10 @@ class BoxPlot(vv.Wobject):
 
 
 if __name__ == '__main__':
-    
-    vv.figure(1); vv.clf()
-    a = vv.gca()
+    # Create data
     d1 = np.random.normal(1, 4, (1000,1000))
     d2 = np.random.normal(2, 3, (20,))
     d3 = np.random.uniform(-1, 3, (100,))
     d4 = [1,2,1,2.0, 8, 2, 3, 1, 2, 2, 3, 2, 2.1, 8, 8, 8, 8, 8,  1.2, 1.3, 0, 0, 1.5, 2]
-    
-    b = boxplot((d1,d2,d3, d4), width=0.8, whiskers='violin')
-    ##
-    dd = d4
-    stat = StatData(dd)
-    bins1, values1 = stat.histogram_np(normed=True)
-    bins2, values2 = stat.histogram()
-    bins3, values3 = stat.kde(     )
-    vv.figure(2); vv.clf()    
-    vv.bar(bins2, values2)#, lc='r', ms='.', mc='r')
-    vv.plot(bins3, values3)#, lc='g', ms='.', mc='g')
-    vv.plot(bins1, values1, lc='b', ms='.', mc='b', ls=':', mw=4)
-    #print(abs(bins1-bins2).sum())
+    # Show boxplot
+    b = vv.boxplot((d1,d2,d3, d4), width=0.8, whiskers='violin')

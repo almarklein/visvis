@@ -4,6 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
+import visvis as vv
 import visvis.backends as backends
 from visvis import BaseFigure
 
@@ -56,3 +57,7 @@ def figure(fig=None):
         fig = newFigure()
         fig.title = '' #_SetTitle("Figure " + str(fig.nr))
         return fig
+
+
+if __name__ == '__main__':
+    fig = vv.figure()

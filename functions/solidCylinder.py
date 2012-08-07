@@ -153,5 +153,5 @@ def solidCylinder(translation=None, scaling=None, direction=None, rotation=None,
 
 if __name__ == '__main__':
     vv.figure()
-    m1 = solidCylinder(N=6)
-    m2 = solidCylinder(translation=(0,0,0.1), scaling=(0.5,0.5,2.5))
+    m1 = vv.solidCylinder(N=6) # With N<8, faceShading is 'flat' by default
+    m2 = vv.solidCylinder(translation=(0,0,0.1), scaling=(0.5,0.5,2.5))

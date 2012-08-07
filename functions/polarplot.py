@@ -213,6 +213,4 @@ if __name__ == '__main__':
     # Show data
     vv.polarplot( angs, mag, lc='b')
     vv.polarplot(angs+20, mag, lc='r', lw=2)
-    
-    axes = vv.gca()
-    
+    a = vv.gca() # Triggers an update required for polar plots

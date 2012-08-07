@@ -13,6 +13,9 @@ def draw(figure=None, fast=False):
     If fast is True, some wobjects can draw itself faster at reduced
     quality.
     
+    This function is now more or less deprecated; visvis is designed to 
+    invoke a draw whenever necessary.
+    
     """ 
     
     # Get figure
@@ -21,3 +24,14 @@ def draw(figure=None, fast=False):
     
     # Draw!
     figure.Draw(fast)
+
+
+if __name__ == '__main__':
+    import time
+    fig = vv.figure()
+    l = vv.plot([1,2,3,1,4])
+    for i in range(20):
+        l.SetYdata([1+i/10.0, 2,3,1,4])
+        vv.draw(fig) # Note: not even necessary
+        vv.processEvents();
+        time.sleep(0.1)

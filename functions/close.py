@@ -27,3 +27,12 @@ def close(fig):
         fig.Destroy()
     else:
         raise ValueError('Invalid argument for vv.functions.close')
+
+if __name__ == '__main__':
+    import time
+    # Create figure
+    fig = vv.figure(1)
+    vv.processEvents(); vv.processEvents()
+    time.sleep(1.0)
+    # Close it
+    vv.close(1) # Note: you can also pus the fig object

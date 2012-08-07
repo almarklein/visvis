@@ -46,4 +46,4 @@ def kde(data, bins=None, kernel=None, **kwargs):
 if __name__ == '__main__':
     vv.clf()
     data = np.random.normal(7,2,size=(100,100))    
-    b = kde(data, lc='r')
+    b = vv.kde(data, lc='r')

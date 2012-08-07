@@ -31,3 +31,12 @@ def view(viewparams=None, axes=None, **kw):
         axes.SetView(viewparams, **kw)
     else:
         return axes.GetView()
+
+
+if __name__=='__main__':
+    a = vv.gca()
+    vv.solidTeapot()
+    v = vv.view()
+    # ... rotate the figure a bit and then call:
+    vv.view(v)
+    # Note that a.GetView() and a.SetView(v) are equivalent

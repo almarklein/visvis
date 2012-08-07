@@ -45,3 +45,10 @@ def use(backendName=None):
     
     """
     return vv.backends.use(backendName)
+
+if __name__=='__main__':
+    app = vv.use() # No arg provided: select backend automatically
+    print('Selected backend is %s.' % app.GetBackendName())
+    app.Create() # Create the backend's application
+    app.Run() # Enter the backend's mainloop (not in interactive mode)
+    

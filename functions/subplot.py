@@ -111,9 +111,12 @@ def subplot(*args):
 
 if __name__ == "__main__":
     f = vv.figure()
-    a1=vv.subplot(221); a1.cameraType = '2d'
-    a2=vv.subplot(224)    
-    a3=vv.subplot(221)
-    a3=vv.subplot(333)
-    f.Draw()
-    print(a1 is a3)
+    # Get axes on 2x2 grid
+    a1 = vv.subplot(221)
+    a2 = vv.subplot(221)
+    a3 = vv.subplot(224)    
+    # Get axes on 3x3 grid
+    a4 = vv.subplot(331) # (center is inside 221)
+    a5 = vv.subplot(333)
+    # Check
+    print(a1 is a2, a1 is a4)

@@ -79,7 +79,7 @@ def volshow3(vol, clim=None, renderStyle='mip', cm=None,
 
 
 if __name__ == "__main__":
-    import visvis as vv
     vol = vv.aVolume()
-    vol[:30,:30,:30] += 0.3
-    t = volshow3(vol)
+    t = vv.volshow3(vol)
+    t.renderStyle = 'iso' # Isosurface rendering instead of MIP
+    t.isoThreshold = 0.1

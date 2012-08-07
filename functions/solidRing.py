@@ -135,10 +135,6 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
 
 
 if __name__ == '__main__':
-    import visvis as vv
-    vv.figure()
-    # Create rings
-    m1 = solidRing((0,0,1), M=4)
-    m2 = solidRing((0,0,2))
-    im = vv.imread('lena.png')
-    m1.SetTexture(im)
+    m1 = vv.solidRing((0,0,1), N=64, M=4, thickness=0.5)
+    m2 = vv.solidRing((0,0,2), N=64, thickness=0.25)
+    m1.SetTexture( vv.imread('lena.png') )

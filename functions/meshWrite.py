@@ -69,14 +69,5 @@ def meshWrite(fname, mesh, name='', bin=True):
 
 
 if __name__ == '__main__':
-    
-    bm = vv.meshRead('/home/almar/projects/teapot2.obj')
-    fname = '/home/almar/projects/test.obj'
-    meshWrite(fname, bm, bin=False)
-    bm = vv.meshRead(fname)
-    
-    vv.figure(1); vv.clf()
-    a = vv.subplot(121)
-    m = vv.mesh(bm)
-    #a.SetLimits()
-    
+    bm = vv.meshRead('bunny.ssdf')
+    vv.meshWrite('bunny.obj', bm)

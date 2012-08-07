@@ -25,7 +25,6 @@ def xlabel(text, axes=None):
     axes.axis.xLabel = text
 
 if __name__=='__main__':
-    vv.figure()
     a = vv.gca()
     a.cameraType = '2d'    
-    xlabel('label test')
+    vv.xlabel('label test')

@@ -207,8 +207,5 @@ class Bars2D(vv.Wobject):
 
 
 if __name__ == '__main__':
-    
-    vv.figure(1); vv.clf()
-    a = vv.gca()
-    b = bar([1,2,1,5])
+    b = vv.bar([1,2,1,5])
     
