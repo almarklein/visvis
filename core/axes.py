@@ -1151,7 +1151,7 @@ class Legend(DraggableBox):
         label.position = self._xoffset*2 + twoPoints*self._linelen, y
         deltax, deltay = label.GetVertexLimits()
         #y2 = label.position.h / 2
-        y2 = (deltay[1] - deltay[0]) / 2 
+        y2 = (deltay[1] + deltay[0]) / 2 
         # create 2-element pointset
         pp = Pointset(2)        
         pp.append(self._xoffset, y + y2)
@@ -1234,8 +1234,8 @@ class Legend(DraggableBox):
             self.position.w = maxWidth + pos.x + self._xoffset
             #self.position.h = pos.bottom + self._yoffset
             deltax, deltay = label.GetVertexLimits()
-            labelHeight = deltay[1] - deltay[0]
-            self.position.h = pos.top + labelHeight + self._yoffset
+            labelHeight = deltay[1]# - deltay[0]
+            self.position.h = pos.top + labelHeight + self._yoffset + 2
             self.visible = True
         else:
             self.visible = False
