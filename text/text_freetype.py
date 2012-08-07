@@ -444,8 +444,6 @@ class FreeTypeFontManager(FontManager):
         
         # Init arrays
         vertices = np.zeros((len(tt)*4,3), dtype=np.float32)
-        indices  = np.zeros((len(tt)*6, ), dtype=np.uint)
-        colors   = np.zeros((len(tt)*4,4), dtype=np.float32)
         texcoords = np.zeros((len(tt)*4,2), dtype=np.float32)
         
         # Prepare
@@ -454,10 +452,10 @@ class FreeTypeFontManager(FontManager):
         prev = None
         
         # Calculate font size
-        # todo: I can also imagine doing it the other way around;
-        # textSize becomes as FreeType sees it, and we scale the fonts
-        # in the prerendered text renderer. We'd have to change all the 
-        # uses fontSize though.
+        # note: I can also imagine doing it the other way around; i.e. textSize 
+        # becomes as FreeType sees it, and we scale the fonts in the 
+        # prerendered text renderer. We'd have to change all the 
+        # uses fontSize though. So this is simply easier.
         fontSize = textObject.fontSize * 1.4 * TEX_SCALE
         fig = textObject.GetFigure()
         if fig:
@@ -515,15 +513,11 @@ class FreeTypeFontManager(FontManager):
             v1 = glyph.texcoords[3]
 
             index     = i*4
-            _indices   = [index, index+1, index+2, index, index+2, index+3]
             _vertices  = [[x0,y0,1],[x0,y1,1],[x1,y1,1], [x1,y0,1]]
             _texcoords = [[u0,v0],[u0,v1],[u1,v1], [u1,v0]]
-            _colors    = [textObject.textColor + (1.0,),]*4
 
             vertices[i*4:i*4+4] = _vertices
-            indices[i*6:i*6+6] = _indices
             texcoords[i*4:i*4+4] = _texcoords
-            colors[i*4:i*4+4] = _colors
             pen[0] = pen[0]+glyph.advance[0]/64.0 + kerning
             pen[1] = pen[1]+glyph.advance[1]/64.0
             prev = charcode
@@ -543,15 +537,14 @@ class FreeTypeFontManager(FontManager):
         self.atlas.upload()
         
         # Store data. 
-        # todo: Why did we calculate indices anc colors. We dont need these, right?
-        textObject._SetCompiledData(vertices, indices, texcoords, colors)
+        textObject._SetCompiledData(vertices, texcoords)
     
     
     def Position(self, textObject):
         FontManager.Position(self, textObject)
         
         # Get data
-        vertices, indices, texcoords, colors = textObject._GetCompiledData()
+        vertices, texcoords = textObject._GetCompiledData()
         vertices = vertices.copy()
         
         # Use default algorithm to correct the vertices for alginment and angle
@@ -559,14 +552,14 @@ class FreeTypeFontManager(FontManager):
         correctVertices(textObject, vertices, font.height/TEX_SCALE)
         
         # Store
-        textObject._SetFinalData(vertices, indices, texcoords, colors)
+        textObject._SetFinalData(vertices, texcoords)
     
     
     def Draw(self, textObject, x=0, y=0, z=0):
         FontManager.Draw(self, textObject)
         
         # Get data
-        vertices, indices, texCords, colors = textObject._GetFinalData()
+        vertices, texCords = textObject._GetFinalData()
         
         # Translate
         if x or y or z:
@@ -580,92 +573,7 @@ class FreeTypeFontManager(FontManager):
         
         # Un-translate
         if x or y or z:
-            gl.glPopMatrix()   
-        
-#         # Enable texture atlas
-#         self.atlas.Enable()
-#         
-#         # init vertex and texture array
-#         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-#         gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-#         gl.glVertexPointerf(vertices)
-#         gl.glTexCoordPointerf(texCords)
-#         
-#         gl.glColorPointer(4, gl.GL_FLOAT, 0, colors)
-#         
-#         # draw
-#         if textObject.textColor and len(vertices):
-#             clr = textObject.textColor
-#             gl.glColor(clr[0], clr[1], clr[2])
-#             gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
-#             #gl.glDrawElements(gl.GL_TRIANGLES, len(indices),
-#             #              gl.GL_UNSIGNED_INT, indices)
-#             gl.glFlush()
-#         
-#         # disable texture and clean up     
-#         if x or y or z:
-#             gl.glPopMatrix()   
-#         self.atlas.Disable()
-#         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-#         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-    
-    
-    def Draw_sub(self, textObject, x=0, y=0, z=0):
-        FontManager.Draw(self, textObject)
-        
-        # Get data
-        vertices, indices, texcoords, colors = textObject._GetFinalData()
-        
-        # Set up the subpixel rendering.  The basic idea is that the vertices
-        # should be shifted to integers to align with the pixel grid, and the
-        # error accounted for in the vertex attribute.  This is complicated by
-        # Labels, with may have a fractional pixel offset already (stored in
-        # textObject._xoffset), so we shift the vertices to have a negative offset to
-        # line them back up with pixel grid.
-        vertices = vertices + np.array([x+textObject._shift[0], y+textObject._shift[1], z], dtype=np.float32)
-        xint = np.floor(vertices[:,0] + textObject._xoffset)
-        attrib = vertices[:,0] + textObject._xoffset - xint
-        vertices[:,0] = xint - textObject._xoffset
-        attrib.shape = (-1,1)
-        
-        self.atlas.Enable()
-        
-        gl.glEnable( gl.GL_TEXTURE_2D )
-        gl.glDisable( gl.GL_DEPTH_TEST )
-
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glEnableClientState(gl.GL_COLOR_ARRAY)
-        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-        gl.glColorPointer(4, gl.GL_FLOAT, 0, colors)
-        gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, texcoords)
-
-        alpha = 1
-        gl.glEnable( gl.GL_COLOR_MATERIAL )
-        gl.glBlendFunc( gl.GL_CONSTANT_COLOR_EXT,
-                        gl.GL_ONE_MINUS_SRC_COLOR )
-        gl.glEnable( gl.GL_BLEND )
-        gl.glColor3f( alpha, alpha, alpha )
-        gl.glBlendColor( 1-alpha, 1-alpha, 1-alpha, 1 )
-        gl.glEnableVertexAttribArray( 1 );
-        gl.glVertexAttribPointer( 1, 1, gl.GL_FLOAT, gl.GL_FALSE, 0, attrib)
-#         shader = get_shader()
-#         shader.bind()
-#         shader.uniformi('texture', 0)
-#         shader.uniformf('pixel', 1.0/512, 1.0/512)
-        gl.glDrawElements(gl.GL_TRIANGLES, len(indices),
-                          gl.GL_UNSIGNED_INT, indices)
-#         shader.unbind()
-        
-        self.atlas.Disable()
-        gl.glDisableVertexAttribArray( 1 );
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glDisableClientState(gl.GL_COLOR_ARRAY)
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        gl.glDisable( gl.GL_TEXTURE_2D )
-        gl.glDisable( gl.GL_BLEND )
+            gl.glPopMatrix() 
     
 
 class TextureFont:

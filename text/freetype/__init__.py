@@ -62,8 +62,6 @@ class FreeTypeWrapper(object):
                 if fname.lower().startswith('freetype'):
                     return os.path.join(getResourceDir(), fname)
         
-        # todo: try pyzo library dir
-        
         # Try if ctypes knows where to find the freetype library
         fname = ctypes.util.find_library('freetype')
         
