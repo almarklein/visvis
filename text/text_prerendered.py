@@ -28,7 +28,7 @@ class Font:
         self.atlas = PrerenderedAtlas()
         self.atlas.SetData(info.data)
 
-# todo: we changed some unicode symbols, are they unavailable now in this renderer?
+
 class PrerenderedFontManager(FontManager):
     
     def __init__(self):
