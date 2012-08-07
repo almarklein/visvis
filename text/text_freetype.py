@@ -334,7 +334,6 @@ class FreeTypeFontManager(FontManager):
     
     @property
     def shader(self):
-        # todo: disable when opengl version < 2.0
         if self._shader is None:
             if not getOpenGlCapable('2.0', 'Antialiased text'):
                 self._shader = self
