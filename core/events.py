@@ -588,7 +588,7 @@ class Timer(BaseEvent):
         """
         
         # test calLaters first        
-        for calltime in _callLater_callables.keys():
+        for calltime in [key for key in _callLater_callables.keys()]:
             if calltime < time.time():
                 callable, args, kwargs = _callLater_callables.pop(calltime)
                 callable(*args, **kwargs)
