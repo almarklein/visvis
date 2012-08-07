@@ -85,7 +85,5 @@ def volshow2(vol, clim=None, renderStyle=None, cm=None,
 
 
 if __name__ == "__main__":
-    import visvis as vv
     vol = vv.aVolume()
-    vol[:30,:30,:30] += 0.3
-    t = volshow2(vol)
+    t = vv.volshow2(vol)

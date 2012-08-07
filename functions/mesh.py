@@ -100,3 +100,10 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
     # Return
     axes.Draw()
     return m
+
+
+if __name__ == '__main__':
+    # Create BaseMesh object (has no visualization props)
+    bm = vv.meshRead('teapot.ssdf')
+    # Show it, returning a Mesh object (which does have visualization props)
+    m = vv.mesh(bm)

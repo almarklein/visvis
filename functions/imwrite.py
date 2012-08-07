@@ -5,6 +5,7 @@
 # The full license can be found in 'license.txt'.
 
 import numpy as np
+import visvis as vv
 
 # Try importing imageio or PIL
 imageio = None
@@ -22,7 +23,7 @@ except ImportError:
 def imwrite(filename, image, format=None):
     """ imwrite(filename, image, format=None)
     
-    Write image (numpy array) to file, requires PIL. 
+    Write image (numpy array) to file, requires imageio or PIL. 
     
     Parameters
     ----------
@@ -73,3 +74,8 @@ def imwrite(filename, image, format=None):
     elif PIL:
         pim = PIL.Image.fromarray(image)
         pim.save(filename, format)
+
+
+if __name__ == '__main__':
+    im = vv.imread('lena.png')
+    vv.imwrite('lena_new.jpg', im)

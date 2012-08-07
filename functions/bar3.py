@@ -198,11 +198,8 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
     
     
 if __name__ == '__main__':
-    vv. figure()    
-    b = bar3([1,2,3,2,4,3], width=0.5) 
-    a = vv.gca()
+    a = vv.gca()   
+    b = vv.bar3([1,2,3,2,4,3], width=0.5)
     a.axis.showGrid = 1
     a.axis.xTicks = ['Januari', 'Februari', 'March', 'April', 'May', 'June']
     b.colors = 'rgbcmy'
-    
-    

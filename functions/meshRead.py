@@ -81,9 +81,7 @@ def meshRead(fname, check=False):
 
     
 if __name__ == '__main__':
-    
-    bm = meshRead('bunny.ssdf')
-    
-    vv.figure(1); vv.clf()
-    a = vv.subplot(121)
+    # Create BaseMesh object (has no visualization props)
+    bm = vv.meshRead('bunny.ssdf')
+    # Show it, returning a Mesh object (which does have visualization props)
     m = vv.mesh(bm)

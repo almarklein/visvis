@@ -140,4 +140,6 @@ def ginput(N=0, axes=None, ms='+', **kwargs):
 
 
 if __name__ == '__main__':
+    vv.cla()
+    vv.title('Selec three points.')
     print(vv.ginput(3))

@@ -16,3 +16,9 @@ def clf():
     f.Clear()
     return f
 
+
+if __name__ == '__main__':
+    # Show plot
+    vv.plot([1,2,3,1,4])
+    # Clear the whole figure
+    vv.clf()

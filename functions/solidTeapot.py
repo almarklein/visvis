@@ -78,5 +78,5 @@ def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
 
 
 if __name__ == '__main__':
-    vv.figure()
-    m = solidTeapot(direction=(0.1, 0.2, 1))
+    m = vv.solidTeapot(direction=(0.1, 0.2, 1))
+    m.faceShading = 'toon' # Let's try the 'toon' shader for a change!

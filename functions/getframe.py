@@ -60,21 +60,20 @@ def getframe(ob):
 if __name__ == '__main__':
     import time
     
+    # Prepare
     f = vv.figure()
     a1 = vv.subplot(211)
     a2 = vv.subplot(212)
     
+    # Draw some data
     vv.plot([2,3,4,2,4,3], axes=a1)
+    f.DrawNow()
     
-    for i in range(4):
-        # draw and wait a bit
-        f.DrawNow()
-        time.sleep(1)
-        # make snapshots
-        im1 = getframe(f)
-        im2 = getframe(a1)
-        # clear and show snapshots
-        a1.Clear()
-        a2.Clear()
-        vv.imshow(im1,axes=a1, clim=(0,1))
-        vv.imshow(im2,axes=a2, clim=(0,1))
+    # Take snapshots
+    im1 = vv.getframe(f)
+    im2 = vv.getframe(a1)
+    # clear and show snapshots
+    a1.Clear()
+    a2.Clear()
+    vv.imshow(im1,axes=a1, clim=(0,1))
+    vv.imshow(im2,axes=a2, clim=(0,1))

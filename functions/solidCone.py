@@ -139,9 +139,5 @@ def solidCone(translation=None, scaling=None, direction=None, rotation=None,
 
 
 if __name__ == '__main__':
-    vv.figure()
-    m = solidCone(N=8)
-    im = vv.imread('lena.png')
-    m.SetTexture(im)    
-    m._normals = None
-    m.Draw()
+    m = vv.solidCone(N=12)
+    m.SetTexture( vv.imread('lena.png') )

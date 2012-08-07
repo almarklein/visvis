@@ -167,7 +167,6 @@ def surf(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    
     # Read image and smooth a bit
     lena = vv.imread('lena.png').astype(np.float32)
     im = lena.copy()
@@ -176,7 +175,6 @@ if __name__ == "__main__":
     im[:,:-1,:] += lena[:,1:,:]
     im[:,1:,:] += lena[:,:-1,:]
     im /= 4
-    
     # Surf
-    m = surf(im[:,:,0], im)
+    m = vv.surf(im[:,:,0], im)
     

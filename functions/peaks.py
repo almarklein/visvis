@@ -206,5 +206,4 @@ SbBf9Ta9Pm47vatJi3Y7X0ktU9lEATEJauXfM4JLdtMF3eEF/Ofj1vzVtrd4a7UteP8DD6jBLg==
 """
 
 if __name__ == "__main__":
-    vv.figure()
     m = vv.surf(peaks())

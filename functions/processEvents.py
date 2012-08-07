@@ -23,3 +23,11 @@ def processEvents():
     app = vv.backends.currentBackend.app
     if app:
         app.ProcessEvents()
+
+if __name__ == '__main__':
+    import time
+    l = vv.plot([1,2,3,1,4])
+    for i in range(20):
+        l.SetYdata([1+i/10.0, 2,3,1,4])
+        vv.processEvents() # Process gui events
+        time.sleep(0.1)

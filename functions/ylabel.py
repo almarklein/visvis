@@ -25,7 +25,6 @@ def ylabel(text, axes=None):
     axes.axis.yLabel = text
 
 if __name__=='__main__':
-    vv.figure()
     a = vv.gca()
     a.cameraType = '2d'    
-    ylabel('label test')
+    vv.ylabel('label test')

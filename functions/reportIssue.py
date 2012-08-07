@@ -15,4 +15,4 @@ def reportIssue():
     webbrowser.open("http://code.google.com/p/visvis/issues/list")
 
 if __name__ == '__main__':
-    reportIssue()
+    vv.reportIssue()

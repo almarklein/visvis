@@ -25,7 +25,7 @@ except ImportError:
 def imread(filename):
     """ imread(filename) 
     
-    Read image from a file, requires PIL. 
+    Read image from a file, requires imageio or PIL. 
     
     """
     
@@ -58,3 +58,8 @@ def imread(filename):
         del im
     
     return a
+
+
+if __name__ == '__main__':
+    im = vv.imread('lena.png')
+    t = vv.imshow(im)

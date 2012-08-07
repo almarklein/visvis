@@ -19,3 +19,12 @@ def colorbar(axes=None):
         axes = vv.gca()
     
     return vv.Colorbar(axes)
+
+
+if __name__ == '__main__':
+    # Create and show grayscale image, using a colormap
+    im = vv.imread('lena.png')[:,:,0]
+    t = vv.imshow(im)
+    t.colormap = vv.CM_COPPER
+    # Show how the values map to colors
+    vv.colorbar()

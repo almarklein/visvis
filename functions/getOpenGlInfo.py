@@ -28,3 +28,13 @@ def getOpenGlInfo():
     fig._ProcessGuiEvents() # so it can close
     
     return result
+
+if __name__ == '__main__':
+    # get info
+    version, vendor, renderer, ext = vv.getOpenGlInfo()
+    # print!
+    print('Information about the OpenGl version on this system:\n')
+    print('version:    ' + version)
+    print('vendor:     ' + vendor)
+    print('renderer:   ' + renderer)
+    print('extensions: ' + str(len(ext.split())) + ' different extensions')

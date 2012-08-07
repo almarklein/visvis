@@ -29,3 +29,6 @@ def gcf():
         BaseFigure._currentNr = nr
     
     return BaseFigure._figures[nr]
+
+if __name__ == '__main__':
+    fig = vv.gcf()

@@ -257,7 +257,5 @@ def solidSphere(translation=None, scaling=None, direction=None, rotation=None,
 
 
 if __name__ == '__main__':
-    vv.figure()
-    m = solidSphere(scaling=(1,1,1.5), direction=(1,1,3))
-    im = vv.imread('lena.png')
-    m.SetTexture(im)    
+    m = vv.solidSphere(scaling=(1,1,1.5), direction=(1,1,3))
+    m.SetTexture( vv.imread('lena.png') )    

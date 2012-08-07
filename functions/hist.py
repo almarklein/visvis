@@ -65,9 +65,10 @@ def hist(data, bins=None, drange=None, normed=False, weights=None):
     dbin = centers[1] - centers[0]
     return vv.bar(centers, values, width=dbin*0.9)
     #return vv.plot(centers, values, **kwargs)
-    
+
+
 if __name__ == '__main__':
     vv.clf()
     data = np.random.normal(7,2,size=(100,100))
-    b = hist(data)
+    b = vv.hist(data)
     b.color = 'r'

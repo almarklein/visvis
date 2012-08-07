@@ -49,7 +49,5 @@ def volshow(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    import visvis as vv
     vol = vv.aVolume()
-    vol[:30,:30,:30] += 0.3
-    t = volshow(vol)
+    t = vv.volshow(vol)

@@ -66,13 +66,14 @@ def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):
     
     
     
-if __name__ == '__main__':    
+if __name__ == '__main__': 
+    # Create series of points
     pp = Pointset(3)
     pp.append(0,1,0)
     pp.append(3,2,1)
     pp.append(4,5,2)
     pp.append(2,3,1)
     pp.append(0,4,0)
-#     pp.append(0,1,0)
-    vv.figure()
-    m = solidLine(pp, [0.1, 0.2, 0.3, 0.03, 0.2], 8)
+    #pp.append(0,1,0) # Circular
+    # Make a surface-line with varying diameter
+    m = vv.solidLine(pp, [0.1, 0.2, 0.3, 0.1, 0.2], 8)
