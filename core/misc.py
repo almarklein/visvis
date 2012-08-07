@@ -415,16 +415,10 @@ def isFrozen():
     """ isFrozen
     
     Returns whether this is a frozen application
-    (using bbfreeze or py2exe) by finding out what was
-    the executable name to start the application.
+    (using bbfreeze or py2exe). From pyzolib.paths.py
     
     """
-    ex = os.path.split(sys.executable)[1]
-    ex = os.path.splitext(ex)[0]
-    if ex.lower().startswith('python'):
-        return False
-    else:
-        return True
+    return bool( getattr(sys, 'frozen', None) )
 
 
 def getResourceDir():

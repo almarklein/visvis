@@ -43,10 +43,7 @@ For more help, see ...
 
 """
 
-# todo: get pypoints from elsewhere?
-# todo: get isFrozen from pyzolib
 # todo: more lazy imports for io and vvmovie
-
 # todo: test vvMovie import and exports, they probably need encoding stuff
 
 __version__  = '1.6.dev' 
