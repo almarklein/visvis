@@ -22,7 +22,7 @@ import math
 import numpy as np
 import OpenGL.GL as gl
 
-from visvis.core.misc import getResourceDir
+from visvis.core.misc import getResourceDir, getOpenGlCapable
 
 import subprocess
 
@@ -336,16 +336,23 @@ class FreeTypeFontManager(FontManager):
     def shader(self):
         # todo: disable when opengl version < 2.0
         if self._shader is None:
-            # Create shader
-            self._shader = Shader()
-            # Set fragment code, vertex code is empty
-            self._shader.vertex.Clear()
-            fragment = ShaderCodePart('textaa', '', FRAGMENT_SHADER)
-            self._shader.fragment.AddPart(fragment)
-            # Set uniform
-            shape = self.atlas.data.shape[:2]
-            uniform_shape = [float(s) for s in reversed(list(shape))]
-            self.shader.SetStaticUniform('shape', uniform_shape)
+            if not getOpenGlCapable('2.0', 'Antialiased text'):
+                self._shader = self
+                self.Enable = lambda: None
+                self.Disable = lambda: None
+                global TEX_SCALE
+                TEX_SCALE = 1.5 # Make text more blurry
+            else:
+                # Create shader
+                self._shader = Shader()
+                # Set fragment code, vertex code is empty
+                self._shader.vertex.Clear()
+                fragment = ShaderCodePart('textaa', '', FRAGMENT_SHADER)
+                self._shader.fragment.AddPart(fragment)
+                # Set uniform
+                shape = self.atlas.data.shape[:2]
+                uniform_shape = [float(s) for s in reversed(list(shape))]
+                self.shader.SetStaticUniform('shape', uniform_shape)
         
         return self._shader
     
@@ -461,7 +468,8 @@ class FreeTypeFontManager(FontManager):
         if fig:
             fontSize *= fig._relativeFontSize
         
-        # Store integer fontsize and residu
+        # Store tex_scale, integer fontsize and residu
+        textObject._tex_scale = TEX_SCALE
         textObject._actualFontSize = int(round(fontSize)) 
         
         fonts = [(self.GetFont(textObject.fontName, textObject._actualFontSize), 0, False, False)]
@@ -556,6 +564,10 @@ class FreeTypeFontManager(FontManager):
     
     
     def Draw(self, textObject, x=0, y=0, z=0):
+        # Check if we need to recompile in case TEX_SCALE was changed
+        if hasattr(textObject, '_tex_scale') and  textObject._tex_scale != TEX_SCALE:
+            textObject.Invalidate()
+        
         FontManager.Draw(self, textObject)
         
         # Get data
