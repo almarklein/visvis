@@ -8,13 +8,19 @@ import visvis as vv
 import numpy as np
 import os
 
-try:
-    import PIL.Image
-except ImportError:
-    PIL = None
-
-# todo: use imageio
+# Try importing imageio or PIL
 imageio = None
+PIL = None
+#
+try:
+    import imageio
+except ImportError:
+    try:
+        import PIL.Image
+    except ImportError:
+        pass
+
+
 
 def imread(filename):
     """ imread(filename) 
@@ -23,8 +29,8 @@ def imread(filename):
     
     """
     
-    if PIL is None and imageio is None:
-        raise RuntimeError("visvis.imread requires the PIL package.")
+    if imageio is None and PIL is None:
+        raise RuntimeError("visvis.imread requires the imageio or PIL package.")
     
     if not os.path.isfile(filename):
         # try loadingpil from the resource dir
@@ -35,21 +41,20 @@ def imread(filename):
         else:
             raise IOError("Image '%s' does not exist." % filename)
     
-    if PIL:
+    if imageio:
+        # Get image as a numpy array
+        a = imageio.imread(filename)
+    
+    elif PIL:
         # Get Pil image and convert if we need to
         im = PIL.Image.open(filename)
         if im.mode == 'P':
             im = im.convert()
-        
         # Make numpy array
         a = np.asarray(im)
         if len(a.shape)==0:
             raise MemoryError("Too little memory to convert PIL image to array")
-        
+        # cleanup
         del im
-    
-    elif imageio:
-        # Get image as a numpy array
-        a = imageio.imread(filename)
     
     return a

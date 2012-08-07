@@ -6,10 +6,18 @@
 
 import numpy as np
 
+# Try importing imageio or PIL
+imageio = None
+PIL = None
+#
 try:
-    import PIL.Image
+    import imageio
 except ImportError:
-    PIL = None
+    try:
+        import PIL.Image
+    except ImportError:
+        pass
+
 
 def imwrite(filename, image, format=None):
     """ imwrite(filename, image, format=None)
@@ -34,8 +42,8 @@ def imwrite(filename, image, format=None):
     
     """
     
-    if PIL is None:
-        raise RuntimeError("visvis.imwrite requires the PIL package.")
+    if imageio is None and PIL is None:
+        raise RuntimeError("visvis.imwrite requires the imageio or PIL package.")
     
     # check image
     if len(image.shape) == 2:
@@ -60,5 +68,8 @@ def imwrite(filename, image, format=None):
         image = image.astype(np.uint8)
     
     # write image
-    pim = PIL.Image.fromarray(image)
-    pim.save(filename, format)
+    if imageio:
+        imageio.imsave(filename, image, format)
+    elif PIL:
+        pim = PIL.Image.fromarray(image)
+        pim.save(filename, format)
