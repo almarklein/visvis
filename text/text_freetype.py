@@ -47,7 +47,6 @@ except Exception:
 # great!
 TEX_SCALE = 2.5
 
-# todo: FreeType lib is installed on Mac, but in different place?
 # todo: have pyzo ship freeType lib on Windows and use that if possible.
 # todo: When we implement full screen antialiasing, we can remove the shader here
 
@@ -407,6 +406,8 @@ class FreeTypeFontManager(FontManager):
             return ''
     
     def get_font_file_with_fcmatch(self, fontname, bold, italic):
+        # fc-match is (almost?) always present in Linux.
+        # fc-match is available on Mac, not sure if installed by default
         
         weight = 200 if bold else 80
         slant = 100 if italic else 0
