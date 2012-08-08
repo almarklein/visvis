@@ -13,6 +13,16 @@ Defines a wibject and a wobject: Label and Text,
 which are both able to produce a single line of text
 oriented at a certain angle.
 
+Visvis used the FreeType library to render text, enabling good-looking text
+(with proper kerning and anti-aliasing) at any size. If FreeType is not 
+available, visvis falls back on system that uses pre-rendered fonts. 
+FreeType is available:
+
+  * On Linux: by default
+  * On Windows: needs to be installed (there is an installer on the visvis website)
+  * On Mac: probably needs to be installed (also fc-match if you want to 
+    make use of other fonts then the default.
+
 
 Formatting
 ----------
