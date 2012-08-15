@@ -51,10 +51,8 @@ class BaseObject(object):
         self._visible = True
         # whether the object is currently being drawn
         self._isbeingdrawn = False
-        # whether the object prevents events from propagating to its parent
-        self._hitTest = False
         # whether the object should draw its shape
-        self._shouldDrawShape = False
+        self._hitTest = False
         # the parent object
         self._parent = None        
         # the children of this object
@@ -145,12 +143,12 @@ class BaseObject(object):
         This method is called by the event objects when handlers are
         added or removed.
         """
-        self._shouldDrawShape = False
+        self._hitTest = False
         for name in dir(self.__class__):
             if name.startswith('event'):
                 event = getattr(self, name, None)
                 if event and event.hasHandlers:
-                    self._shouldDrawShape = True
+                    self._hitTest = True
                     break
     
     
@@ -175,7 +173,7 @@ class BaseObject(object):
         self._isbeingdrawn = True
         try:
             if mode==DRAW_SHAPE:
-                if self._shouldDrawShape:
+                if self._hitTest:
                     clr = pickerHelper.GetColorFromId(self._id)
                     self.OnDrawShape(clr)
             elif mode==DRAW_SCREEN:
@@ -354,9 +352,9 @@ class BaseObject(object):
     
     @misc.Property
     def hitTest():
-        """ Get/Set whether this object prevents events from propagating to
-        its parent. In general this property should be avoided, but it is
-        maintained for backwards compatibility.
+        """ Get/Set whether mouse events are generated for this object.
+        From v1.7 this property is set automatically, and need not be set 
+        to receive mouse events.
         """
         def fget(self):
             return self._hitTest

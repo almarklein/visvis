@@ -61,8 +61,6 @@ class SliceTexture(BaseTexture):
         self._refPos = (0,0)
         self._refIndex = 0
         #
-        self.hitTest = True
-        #
         self.eventEnter.Bind(self._OnMouseEnter)
         self.eventLeave.Bind(self._OnMouseLeave)
         self.eventMouseDown.Bind(self._OnMouseDown)
