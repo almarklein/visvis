@@ -109,23 +109,18 @@ class BaseEvent:
     
     """
     
-    def __init__(self, owner):
-        # users should not change type, owner or handlers.       
+    _PROPAGATE = False
+    
+    def __init__(self, owner):   
         self._owner = weakref.ref(owner)
         self._handlers = []
         self._modifiers = ()
+        self._setArgs = [] # The arguments passed to the Set method
     
-    
-    def Set(self, modifiers=()):
-        """ Set(modifiers) 
-        
-        Set the event properties before firing it. In the base event
-        the only property is the modifiers state, a tuple of the 
-        modifier keys currently pressed.
-        
+    def _SetArgs(self, *args):
+        """ This should be called in the Set method.
         """
-        self._modifiers = modifiers
-    
+        self._setArgs = args
     
     @property
     def owner(self):
@@ -140,12 +135,18 @@ class BaseEvent:
         """
         return self.__class__
     
+    @property
+    def eventName(self):
+        """ The name of this event.
+        """
+        className = self.__class__.__name__
+        return className[0].lower() + className[1:]
     
     @property
-    def modifiers(self):
-        """ The modifier keys active when the event occurs.
+    def hasHandlers(self):
+        """ Get whether this event has handlers registered to it.
         """
-        return self._modifiers
+        return bool(self._handlers)
     
     
     def Bind(self, func):
@@ -174,7 +175,9 @@ class BaseEvent:
         
         # add the handler
         self._handlers.append( cnew )
-
+        
+        self._UpdateOwner()
+    
 
     def Unbind(self, func=None):
         """ Unbind(func=None)
@@ -190,6 +193,8 @@ class BaseEvent:
                 # remove if callable matches func or object is destroyed
                 if c.compare(cref) or c.isdead():  
                     self._handlers.remove( c )
+        
+        self._UpdateOwner()
     
     
     def Fire(self):
@@ -204,43 +209,94 @@ class BaseEvent:
         for c in [c for c in self._handlers]:
             if c.isdead():         
                 self._handlers.remove( c )
+                self._UpdateOwner()
         
         # get list of callable functions 
         L = self._handlers
         
-        # call event handlers. Call last added first!
-        handled = False
+        # call event handlers. Call last added first! ...
+        func = None
         for func in reversed( L ):
-            if handled:
-                break
             try:
+                # Returning True means that the event is handled
                 handled = func.call(self)
+                if handled:
+                    break                
             except Exception:
-                # get easier func name
-                s = str(func)
-                i = s.find("function")
-                if i<0:
-                    i = s.find("method")
-                if i>= 0:
-                    i1 = s.find(" ",i+1)
-                    i2 = s.find(" ",i1+1)
-                    if i1>=0 and i2>=0:
-                        s = s[i1+1:i2]
-                # get traceback and store
-                type, value, tb = sys.exc_info()
-                sys.last_type = type
-                sys.last_value = value
-                sys.last_traceback = tb
-                # Show traceback
-                tblist = traceback.extract_tb(tb)                
-                list = traceback.format_list(tblist[2:]) # remove "Fire"
-                list.extend( traceback.format_exception_only(type, value) )
-                # print
-                print("ERROR calling '%s':" % s)
-                tmp = ""                
-                for i in list:
-                    tmp += i
-                print(tmp)
+                # On error, notify, allow postmortem debugging and also break
+                self._HandleExceptionInCallback(func)
+                break
+        else:
+            # todo: hitTest == True also prevents propagation -> make things
+            # backward compatible ...
+            # The event is not handled yet, try the parent object
+            ob = self.owner
+            if self._PROPAGATE and (ob is not None) and (ob.parent is not None):
+                # Try getting the event object with the same name
+                parentEvent = getattr(ob.parent, self.eventName, None)
+                if parentEvent is not None:
+                    # Set event using *this* owner object as a child, and fire
+                    parentEvent.Set(*self._setArgs)
+                    parentEvent.Fire()
+    
+    
+    def _HandleExceptionInCallback(self, func):
+        """ Print a nice message of what went wrong and also set sys.last_*
+        for postmortem debugging.
+        """
+        # get easier func name
+        s = str(func)
+        i = s.find("function")
+        if i<0:
+            i = s.find("method")
+        if i>= 0:
+            i1 = s.find(" ",i+1)
+            i2 = s.find(" ",i1+1)
+            if i1>=0 and i2>=0:
+                s = s[i1+1:i2]
+        # get traceback and store
+        type, value, tb = sys.exc_info()
+        sys.last_type = type
+        sys.last_value = value
+        sys.last_traceback = tb
+        # Show traceback
+        tblist = traceback.extract_tb(tb)                
+        list = traceback.format_list(tblist[2:]) # remove "Fire"
+        list.extend( traceback.format_exception_only(type, value) )
+        # print
+        print("ERROR calling '%s':" % s)
+        tmp = ""                
+        for i in list:
+            tmp += i
+        print(tmp)
+    
+    
+    def _UpdateOwner(self):
+        owner = self.owner
+        if owner and hasattr(owner, '_testWhetherShouldDrawShape'):
+            owner._testWhetherShouldDrawShape()
+    
+    # Event properties:
+    
+    @property
+    def modifiers(self):
+        """ The modifier keys active when the event occurs.
+        """
+        return self._modifiers
+    
+    # Event classes should overload these two:
+    
+    def Set(self, modifiers=()):
+        """ Set(modifiers) 
+        
+        Set the event properties before firing it. In the base event
+        the only property is the modifiers state, a tuple of the 
+        modifier keys currently pressed.
+        
+        """
+        self._SetArgs(modifiers)
+        self._modifiers = modifiers
+    
 
 
 class MouseEvent(BaseEvent):
@@ -264,8 +320,10 @@ class MouseEvent(BaseEvent):
         Set the event properties before firing it. 
         
         """
-        
         BaseEvent.Set(self, modifiers)
+        
+        # This is what Set will be called with if the event propagetes to the parent
+        self._SetArgs(absx, absy, but, modifiers)
         
         # Set properties we can alway set
         self._absx = absx
@@ -384,6 +442,9 @@ class KeyEvent(BaseEvent):
         
         """
         BaseEvent.Set(self, modifiers)
+        # This is what Set will be called with if the event propagetes to the parent
+        self._SetArgs(key, text, modifiers)
+        
         self._key = key
         self._text = text
     
@@ -407,11 +468,16 @@ class KeyEvent(BaseEvent):
 class EventMouseDown(MouseEvent):
     """ EventMouseDown(owner)
     
-    Fired when the mouse is pressed down on this object. (Also 
-    fired the first click of a double click.) 
+    Fired when the mouse is pressed down on this object, or on any of its
+    children and not being handled. 
+    (Also fired the first click of a double click.) 
     
     """
-    pass
+    _PROPAGATE = True
+    def Fire(self):
+        if self.owner:
+            self.owner._mousePressedDown = True
+        MouseEvent.Fire(self)
 
 class EventMouseUp(MouseEvent):
     """ EventMouseUp(owner)
@@ -421,40 +487,54 @@ class EventMouseUp(MouseEvent):
     fired on the first click of a double click.) 
     
     """
-    pass
+    _PROPAGATE = False
+    def Fire(self):
+        if self.owner:
+            self.owner._mousePressedDown = False
+        MouseEvent.Fire(self)
 
 class EventDoubleClick(MouseEvent):
     """ EventDoubleClick(owner)
     
-    Fired when the mouse is double-clicked on this object. 
+    Fired when the mouse is double-clicked on this object, or on any of its
+    children and not being handled. 
     
     """
-    pass
+    _PROPAGATE = True
 
 class EventEnter(MouseEvent):
     """ EventEnter(owner)
     
-    Fired when the mouse enters this object or one of its children. 
+    Fired when the mouse enters this object or any of its children. 
     
     """
-    pass
+    _PROPAGATE = False
 
 class EventLeave(MouseEvent):
     """ EventLeave(owner)
     
-    Fired when the mouse leaves this object (and is also not over any
-    of it's children). 
+    Fired when the mouse was previously over the object or any of its 
+    children, and is now not.
     
     """
-    pass
+    _PROPAGATE = False
 
 class EventMotion(MouseEvent):
     """ EventMotion(owner)
     
-    Fired when the mouse is moved anywhere in the figure. 
+    Fired when the mouse is moved over the object, or over any of its
+    children and not being handled. This event is also always called
+    when the mouse is pressed down on the object.
+    """
+    _PROPAGATE = False
+class EventScroll(MouseEvent):
+    """ EventScroll(owner)
+    
+    Fired when the scroll wheel is used while over the object, or on any of its
+    children and not being handled. 
     
     """
-    pass
+    _PROPAGATE = True
 
 class EventKeyDown(KeyEvent):
     """ EventKeyDown(owner)
@@ -462,7 +542,7 @@ class EventKeyDown(KeyEvent):
     Fired when a key is pressed down while the figure is active. 
     
     """
-    pass
+    _PROPAGATE = True
 
 class EventKeyUp(KeyEvent):
     """ EventKeyUp(owner) 
@@ -470,7 +550,7 @@ class EventKeyUp(KeyEvent):
     Fired when a key is released while the figure is active. 
     
     """
-    pass
+    _PROPAGATE = True
 
 ## Only for wibjects
 
@@ -480,7 +560,7 @@ class EventPosition(BaseEvent):
     Fired when the position (or size) of this wibject changes. 
     
     """ 
-    pass
+    _PROPAGATE = False
     
 
 ## Processing events + timers

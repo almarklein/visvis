@@ -916,22 +916,35 @@ class BaseFigure(_BaseFigure):
             
             # Generate motion events for any objects that have handlers
             # for the motion event
-            items = self.FindObjects(lambda i:i._eventMotion._handlers)
+            items = self.FindObjects(lambda i:i.eventMotion.hasHandlers)
             events.extend([(item, item._eventMotion) for item in items])
             
             # Update items under the mouse
             self._underMouse = [item.GetWeakref() for item in items2]        
+            
+            # todo: how to handle motionEvents? 
+            # It feels nicer (and is more Qt-ish) to fire the events only 
+            # from the objects that have their mouse pressed down. However, 
+            # someone may want to be notified of motion regardless of the 
+            # state of the mouse. Qt has setMouseTracking(True).
+            # But then there's a problem. This version of eventMotion we *do*
+            # want to propate to parent objects if not handled. But then
+            # an object may get an event twice if the mouse is pressed down.
+            # Surely these things can be overcome, but I think its easier 
+            # for everyone if we stick to the old approach: the eventMotion
+            # is fired for all objects that have handlers registered to it.
         
         elif eventName.count("up"):
-            # Find object that was clicked down
+            # Find objects that are currently clicked down
             items = self.FindObjects(lambda i:i._mousePressedDown)
             for item in items:
                 events.append( (item, item.eventMouseUp) )
-                item._mousePressedDown = False
+            # todo: Also generate event where the mouse is now over - MouseDrop?
+            #if items[-1] not in items:
+            #    events.append( ( items[-1], items[-1].eventMouseDrop) )
         
         elif items1 and eventName.count("down"):
             item = items1[-1]
-            item._mousePressedDown = True
             events.append( ( item, item.eventMouseDown) )        
         
         elif items1 and eventName.count("double"):
@@ -939,6 +952,10 @@ class BaseFigure(_BaseFigure):
             # because the toolkit won't fire a down event for the second click.
             item = items1[-1]
             events.append( ( item, item.eventDoubleClick) )
+        
+        elif items1 and eventName.count('scroll'):
+            item = items1[-1]
+            events.append( ( item, item.eventScroll) )
         
         # Fire events
         for item,ev in events:
