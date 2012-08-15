@@ -51,8 +51,10 @@ class BaseObject(object):
         self._visible = True
         # whether the object is currently being drawn
         self._isbeingdrawn = False
-        # whether the object can be clicked
+        # whether the object prevents events from propagating to its parent
         self._hitTest = False
+        # whether the object should draw its shape
+        self._shouldDrawShape = False
         # the parent object
         self._parent = None        
         # the children of this object
@@ -74,6 +76,7 @@ class BaseObject(object):
         self._eventLeave = events.EventLeave(self)        
         #
         self._eventMotion = events.EventMotion(self)
+        self._eventScroll = events.EventScroll(self)
         self._eventKeyDown = events.EventKeyDown(self)
         self._eventKeyUp = events.EventKeyUp(self)
     
@@ -114,6 +117,14 @@ class BaseObject(object):
         the mouse is over one of its children. 
         """
         return self._eventMotion    
+    
+    @property
+    def eventScroll(self):
+        """ Fires when the scroll wheel is used while over the object. 
+        Not fired when the mouse is over one of its children. 
+        """
+        return self._eventScroll   
+    
     @property
     def eventKeyDown(self):        
         """ Fires when the mouse is moved over the object. Not fired when
@@ -126,6 +137,21 @@ class BaseObject(object):
         the mouse is over one of its children. 
         """
         return self._eventKeyUp
+    
+    
+    def _testWhetherShouldDrawShape(self):
+        """ Tests whether any of the events has handlers registered
+        to it. If so, this object should draw its shape.
+        This method is called by the event objects when handlers are
+        added or removed.
+        """
+        self._shouldDrawShape = False
+        for name in dir(self.__class__):
+            if name.startswith('event'):
+                event = getattr(self, name, None)
+                if event and event.hasHandlers:
+                    self._shouldDrawShape = True
+                    break
     
     
     def _DrawTree(self, mode=DRAW_NORMAL, pickerHelper=None):
@@ -149,7 +175,7 @@ class BaseObject(object):
         self._isbeingdrawn = True
         try:
             if mode==DRAW_SHAPE:
-                if self.hitTest:
+                if self._shouldDrawShape:
                     clr = pickerHelper.GetColorFromId(self._id)
                     self.OnDrawShape(clr)
             elif mode==DRAW_SCREEN:
@@ -328,7 +354,9 @@ class BaseObject(object):
     
     @misc.Property
     def hitTest():
-        """ Get/Set whether mouse events are generated for this object.
+        """ Get/Set whether this object prevents events from propagating to
+        its parent. In general this property should be avoided, but it is
+        maintained for backwards compatibility.
         """
         def fget(self):
             return self._hitTest
