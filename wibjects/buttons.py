@@ -32,9 +32,6 @@ class PushButton(Label):
         # Text is centered by default
         self.halign = 0
         
-        # A button is hittable by default
-        self.hitTest = True
-        
         # And changes appearance on mouse over
         self._isOver = False
         self.eventEnter.Bind(self._OnEnter)

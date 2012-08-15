@@ -59,7 +59,6 @@ class RangeWobject2D(vv.Wobject):
         self.eventRangeUpdated = vv.events.BaseEvent(self)
         
         # Callbacks
-        self.hitTest = 1
         self.eventEnter.Bind(self._OnEnter)
         self.eventLeave.Bind(self._OnLeave)
         self.eventMouseDown.Bind(self._OnDown)

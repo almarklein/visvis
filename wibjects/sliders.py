@@ -45,9 +45,6 @@ class BaseSlider(Box):
         self._frontColor = 0.5, 0.7, 0.9
         self.edgeWidth = 1
         
-        # A slider should respond to mouse
-        self.hitTest = True
-        
         # Create label centered at the box
         self._label = Label(self)
         self._label.position = 0,0,1,1

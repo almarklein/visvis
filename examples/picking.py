@@ -46,7 +46,6 @@ def leaving(event):
         event.owner.lc = event.owner.picker_lc
 
 for ob in [f,a,b1,b2, l1, l2]:#, t1]:
-    ob.hitTest = True # otherwise we cannot detect them
     ob.eventMouseDown.Bind(picker)
     ob.eventEnter.Bind(entering)
     ob.eventLeave.Bind(leaving)

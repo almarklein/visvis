@@ -173,10 +173,7 @@ class Axes(base.Wibject):
         # of daspect are ignored (only the sign is taken into account)
         self._daspect = (1.0,1.0,1.0)
         self._daspectAuto = None # None is like False, but means not being set
-        
-        # make clickable
-        self.hitTest = True
-        
+                
         # screenshot buffer and variable to indicate whether we can use it
         self._screenshot = None
         self._isdirty = True

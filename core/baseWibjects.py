@@ -123,7 +123,6 @@ class DraggableBox(Box):
         self._DragCalcDots()
         
         # Bind to own events
-        self.hitTest = True
         self.eventMouseDown.Bind(self._DragOnDown)
         self.eventMouseUp.Bind(self._DragOnUp)
         self.eventEnter.Bind(self._DragOnEnter)
@@ -178,10 +177,10 @@ class DraggableBox(Box):
             event.owner.Draw()
         self._dragStartPos = event.absx, event.absy
     
+    
     def _DragOnUp(self, event):
         self._dragStartPos = None
         self._dragResizing = False
-    
     
     def OnDraw(self):
         Box.OnDraw(self)

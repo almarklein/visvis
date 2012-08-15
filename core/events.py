@@ -114,8 +114,14 @@ class BaseEvent:
     def __init__(self, owner):   
         self._owner = weakref.ref(owner)
         self._handlers = []
-        self._modifiers = ()
         self._setArgs = [] # The arguments passed to the Set method
+        
+        # For propagation to parent and sibling handlers
+        self._accepted = True
+        self._isHandled = False
+        
+        # Properties
+        self._modifiers = ()
     
     def _SetArgs(self, *args):
         """ This should be called in the Set method.
@@ -147,6 +153,32 @@ class BaseEvent:
         """ Get whether this event has handlers registered to it.
         """
         return bool(self._handlers)
+    
+    def Accept(self):
+        """ Accept()
+        Accept the event, preventing it from being propagated to
+        the parent object. When an event handler is called, the event
+        is accepted by default.
+        """
+        self._accepted = True
+    
+    def Ignore(self):
+        """ Ignore()
+        Clears the accept flag parameter of the event object. Clearing the 
+        accept parameter indicates that the event receiver does not want 
+        the event. If none of the handlers for this event do not want it,
+        the event might be propagated to the parent object.
+        """
+        self._accepted = False
+    
+    def SetHandled(self, isHandled=True):
+        """ SetHandled(isHandled=True)
+        Mark the event as handled, preventing any subsequent handlers
+        from being called. Use this to override existing behavior of a
+        Wibject or Wobject. The same behavior is obtained when the handler
+        returns True.
+        """
+        self._isHandled = bool(isHandled)
     
     
     def Bind(self, func):
@@ -203,6 +235,9 @@ class BaseEvent:
         Fire the event, calling all functions that are bound
         to it, untill the event is handled (a handler returns True).
         
+        If no handlers are present or if the event is explicitly ignored,
+        the event is propagated the owners parent.
+        
         """
         
         # remove dead weakrefs
@@ -214,28 +249,39 @@ class BaseEvent:
         # get list of callable functions 
         L = self._handlers
         
+        # Init handled and accepted
+        # In the event, the event is accepted if one of the handlers 
+        # accepted (i.e. did not ignore) it
+        accepted = False
+        handled = False
+        
         # call event handlers. Call last added first! ...
         func = None
         for func in reversed( L ):
             try:
-                # Returning True means that the event is handled
-                handled = func.call(self)
-                if handled:
-                    break                
+                # Init handled and accepted for next call
+                self._isHandled = False
+                self._accepted = True # Default is accepted if handled
+                # Do the call and determine if handled
+                res = func.call(self)
+                handled = res or self._isHandled
             except Exception:
                 # On error, notify, allow postmortem debugging and also break
                 self._HandleExceptionInCallback(func)
+            # Handle accepted and handled
+            accepted = accepted or self._accepted
+            if handled:
                 break
-        else:
-            # todo: hitTest == True also prevents propagation -> make things
-            # backward compatible ...
-            # The event is not handled yet, try the parent object
+        
+        if self._PROPAGATE and not accepted:
+            # The event is not properly handled yet, try the parent object
             ob = self.owner
-            if self._PROPAGATE and (ob is not None) and (ob.parent is not None):
+            if (ob is not None) and (ob.parent is not None):
                 # Try getting the event object with the same name
                 parentEvent = getattr(ob.parent, self.eventName, None)
                 if parentEvent is not None:
-                    # Set event using *this* owner object as a child, and fire
+                    # Set event using the args of *this* event object as a
+                    # child and then fire
                     parentEvent.Set(*self._setArgs)
                     parentEvent.Fire()
     
@@ -272,6 +318,8 @@ class BaseEvent:
     
     
     def _UpdateOwner(self):
+        """ Update the hitTest property of the object.
+        """
         owner = self.owner
         if owner and hasattr(owner, '_testWhetherShouldDrawShape'):
             owner._testWhetherShouldDrawShape()

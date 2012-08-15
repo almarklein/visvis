@@ -203,7 +203,6 @@ class ColormapEditor(BaseMapableEditor):
         cb.position = pos.x, 5, pos.w, 10
         
         # Bind events
-        self.hitTest = True # enable firing events
         self._aBut.eventStateChanged.Bind(self._OnChannelSelect)
         
         # Bind events to THIS wibject, and process them in the nodeWidget
@@ -383,7 +382,6 @@ class CM_NodeWidget(Box):
         self.eventMouseUp.Bind(self._OnUp)
         self.eventMouseDown.Bind(self._OnDown)
         self.eventDoubleClick.Bind(self._OnDoubleClick)
-        self.hitTest = True # enable firing events
     
     
     def _OnDown(self, event):
