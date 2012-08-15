@@ -101,9 +101,16 @@ class BaseEvent:
     the properties of the event are stored (such mouse location, key 
     being pressed, ...).
     
-    One can Bind() or Unbind() a callable to the event. When fired, all 
-    handlers that are bind to this event are called, until the event is 
-    handled (a handler returns True). The handlers are called with the 
+    In Qt speak, an event is a combination of an event and a signal.
+    Multiple callbacks can be registered to an event (signal-paradigm).
+    A callback may chose to override previously registered callbacks
+    by using setHandled(). If there are no handlers, or if the event
+    is explicitly ignored (using the Ignore method) by *all* handlers,
+    the event is propagated to the parent object (event paradigm).
+    
+    To register or unregister a callback, use the Bind and Unbind methods
+    When fired, all handlers that are bind to this event are called, 
+    until the event is set as handled. The handlers are called with the 
     event object as an argument. The event.owner provides a reference of 
     what wobject/wibject fired the event.
     
