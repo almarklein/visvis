@@ -135,21 +135,25 @@ class GLWidget(QtOpenGL.QGLWidget):
             x, y = event.x(), event.y()
             self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers(event))
     
-    def keyPressEvent(self, event):
-        ev = self.figure.eventKeyDown        
+    def wheelEvent(self, event):
+        # Get number of steps
+        numDegrees = event.delta() / 8.0
+        numSteps = numDegrees / 15.0
+        # fire event   
+        x, y = event.x(), event.y()
+        self.figure._GenerateMouseEvent('scroll', x, y, numSteps, modifiers(event))
+    
+    def keyPressEvent(self, event):      
         key = self._ProcessKey(event)
         text = str(event.text())
-        ev.Set(key, text, modifiers(event))
-        ev.Fire() 
+        self.figure._GenerateKeyEvent('keydown', key, text, modifiers(event))
     
     def keyReleaseEvent(self, event):
         if event.isAutoRepeat():
             return # Skip release auto repeat events
-        ev = self.figure.eventKeyUp
         key = self._ProcessKey(event)
         text = str(event.text())
-        ev.Set(key, text, modifiers(event))
-        ev.Fire()
+        self.figure._GenerateKeyEvent('keyup', key, text, modifiers(event))
     
     def _ProcessKey(self,event):
         """ evaluates the keycode of qt, and transform to visvis key.
