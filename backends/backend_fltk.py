@@ -89,6 +89,8 @@ class GLWidget(fltk.Fl_Gl_Window):
         elif event in [fltk.FL_MOVE, fltk.FL_DRAG]:
             w,h = self.w(), self.h()
             self.OnMotion(None)
+        elif event == fltk.FL_MOUSEWHEEL:
+            self.OnMouseWheel(None)
         elif event == fltk.FL_ENTER:
             ev = self.figure.eventEnter
             ev.Set(0,0,0)
@@ -127,17 +129,18 @@ class GLWidget(fltk.Fl_Gl_Window):
         x, y = fltk.Fl.event_x(), fltk.Fl.event_y()
         self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers())
     
+    def OnMouseWheel(self, event):
+        numSteps = -1.0 * fltk.Fl.event_dy()
+        x, y = fltk.Fl.event_x(), fltk.Fl.event_y()
+        self.figure._GenerateMouseEvent('scroll', x, y, numSteps, modifiers())
+    
     def OnKeyDown(self, event):
         key, text = self._ProcessKey()
-        ev = self.figure.eventKeyDown
-        ev.Set(key, text, modifiers())
-        ev.Fire()
+        self.figure._GenerateKeyEvent('keydown', key, text, modifiers())
     
     def OnKeyUp(self, event):        
         key, text = self._ProcessKey()        
-        ev = self.figure.eventKeyUp
-        ev.Set(key, text, modifiers())
-        ev.Fire()
+        self.figure._GenerateKeyEvent('keyup', key, text, modifiers())
     
     def _ProcessKey(self):
         """ evaluates the keycode of fltk, and transform to visvis key.
