@@ -513,7 +513,7 @@ class Cropper3D:
             self._range_transversal._rangey = rangex.Copy()
             self._range_coronal._rangey = rangey.Copy()
         else:
-            print 'unknown owner!', event.owner
+            print('unknown owner! %s' % repr(event.owner))
         
         # Invalidate all coordinates
         for r in self._rangeWobjects:
