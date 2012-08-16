@@ -26,12 +26,12 @@ from visvis.core.misc import getResourceDir, getOpenGlCapable
 
 import subprocess
 
-from ..core.shaders import Shader, ShaderCodePart
+from visvis.core.shaders import Shader, ShaderCodePart
 
-from .text_base import AtlasTexture, FontManager, Text, Label
-from .text_base import correctVertices, simpleTextureDraw
+from visvis.text.text_base import AtlasTexture, FontManager, Text, Label
+from visvis.text.text_base import correctVertices, simpleTextureDraw
 
-from .freetype import ( Face, Vector, Matrix, FT_KERNING_UNFITTED,
+from visvis.text.freetype import ( Face, Vector, Matrix, FT_KERNING_UNFITTED,
                         FT_LOAD_RENDER, FT_LOAD_FORCE_AUTOHINT )
 
 

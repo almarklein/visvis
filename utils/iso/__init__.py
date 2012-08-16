@@ -22,11 +22,11 @@ else:
 
 from pyzolib import pyximport
 pyximport.install()
-from . import marchingsquares_
+from visvis.utils.iso import marchingsquares_
 pyximport.install()
-from . import marchingcubes_
+from visvis.utils.iso import marchingcubes_
 
-from . import mcluts
+from visvis.utils.iso import mcluts
 
 
 
