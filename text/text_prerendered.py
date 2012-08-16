@@ -11,8 +11,8 @@ from visvis.utils.pypoints import Pointset
 from visvis.core.misc import basestring , getResourceDir
 from visvis.core.baseWibjects import Box
 
-from .text_base import AtlasTexture, FontManager, Text, Label
-from .text_base import correctVertices, simpleTextureDraw
+from visvis.text.text_base import AtlasTexture, FontManager, Text, Label
+from visvis.text.text_base import correctVertices, simpleTextureDraw
 
 
 class PrerenderedAtlas(AtlasTexture):

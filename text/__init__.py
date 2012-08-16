@@ -73,10 +73,10 @@ one can always look up its unicode value and use that instead.
 
 """
 
-from .text_base import AtlasTexture, FontManager, BaseText
-from .text_base import Text, Label
+from visvis.text.text_base import AtlasTexture, FontManager, BaseText
+from visvis.text.text_base import Text, Label
 
-from .text_prerendered import PrerenderedFontManager
+from visvis.text.text_prerendered import PrerenderedFontManager
 
 # Try importing the freetype font manager
 # Note that FreeType must be installed. On Linux this would usually be
@@ -84,7 +84,7 @@ from .text_prerendered import PrerenderedFontManager
 # For Windows users there is a simple installer on the Visvis website.
 # For Mac I'm not sure yet.
 try:
-  from .text_freetype import FreeTypeFontManager
+  from visvis.text.text_freetype import FreeTypeFontManager
 except RuntimeError:
   FreeTypeFontManager = None
 

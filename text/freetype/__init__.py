@@ -28,11 +28,11 @@ else:
 
 # Imports from the low level freetype wrapper
 # These names I collected by parsing this module for words starting with "FT_".
-from .ft_enums import (FT_LOAD_RENDER, FT_LOAD_FORCE_AUTOHINT,
+from visvis.text.freetype.ft_enums import (FT_LOAD_RENDER, FT_LOAD_FORCE_AUTOHINT,
                                 FT_KERNING_DEFAULT, FT_KERNING_UNFITTED)
-from .ft_types import FT_Int
-from .ft_errors import FT_Exception
-from .ft_structs import (  FT_Face, FT_Glyph, FT_Matrix, FT_Vector, 
+from visvis.text.freetype.ft_types import FT_Int
+from visvis.text.freetype.ft_errors import FT_Exception
+from visvis.text.freetype.ft_structs import (  FT_Face, FT_Glyph, FT_Matrix, FT_Vector, 
                                     FT_Library, FT_GlyphSlot, FT_Size_Metrics)
 
 
