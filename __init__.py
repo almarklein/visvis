@@ -44,7 +44,6 @@ For more help, see ...
 """
 
 # todo: more lazy imports for io and vvmovie
-# todo: test vvMovie import and exports, they probably need encoding stuff
 
 __version__  = '1.6.dev' 
 
@@ -53,7 +52,6 @@ import visvis.utils.guisupport
 from visvis.utils.pypoints import Point, Pointset, Aarray, Quaternion
 from visvis.utils import ssdf
 from visvis import vvmovie
-from visvis import io
 
 # The core
 from visvis.core import *
