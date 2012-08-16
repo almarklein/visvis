@@ -6,8 +6,6 @@
 
 import os
 import visvis as vv
-import visvis.io.stl
-import visvis.io.wavefront
 
 
 def ssdfRead(fname, check=False):
@@ -59,7 +57,7 @@ def meshRead(fname, check=False):
     
     if not os.path.isfile(fname):
         # try loading from the resource dir
-        path = visvis.core.misc.getResourceDir()
+        path = vv.core.misc.getResourceDir()
         fname2 = os.path.join(path, fname)
         if os.path.isfile(fname2):
             fname = fname2
@@ -68,8 +66,10 @@ def meshRead(fname, check=False):
     
     # Use file extension to read file
     if fname.lower().endswith('.stl'):
+        import visvis.io
         readFunc = vv.io.stl.StlReader.read
     elif fname.lower().endswith('.obj'):
+        import visvis.io
         readFunc = vv.io.wavefront.WavefrontReader.read
     elif fname.lower().endswith('.ssdf') or fname.lower().endswith('.bsdf'):
         readFunc = ssdfRead

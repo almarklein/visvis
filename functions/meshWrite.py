@@ -5,8 +5,6 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-import visvis.io.stl
-import visvis.io.wavefront
 
 
 def ssdfWrite(fname, mesh, name='', bin='unused'):
@@ -56,8 +54,10 @@ def meshWrite(fname, mesh, name='', bin=True):
     
     # Use file extension to read file
     if fname.lower().endswith('.stl'):
+        import visvis.io
         writeFunc = vv.io.stl.StlWriter.write
     elif fname.lower().endswith('.obj'):
+        import visvis.io
         writeFunc = vv.io.wavefront.WavefrontWriter.write
     elif fname.lower().endswith('.ssdf') or fname.lower().endswith('.bsdf'):
         writeFunc = ssdfWrite

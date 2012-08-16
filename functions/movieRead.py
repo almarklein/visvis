@@ -9,7 +9,8 @@ import visvis as vv
 from visvis.vvmovie import movieRead as _movieRead
 
 # todo: vvmovie will be replaced by imageio
-# todo: I tried some animated gifs from wiki, and most did not read in correctly ...
+# todo: I tried some animated gifs from wiki using the PIL wrapper, and most did not read in correctly ...
+
 # like newtons cradle and rotating earth
 
 def movieRead(filename, *args, **kwargs):
