@@ -97,6 +97,7 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
         self.connect('motion_notify_event', self._on_motion_notify_event)
         self.connect('button_press_event', self._on_button_event)
         self.connect('button_release_event', self._on_button_event)
+        self.connect('scroll_event', self._on_scroll_event)
         self.connect('key_press_event', self._on_key_press_event)
         self.connect('key_release_event', self._on_key_release_event)
         self.connect('enter_notify_event', self._on_enter_notify_event)
@@ -125,15 +126,18 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
         button = {1:1, 3:2}.get(event.button, 0)
         self.figure._GenerateMouseEvent(MOUSEMAP[event.type], event.x, event.y, button, modifiers(event))
     
+    def _on_scroll_event(self, widget, event):
+        step = {gtk.gdk.SCROLL_UP: 1, gtk.gdk.SCROLL_DOWN: -1}.get(event.direction)
+        if step is not None:
+            self.figure._GenerateMouseEvent('scroll', event.x, event.y, step, modifiers(event))
+    
     def _on_key_press_event(self, widget, event):
-        ev = self.figure.eventKeyDown
-        ev.Set(KEYMAP.get(event.keyval, event.keyval), event.string, modifiers(event))
-        ev.Fire()
+        self.figure._GenerateKeyEvent('keydown', KEYMAP.get(event.keyval, event.keyval),
+                                      event.string, modifiers(event))
     
     def _on_key_release_event(self, widget, event):
-        ev = self.figure.eventKeyUp
-        ev.Set(KEYMAP.get(event.keyval, event.keyval), event.string, modifiers(event))
-        ev.Fire()
+        self.figure._GenerateKeyEvent('keyup', KEYMAP.get(event.keyval, event.keyval),
+                                      event.string, modifiers(event))
     
     def _on_enter_notify_event(self, widget, event):
         if self.figure:
