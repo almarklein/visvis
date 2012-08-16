@@ -246,6 +246,7 @@ class BaseEvent:
         the event is propagated the owners parent.
         
         """
+        self._isFired = True # Flag used by BaseFigure
         
         # remove dead weakrefs
         for c in [c for c in self._handlers]:
@@ -586,10 +587,19 @@ class EventScroll(MouseEvent):
     """ EventScroll(owner)
     
     Fired when the scroll wheel is used while over the object, or on any of its
-    children and not being handled. 
+    children and not being handled. The value of the button property is 
+    undefined for this event. The amount of scrolling is available as the
+    scrollSteps property.
     
     """
     _PROPAGATE = True
+    @property
+    def scrollSteps(self):
+        """ Get the amount of scrolling (can be positive or negative) 
+        for this event.
+        """
+        # Yes, we simply use the _but variable, because it is unused anyway
+        return self._but
 
 class EventKeyDown(KeyEvent):
     """ EventKeyDown(owner)

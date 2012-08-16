@@ -234,8 +234,6 @@ class BaseFigure(_BaseFigure):
         
         # Bind to events
         self.eventPosition.Bind(self._OnPositionChange)
-        self.eventKeyDown.Bind(self._PassOnKeyDownEvent)
-        self.eventKeyUp.Bind(self._PassOnKeyUpEvent)
     
     
     @property
@@ -591,8 +589,6 @@ class BaseFigure(_BaseFigure):
                     event.Unbind()
         # Restore some event bindings
         self.eventPosition.Bind(self._OnPositionChange)
-        self.eventKeyDown.Bind(self._PassOnKeyDownEvent)
-        self.eventKeyUp.Bind(self._PassOnKeyUpEvent)
     
     ## Implement methods
     
@@ -854,28 +850,43 @@ class BaseFigure(_BaseFigure):
         gl.glLoadIdentity()
     
     
-    def _PassOnKeyDownEvent(self, event):
+    def _GenerateKeyEvent(self, eventName, key, text, modifiers=()):
+        """ _GenerateKeyEvent(eventName, key, text, modifiers=())
         
-        # Get all items that want to fire this event
-        items = self.FindObjects(lambda i:i._eventKeyDown._handlers)
+        For the backend to generate key events. 
         
-        # Fire them
-        for item in items:
-            ev = item.eventKeyDown
-            ev.Set(event.key, event.text, event.modifiers)
-            ev.Fire()
-    
-    
-    def _PassOnKeyUpEvent(self, event):
+        """
+        # make lower
+        eventName = eventName.lower()
+        # get items now under the mouse
+        items1 = [item() for item in self._underMouse if item()]
+        # init list of events to fire
+        events = []
+        eventToAlwaysFire = None
         
-        # Get all items that want to fire this event
-        items = self.FindObjects(lambda i:i._eventKeyUp._handlers)
+        # Check what to fire
+        if eventName.count('down'):
+            eventToAlwaysFire = self.eventKeyDown
+            if items1:
+                events.append(items1[-1].eventKeyDown) 
+        elif eventName.count('up'):
+            eventToAlwaysFire = self.eventKeyUp
+            if items1:
+                events.append(items1[-1].eventKeyUp) 
         
-        # Fire them
-        for item in items:
-            ev = item.eventKeyUp
-            ev.Set(event.key, event.text, event.modifiers)
-            ev.Fire()
+        # Fire events. We use an approach to ensure that the key event
+        # is always fired for the Figure, but only once, not if that event
+        # was fired because it propagated from its children.
+        if eventToAlwaysFire:
+            eventToAlwaysFire._isFired = False
+        #
+        for event in events:
+            event.Set(key, text, modifiers)
+            event.Fire()
+        #
+        if eventToAlwaysFire and not eventToAlwaysFire._isFired:
+            eventToAlwaysFire.Set(key, text, modifiers)
+            eventToAlwaysFire.Fire()
     
     
     def _GenerateMouseEvent(self, eventName, absx, absy, button=0, modifiers=()):
@@ -891,6 +902,7 @@ class BaseFigure(_BaseFigure):
         items1 = [item() for item in self._underMouse if item()]
         # init list of events to fire
         events = []
+        eventToAlwaysFire = None
         
         if eventName.count("motion") or eventName.count("move"):
             
@@ -906,23 +918,23 @@ class BaseFigure(_BaseFigure):
             # analyse for enter and leave events
             for item in items1:
                 if item not in items2:
-                    events.append( (item, item.eventLeave) )
+                    events.append(item.eventLeave)
             for item in items2:
                 if item not in items1:
-                    events.append( (item, item.eventEnter) )
+                    events.append(item.eventEnter)
             
             # Always generate motion event from figure
-            events.append( (self, self.eventMotion) ) 
+            events.append(self.eventMotion) 
             
             # Generate motion events for any objects that have handlers
-            # for the motion event
+            # for the motion event. Note that this excludes "self".
             items = self.FindObjects(lambda i:i.eventMotion.hasHandlers)
-            events.extend([(item, item._eventMotion) for item in items])
+            events.extend([item.eventMotion for item in items])
             
             # Update items under the mouse
             self._underMouse = [item.GetWeakref() for item in items2]        
             
-            # todo: how to handle motionEvents? 
+            # Note: how to handle motionEvents
             # It feels nicer (and is more Qt-ish) to fire the events only 
             # from the objects that have their mouse pressed down. However, 
             # someone may want to be notified of motion regardless of the 
@@ -937,27 +949,23 @@ class BaseFigure(_BaseFigure):
         elif eventName.count("up"):
             # Find objects that are currently clicked down
             items = self.FindObjects(lambda i:i._mousePressedDown)
-            for item in items:
-                events.append( (item, item.eventMouseUp) )
+            events.extend([item.eventMouseUp for item in items])
             # todo: Also generate event where the mouse is now over - MouseDrop?
             #if items[-1] not in items:
-            #    events.append( ( items[-1], items[-1].eventMouseDrop) )
+            #    events.append( items[-1].eventMouseDrop)
         
         elif items1 and eventName.count("down"):
-            item = items1[-1]
-            events.append( ( item, item.eventMouseDown) )        
+            events.append(items1[-1].eventMouseDown)        
         
         elif items1 and eventName.count("double"):
             # Note: we cannot detect double clicking by timing the down-events,
             # because the toolkit won't fire a down event for the second click.
-            item = items1[-1]
-            events.append( ( item, item.eventDoubleClick) )
+            events.append(items1[-1].eventDoubleClick)
         
         elif items1 and eventName.count('scroll'):
-            item = items1[-1]
-            events.append( ( item, item.eventScroll) )
+            events.append(items1[-1].eventScroll)
         
         # Fire events
-        for item,ev in events:
-            ev.Set(absx, absy, button, modifiers)
-            ev.Fire()
+        for event in events:
+            event.Set(absx, absy, button, modifiers)
+            event.Fire()
