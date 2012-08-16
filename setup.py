@@ -4,49 +4,73 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-description = 'An object oriented approach to visualization of 1D to 4D data.'
-long_description = """
-Visvis is a pure Python library for visualization of 1D to 4D
-data in an object oriented way. Essentially, visvis is an object
-oriented layer of Python on top of OpenGl, thereby combining the
-power of OpenGl with the usability of Python. A Matlab-like
-interface in the form of a set of functions allows easy creation 
-of objects (e.g. plot(), imshow(), volshow(), surf()). 
-
-"""
-
+import os
 from distutils.core import setup
 
-# Get version
+name = 'visvis'
+description = 'An object oriented approach to visualization of 1D to 4D data.'
+
+# Get version and docstring
 __version__ = None
-for line in file('__init__.py').readlines():
+__doc__ = ''
+docStatus = 0 # Not started, in progress, done
+initFile = os.path.join(os.path.dirname(__file__), '__init__.py')
+for line in open(initFile).readlines():
     if (line.startswith('__version__')):
         exec(line.strip())
+    elif line.startswith('"""'):
+        if docStatus == 0:
+            docStatus = 1
+            line = line.lstrip('"')
+        elif docStatus == 1:
+            docStatus = 2
+    if docStatus == 1:
+        __doc__ += line
 
 
 setup(
-    name = 'visvis',
+    name = name,
     version = __version__,
     author = 'Almar Klein',
-    author_email = 'almar.klein at gmail',
+    author_email = 'a.klein@science-applied.nl',
     license = '(new) BSD',
     
     url = 'http://code.google.com/p/visvis/',
     download_url = 'http://code.google.com/p/visvis/downloads/list',    
     keywords = "visualization OpenGl medical imaging 3D plotting numpy",
     description = description,
-    long_description = long_description,
+    long_description = __doc__,
     
     platforms = 'any',
     provides = ['visvis'],
-    requires = ['numpy', 'pyOpenGl'],
+    #install_requires = ['numpy', 'pyOpenGl', 'imageio'], # Maybe "require" imageio later? so it is auto-installed by pip?
+    install_requires = ['numpy', 'pyOpenGl'],
     
     packages = ['visvis', 'visvis.functions', 'visvis.backends', 
-                'visvis.processing', 'visvis.vvmovie', 'visvis.io',
-                'visvis.core', 'visvis.wibjects', 'visvis.wobjects'],
+                'visvis.processing', 'visvis.vvmovie', 'visvis.vvio',
+                'visvis.core', 'visvis.wibjects', 'visvis.wobjects', 
+                'visvis.text', 'visvis.utils', 'visvis.utils.ssdf',
+                'visvis.utils.iso', 'visvis.text.freetype'],
     package_dir = {'visvis': '.'},
     package_data = {'visvis': [ 'examples/*.py', 'visvisResources/*']},
-    zip_safe = False, # I want examples to work
+    zip_safe = False,
+    
+    classifiers=[
+          'Development Status :: 4 - Beta',
+          'Intended Audience :: Science/Research',
+          'Intended Audience :: Education',
+          'Intended Audience :: Developers',
+          'Topic :: Scientific/Engineering :: Visualization',
+          'License :: OSI Approved :: BSD License',
+          'Operating System :: MacOS :: MacOS X',
+          'Operating System :: Microsoft :: Windows',
+          'Operating System :: POSIX',
+          'Programming Language :: Python',
+          'Programming Language :: Python :: 2.5',
+          'Programming Language :: Python :: 2.6',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3',
+          ],
     )
 
 # Note that the dir in package_dir must NOT be an empty string! This
