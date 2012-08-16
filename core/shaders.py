@@ -332,15 +332,16 @@ class GlslProgram:
         self._vertexCode = ''
         
         # is usable?
-        self._usable = True
-        if not getOpenGlCapable('2.0',
-            'anti-aliasing, the clim property, colormaps and 3D rendering'):
-            self._usable = False
+        self._usable = None
     
     def IsUsable(self):
         """ Returns whether the program is usable. In other words, whether
         the OpenGl driver supports GLSL.
         """ 
+        if self._usable is None: # Not True nor False
+            usable = getOpenGlCapable('2.0',
+                'anti-aliasing, the clim property, colormaps and 3D rendering')
+            self._usable = bool(usable) # Make very sure its not None
         return self._usable
     
     
@@ -352,7 +353,7 @@ class GlslProgram:
     
     
     def _IsCompiled(self):
-        if not self._usable:
+        if not self.IsUsable():
             return False
         else:
             return ( self._programId>0 and gl.glIsProgram(self._programId) )
@@ -361,7 +362,7 @@ class GlslProgram:
     def Enable(self):
         """ Start using the program. Returns True on success, False otherwise.
         """
-        if not self._usable:
+        if not self.IsUsable():
             return True # Not a compile problem, but simply old drivers.
         
         if (self._fragmentCode or self._vertexCode) and not self._IsCompiled():
@@ -378,7 +379,7 @@ class GlslProgram:
     def Disable(self):
         """ Stop using the program. 
         """
-        if not self._usable:
+        if not self.IsUsable():
             return
         gla.glUseProgramObjectARB(0)
     
@@ -555,7 +556,7 @@ class GlslProgram:
         
         """
         # clear OpenGL stuff
-        if not self._usable:
+        if not self.IsUsable():
             return
         if self._programId>0:
             try: gla.glDeleteObjectARB(self._programId)
