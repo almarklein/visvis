@@ -197,6 +197,7 @@ class Axes(base.Wibject):
         # bind to event (no need to unbind because it's our own)
         self.eventMouseDown.Bind(self._OnMouseDown)
         self.eventKeyDown.Bind(self._OnKeyDown)
+        self.eventScroll.Bind(self._OnScroll)
         
         # Store axis class and instantiate it
         if axisClass is None or not isinstance(axisClass, BaseAxis):
@@ -1054,6 +1055,10 @@ class Axes(base.Wibject):
     
     def _OnMouseDown(self, event):
         self.MakeCurrent()
+    
+    def _OnScroll(self, event):
+        SCROLL_ZOOM_FACTOR = 1.1
+        self.camera.zoom *= SCROLL_ZOOM_FACTOR**event.scrollSteps
     
     def _OnKeyDown(self, event):
         """ Give user a lot of control via special keyboard input.
