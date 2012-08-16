@@ -66,11 +66,11 @@ def meshRead(fname, check=False):
     
     # Use file extension to read file
     if fname.lower().endswith('.stl'):
-        import visvis.io
-        readFunc = vv.io.stl.StlReader.read
+        import visvis.vvio
+        readFunc = vv.vvio.stl.StlReader.read
     elif fname.lower().endswith('.obj'):
-        import visvis.io
-        readFunc = vv.io.wavefront.WavefrontReader.read
+        import visvis.vvio
+        readFunc = vv.vvio.wavefront.WavefrontReader.read
     elif fname.lower().endswith('.ssdf') or fname.lower().endswith('.bsdf'):
         readFunc = ssdfRead
     else:
