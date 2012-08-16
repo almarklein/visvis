@@ -82,6 +82,7 @@ class GLWidget(GLCanvas):
         self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnDoubleClick)
         self.Bind(wx.EVT_RIGHT_DCLICK, self.OnDoubleClick)
+        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         #        
         self.Bind(wx.EVT_MOTION, self.OnMotion)        
         self.Bind(wx.EVT_ENTER_WINDOW, self.OnEnter)
@@ -146,17 +147,21 @@ class GLWidget(GLCanvas):
             x,y = event.GetPosition()
             self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers(event))
     
+    def OnMouseWheel(self, event):
+        numDegrees = event.GetWheelRotation() / 8.0
+        numSteps = numDegrees / 15.0
+        if self.figure:
+            x,y = event.GetPosition()
+            self.figure._GenerateMouseEvent('scroll', x, y, numSteps, modifiers(event))
+    
     def OnKeyDown(self, event):
         key, text = self._ProcessKey(event)
-        ev = self.figure.eventKeyDown
-        ev.Set(key, text, modifiers(event))
-        ev.Fire()
+        self.figure._GenerateKeyEvent('keydown', key, text, modifiers(event))
     
     def OnKeyUp(self, event):        
-        key, text = self._ProcessKey(event)        
-        ev = self.figure.eventKeyUp
-        ev.Set(key, text, modifiers(event))
-        ev.Fire()
+        key, text = self._ProcessKey(event)
+        self.figure._GenerateKeyEvent('keyup', key, text, modifiers(event))
+    
     
     def _ProcessKey(self,event):
         """ evaluates the keycode of wx, and transform to visvis key.
