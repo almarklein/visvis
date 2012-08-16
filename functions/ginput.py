@@ -34,12 +34,7 @@ class GinputHelper(object):
             # Register with axes            
             self.axes.eventMouseDown.Bind(self.OnMouseDown)
             self.axes.eventDoubleClick.Bind(self.OnDoubleClick)
-            
-            # Register with figure
-            fig = self.axes.GetFigure()
-            if fig:
-                fig.eventKeyDown.Unbind(self.OnKeyDown)
-                fig.eventKeyDown.Bind(self.OnKeyDown)
+            self.axes.eventKeyDown.Bind(self.OnKeyDown)
         
     
     def Unregister(self):
@@ -48,12 +43,7 @@ class GinputHelper(object):
             # Unregister axes
             self.axes.eventMouseDown.Unbind(self.OnMouseDown)
             self.axes.eventDoubleClick.Unbind(self.OnDoubleClick)
-        
-            # Unreister figure
-            fig = self.axes.GetFigure()
-            if fig:
-                fig.eventKeyDown.Unbind(self.OnKeyDown)
-                fig.eventKeyDown.Bind(self.OnKeyDown)
+            self.axes.eventKeyDown.Unbind(self.OnKeyDown)
         
         # Remove references
         self.axes = None
