@@ -867,7 +867,8 @@ class Axes(base.Wibject):
         
         
         # Perform tests
-        if self._useBuffer:
+        # Only if enabled on axes and if user interaction is enabled for the figure
+        if self._useBuffer and fig.enableUserInteraction:
             
             # Test if we can use the screenshot
             canUseScreenshot = (    (sshot is not None) and 

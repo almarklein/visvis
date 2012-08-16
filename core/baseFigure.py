@@ -82,6 +82,9 @@ class ObjectPickerHelper(object):
     def CaptureScreen(self):
         self.screen = np.flipud( _Screenshot() )
     
+    def ClearScreen(self):
+        self.screen = None
+    
     def GetItemsUnderMouse(self, figure):
         """ Detect over which objects the mouse is now.
         """
@@ -221,6 +224,9 @@ class BaseFigure(_BaseFigure):
         # To store the fonts used in this figure.
         self._fontManager = visvis.text.FontManager()
         self._relativeFontSize = visvis.settings.defaultRelativeFontSize
+        
+        # Whether to enable user interaction
+        self._enableUserInteraction = True
         
         # To store the markers used in this figure
         self._markerManager = MarkerManager()
@@ -565,6 +571,17 @@ class BaseFigure(_BaseFigure):
                 ob.SetStrings(ob._stringList)
         return locals()
     
+    @Property
+    def enableUserInteraction():
+        """ Whether to allow user interaction. The default is True. This
+        property can be set to False to improve performance (expensive
+        calls to glDrawPixels can be omitted).
+        """
+        def fget(self):
+            return self._enableUserInteraction
+        def fset(self, value):
+            self._enableUserInteraction = bool(value)
+        return locals()
     
     ## Extra methods
     
@@ -735,7 +752,11 @@ class BaseFigure(_BaseFigure):
             gl.glFinish() # call finish, normally swapbuffers does this...
             
             # read screen (of backbuffer)
-            self._pickerHelper.CaptureScreen()
+            # We can improve performance if we do not capture the screen here
+            if self._enableUserInteraction:
+                self._pickerHelper.CaptureScreen()
+            else:
+                self._pickerHelper.ClearScreen()
             #self._SwapBuffers() # uncomment to see the color coded objects
             
             # draw picture
@@ -856,6 +877,9 @@ class BaseFigure(_BaseFigure):
         For the backend to generate key events. 
         
         """
+        if not self._enableUserInteraction:
+            return
+        
         # make lower
         eventName = eventName.lower()
         # get items now under the mouse
@@ -895,6 +919,8 @@ class BaseFigure(_BaseFigure):
         For the backend to generate mouse events. 
         
         """
+        if not self._enableUserInteraction:
+            return
         
         # make lower
         eventName = eventName.lower()
