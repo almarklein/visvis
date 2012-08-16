@@ -4,8 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Package visvis
-
+""" 
 Visvis is a pure Python library for visualization of 1D to 4D data in an
 object oriented way. Essentially, visvis is an object oriented layer of
 Python on top of OpenGl, thereby combining the power of OpenGl with the
@@ -25,8 +24,8 @@ with IPython or IEP) and can be embedded in applications.
 Requirements:
   * Numpy
   * PyOpengl
-  * A backend GUI toolkit (PyQt4, wxPython, GTK, fltk)
-  * (optionally, to enable reading and writing of images) PIL
+  * A backend GUI toolkit (PySide, PyQt4, wxPython, GTK, fltk)
+  * (optionally, to enable reading and writing of images) imageio or PIL
 
 usage:
 import visvis as vv
@@ -41,9 +40,9 @@ For more help, see ...
   * the examples at the bottom of the function modules (in the functions dir)
   * the online docs: http://code.google.com/p/visvis/
 
-"""
+Visvis is maintained by `Science Applied <http://www.science-applied.nl>`_.
 
-# todo: more lazy imports for io and vvmovie
+"""
 
 __version__  = '1.6.dev' 
 
