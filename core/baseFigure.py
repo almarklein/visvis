@@ -923,13 +923,13 @@ class BaseFigure(_BaseFigure):
                 if item not in items1:
                     events.append(item.eventEnter)
             
-            # Always generate motion event from figure
-            events.append(self.eventMotion) 
-            
             # Generate motion events for any objects that have handlers
             # for the motion event. Note that this excludes "self".
             items = self.FindObjects(lambda i:i.eventMotion.hasHandlers)
             events.extend([item.eventMotion for item in items])
+            
+            # Always generate motion event from figure
+            events.append(self.eventMotion) 
             
             # Update items under the mouse
             self._underMouse = [item.GetWeakref() for item in items2]        
@@ -949,6 +949,7 @@ class BaseFigure(_BaseFigure):
         elif eventName.count("up"):
             # Find objects that are currently clicked down
             items = self.FindObjects(lambda i:i._mousePressedDown)
+            if self._mousePressedDown: items.append(self)
             events.extend([item.eventMouseUp for item in items])
             # todo: Also generate event where the mouse is now over - MouseDrop?
             #if items[-1] not in items:
