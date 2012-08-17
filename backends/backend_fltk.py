@@ -130,9 +130,11 @@ class GLWidget(fltk.Fl_Gl_Window):
         self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers())
     
     def OnMouseWheel(self, event):
-        numSteps = -1.0 * fltk.Fl.event_dy()
+        # Mpff, I cant event test horizontal scrolling, because if I do, fltk segfaults
+        horizontal = -1.0 * fltk.Fl.event_dx() or 0
+        vertical = -1.0 * fltk.Fl.event_dy() or 0
         x, y = fltk.Fl.event_x(), fltk.Fl.event_y()
-        self.figure._GenerateMouseEvent('scroll', x, y, numSteps, modifiers())
+        self.figure._GenerateMouseEvent('scroll', x, y, horizontal, vertical, modifiers())
     
     def OnKeyDown(self, event):
         key, text = self._ProcessKey()

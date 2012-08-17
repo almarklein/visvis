@@ -150,9 +150,12 @@ class GLWidget(GLCanvas):
     def OnMouseWheel(self, event):
         numDegrees = event.GetWheelRotation() / 8.0
         numSteps = numDegrees / 15.0
+        # There is event.GetWheelAxis() but only in newer versions of wx
+        # Mine has not so I am not able to even test it...
+        horizontal, vertical = 0, numSteps
         if self.figure:
             x,y = event.GetPosition()
-            self.figure._GenerateMouseEvent('scroll', x, y, numSteps, modifiers(event))
+            self.figure._GenerateMouseEvent('scroll', x, y, horizontal, vertical, modifiers(event))
     
     def OnKeyDown(self, event):
         key, text = self._ProcessKey(event)

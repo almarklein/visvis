@@ -871,8 +871,8 @@ class BaseFigure(_BaseFigure):
         gl.glLoadIdentity()
     
     
-    def _GenerateKeyEvent(self, eventName, key, text, modifiers=()):
-        """ _GenerateKeyEvent(eventName, key, text, modifiers=())
+    def _GenerateKeyEvent(self, eventName, *eventArgs):
+        """ _GenerateKeyEvent(eventName, *eventArgs)
         
         For the backend to generate key events. 
         
@@ -903,18 +903,14 @@ class BaseFigure(_BaseFigure):
         # was fired because it propagated from its children.
         if eventToAlwaysFire:
             eventToAlwaysFire._isFired = False
-        #
         for event in events:
-            event.Set(key, text, modifiers)
-            event.Fire()
-        #
+            event.Fire(*eventArgs)
         if eventToAlwaysFire and not eventToAlwaysFire._isFired:
-            eventToAlwaysFire.Set(key, text, modifiers)
-            eventToAlwaysFire.Fire()
+            eventToAlwaysFire.Fire(*eventArgs)
     
     
-    def _GenerateMouseEvent(self, eventName, absx, absy, button=0, modifiers=()):
-        """ _GenerateMouseEvent(eventName, x, y, button=0)
+    def _GenerateMouseEvent(self, eventName, *eventArgs):
+        """ _GenerateMouseEvent(eventName, *eventArgs)
         
         For the backend to generate mouse events. 
         
@@ -933,7 +929,7 @@ class BaseFigure(_BaseFigure):
         if eventName.count("motion") or eventName.count("move"):
             
             # Set current mouse pos, so that it's up to date
-            self._mousepos = absx, absy
+            self._mousepos = eventArgs[0], eventArgs[1]
             
             # also get new version of items under the mouse           
             items2 = self._pickerHelper.GetItemsUnderMouse(self)
@@ -994,5 +990,4 @@ class BaseFigure(_BaseFigure):
         
         # Fire events
         for event in events:
-            event.Set(absx, absy, button, modifiers)
-            event.Fire()
+            event.Fire(*eventArgs)

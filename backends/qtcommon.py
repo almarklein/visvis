@@ -139,9 +139,13 @@ class GLWidget(QtOpenGL.QGLWidget):
         # Get number of steps
         numDegrees = event.delta() / 8.0
         numSteps = numDegrees / 15.0
+        if event.orientation() == QtCore.Qt.Vertical:
+            horizontal, vertical = 0, numSteps
+        else:
+            horizontal, vertical = numSteps, 0
         # fire event   
         x, y = event.x(), event.y()
-        self.figure._GenerateMouseEvent('scroll', x, y, numSteps, modifiers(event))
+        self.figure._GenerateMouseEvent('scroll', x, y, horizontal, vertical, modifiers(event))
     
     def keyPressEvent(self, event):      
         key = self._ProcessKey(event)
