@@ -64,6 +64,6 @@ if True:
 
 else:
     # The native way.
-    wxApp = wx.PySimpleApp()    
+    wxApp = wx.App()    
     m = MainWindow()
     wxApp.MainLoop()

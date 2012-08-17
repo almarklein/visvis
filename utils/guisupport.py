@@ -80,7 +80,8 @@ def get_app_wx(*args, **kwargs):
     if app is None:
         if 'redirect' not in kwargs:
             kwargs['redirect'] = False
-        app = wx.PySimpleApp(*args, **kwargs)
+        # app = wx.PySimpleApp(*args, **kwargs) Deprecated!
+        app = wx.App(*args, **kwargs)
     return app
 
 def is_event_loop_running_wx(app=None):
