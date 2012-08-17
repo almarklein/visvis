@@ -127,9 +127,10 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
         self.figure._GenerateMouseEvent(MOUSEMAP[event.type], event.x, event.y, button, modifiers(event))
     
     def _on_scroll_event(self, widget, event):
-        step = {gtk.gdk.SCROLL_UP: 1, gtk.gdk.SCROLL_DOWN: -1}.get(event.direction)
-        if step is not None:
-            self.figure._GenerateMouseEvent('scroll', event.x, event.y, step, modifiers(event))
+        horizontal = {gtk.gdk.SCROLL_LEFT: 1.0, gtk.gdk.SCROLL_RIGHT: -1.0}.get(event.direction, 0)
+        vertical = {gtk.gdk.SCROLL_UP: 1.0, gtk.gdk.SCROLL_DOWN: -1.0}.get(event.direction, 0)
+        if horizontal or vertical:
+            self.figure._GenerateMouseEvent('scroll', event.x, event.y, horizontal, vertical, modifiers(event))
     
     def _on_key_press_event(self, widget, event):
         self.figure._GenerateKeyEvent('keydown', KEYMAP.get(event.keyval, event.keyval),

@@ -121,7 +121,6 @@ class BaseEvent:
     def __init__(self, owner):   
         self._owner = weakref.ref(owner)
         self._handlers = []
-        self._setArgs = [] # The arguments passed to the Set method
         
         # For propagation to parent and sibling handlers
         self._accepted = True
@@ -130,10 +129,6 @@ class BaseEvent:
         # Properties
         self._modifiers = ()
     
-    def _SetArgs(self, *args):
-        """ This should be called in the Set method.
-        """
-        self._setArgs = args
     
     @property
     def owner(self):
@@ -181,8 +176,8 @@ class BaseEvent:
     def SetHandled(self, isHandled=True):
         """ SetHandled(isHandled=True)
         Mark the event as handled, preventing any subsequent handlers
-        from being called. Use this to override existing behavior of a
-        Wibject or Wobject. The same behavior is obtained when the handler
+        from being called. Use this in a custom handler to override the 
+        existing  handler. The same behavior is obtained when the handler
         returns True.
         """
         self._isHandled = bool(isHandled)
@@ -236,17 +231,23 @@ class BaseEvent:
         self._UpdateOwner()
     
     
-    def Fire(self):
-        """ Fire()
+    def Fire(self, *eventArgs):
+        """ Fire(*eventArgs)
         
         Fire the event, calling all functions that are bound
         to it, untill the event is handled (a handler returns True).
         
         If no handlers are present or if the event is explicitly ignored,
-        the event is propagated the owners parent.
+        the event is propagated to the owners parent. This only apples
+        to events for which this is approprioate and only if eventArgs 
+        are given.
         
         """
         self._isFired = True # Flag used by BaseFigure
+        
+        # If event args given, set first
+        if eventArgs:
+            self.Set(*eventArgs)
         
         # remove dead weakrefs
         for c in [c for c in self._handlers]:
@@ -281,17 +282,15 @@ class BaseEvent:
             if handled:
                 break
         
-        if self._PROPAGATE and not accepted:
+        if self._PROPAGATE and eventArgs and not accepted:
             # The event is not properly handled yet, try the parent object
             ob = self.owner
             if (ob is not None) and (ob.parent is not None):
                 # Try getting the event object with the same name
                 parentEvent = getattr(ob.parent, self.eventName, None)
                 if parentEvent is not None:
-                    # Set event using the args of *this* event object as a
-                    # child and then fire
-                    parentEvent.Set(*self._setArgs)
-                    parentEvent.Fire()
+                    # Fire parent events with given event arguments
+                    parentEvent.Fire(*eventArgs)
     
     
     def _HandleExceptionInCallback(self, func):
@@ -340,8 +339,7 @@ class BaseEvent:
         """
         return self._modifiers
     
-    # Event classes should overload these two:
-    
+    # Event classes should overload this        
     def Set(self, modifiers=()):
         """ Set(modifiers) 
         
@@ -350,7 +348,6 @@ class BaseEvent:
         modifier keys currently pressed.
         
         """
-        self._SetArgs(modifiers)
         self._modifiers = modifiers
     
 
@@ -364,22 +361,18 @@ class MouseEvent(BaseEvent):
     
     def __init__(self, owner):
         BaseEvent.__init__(self, owner)
-        
         self._x, self._y = 0, 0
         self._x2d, self._y2d = 0, 0
         self._but = 0
     
     
     def Set(self, absx, absy, but, modifiers=()):
-        """ Set(absx, absy, but)
+        """ Set(absx, absy, but, modifiers=())
         
         Set the event properties before firing it. 
         
         """
         BaseEvent.Set(self, modifiers)
-        
-        # This is what Set will be called with if the event propagetes to the parent
-        self._SetArgs(absx, absy, but, modifiers)
         
         # Set properties we can alway set
         self._absx = absx
@@ -487,7 +480,6 @@ class KeyEvent(BaseEvent):
     
     def __init__(self, owner):
         BaseEvent.__init__(self, owner)
-        
         self._key = 0
         self._text = ''
     
@@ -498,9 +490,6 @@ class KeyEvent(BaseEvent):
         
         """
         BaseEvent.Set(self, modifiers)
-        # This is what Set will be called with if the event propagetes to the parent
-        self._SetArgs(key, text, modifiers)
-        
         self._key = key
         self._text = text
     
@@ -530,10 +519,10 @@ class EventMouseDown(MouseEvent):
     
     """
     _PROPAGATE = True
-    def Fire(self):
+    def Fire(self, *eventArgs):
         if self.owner:
             self.owner._mousePressedDown = True
-        MouseEvent.Fire(self)
+        MouseEvent.Fire(self, *eventArgs)
 
 class EventMouseUp(MouseEvent):
     """ EventMouseUp(owner)
@@ -544,10 +533,10 @@ class EventMouseUp(MouseEvent):
     
     """
     _PROPAGATE = False
-    def Fire(self):
+    def Fire(self, *eventArgs):
         if self.owner:
             self.owner._mousePressedDown = False
-        MouseEvent.Fire(self)
+        MouseEvent.Fire(self, *eventArgs)
 
 class EventDoubleClick(MouseEvent):
     """ EventDoubleClick(owner)
@@ -583,23 +572,44 @@ class EventMotion(MouseEvent):
     when the mouse is pressed down on the object.
     """
     _PROPAGATE = False
+
 class EventScroll(MouseEvent):
     """ EventScroll(owner)
     
     Fired when the scroll wheel is used while over the object, or on any of its
     children and not being handled. The value of the button property is 
     undefined for this event. The amount of scrolling is available as the
-    scrollSteps property.
+    horizontalSteps and verticalSteps properties.
     
     """
     _PROPAGATE = True
-    @property
-    def scrollSteps(self):
-        """ Get the amount of scrolling (can be positive or negative) 
-        for this event.
+    
+    def __init__(self, owner):
+        MouseEvent.__init__(self, owner)
+        self._horizontalSteps = 0.0
+        self._verticalSteps = 0.0
+    
+    def Set(self, absx, absy, horizontalSteps, verticalSteps, modifiers=()):
+        """ Set(absx, absy, horizontalSteps, verticalSteps, modifiers=())
         """
-        # Yes, we simply use the _but variable, because it is unused anyway
-        return self._but
+        MouseEvent.Set(self, absx, absy, 0, modifiers) # Button is 0
+        self._horizontalSteps = horizontalSteps
+        self._verticalSteps = verticalSteps
+
+    @property
+    def horizontalSteps(self):
+        """ Get the amount of scrolling in the horizontal direction
+        (can be positive or negative) .
+        """
+        return self._horizontalSteps
+    
+    @property
+    def verticalSteps(self):
+        """ Get the amount of scrolling in the vertical direction
+        (can be positive or negative) .
+        """
+        return self._verticalSteps
+
 
 class EventKeyDown(KeyEvent):
     """ EventKeyDown(owner)
