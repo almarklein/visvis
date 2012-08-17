@@ -49,8 +49,7 @@ def picker(event):
             event.x, event.y, event.x2d, event.y2d))
 
 def ignoringPicker(event):
-    print("Picking %s (%i,%i - %3.2f, %3.2f)" % (event.owner.description,
-            event.x, event.y, event.x2d, event.y2d))
+    picker(event)
     event.Ignore() # The parent object will be picked too!
 
 def entering(event):
@@ -64,6 +63,14 @@ def leaving(event):
     if hasattr(event.owner, 'original_lc'):
         event.owner.lc = event.owner.original_lc
 
+def keyCallback(event):
+    print('Received key %i at %s' % (event.key, event.owner.description))
+
+
+def ignoringKeyCallback(event):
+    keyCallback(event)
+    event.Ignore() # The parent object will receive the event too
+
 # Subscribe to events
 
 # Note how clicking on the red line also picks the axes,
@@ -71,14 +78,19 @@ def leaving(event):
 # Note also that no mouseDown event is registered for the 3d line,
 # and that clicking on it is equivalent to clicking on the axes;
 # the event is propagated to the line's parent.
+#
+# Same goes for key events. But in addition, the figure *always* 
+# receives a key event.
 
 for ob in [f, a, b1, b2, l1, l2, l3]:
     ob.eventEnter.Bind(entering)
     ob.eventLeave.Bind(leaving)
 for ob in [f, a, b1, l1]:
     ob.eventMouseDown.Bind(picker)
+    ob.eventKeyDown.Bind(keyCallback)
 for ob in [b2, l2]:
     ob.eventMouseDown.Bind(ignoringPicker)
+    ob.eventKeyDown.Bind(ignoringKeyCallback)
 
 # Start app
 app.Run()
