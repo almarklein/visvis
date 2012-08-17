@@ -19,7 +19,6 @@ import os
 import visvis
 from visvis import BaseFigure, events, constants
 from visvis.core.misc import getResourceDir
-from visvis.utils import guisupport
 
 import wx
 from wx.glcanvas import GLCanvas
@@ -392,8 +391,11 @@ class App(events.App):
         self._timer = None
     
     def _GetNativeApp(self):
-        # Get native app in save way
-        app = guisupport.get_app_wx()
+        # Get native app in save way. Taken from guisupport.py, 
+        # but use wx.App() class because PySimpleApp is deprecated
+        app = wx.GetApp()
+        if app is None:
+            app = wx.App(False)
         # Store so it won't be deleted, but not on a visvis object,
         # or an application may produce error when closed
         wx.app_instance = app

@@ -47,7 +47,6 @@ Visvis is maintained by `Science Applied <http://www.science-applied.nl>`_.
 __version__  = '1.6.dev' 
 
 # Loose sub-modules and sub-packages
-import visvis.utils.guisupport
 from visvis.utils.pypoints import Point, Pointset, Aarray, Quaternion
 from visvis.utils import ssdf
 from visvis import vvmovie
