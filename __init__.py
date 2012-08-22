@@ -44,7 +44,7 @@ Visvis is maintained by `Science Applied <http://www.science-applied.nl>`_.
 
 """
 
-__version__  = '1.6.dev' 
+__version__  = '1.7' 
 
 # Loose sub-modules and sub-packages
 from visvis.utils.pypoints import Point, Pointset, Aarray, Quaternion
