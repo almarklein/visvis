@@ -40,7 +40,7 @@ if False: # Use this line to switch back:
     t.shader.fragment.RemovePart(SH_2F_EDGEL)
 
 # In case there are bugs in the code, it might be helpfull to see the code
-# t2.fragmentShader.ShowCode() # Shows the whole code
+# t.shader.fragment.ShowCode() # Shows the whole code
 t.shader.fragment.ShowCode('edge') # Shows only our bit, with line numbers
 
 # Run app
