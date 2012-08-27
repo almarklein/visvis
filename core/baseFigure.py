@@ -43,6 +43,14 @@ class ObjectPickerHelper(object):
     A simple class to help picking of the objects.
     An instance of this is attached to each figure. 
     
+    Picking in visvis is done using the approach proposed in chapter 14 of 
+    the 6th edition of the Red Book: rendering to the backbuffer using a
+    particular color per object.
+    
+    Another possible approach is gluPickMatrix. Although the backbuffer 
+    approach might be a bit slower, it is easier than the pickmatrix approach 
+    and allows more control over what objects you want to be able to pick. 
+    
     """
     
     def __init__(self):
