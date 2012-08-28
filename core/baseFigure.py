@@ -748,8 +748,9 @@ class BaseFigure(_BaseFigure):
             self._pickerHelper.AssignIds(self)
             
             # draw shape (to backbuffer)
-            self._Draw(DRAW_SHAPE)
-            gl.glFinish() # call finish, normally swapbuffers does this...
+            if self._enableUserInteraction:
+                self._Draw(DRAW_SHAPE)
+                gl.glFinish() # call finish, normally swapbuffers does this...
             
             # read screen (of backbuffer)
             # We can improve performance if we do not capture the screen here

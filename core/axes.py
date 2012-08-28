@@ -897,7 +897,7 @@ class Axes(base.Wibject):
             self._OnDrawContent(mode, bgcolor, pos, pickerHelper)
             
             # Make screenshot and store/combine
-            if self._useBuffer:
+            if self._useBuffer and fig.enableUserInteraction:
                 tmp = _Screenshot()
                 shapesMatch = (sshot is not None) and tmp.shape == sshot.shape
                 if blurWithScreenshot and shapesMatch:
