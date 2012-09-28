@@ -49,22 +49,22 @@ def surf(*args, **kwargs):
     
     # Parse input
     if len(args) == 1:
-        z = args[0]
+        z = np.asanyarray(args[0])
         checkZ(z)
         y = np.arange(z.shape[0])
         x = np.arange(z.shape[1])        
         c = None
     elif len(args) == 2:
-        z, c = args
+        z, c = map(np.asanyarray, args)
         checkZ(z)
         y = np.arange(z.shape[0])
         x = np.arange(z.shape[1])
     elif len(args) == 3:
-        x, y, z = args
+        x, y, z = map(np.asanyarray, args)
         checkZ(z)
         c = None
     elif len(args) == 4:
-        x, y, z, c = args
+        x, y, z, c = map(np.asanyarray, args)
         checkZ(z)
     else:
         raise ValueError('Invalid number of arguments.  Must pass 1-4 arguments.')
