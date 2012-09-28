@@ -13,10 +13,20 @@ def grid(*args, **kwargs):
     
     Usage
     -----
-      * grid(z) - create a grid mesh using the given image with z coordinates.
-      * grid(z, c) - also supply a texture image to map.
-      * grid(x, y, z) - give x, y and z coordinates.
-      * grid(x, y, z, c) - also supply a texture image to map.
+      * grid(Z) - create a grid mesh using the given image with z coordinates.
+      * grid(Z, C) - also supply a texture image to map.
+      * grid(X, Y, Z) - give x, y and z coordinates.
+      * grid(X, Y, Z, C) - also supply a texture image to map.
+    
+    Parameters
+    ----------
+    Z : A MxN 2D array
+    X : A length N 1D array, or a MxN 2D array
+    Y : A length M 1D array, or a MxN 2D array
+    C : A MxN 2D array, or a AxBx3 3D array
+        If 2D, C specifies a colormap index for each vertex of Z.  If
+        3D, C gives a RGB image to be mapped over Z.  In this case, the
+        sizes of C and Z need not match.
     
     Keyword arguments
     -----------------
