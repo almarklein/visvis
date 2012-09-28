@@ -73,26 +73,26 @@ def surf(*args, **kwargs):
     
     
     # Init vertices
-    vertices = np.zeros( (len(x)*len(y), 3), dtype=np.float32  )
+    vertices = np.zeros( (z.shape[0] * z.shape[1], 3), dtype=np.float32  )
     
     # Set y vertices
-    if len(y) == z.shape[0]:
-        start, jump = 0, len(y)
+    if y.shape == (z.shape[0],):
+        jump = z.shape[1]
         for i in range(z.shape[1]):
-            vertices[start:start+jump,0] = y
-            start += jump
-    elif len(y) == z.shape[0]*z.shape[1]:
-        vertices[:,0] = y
+            vertices[i::jump,1] = y
+    elif y.shape == z.shape:
+        vertices[:,1] = y.ravel()
     else:
         raise ValueError('Y does not match the dimensions of Z.')
     
     # Set x vertices
-    if len(x) == z.shape[1]:
-        step = z.shape[0]
+    if x.shape == (z.shape[1],):
+        start, jump = 0, z.shape[1]
         for i in range(z.shape[0]):
-            vertices[i::step,1] = x
-    elif len(y) == z.shape[0]*z.shape[1]:
-        vertices[:,1] = x
+            vertices[start:start+jump,0] = x
+            start += jump
+    elif x.shape == z.shape:
+        vertices[:,0] = x.ravel()
     else:
         raise ValueError('X does not match the dimensions of Z.')
     
@@ -101,43 +101,39 @@ def surf(*args, **kwargs):
     
     
     # Create texcoords
-    if c is None or c.ndim==2:
-        # Grayscale texture -> color mapping        
+    if c is None or c.shape == z.shape:
         # No texture -> colormap on the z value
-        
-        if c is None:
-            texcords = z.reshape((z.shape[0]*z.shape[1],))
-        elif c.size != z.size:
-            raise ValueError('The 2D color data for surf must match z.')
-        else:
-            texcords = c.reshape((c.shape[0]*c.shape[1],))
+        # Grayscale texture -> color mapping        
+        texcords = (c if c is not None else z).ravel()
         
         # Correct for min-max
         mi, ma = texcords.min(), texcords.max()
         texcords = (texcords-mi) / (ma-mi)
     
-    else:
+    elif c.ndim == 3:
         # color texture -> use texture mapping
         
         texcords = np.zeros( (vertices.shape[0],2), dtype=np.float32  )
-        if True:
-            v = np.linspace(0,1,z.shape[0])
-            start, jump = 0, len(y)
-            for i in range(z.shape[1]):
-                texcords[start:start+jump,0] = v
-                start += jump
-        if True:
-            u = np.linspace(0,1,z.shape[1])
-            step = z.shape[0]
-            for i in range(z.shape[0]):
-                texcords[i::step,1] = u
+        # y coordinates
+        v = np.linspace(0,1,z.shape[0])
+        jump = z.shape[1]
+        for i in range(z.shape[1]):
+            texcords[i::jump,1] = v
+        # x coordinates
+        u = np.linspace(0,1,z.shape[1])
+        start = 0
+        for i in range(z.shape[0]):
+            texcords[start:start+jump,0] = u
+            start += jump
     
+    else:
+        raise ValueError('C does not match the dimensions of Z.')
     
     # Create faces
     faces = []
-    w = len(y)
-    for j in range(len(y)-1):
-        for i in range(len(x)-1):
+    w = z.shape[1]
+    for j in range(z.shape[1]-1):
+        for i in range(z.shape[0]-1):
             faces.extend([j + w*i, j+1+w*i, j+1+w*(i+1), j+w*(i+1)])
     
     
