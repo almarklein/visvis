@@ -72,32 +72,20 @@ def surf(*args, **kwargs):
         axesAdjust = kwargs['axesAdjust']
     
     
-    # Init vertices
-    vertices = np.zeros( (z.shape[0] * z.shape[1], 3), dtype=np.float32  )
-    
     # Set y vertices
     if y.shape == (z.shape[0],):
-        jump = z.shape[1]
-        for i in range(z.shape[1]):
-            vertices[i::jump,1] = y
-    elif y.shape == z.shape:
-        vertices[:,1] = y.ravel()
-    else:
+        y = y.reshape(z.shape[0], 1).repeat(z.shape[1], axis=1)
+    elif y.shape != z.shape:
         raise ValueError('Y does not match the dimensions of Z.')
     
     # Set x vertices
     if x.shape == (z.shape[1],):
-        start, jump = 0, z.shape[1]
-        for i in range(z.shape[0]):
-            vertices[start:start+jump,0] = x
-            start += jump
-    elif x.shape == z.shape:
-        vertices[:,0] = x.ravel()
-    else:
+        x = x.reshape(1, z.shape[1]).repeat(z.shape[0], axis=0)
+    elif x.shape != z.shape:
         raise ValueError('X does not match the dimensions of Z.')
     
-    # Set z vertices
-    vertices[:,2] = z.ravel()
+    # Set vertices
+    vertices = np.column_stack((x.ravel(), y.ravel(), z.ravel()))
     
     
     # Create texcoords
@@ -112,29 +100,18 @@ def surf(*args, **kwargs):
     
     elif c.ndim == 3:
         # color texture -> use texture mapping
-        
-        texcords = np.zeros( (vertices.shape[0],2), dtype=np.float32  )
-        # y coordinates
-        v = np.linspace(0,1,z.shape[0])
-        jump = z.shape[1]
-        for i in range(z.shape[1]):
-            texcords[i::jump,1] = v
-        # x coordinates
-        u = np.linspace(0,1,z.shape[1])
-        start = 0
-        for i in range(z.shape[0]):
-            texcords[start:start+jump,0] = u
-            start += jump
+        U, V = np.meshgrid(np.linspace(0,1,z.shape[1]), np.linspace(0,1,z.shape[0]))
+        texcords = np.column_stack((U.ravel(), V.ravel()))
     
     else:
         raise ValueError('C does not match the dimensions of Z.')
     
     # Create faces
-    faces = []
+    faces = np.zeros(((z.shape[0]-1) * (z.shape[1]-1), 4), np.int)
     w = z.shape[1]
     for j in range(z.shape[1]-1):
         for i in range(z.shape[0]-1):
-            faces.extend([j + w*i, j+1+w*i, j+1+w*(i+1), j+w*(i+1)])
+            faces[j * (z.shape[0]-1) + i, :] = [j + w*i, j+1+w*i, j+1+w*(i+1), j+w*(i+1)]
     
     
     ## Visualize
