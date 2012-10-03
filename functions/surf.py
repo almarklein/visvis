@@ -114,11 +114,11 @@ def surf(*args, **kwargs):
         raise ValueError('C must have same shape as Z, or be 3D array.')
     
     # Create faces
-    faces = np.zeros(((z.shape[0]-1) * (z.shape[1]-1), 4), np.int)
     w = z.shape[1]
-    for j in range(z.shape[1]-1):
-        for i in range(z.shape[0]-1):
-            faces[j * (z.shape[0]-1) + i, :] = [j + w*i, j+1+w*i, j+1+w*(i+1), j+w*(i+1)]
+    i = np.arange(z.shape[0]-1)
+    faces = np.row_stack(
+        np.column_stack((j + w*i, j+1 + w*i, j+1 + w*(i+1), j + w*(i+1)))
+        for j in range(w-1))
     
     
     ## Visualize
