@@ -393,8 +393,11 @@ class Line(Wobject):
         # Obtain untransformed coords (if not an empty set)
         if not self._points:
             return None
-        x1, y1, z1 = np.nanmin(self._points.data, axis=0)
-        x2, y2, z2 = np.nanmax(self._points.data, axis=0)
+        p = self._points.data
+        valid = np.isfinite(p[:,0]) * np.isfinite(p[:,1]) * np.isfinite(p[:,2])
+        validpoints = p[valid, :]
+        x1, y1, z1 = validpoints.min(axis=0)
+        x2, y2, z2 = validpoints.max(axis=0)
         
         # There we are
         return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)
