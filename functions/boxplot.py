@@ -73,6 +73,13 @@ def boxplot(data1, data2=None, width=0.75, whiskers=1.5, axesAdjust=True, axes=N
         if len(data_list) != len(xx):
             raise ValueError('Positions do not match length of data.')
     
+    # Remove data where x position is invalid
+    # At the same time sort data by x position
+    validIndices, = np.where(np.isfinite(xx))
+    validIndices = sorted(validIndices, key=lambda i:xx[i])
+    xx = [xx[i] for i in validIndices]
+    data_list = [data_list[i] for i in validIndices]
+    
     # Create boxes and boxplot object
     boxes = [BoxPlotBox(d, width, whiskers) for d in data_list]
     bp = BoxPlot(axes, xx, boxes)
@@ -365,8 +372,8 @@ class BoxPlot(vv.Wobject):
         # ylim is harder
         y1, y2 = 9999999999999, -99999999999999999
         for box in self._boxes:
-            y1 = min(y1, box._limits.min)
-            y2 = max(y2, box._limits.max)
+            y1 = min(y1, box._stats.dmin)
+            y2 = max(y2, box._stats.dmax)
         if not self._boxes:
             y1, y2 = 0,1
         
