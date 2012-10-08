@@ -855,18 +855,17 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         
         """
         
-        # Get vertices and remove nans
-        vertices = self._vertices.copy()
-        I = np.isnan(vertices[:,2]); vertices[I,0] = np.nan
-        I = np.isnan(vertices[:,1]); vertices[I,0] = np.nan
-        I = (1-np.isnan(vertices[:,0])).astype(np.bool)
-        vertices = vertices[I,:]
+        # Get vertices with all coordinates unmasked and finite
+        v = self._vertices
+        if isinstance(v, np.ma.MaskedArray):
+            v = v.filled(np.nan)
+        valid = np.isfinite(v[:,0]) * np.isfinite(v[:,1]) * np.isfinite(v[:,2])
+        validverts = v[valid,:]
         
         try:
-            # Obtain untransformed coords         
-            x1, x2 = vertices[:,0].min(), vertices[:,0].max()
-            y1, y2 = vertices[:,1].min(), vertices[:,1].max()
-            z1, z2 = vertices[:,2].min(), vertices[:,2].max()
+            # Obtain untransformed coords
+            x1, y1, z1 = validverts.min(axis=0)
+            x2, y2, z2 = validverts.max(axis=0)
             
             # There we are
             return Wobject._GetLimits(self, x1, x2, y1, y2, z1, z2)

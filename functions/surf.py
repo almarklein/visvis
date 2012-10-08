@@ -20,8 +20,15 @@ def surf(*args, **kwargs):
       * surf(X, Y, Z) - give x, y and z coordinates.
       * surf(X, Y, Z, C) - also supply a texture image to map.
     
-    If C is a 2D image, it should match the dimensions of z. If it is an Nx3
-    array it specifies the color for each vertex.
+    Parameters
+    ----------
+    Z : A MxN 2D array
+    X : A length N 1D array, or a MxN 2D array
+    Y : A length M 1D array, or a MxN 2D array
+    C : A MxN 2D array, or a AxBx3 3D array
+        If 2D, C specifies a colormap index for each vertex of Z.  If
+        3D, C gives a RGB image to be mapped over Z.  In this case, the
+        sizes of C and Z need not match.
     
     Keyword arguments
     -----------------
@@ -38,29 +45,29 @@ def surf(*args, **kwargs):
     
     def checkZ(z):
         if z.ndim != 2:
-            raise ValueError('Surf() requires Z to be 2D.')
+            raise ValueError('Z must be a 2D array.')
     
     # Parse input
     if len(args) == 1:
-        z = args[0]
+        z = np.asanyarray(args[0])
         checkZ(z)
         y = np.arange(z.shape[0])
         x = np.arange(z.shape[1])        
         c = None
     elif len(args) == 2:
-        z, c = args
+        z, c = map(np.asanyarray, args)
         checkZ(z)
         y = np.arange(z.shape[0])
         x = np.arange(z.shape[1])
     elif len(args) == 3:
-        x, y, z = args
+        x, y, z = map(np.asanyarray, args)
         checkZ(z)
         c = None
     elif len(args) == 4:
-        x, y, z, c = args
+        x, y, z, c = map(np.asanyarray, args)
         checkZ(z)
     else:
-        raise ValueError('Invalid number of arguments for function surf().')
+        raise ValueError('Invalid number of arguments.  Must pass 1-4 arguments.')
     
     
     # Parse kwargs
@@ -72,73 +79,46 @@ def surf(*args, **kwargs):
         axesAdjust = kwargs['axesAdjust']
     
     
-    # Init vertices
-    vertices = np.zeros( (len(x)*len(y), 3), dtype=np.float32  )
-    
     # Set y vertices
-    if len(y) == z.shape[0]:
-        start, jump = 0, len(y)
-        for i in range(z.shape[1]):
-            vertices[start:start+jump,0] = y
-            start += jump
-    elif len(y) == z.shape[0]*z.shape[1]:
-        vertices[:,0] = y
-    else:
-        raise ValueError('Y does not match the dimensions of Z.')
+    if y.shape == (z.shape[0],):
+        y = y.reshape(z.shape[0], 1).repeat(z.shape[1], axis=1)
+    elif y.shape != z.shape:
+        raise ValueError('Y must have same shape as Z, or be 1D with length of rows of Z.')
     
     # Set x vertices
-    if len(x) == z.shape[1]:
-        step = z.shape[0]
-        for i in range(z.shape[0]):
-            vertices[i::step,1] = x
-    elif len(y) == z.shape[0]*z.shape[1]:
-        vertices[:,1] = x
-    else:
-        raise ValueError('X does not match the dimensions of Z.')
+    if x.shape == (z.shape[1],):
+        x = x.reshape(1, z.shape[1]).repeat(z.shape[0], axis=0)
+    elif x.shape != z.shape:
+        raise ValueError('X must have same shape as Z, or be 1D with length of columns of Z.')
     
-    # Set z vertices
-    vertices[:,2] = z.ravel()
+    # Set vertices
+    vertices = np.column_stack((x.ravel(), y.ravel(), z.ravel()))
     
     
     # Create texcoords
-    if c is None or c.ndim==2:
-        # Grayscale texture -> color mapping        
+    if c is None or c.shape == z.shape:
         # No texture -> colormap on the z value
-        
-        if c is None:
-            texcords = z.reshape((z.shape[0]*z.shape[1],))
-        elif c.size != z.size:
-            raise ValueError('The 2D color data for surf must match z.')
-        else:
-            texcords = c.reshape((c.shape[0]*c.shape[1],))
+        # Grayscale texture -> color mapping        
+        texcoords = (c if c is not None else z).ravel()
         
         # Correct for min-max
-        mi, ma = texcords.min(), texcords.max()
-        texcords = (texcords-mi) / (ma-mi)
+        mi, ma = texcoords.min(), texcoords.max()
+        texcoords = (texcoords-mi) / (ma-mi)
+    
+    elif c.ndim == 3:
+        # color texture -> use texture mapping
+        U, V = np.meshgrid(np.linspace(0,1,z.shape[1]), np.linspace(0,1,z.shape[0]))
+        texcoords = np.column_stack((U.ravel(), V.ravel()))
     
     else:
-        # color texture -> use texture mapping
-        
-        texcords = np.zeros( (vertices.shape[0],2), dtype=np.float32  )
-        if True:
-            v = np.linspace(0,1,z.shape[0])
-            start, jump = 0, len(y)
-            for i in range(z.shape[1]):
-                texcords[start:start+jump,0] = v
-                start += jump
-        if True:
-            u = np.linspace(0,1,z.shape[1])
-            step = z.shape[0]
-            for i in range(z.shape[0]):
-                texcords[i::step,1] = u
-    
+        raise ValueError('C must have same shape as Z, or be 3D array.')
     
     # Create faces
-    faces = []
-    w = len(y)
-    for j in range(len(y)-1):
-        for i in range(len(x)-1):
-            faces.extend([j + w*i, j+1+w*i, j+1+w*(i+1), j+w*(i+1)])
+    w = z.shape[1]
+    i = np.arange(z.shape[0]-1)
+    faces = np.row_stack(
+        np.column_stack((j + w*i, j+1 + w*i, j+1 + w*(i+1), j + w*(i+1)))
+        for j in range(w-1))
     
     
     ## Visualize
@@ -148,7 +128,7 @@ def surf(*args, **kwargs):
         axes = vv.gca()
     
     # Create mesh
-    m = vv.Mesh(axes, vertices, faces, values=texcords, verticesPerFace=4)
+    m = vv.Mesh(axes, vertices, faces, values=texcoords, verticesPerFace=4)
     
     # Should we apply a texture?
     if c is not None and c.ndim==3:

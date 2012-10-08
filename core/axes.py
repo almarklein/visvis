@@ -852,6 +852,11 @@ class Axes(base.Wibject):
             fig = self.GetFigure()
             w,h = fig.position.size
             
+            # Correction of size for labels is normally done in OnDrawShape,
+            # but this is not called if user interaction is disabled ...
+            if not fig.enableUserInteraction:
+                self._CorrectPositionForLabels()
+            
             # Find actual position in pixels, do not allow negative values
             pos = self.position.InPixels()
             pos._w, pos._h = max(pos.w, 1), max(pos.h, 1)
@@ -897,7 +902,7 @@ class Axes(base.Wibject):
             self._OnDrawContent(mode, bgcolor, pos, pickerHelper)
             
             # Make screenshot and store/combine
-            if self._useBuffer:
+            if self._useBuffer and fig.enableUserInteraction:
                 tmp = _Screenshot()
                 shapesMatch = (sshot is not None) and tmp.shape == sshot.shape
                 if blurWithScreenshot and shapesMatch:

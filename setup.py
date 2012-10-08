@@ -4,6 +4,36 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
+""" Steps to do a new release:
+
+Preparations:
+  * Test on Windows, Linux, Mac
+  * Test on a machine with OpenGl v1.1 (e.g. winXP virtual machine)
+  * Make release notes
+  * Update API documentation and other docs that need updating.
+
+Test installation:
+  * clear the build and dist dir (if they exist)
+  * python setup.py register -r http://testpypi.python.org/pypi
+  * python setup.py sdist upload -r http://testpypi.python.org/pypi 
+  * pip install -i http://testpypi.python.org/pypi
+
+Define the version:
+  * update __version__ in __init__.py
+  * Tag the tip changeset as version x.x
+
+Generate and upload package (preferably on Windows)
+  * python setup.py register
+  * python setup.py sdist upload
+  * python setup.py bdist_wininst upload
+  * Upload the zipfile and exe to the google code page
+
+Announcing:
+  * It can be worth waiting a day for eager users to report critical bugs
+  * Announce in scipy-user, visvis mailing list, G+
+  
+"""
+
 import os
 from distutils.core import setup
 
@@ -59,7 +89,7 @@ setup(
                 'visvis.utils', 'visvis.utils.ssdf', 'visvis.utils.iso',
                ],
     package_dir = {'visvis': '.'},
-    package_data = {'visvis': [ 'examples/*.py', 'visvisResources/*']},
+    package_data = {'visvis': [ 'examples/*.py', 'visvisResources/*', 'utils/iso/*.pyx']},
     zip_safe = False,
     
     classifiers=[
