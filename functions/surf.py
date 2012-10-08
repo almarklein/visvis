@@ -103,7 +103,8 @@ def surf(*args, **kwargs):
         
         # Correct for min-max
         mi, ma = texcoords.min(), texcoords.max()
-        texcoords = (texcoords-mi) / (ma-mi)
+        if mi != ma:
+            texcoords = (texcoords-mi) / (ma-mi)
     
     elif c.ndim == 3:
         # color texture -> use texture mapping
