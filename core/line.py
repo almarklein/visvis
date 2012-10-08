@@ -352,17 +352,10 @@ class Line(Wobject):
 
     def __init__(self, parent, points):
         Wobject.__init__(self, parent)
-
-        # make a copy
-        points = points.copy()
-
-        # add z dimension to points if not available
-        if points.ndim == 2:
-            # a bit dirty...
-            tmp = points._data, 0.1*np.ones((len(points._data),1), dtype='float32')
-            points._data = np.concatenate(tmp,1)
-        self._points = points
-
+        
+        # Store points
+        self.SetPoints(points)
+        
         # init line properties
         self._lw, self._ls, self._lc = 1, '-', 'b'
         # init marker properties
@@ -585,8 +578,10 @@ class Line(Wobject):
         
         """
         
-        # Try make it a (copied) pointset
+        # Try make it a (copied) pointset (handle masked array)
         if not is_Pointset(points):
+            if isinstance(points, np.ma.MaskedArray):
+                points = points.filled(np.inf)
             points = Pointset(points) # Already does a copy
         else:
             points = points.copy() # Make a copy
@@ -595,6 +590,12 @@ class Line(Wobject):
         if points.ndim == 2:
             tmp = points._data, 0.1*np.ones((len(points._data),1), dtype='float32')
             points._data = np.concatenate(tmp,1)
+        
+        # Convert NaN to Inf because it has a higher chance of being handled
+        # the right way by OpenGl
+        p = points.data
+        valid = np.isfinite(p[:,0]) * np.isfinite(p[:,1]) * np.isfinite(p[:,2])
+        p[~valid,:] = np.inf
         
         # Store
         self._points = points
