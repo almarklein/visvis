@@ -95,6 +95,12 @@ class Bars2D(vv.Wobject):
     def __init__(self, parent, xx, hh, width):
         vv.Wobject.__init__(self, parent)
         
+        # Take care of invalid values
+        # Do this here, so the invalid data points are simply not drawn
+        valid = np.isfinite(xx) * np.isfinite(hh)
+        xx = np.array(xx)[valid]
+        hh = np.array(hh)[valid]
+        
         # Store data
         self._xx = xx
         self._hh = hh
@@ -112,8 +118,8 @@ class Bars2D(vv.Wobject):
         
         # Get limits
         w = 0.5 * self._width
-        x1, x2 = min(self._xx) - w, max(self._xx) + w
-        y1, y2 = 0, max(self._hh)
+        x1, x2 = self._xx.min() - w, self._xx.max() + w
+        y1, y2 = 0, self._hh.max()
         z1, z2 = 0, 0
         
         # Done

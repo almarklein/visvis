@@ -15,7 +15,8 @@ class StatData:
     """ StatData(data)
     
     Get statistics on the given sequence of data. The data must be
-    something that is accepted by np.array().
+    something that is accepted by np.array(). Any nonfinite data points
+    (NaN, Inf, -Inf) are removed from the data.
     
     Allows easy calculation of statistics such as mean, std, median,
     any percentile, histogram data and kde's.
@@ -32,6 +33,10 @@ class StatData:
         if not isinstance(data, np.ndarray):
             data = np.array(data)
         self._data = np.sort(data.ravel())
+        
+        # Remove invalids
+        valid = np.isfinite(self._data)
+        self._data = self._data[valid]
         
         # Calculate some stats
         self._mean = self._data.mean()
