@@ -935,7 +935,7 @@ def handleInvalidValues(values, _inplace=False):
         if invalid.sum() and not _inplace:
             values = values.copy()
         # Convert values and return
-        values[~invalid] = np.inf
+        values[invalid] = np.inf
         return values
 
 
