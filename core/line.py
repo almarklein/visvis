@@ -545,7 +545,7 @@ class Line(Wobject):
         Set the x coordinates of the points of the line.
         
         """
-        self._points[:,0] = data
+        self._points[:,0] = handleInvalidValues(data)
     
     @DrawAfter
     def SetYdata(self, data):
@@ -554,8 +554,8 @@ class Line(Wobject):
         Set the y coordinates of the points of the line.
         
         """
-        self._points[:,1] = data
-
+        self._points[:,1] = handleInvalidValues(data)
+    
     @DrawAfter
     def SetZdata(self, data):
         """ SetZdata(data)
@@ -563,8 +563,8 @@ class Line(Wobject):
         Set the z coordinates of the points of the line.
         
         """
-        self._points[:,2] = data
-
+        self._points[:,2] = handleInvalidValues(data)
+    
     @DrawAfter
     def SetPoints(self, points):
         """ SetPoints(points)
@@ -579,27 +579,18 @@ class Line(Wobject):
         """
         
         # Try make it a (copied) pointset (handle masked array)
-        if not is_Pointset(points):
-            if isinstance(points, np.ma.MaskedArray):
-                points = points.filled(np.inf)
-            points = Pointset(points) # Already does a copy
+        if is_Pointset(points):
+            points = Pointset(handleInvalidValues(points.data))
         else:
-            points = points.copy() # Make a copy
-        
-        # add z dimension to points if not available
+            points = Pointset(handleInvalidValues(points))
+       
+        # Add z dimension to points if not available
         if points.ndim == 2:
             tmp = points._data, 0.1*np.ones((len(points._data),1), dtype='float32')
             points._data = np.concatenate(tmp,1)
         
-        # Convert NaN to Inf because it has a higher chance of being handled
-        # the right way by OpenGl
-        p = points.data
-        valid = np.isfinite(p[:,0]) * np.isfinite(p[:,1]) * np.isfinite(p[:,2])
-        p[~valid,:] = np.inf
-        
         # Store
         self._points = points
-    
     
     @property
     def points(self):
@@ -925,4 +916,26 @@ class PolarLine(Line):
         else:
             return Range(self._angs.min(), self._angs.max()), \
                    Range(self._mags.min(), self._mags.max())
+
+
+
+def handleInvalidValues(values, _inplace=False):
+    """ handleInvalidValues(values)
+    
+    Modifies any invalid values (NaN, Inf, -Inf) to Inf,
+    and turn masked values of masked arrays to Inf.
+    Returns a copy if correction if needed.
+    """
+    if isinstance(values, np.ma.MaskedArray):
+        values = values.filled(np.inf)
+        return handleInvalidValues(values, True) # Recurse, force in-place
+    else:
+        invalid = ~np.isfinite(values)
+        # Determine if we should make a copy
+        if invalid.sum() and not _inplace:
+            values = values.copy()
+        # Convert values and return
+        values[~invalid] = np.inf
+        return values
+
 
