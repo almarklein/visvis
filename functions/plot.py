@@ -145,12 +145,13 @@ def plot(data1, data2=None, data3=None,
         data2 = data2.reshape((data2.size,1))
         data3 = data3.reshape((data3.size,1))
         
+        # Concatenate to a single Nx3 array (take care of masked arrays)
         tmp = data1, data2, data3
-        pp = Pointset( np.concatenate(tmp, 1) )
-        #pp.points = np.empty((L,3))
-        #pp.points[:,0] = data1.ravel()
-        #pp.points[:,1] = data2.ravel()
-        #pp.points[:,2] = data3.ravel()
+        if any([isinstance(d, np.ma.MaskedArray) for d in tmp]):
+            pp = np.ma.concatenate(tmp, 1)
+        else:
+            pp = np.concatenate(tmp, 1)
+        
     
     # Process camdim for given points or pointsets
     if not camDim:
