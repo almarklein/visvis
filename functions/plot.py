@@ -9,20 +9,6 @@ import numpy as np
 
 import visvis as vv
 
-def makeArray(data):
-    if isinstance(data,np.ndarray):
-        return data
-    else:
-        # create numpy array
-        try:
-            l = len(data)
-            a = np.empty((l,1))
-            for i in range(len(data)):
-                a[i] = data[i]                
-            return a
-        except TypeError:
-            raise Exception("Cannot plot %s" % data.__class__.__name__)
-
 
 def plot(data1, data2=None, data3=None, 
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
@@ -113,7 +99,7 @@ def plot(data1, data2=None, data3=None,
         
         if data1 is None:
             raise Exception("The first argument cannot be None!")
-        data1 = makeArray(data1)
+        data1 = np.asanyarray(data1)
         
         d3 = data3
         if data3 is None:
@@ -121,7 +107,7 @@ def plot(data1, data2=None, data3=None,
             camDim = 2
         else:
             camDim = 3
-            data3 = makeArray(data3)
+            data3 = np.asanyarray(data3)
         
         if data2 is None:
             if d3 is not None:
@@ -132,7 +118,7 @@ def plot(data1, data2=None, data3=None,
             data1 = np.arange(1,data2.shape[0]+1)
             data3 = 0.1*np.ones(data2.shape)
         else:
-            data2 = makeArray(data2)
+            data2 = np.asanyarray(data2)
         
         # check dimensions
         L = data1.size
