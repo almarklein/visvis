@@ -919,7 +919,7 @@ class PolarLine(Line):
 
 
 
-def handleInvalidValues(values, _inplace=False):
+def handleInvalidValues(values):
     """ handleInvalidValues(values)
     
     Modifies any invalid values (NaN, Inf, -Inf) to Inf,
@@ -929,6 +929,8 @@ def handleInvalidValues(values, _inplace=False):
     if isinstance(values, np.ma.MaskedArray):
         values = values.filled(np.inf)
         _inplace = True  # values is already a copy, so we can modify it
+    else:
+        _inplace = False
     
     invalid = ~np.isfinite(values)
     # Determine if we should make a copy
