@@ -928,14 +928,14 @@ def handleInvalidValues(values, _inplace=False):
     """
     if isinstance(values, np.ma.MaskedArray):
         values = values.filled(np.inf)
-        return handleInvalidValues(values, True) # Recurse, force in-place
-    else:
-        invalid = ~np.isfinite(values)
-        # Determine if we should make a copy
-        if invalid.sum() and not _inplace:
-            values = values.copy()
-        # Convert values and return
-        values[invalid] = np.inf
-        return values
+        _inplace = True  # values is already a copy, so we can modify it
+    
+    invalid = ~np.isfinite(values)
+    # Determine if we should make a copy
+    if invalid.sum() and not _inplace:
+        values = values.copy()
+    # Convert values and return
+    values[invalid] = np.inf
+    return values
 
 
