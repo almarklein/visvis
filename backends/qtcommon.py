@@ -214,13 +214,14 @@ class GLWidget(QtOpenGL.QGLWidget):
 # simply disable it's visual effects
 #     def moveEvent(self, event):
 #         self.update()
-#         
-#     def showEvent(self, event):
-#         # This is to make the frame being drawn on Ubuntu
-#         w, h = self.width(), self.height()
-#         self.resize(w-1,h)
-#         self.resize(w,h)
-    
+        
+    def showEvent(self, event):
+        # Force a redraw. In some applications that have stuff that takes
+        # a while to draw, the content of the OpenGL widget is simply
+        # fully transparent, showing through any "underlying" widgets.
+        # By calling swapBuffers on "show" this is prevented.
+        self.swapBuffers()
+
 
 class Figure(BaseFigure):
     """ This is the Qt4 implementation of the figure class.
