@@ -243,15 +243,25 @@ class Figure(BaseFigure):
     
     def __init__(self, parent, *args, **kwargs):
         
-        # Make sure there is a native app and the timer is started 
-        # (also when embedded)
-        app.Create()
-        
-        # create widget
-        self._widget = GLWidget(self, parent, *args, **kwargs)
+        self._widget = None
+        self._widget_args = (parent, args, kwargs)
+        if kwargs.get('create_widget', True):
+            self.CreateWidget()
         
         # call original init AFTER we created the widget
         BaseFigure.__init__(self)
+    
+    def CreateWidget(self):
+        if self._widget is None:
+            # Make sure there is a native app and the timer is started 
+            # (also when embedded)
+            app.Create()
+            
+            # create widget
+            parent, args, kwargs = self._widget_args
+            if 'create_widget' in kwargs:
+                del(kwargs['create_widget'])
+            self._widget = GLWidget(self, parent, *args, **kwargs)
     
     
     def _SetCurrent(self):
@@ -268,12 +278,12 @@ class Figure(BaseFigure):
     def _SwapBuffers(self):
         """ Swap the memory and screen buffer such that
         what we rendered appears on the screen """
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             self._widget.SwapBuffers()
 
     def _SetTitle(self, title):
         """ Set the title of the figure... """
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             window = self._widget.GetParent()
             if hasattr(window,'SetTitle'):
                 window.SetTitle(title)
@@ -281,7 +291,7 @@ class Figure(BaseFigure):
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
         # select widget to resize. If it 
-        if not self._destroyed:            
+        if self._widget and not self._destroyed:            
             widget = self._widget
             if isinstance(widget.GetParent(), FigureFrame):
                 widget = widget.GetParent()
@@ -293,7 +303,7 @@ class Figure(BaseFigure):
     def _GetPosition(self):
         """ Get the position of the widget. """
         # select widget to resize. If it 
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             widget = self._widget
             if isinstance(widget.GetParent(), FigureFrame):
                 widget = widget.GetParent()
@@ -303,6 +313,7 @@ class Figure(BaseFigure):
             size = widget.GetClientSizeTuple()
             pos = widget.GetPositionTuple()
             return pos[0], pos[1], size[0], size[1]
+        return 0, 0, 0, 0
     
     
     def _RedrawGui(self):
