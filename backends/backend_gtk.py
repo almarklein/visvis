@@ -190,22 +190,31 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
 class Figure(BaseFigure):
     
     def __init__(self, *args, **kw):
-        # Make sure there is a native app and the timer is started 
-        # (also when embedded)
-        app.Create()
+        self._widget = None
+        self._widget_args = (args, kw)
+        if kw.get('create_widget', True):
+            self.CreateWidget()
         
-        # Create gl widget
-        self._widget = GlCanvas(self, *args, **kw)
         BaseFigure.__init__(self)
+    
+    def CreateWidget(self):
+        if self._widget is None:
+            # Make sure there is a native app and the timer is started 
+            # (also when embedded)
+            app.Create()
+            
+            # Create gl widget
+            args, kw = self._widget_args
+            self._widget = GlCanvas(self, *args, **kw)
     
     def _SetCurrent(self):
         """Make figure the current OpenGL context."""
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             self._widget.set_current()
     
     def _SwapBuffers(self):
         """Swap the memory and screen buffers."""
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             self._widget.swap_buffers()
     
     def _RedrawGui(self):
@@ -219,7 +228,7 @@ class Figure(BaseFigure):
     
     def _SetTitle(self, title):
         """Set the title, when not used in application."""
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             window = self._widget.parent
             if isinstance(window, gtk.Window):
                 window.set_title(title)
@@ -227,7 +236,7 @@ class Figure(BaseFigure):
     def _SetPosition(self, x, y, w, h):
         """Set the position and size of the widget.  If it is embedded,
         ignore the x and y coordinates."""
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             self._widget.set_size_request(w, h)
             self._widget.queue_resize()
             window = self._widget.parent
@@ -237,25 +246,27 @@ class Figure(BaseFigure):
     
     def _GetPosition(self):
         """Get the widget's position."""
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             alloc = self._widget.allocation
             x, y = alloc.x, alloc.y
             window = self._widget.parent
             if isinstance(window, gtk.Window):
                 x, y = window.get_position()
             return x, y, alloc.width, alloc.height
+        return 0, 0, 0, 0
     
     def _Close(self, widget):
         """Close the widget."""
         if widget is None:
             widget = self._widget
-        window = widget.parent
-        # The destroy() method causes IPython to emit on error on my system
-        # the first time it happens (almar)
-        if isinstance(window, gtk.Window):
-            window.destroy()
-        else:
-            widget.destroy()
+        if widget:
+            window = widget.parent
+            # The destroy() method causes IPython to emit on error on my system
+            # the first time it happens (almar)
+            if isinstance(window, gtk.Window):
+                window.destroy()
+            else:
+                widget.destroy()
         
         # If no more figures, quit
         # If in script-mode, we nicely quit. If in interactive mode, we won't.
