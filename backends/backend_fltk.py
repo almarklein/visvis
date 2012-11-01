@@ -186,15 +186,25 @@ class Figure(BaseFigure):
     
     def __init__(self, *args, **kwargs):
         
-        # Make sure there is a native app and the timer is started 
-        # (also when embedded)
-        app.Create()
-        
-        # create widget
-        self._widget = GLWidget(self, *args, **kwargs)
+        self._widget = None
+        self._widget_args = (args, kwargs)
+        if kwargs.get('create_widget', True):
+            self.CreateWidget()
         
         # call original init AFTER we created the widget
         BaseFigure.__init__(self)
+    
+    def CreateWidget(self):
+        if self._widget is None:
+            # Make sure there is a native app and the timer is started 
+            # (also when embedded)
+            app.Create()
+            
+            # create widget
+            args, kwargs = self._widget_args
+            if 'create_widget' in kwargs:
+                del(kwargs['create_widget'])
+            self._widget = GLWidget(self, *args, **kwargs)
     
     def _SetCurrent(self):
         """ make this scene the current context """
@@ -205,28 +215,33 @@ class Figure(BaseFigure):
     def _SwapBuffers(self):
         """ Swap the memory and screen buffer such that
         what we rendered appears on the screen """
-        self._widget.swap_buffers()
+        if self._widget:
+            self._widget.swap_buffers()
 
     def _SetTitle(self, title):
         """ Set the title of the figure... """
-        window = self._widget
-        if hasattr(window,'label'):
-            window.label(title)
+        if self._widget:
+            window = self._widget
+            if hasattr(window,'label'):
+                window.label(title)
     
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
-        # select widget to resize. If it 
-        widget = self._widget       
-        # apply
-        widget.position(x,y)
-        widget.size(w, h)
+        if self._widget:
+            # select widget to resize. If it 
+            widget = self._widget       
+            # apply
+            widget.position(x,y)
+            widget.size(w, h)
 
     def _GetPosition(self):
         """ Get the position of the widget. """
-        # select widget to resize. If it 
-        widget = self._widget        
-        # get and return        
-        return widget.x(), widget.y(), widget.w(), widget.h()
+        if self._widget:
+            # select widget to resize. If it 
+            widget = self._widget        
+            # get and return        
+            return widget.x(), widget.y(), widget.w(), widget.h()
+        return 0, 0, 0, 0
     
     def _RedrawGui(self):
         if self._widget:
