@@ -195,6 +195,8 @@ class Figure(BaseFigure):
         BaseFigure.__init__(self)
     
     def CreateWidget(self):
+        """ Create the Figure's widget if necessary, and return the
+        widget. """
         if self._widget is None:
             # Make sure there is a native app and the timer is started 
             # (also when embedded)
@@ -205,6 +207,7 @@ class Figure(BaseFigure):
             if 'create_widget' in kwargs:
                 del(kwargs['create_widget'])
             self._widget = GLWidget(self, *args, **kwargs)
+        return self._widget
     
     def _SetCurrent(self):
         """ make this scene the current context """
