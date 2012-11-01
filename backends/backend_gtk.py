@@ -198,6 +198,8 @@ class Figure(BaseFigure):
         BaseFigure.__init__(self)
     
     def CreateWidget(self):
+        """Create the Figure's widget if necessary, and return the
+        widget."""
         if self._widget is None:
             # Make sure there is a native app and the timer is started 
             # (also when embedded)
@@ -206,6 +208,7 @@ class Figure(BaseFigure):
             # Create gl widget
             args, kw = self._widget_args
             self._widget = GlCanvas(self, *args, **kw)
+        return self._widget
     
     def _SetCurrent(self):
         """Make figure the current OpenGL context."""
