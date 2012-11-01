@@ -236,28 +236,37 @@ class Figure(BaseFigure):
         
         # keep same documentation
         self.__doc__ = BaseFigure.__doc__
-        
-        # Make sure there is a native app and the timer is started 
-        # (also when embedded)
-        app.Create()
-        
-        # create widget
-        self._widget = GLWidget(self, parent, *args, **kwargs)
+        self._widget = None
+        self._widget_args = (parent, args, kwargs)
+        if kwargs.get('create_widget', True):
+            self.CreateWidget()
         
         # call original init AFTER we created the widget
         BaseFigure.__init__(self)
+    
+    def CreateWidget(self):
+        if self._widget is None:
+            # Make sure there is a native app and the timer is started 
+            # (also when embedded)
+            app.Create()
+            
+            # create widget
+            parent, args, kwargs = self._widget_args
+            if 'create_widget' in kwargs:
+                del(kwargs['create_widget'])
+            self._widget = GLWidget(self, parent, *args, **kwargs)
     
     
     def _SetCurrent(self):
         """ Make this scene the current OpenGL context. 
         """
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             self._widget.makeCurrent()
         
     def _SwapBuffers(self):
         """ Swap the memory and screen buffer such that
         what we rendered appears on the screen """
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             self._widget.swapBuffers()
         
     def _SetTitle(self, title):
@@ -265,19 +274,20 @@ class Figure(BaseFigure):
         does not have to work if the Figure is uses as
         a widget in an application.
         """
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             self._widget.setWindowTitle(title)
 
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             self._widget.setGeometry(x, y, w, h)
     
     def _GetPosition(self):
         """ Get the position of the widget. """        
-        if not self._destroyed:
+        if self._widget and not self._destroyed:
             tmp = self._widget.geometry()
             return tmp.left(), tmp.top(), tmp.width(), tmp.height()
+        return 0, 0, 0, 0
     
     def _RedrawGui(self):
         if self._widget:
