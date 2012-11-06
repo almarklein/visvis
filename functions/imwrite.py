@@ -50,8 +50,8 @@ def imwrite(filename, image, format=None):
     if len(image.shape) == 2:
         pass # grayscale
     elif len(image.shape) == 3:
-        if image.shape[2] == 3:
-            pass # RGB
+        if image.shape[2] in [3, 4]:
+            pass # RGB or RGBA
         else:
             raise ValueError("Cannot write image: Too many values in third dim.")
     else:
