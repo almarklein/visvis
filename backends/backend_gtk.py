@@ -205,9 +205,15 @@ class Figure(BaseFigure):
             # (also when embedded)
             app.Create()
             
-            # Create gl widget
-            args, kw = self._widget_args
-            self._widget = GlCanvas(self, *args, **kw)
+            # create gl widget
+            updatePosition = False
+            args, kwargs = self._widget_args
+            if 'create_widget' in kwargs:
+                updatePosition = True
+                del(kwargs['create_widget'])
+            self._widget = GlCanvas(self, *args, **kwargs)
+            if updatePosition:
+                self.position._Changed()
         return self._widget
     
     def _SetCurrent(self):

@@ -203,10 +203,14 @@ class Figure(BaseFigure):
             app.Create()
             
             # create widget
+            updatePosition = False
             args, kwargs = self._widget_args
             if 'create_widget' in kwargs:
+                updatePosition = True
                 del(kwargs['create_widget'])
             self._widget = GLWidget(self, *args, **kwargs)
+            if updatePosition:
+                self.position._Changed()
         return self._widget
     
     def _SetCurrent(self):
