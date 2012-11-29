@@ -287,7 +287,9 @@ class SliceTexture(BaseTexture):
             
             # Handle the event
             return True
-    
+        
+        else:
+            event.Ignore()
     
     def _OnMouseUp(self, event):
         self._interact_down = False
