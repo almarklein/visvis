@@ -9,8 +9,9 @@ import numpy as np
 import OpenGL.GL as gl
 
 
-def bar(data1, data2=None, width=0.75, axesAdjust=True, axes=None):    
-    """ bar(*args, width=0.75, axesAdjust=True, axes=None)
+def bar(data1, data2=None, bottom=None, width=0.75, 
+                                    axesAdjust=True, axes=None, **kwargs):    
+    """ bar(*args, width=0.75, axesAdjust=True, axes=None, **kwargs)
     
     Create a bar chart and returns a Bars2D instance that can be
     used to change the appearance of the bars (such as color).
@@ -24,6 +25,14 @@ def bar(data1, data2=None, width=0.75, axesAdjust=True, axes=None):
     -----------------
     width : scalar
         The width of the bars.
+    color : {3-element tuple, color-char}
+        The color of the bars
+    colors : {3-element tuple, color-char}
+        A color value for each bar.
+    lc : {3-element tuple, color-char}
+        The color for the bar lines (i.e. edges).
+    lw : scalar
+        The width of the bar lines (i.e. edges).
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
         the camera type to 3D. If daspectAuto has not been set yet, 
@@ -58,6 +67,10 @@ def bar(data1, data2=None, width=0.75, axesAdjust=True, axes=None):
         # All three given
         xx = data1
         hh = data2
+    if bottom is not None:
+        bb = [float(val) for val in bottom]
+    else:
+        bb = [0.0 for val in xx]
     
     # Check
     if len(hh) != len(xx):
@@ -68,7 +81,7 @@ def bar(data1, data2=None, width=0.75, axesAdjust=True, axes=None):
         axes = vv.gca()
     
     # Create Bars instance
-    bars = Bars2D(axes, xx, hh, width)
+    bars = Bars2D(axes, xx, hh, bb, width, **kwargs)
     
     # Adjust axes
     if axesAdjust:
@@ -92,18 +105,20 @@ class Bars2D(vv.Wobject):
     This wobject is created by the function vv.bar().
     
     """
-    def __init__(self, parent, xx, hh, width):
+    def __init__(self, parent, xx, hh, bb, width, **kwargs):
         vv.Wobject.__init__(self, parent)
         
         # Take care of invalid values
         # Do this here, so the invalid data points are simply not drawn
-        valid = np.isfinite(xx) * np.isfinite(hh)
+        valid = np.isfinite(xx) * np.isfinite(hh) * np.isfinite(bb)
         xx = np.array(xx)[valid]
         hh = np.array(hh)[valid]
+        bb = np.array(bb)[valid]
         
         # Store data
         self._xx = xx
         self._hh = hh
+        self._bb = bb
         
         # Init width
         self._width = width
@@ -112,6 +127,11 @@ class Bars2D(vv.Wobject):
         self._colors = [(0,0,1) for i in hh]
         self._lc = (0,0,0)
         self._lw = 1
+        
+        # Set extra args
+        for key in ['color', 'colors', 'lw', 'lc']:
+            if key in kwargs:
+                setattr(self, key, kwargs[key])
     
     
     def _GetLimits(self):
@@ -119,7 +139,7 @@ class Bars2D(vv.Wobject):
         # Get limits
         w = 0.5 * self._width
         x1, x2 = self._xx.min() - w, self._xx.max() + w
-        y1, y2 = 0, self._hh.max()
+        y1, y2 = self._bb.min(), (self._bb+self._hh).max()
         z1, z2 = 0, 0
         
         # Done
@@ -135,11 +155,11 @@ class Bars2D(vv.Wobject):
         w = self._width * 0.5
         z = 0.1
         
-        for x, h, c in zip(self._xx, self._hh, self._colors):
+        for x, h, b, c in zip(self._xx, self._hh, self._bb, self._colors):
             
             # Define rectangle
-            vertices = np.array([   (x-w, 0, z), (x-w, h, z),
-                                    (x+w, h, z), (x+w, 0, z) ]).astype('float32')
+            vertices = np.array([   (x-w, b, z), (x-w, b+h, z),
+                                    (x+w, b+h, z), (x+w, b, z) ]).astype('float32')
             
             gl.glVertexPointerf(vertices)
             
