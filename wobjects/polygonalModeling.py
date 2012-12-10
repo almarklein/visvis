@@ -820,7 +820,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             # Check dimensions
             if data.ndim==2:
                 pass # ok: gray image
-            elif data.ndim==3 and data.shape[2]==3:
+            elif data.ndim==3 and data.shape[2] in [3, 4]:
                 pass # ok: color image
             else:
                 raise ValueError('Only 2D images can be mapped to a mesh.')
@@ -991,6 +991,10 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         if shading == 'plain':
             gl.glColor(*refColor)
         else:
+            # Set glColor: unless ALBEIDO is RGB or RGBA, 
+            # this is used to dermine the alpha value
+            gl.glColor(*refColor)
+            # Set material properties
             what = gl.GL_FRONT_AND_BACK
             gc = _getColor
             gl.glMaterial(what, gl.GL_AMBIENT, gc(self._ambient, refColor))

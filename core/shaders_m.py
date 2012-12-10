@@ -271,7 +271,8 @@ SH_NLIGHTS_0 = ShaderCodePart('nlights', '0',
 SH_MF_ALBEIDO_UNIT = ShaderCodePart('albeido', 'unit',
 """
     >>--albeido--
-    // Albeido stays unit
+    // Albeido stays unit, but takes alpha from vColor
+    albeido.a = vColor.a;
 """)
 SH_MF_ALBEIDO_LUT1 = ShaderCodePart('albeido', '1D LUT',
 """
@@ -281,6 +282,7 @@ SH_MF_ALBEIDO_LUT1 = ShaderCodePart('albeido', '1D LUT',
         
     >>--albeido--
     albeido = texture1D( colormap, gl_TexCoord[0].x);
+    albeido.a *= vColor.a;
 """)
 SH_MF_ALBEIDO_LUT2 = ShaderCodePart('albeido', '2D LUT',
 """
@@ -290,8 +292,9 @@ SH_MF_ALBEIDO_LUT2 = ShaderCodePart('albeido', '2D LUT',
     
     >>--albeido--
     albeido = texture2D( texture, gl_TexCoord[0].xy);
+    albeido.a *= vColor.a;
 """)
-SH_MF_ALBEIDO_RGB = ShaderCodePart('albeido', 'RGB',
+SH_MF_ALBEIDO_RGB = ShaderCodePart('albeido', 'RGB', # No transparency possible here
 """
     >>--albeido--
     albeido = vec4(vColor.rgb, 1.0);
