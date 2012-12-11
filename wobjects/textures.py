@@ -319,10 +319,11 @@ class BaseTexture(Wobject, Colormapable):
         # Clean up OpenGl resources.
         
         # remove texture from opengl memory
-        self._texture1.DestroyGl()
+        if self._texture1 is not None:
+            self._texture1.DestroyGl()
         
         # clear shader
-        self._shader.program.DestroyGl()
+        self._shader.DestroyGl()
         
         # remove colormap's texture from memory        
         if hasattr(self, '_colormap'):
@@ -331,7 +332,9 @@ class BaseTexture(Wobject, Colormapable):
     
     def OnDestroy(self):
         # Clean up any resources.
-        self._texture1.Destroy()
+        if self._texture1 is not None:
+            self._texture1.Destroy()
+        self._shader.Destroy()
         if hasattr(self, '_colormap'):
             self._colormap.Destroy()
     
@@ -1225,7 +1228,7 @@ class MultiTexture3D(Texture3D):
         self._texture2.DestroyGl()
         
         # clear shaders
-        self._shader.program.DestroyGl()
+        self._shader.DestroyGl()
         
         # remove colormap's texture from memory        
         if hasattr(self, '_colormap'):
