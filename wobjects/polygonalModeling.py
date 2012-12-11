@@ -875,9 +875,9 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     def OnDestroyGl(self):
         # Clean up OpenGl resources.
-        self._faceShader.program.DestroyGl()
-        self._edgeShader.program.DestroyGl()
-        self._shapeShader.program.DestroyGl()
+        self._faceShader.DestroyGl()
+        self._edgeShader.DestroyGl()
+        self._shapeShader.DestroyGl()
         self._colormap.DestroyGl()
         if self._texture is not None:
             self._texture.DestroyGl()
@@ -885,7 +885,10 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     def OnDestroy(self):
         # Clean up any resources.
-        self._colormap.Destroy()
+        self._faceShader.Destroy()
+        self._edgeShader.Destroy()
+        self._shapeShader.Destroy()
+        self._colormap.Destroy()        
         if self._texture is not None:
             self._texture.Destroy()
     

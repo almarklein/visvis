@@ -308,7 +308,16 @@ class Shader(object):
         uniforms.update(self._pendingUniforms)
         
         return uniforms
-
+    
+    
+    def DestroyGl(self):
+        self._program.DestroyGl()
+    
+    
+    def Destroy(self):
+        self._staticUniforms = {}
+        self._pendingUniforms = {}
+        self._texturesToDisable = []
 
 
 class GlslProgram:
