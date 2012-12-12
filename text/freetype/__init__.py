@@ -38,6 +38,18 @@ from visvis.text.freetype.ft_structs import (  FT_Face, FT_Glyph, FT_Matrix, FT_
 
 ## The actual library wrapper
 
+def _looks_lib(fname):
+    """ Returns True if the given filename looks like a dynamic library.
+    Based on extension, but cross-platform and more flexible. 
+    """
+    fname = fname.lower()
+    if sys.platform.startswith('win'):
+        return fname.endswith('.dll')
+    elif sys.platform.startswith('darwin'):
+        return fname.endswith('.dylib')
+    else:
+        return fname.endswith('.so') or '.so.' in fname
+
 
 class FreeTypeWrapper(object):
     """ Class to find and load the FreeType dll.
@@ -54,12 +66,24 @@ class FreeTypeWrapper(object):
     
     def find_library(self):
         
+        # Get Python dirs to search (shared is for Pyzo)
+        import os
+        py_sub_dirs = ['shared', 'lib', 'DLLs']
+        py_lib_dirs = [os.path.join(sys.prefix, d) for d in py_sub_dirs]
+        if hasattr(sys, 'base_prefix'):
+            py_lib_dirs += [os.path.join(sys.base_prefix, d) for d in py_sub_dirs]
+        py_lib_dirs = [d for d in py_lib_dirs if os.path.isdir(d)]
+        for py_lib_dir in py_lib_dirs:
+            for fname in os.listdir(py_lib_dir):
+                if 'freetype' in fname.lower() and _looks_lib(fname):
+                    return os.path.join(py_lib_dir, fname)
+        
         # Search in resources (only when frozen)
         if getattr(sys, 'frozen', None):
             from visvis.core.misc import getResourceDir
             import os
             for fname in os.listdir(getResourceDir()):
-                if fname.lower().startswith('freetype'):
+                if 'freetype' in fname.lower() and _looks_lib(fname):
                     return os.path.join(getResourceDir(), fname)
         
         # Try if ctypes knows where to find the freetype library
