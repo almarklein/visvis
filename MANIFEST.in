@@ -1,0 +1,6 @@
+include examples/*.py
+include visvisResources/*
+include io/*.py
+include processing/*.py
+include vvmoview/*.py
+
