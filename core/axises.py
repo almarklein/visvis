@@ -1108,11 +1108,16 @@ class CartesianAxis2D(BaseAxis):
                     t.valign = 0
                 else:
                     t.textAngle = self._xTicksAngle
-                    if self._xTicksAngle:
+                    if self._xTicksAngle > 0:
+                        t.halign = 1
+                    elif self._xTicksAngle < 0:
                         t.halign = -1
                     else:
                         t.halign = 0
-                    t.valign = -1
+                    if abs(self._xTicksAngle) > 45:
+                        t.valign = 0
+                    else:
+                        t.valign = -1
             
             # We should hide this last tick if it sticks out
             if d==0 and len(ticks):
