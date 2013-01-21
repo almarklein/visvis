@@ -80,7 +80,12 @@ class GLWidget(QtOpenGL.QGLWidget):
     """
     
     def __init__(self, figure, parent, *args):
-        QtOpenGL.QGLWidget.__init__(self, parent, *args)
+        # Create opengl format
+        glFormat = QtOpenGL.QGLFormat()
+        #glFormat.setSampleBuffers(True)
+        #glFormat.setSamples(4)
+        #
+        QtOpenGL.QGLWidget.__init__(self, glFormat, parent, *args)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose) # keep cleaned up
         self.figure = figure
         # Note that the default QGLFormat has double buffering enabled.

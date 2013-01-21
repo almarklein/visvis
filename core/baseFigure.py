@@ -836,7 +836,7 @@ class BaseFigure(_BaseFigure):
             # enable blending, so lines and points can be antialiased
             gl.glEnable(gl.GL_BLEND)
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-            
+            #gl.glEnable(gl.GL_MULTISAMPLE)
             # smooth lines            
             gl.glEnable(gl.GL_LINE_SMOOTH)
             if mode==DRAW_FAST:
