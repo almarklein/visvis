@@ -395,11 +395,14 @@ class FreeTypeFontManager(FontManager):
         bold = 'Bold' if bold else ''
         italic = 'Oblique' if italic else ''
         
-        # Build filename
-        fname = 'Free' + fontname + bold + italic + '.otf'
-        fname = os.path.join( getResourceDir(), fname )
+        # Be a bit smart
+        if fontname in ['Xkcd', 'Humor']:
+            fname = 'HumorSans.otf'  # xkcd-style font
+        else:
+            fname = 'Free' + fontname + bold + italic + '.otf'  # Freetype font
         
         # Check if exist
+        fname = os.path.join( getResourceDir(), fname )
         if os.path.exists(fname):
             return fname
         else:

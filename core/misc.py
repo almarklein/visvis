@@ -638,8 +638,8 @@ class Settings(object):
                 return 'sans'  # Default value
         def fset(self, key, value):
             value = value.lower()
-            if value not in ['mono', 'sans', 'serif']:
-                raise ValueError("defaultFontName must be 'mono', 'sans' or 'serif'.")
+            if value not in ['mono', 'sans', 'serif', 'humor']:
+                raise ValueError("defaultFontName must be 'mono', 'sans', 'serif' or 'humor'.")
             self._s[key] = value
         return locals()
     
