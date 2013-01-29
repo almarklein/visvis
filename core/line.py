@@ -686,6 +686,7 @@ class Line(Wobject):
 
         # clean up
         gl.glDisable(gl.GL_LINE_STIPPLE)
+        gl.glLineStipple(int(round(self.lw)), int('1111111111111111',2))
         gl.glEnable(gl.GL_DEPTH_TEST)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
@@ -931,8 +932,6 @@ def handleInvalidValues(values):
         _inplace = True  # values is already a copy, so we can modify it
     else:
         _inplace = False
-    if not isinstance(values, np.ndarray):
-        values = np.array(values)
     
     invalid = ~np.isfinite(values)
     # Determine if we should make a copy
