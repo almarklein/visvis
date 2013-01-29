@@ -244,7 +244,7 @@ _NLIGHTS = """
     >>varying vec3 lightDirs[1];
     varying vec3 lightDirs[%i];
 """
-SH_NLIGHTS_1 = ShaderCodePart('nlights', '1', _NLIGHTS % (1,1))
+
 SH_NLIGHTS_2 = ShaderCodePart('nlights', '2', _NLIGHTS % (2,2))
 SH_NLIGHTS_3 = ShaderCodePart('nlights', '3', _NLIGHTS % (3,3))
 SH_NLIGHTS_4 = ShaderCodePart('nlights', '4', _NLIGHTS % (4,4))
@@ -252,6 +252,16 @@ SH_NLIGHTS_5 = ShaderCodePart('nlights', '5', _NLIGHTS % (5,5))
 SH_NLIGHTS_6 = ShaderCodePart('nlights', '6', _NLIGHTS % (6,6))
 SH_NLIGHTS_7 = ShaderCodePart('nlights', '7', _NLIGHTS % (7,7))
 SH_NLIGHTS_8 = ShaderCodePart('nlights', '8', _NLIGHTS % (8,8))
+
+# Make one light extra lightweight
+# (I know at least one occurance where it meant the difference between
+# success and failure for the iso volume renderer).
+SH_NLIGHTS_1 = ShaderCodePart('nlights', '1',  
+"""
+    >>for (int i=0; i<nlights; i++)
+    int i = 0;
+""")
+
 SH_NLIGHTS_0 = ShaderCodePart('nlights', '0', 
 """
     >>int nlights = 1;
@@ -261,6 +271,7 @@ SH_NLIGHTS_0 = ShaderCodePart('nlights', '0',
     >>lightDirs[i] =
     // Removed Assignment to lightDirs
 """)
+
 
 ## ALBEIDO
 # Different ways to determine the albeido of the mesh. The material
