@@ -932,6 +932,8 @@ def handleInvalidValues(values):
         _inplace = True  # values is already a copy, so we can modify it
     else:
         _inplace = False
+    if not isinstance(values, np.ndarray):
+        values = np.array(values)
     
     invalid = ~np.isfinite(values)
     # Determine if we should make a copy
