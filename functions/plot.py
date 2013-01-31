@@ -141,7 +141,7 @@ def plot(data1, data2=None, data3=None,
     
     # Process camdim for given points or pointsets
     if not camDim:
-        camDim = pp.ndim
+        camDim = max(2, pp.ndim)
         
     
     ## create the line
