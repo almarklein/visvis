@@ -349,39 +349,14 @@ class Axes(base.Wibject):
     def GetLimits(self):
         """ GetLimits()
         
-        Get the limits of the 2D axes as currently displayed. This can differ
-        from what was set by SetLimits if the daspectAuto is False. 
-        Returns a tuple of limits for x and y, respectively.
-        
-        Note: the limits are queried from the twod camera model, even 
-        if this is not the currently used camera.
+        Get the limits of the axes as currently displayed. This can differ
+        from what was set by SetLimits if the daspectAuto is False.  With
+        a 2D camera, this returns the limits for x and y determined by the
+        view.  With a 3D camera, this returns the x, y, and z extents of
+        the coordinate axes.
         
         """
-        
-        # get camera
-        cam = self.camera
-        if not isinstance(cam, cameras.TwoDCamera):
-            cam = self._cameras['TwoDCamera']
-        
-        # Calculate viewing range for x and y
-        fx = abs( 1.0 / cam._zoom )
-        fy = abs( 1.0 / cam._zoom )
-        # correct for window size
-        w, h = self.position.size
-        w, h = float(w), float(h)        
-        if w / h > 1:
-            fx *= w/h
-        else:
-            fy *= h/w
-        
-        # calculate limits
-        tmp = fx/2 / self.daspectNormalized[0]
-        xlim = Range( cam._view_loc[0] - tmp, cam._view_loc[0] + tmp )
-        tmp = fy/2 / self.daspectNormalized[1]
-        ylim = Range( cam._view_loc[1] - tmp, cam._view_loc[1] + tmp )
-        
-        # return
-        return xlim, ylim
+        return self.camera.GetLimits()
     
     
     def GetView(self):
