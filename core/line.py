@@ -585,9 +585,16 @@ class Line(Wobject):
             points = Pointset(handleInvalidValues(points))
        
         # Add z dimension to points if not available
-        if points.ndim == 2:
-            tmp = points._data, 0.1*np.ones((len(points._data),1), dtype='float32')
-            points._data = np.concatenate(tmp,1)
+        if points.ndim == 3:
+            pass
+        elif points.ndim == 2:
+            zz = 0.1*np.ones((len(points._data),1), dtype='float32')
+            points._data = np.concatenate((points._data, zz),1)
+        elif points.ndim == 1:
+            N = len(points._data)
+            xx = np.arange(N, dtype='float32').reshape(N, 1)
+            zz = 0.1*np.ones((N,1), dtype='float32')
+            points._data = np.concatenate((xx, points._data, zz), 1)
         
         # Store
         self._points = points
