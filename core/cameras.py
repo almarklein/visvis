@@ -273,6 +273,15 @@ class BaseCamera(object):
         return locals()
     
     
+    def GetLimits(self):
+        """ GetLimits()
+        
+        Return the extent of the axes, which is determined by the camera
+        in the 2D case.
+        
+        """
+        return self._xlim, self._ylim, self._zlim
+    
     def SetLimits(self, xlim, ylim, zlim=None):
         """ SetLimits(xlim, ylim, zlim=None)
         
@@ -282,7 +291,7 @@ class BaseCamera(object):
         
         """
         if zlim is None:
-            zlim = Range(-1,1)        
+            zlim = Range(-1,1)
         self._xlim = xlim
         self._ylim = ylim
         self._zlim = zlim
@@ -544,6 +553,28 @@ class TwoDCamera(BaseCamera):
         
         # Set center location -> calls refresh
         BaseCamera.Reset(self)
+    
+    
+    def GetLimits(self):
+        # Calculate viewing range for x and y from camera view
+        fx = abs( 1.0 / self._zoom )
+        fy = abs( 1.0 / self._zoom )
+        # correct for window size
+        w, h = map(float, self.axes.position.size)
+        if w / h > 1:
+            fx *= w/h
+        else:
+            fy *= h/w
+        
+        # calculate limits
+        tmp = fx/2 / self.axes.daspectNormalized[0]
+        xlim = Range( self._view_loc[0] - tmp, self._view_loc[0] + tmp )
+        tmp = fy/2 / self.axes.daspectNormalized[1]
+        ylim = Range( self._view_loc[1] - tmp, self._view_loc[1] + tmp )
+        
+        # return
+        return xlim, ylim
+
     
     
     def OnMouseDown(self, event): 
