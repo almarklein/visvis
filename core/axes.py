@@ -590,7 +590,7 @@ class Axes(base.Wibject):
                 self._cameras[camType] = camera
                 # Register at camera, unregister at old one
                 camera._RegisterAxes(self)
-                if oldCamera:
+                if oldCamera and oldCamera is not camera:
                     oldCamera._UnregisterAxes(self)
                 # Make current and set limits
                 self._camera = camera
