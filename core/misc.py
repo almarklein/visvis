@@ -16,6 +16,7 @@ visvis modules.
 """
 
 import sys, os
+import zipfile
 import numpy as np
 from visvis import ssdf
 import OpenGL.GL as gl
@@ -30,6 +31,30 @@ if V2:
 else:
     basestring = str
     unichr = chr
+
+
+# Used to load resources when in a zipfile
+def splitPathInZip(path):
+    """ splitPathInZip(path)
+    Split a filename in two parts: the path to a zipfile, and the path
+    within the zipfile. If the given path is a native file or direcory,
+    returns ('', path). Raises an error if no valid zipfile can be found.
+    """
+    if os.path.exists(path):
+        return '', path
+    # Split path in parts
+    zipPath = []
+    while True:
+        path, sub = os.path.split(path)
+        if not sub:
+            raise RuntimeError('Not a real path nor in a zipfile.')
+        zipPath.insert(0, sub)
+        if os.path.isfile(path):
+            if zipfile.is_zipfile(path):
+                return path, os.path.join(*zipPath)
+            else:
+                raise RuntimeError('Not a zipfile: "%s"' % path)
+    
 
 
 ## For info about OpenGL version

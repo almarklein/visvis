@@ -39,7 +39,7 @@ def copyResources(destPath):
         ft_filename = vv.text.freetype.FT.filename
     except Exception:
         ft_filename = None
-    if ft_filename:
+    if ft_filename and os.path.isfile(ft_filename):
         fname = os.path.split(ft_filename)[1]
         shutil.copy(ft_filename, os.path.join(destPath,fname))
 
@@ -89,6 +89,8 @@ def getIncludes(backendName):
             includes.append(name)
     if sys.platform.startswith('win'):
         includes.append("OpenGL.platform.win32")
+    if sys.platform.startswith('linux'):
+        includes.append("OpenGL.platform.glx")
     
     # done
     return includes
