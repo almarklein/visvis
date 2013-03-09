@@ -39,9 +39,19 @@ def copyResources(destPath):
         ft_filename = vv.text.freetype.FT.filename
     except Exception:
         ft_filename = None
+    if ft_filename and not os.path.isfile(ft_filename):
+        # Try harder to get absolute path for the freetype lib
+        for dir in ['/usr/lib/', '/usr/local/lib/', 
+                    '/usr/lib/x86_64-linux-gnu/', '/usr/lib/i386-linux-gnu/']:
+            if os.path.isfile(dir+ft_filename):
+                ft_filename = dir+ft_filename
+                break
     if ft_filename and os.path.isfile(ft_filename):
         fname = os.path.split(ft_filename)[1]
         shutil.copy(ft_filename, os.path.join(destPath,fname))
+    else:
+        print('Warning: could not copy freetype library.')
+
 
 def getIncludes(backendName):
     """ getIncludes(backendName)
