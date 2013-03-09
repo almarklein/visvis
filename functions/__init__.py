@@ -22,6 +22,10 @@ There are three things to take into account when making a new function:
 """
 
 import os
+import zipfile
+
+from visvis.core.misc import splitPathInZip
+
 
 def _insertFunctions():
     """ insert the function is this module's namespace.
@@ -32,12 +36,11 @@ def _insertFunctions():
     path = os.path.dirname( os.path.abspath(path) )
     
     # determine if we're in a zipfile
-    i = path.find('.zip')
-    if i>0:
+    zipfilename, path = splitPathInZip(path)
+    
+    if zipfilename:
         # get list of files from zipfile
-        path = path[:i+4]
-        import zipfile
-        z = zipfile.ZipFile(path)
+        z = zipfile.ZipFile(zipfilename)
         files = [os.path.split(i)[1] for i in z.namelist() 
                     if i.startswith('visvis') and i.count('functions')]
     else:
