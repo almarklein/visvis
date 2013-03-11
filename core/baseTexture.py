@@ -308,15 +308,18 @@ class TextureObject(object):
         if self._ndim==3 and not getOpenGlCapable('1.2','3D textures'):
             return
         
-        # Make singles if doubles or quadruples
-        if data.dtype in (np.float64, np.float128):
-            data = data.astype(np.float32)
-        # Long integers become floats; int32 would not have enough range
-        elif data.dtype in (np.int64, np.uint64):
-            data = data.astype(np.float32)
-        # Bools become bytes
-        elif data.dtype == np.bool:
-            data = data.astype(np.uint8)
+        # Convert data type to one supported by OpenGL
+        if data.dtype.name not in dtypes:
+            # Long integers become floats; int32 would not have enough range
+            if data.dtype in (np.int64, np.uint64):
+                data = data.astype(np.float32)
+            # Bools become bytes
+            elif data.dtype == np.bool:
+                data = data.astype(np.uint8)
+            else:
+                # Make singles in all other cases (e.g. np.float64, np.float128)
+                # We cannot explicitly use float128, since its not always defined
+                data = data.astype(np.float32)
         
         # Determine type
         thetype = data.dtype.name
