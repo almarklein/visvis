@@ -9,30 +9,42 @@ import numpy as np
 import os
 
 
+# Try importing imageio
+imageio = None
+try:
+    import imageio
+except ImportError:
+    pass
+
+
 def volread(filename):
     """ volread(filename) 
     
-    Read volume from a file. Currently this only reads a dedicated
-    dataset. In the future this will use imageio and support various
-    volumetric formats.
+    Read volume from a file. If filename is 'stent', read a dedicated
+    test dataset. For reading any other kind of volume, the imageio
+    package is required.
     
     """
     
-    if filename != 'stent':
-        raise ValueError('Only "stent" is supported as an argument to volread for now.')
+    if filename == 'stent':
+        # Get full filename
+        path = vv.misc.getResourceDir()
+        filename2 = os.path.join(path, 'stent_vol.ssdf')
+        if os.path.isfile(filename2):
+            filename = filename2
+        else:
+            raise IOError("File '%s' does not exist." % filename)
+        # Load
+        s = vv.ssdf.load(filename)
+        return s.vol.astype('int16') * s.colorscale
     
-    # Get full filename
-    path = vv.misc.getResourceDir()
-    filename2 = os.path.join(path, 'stent_vol.ssdf')
-    if os.path.isfile(filename2):
-        filename = filename2
+    elif imageio is not None:
+        return imageio.volread(filename)
+        
     else:
-        raise IOError("File '%s' does not exist." % filename)
-    
-    # Load
-    s = vv.ssdf.load(filename)
-    return s.vol.astype('int16') * s.colorscale
-    
+        raise RuntimeError("visvis.volread needs the imageio package to read arbitrary files.")
+        
+
 
 if __name__ == '__main__':
     vol = vv.volread('stent')
