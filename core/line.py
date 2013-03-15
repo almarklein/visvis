@@ -947,7 +947,10 @@ def handleInvalidValues(values):
     if invalid.sum() and not _inplace:
         values = values.copy()
     # Convert values and return
-    values[invalid] = np.inf
+    try:
+        values[invalid] = np.inf
+    except OverflowError:
+        pass # Cannot do this with integer types
     return values
 
 
