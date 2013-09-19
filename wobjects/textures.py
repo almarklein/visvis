@@ -262,24 +262,26 @@ class BaseTexture(Wobject, Colormapable):
             self.shader.fragment.ReplacePart(part)
         
         # if Aarray, edit scaling and transform
-        if is_Aarray(data):
-            if hasattr(data,'sampling') and hasattr(data,'origin'):
-                if self._ndim == 3:
-                    # Three dimensional
-                    self._trafo_scale.sx = data.sampling[2]
-                    self._trafo_scale.sy = data.sampling[1]
-                    self._trafo_scale.sz = data.sampling[0]
-                    #
-                    self._trafo_trans.dx = data.origin[2]
-                    self._trafo_trans.dy = data.origin[1]
-                    self._trafo_trans.dz = data.origin[0]
-                elif self._ndim == 2:
-                    # Two dimensional
-                    self._trafo_scale.sx = data.sampling[1]
-                    self._trafo_scale.sy = data.sampling[0]
-                    #
-                    self._trafo_trans.dx = data.origin[1]
-                    self._trafo_trans.dy = data.origin[0]
+        if hasattr(data,'sampling'):
+            if self._ndim == 3:
+                # Three dimensional
+                self._trafo_scale.sx = data.sampling[2]
+                self._trafo_scale.sy = data.sampling[1]
+                self._trafo_scale.sz = data.sampling[0]
+            elif self._ndim == 2:
+                # Two dimensional
+                self._trafo_scale.sx = data.sampling[1]
+                self._trafo_scale.sy = data.sampling[0]
+        if  hasattr(data,'origin'):
+            if self._ndim == 3:
+                # Three dimensional
+                self._trafo_trans.dx = data.origin[2]
+                self._trafo_trans.dy = data.origin[1]
+                self._trafo_trans.dz = data.origin[0]
+            elif self._ndim == 2:
+                # Two dimensional
+                self._trafo_trans.dx = data.origin[1]
+                self._trafo_trans.dy = data.origin[0]
     
     
     def _SetData(self, data):
