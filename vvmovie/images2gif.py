@@ -230,7 +230,7 @@ class GifWriter:
         -------
           * 0 - No disposal specified.
           * 1 - Do not dispose. The graphic is to be left in place.
-          * 2 -	Restore to background color. The area used by the graphic 
+          * 2 - Restore to background color. The area used by the graphic 
             must be restored to the background color.
           * 3 -	Restore to previous. The decoder is required to restore the
             area overwritten by the graphic with what was there prior to 
@@ -432,9 +432,9 @@ class GifWriter:
                 appext = self.getAppExt(loops)
         
                 # Write
-                fp.write(header)
+                fp.write(header.encode('utf-8'))
                 fp.write(globalPalette)
-                fp.write(appext)
+                fp.write(appext.encode('utf-8'))
         
                 # Next frame is not the first
                 firstFrame = False
@@ -453,13 +453,13 @@ class GifWriter:
                 # Write local header
                 if (palette != globalPalette) or (disposes[frames] != 2):
                     # Use local color palette
-                    fp.write(graphext)
+                    fp.write(graphext.encode('utf-8'))
                     fp.write(lid) # write suitable image descriptor
                     fp.write(palette) # write local color table
                     fp.write('\x08') # LZW minimum size code
                 else:
                     # Use global color palette
-                    fp.write(graphext)
+                    fp.write(graphext.encode('utf-8'))
                     fp.write(imdes) # write suitable image descriptor
         
                 # Write image data
@@ -469,7 +469,7 @@ class GifWriter:
             # Prepare for next round
             frames = frames + 1
         
-        fp.write(";")  # end gif
+        fp.write(";".encode('utf-8'))  # end gif
         return frames
     
 
