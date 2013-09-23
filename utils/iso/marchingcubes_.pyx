@@ -38,7 +38,8 @@ INT32 = np.float32
 
 
 # Define tiny winy number
-cdef double FLT_EPSILON = 0.0000001
+cdef double FLT_EPSILON = np.spacing(1.0) #0.0000001
+
 
 # Define abs function for doubles
 cdef inline double dabs(double a): return a if a>=0 else -a
@@ -1295,7 +1296,7 @@ cdef int test_internal(Cell cell, LutProvider luts, int case, int config, int su
     if case==4 or case==10:
         a = ( cell.v4 - cell.v0 ) * ( cell.v6 - cell.v2 ) - ( cell.v7 - cell.v3 ) * ( cell.v5 - cell.v1 )
         b =  cell.v2 * ( cell.v4 - cell.v0 ) + cell.v0 * ( cell.v6 - cell.v2 ) - cell.v1 * ( cell.v7 - cell.v3 ) - cell.v3 * ( cell.v5 - cell.v1 )
-        t = - b / (2*a)
+        t = - b / (2*a + FLT_EPSILON)
         if t<0 or t>1:  return s>0 ;
     
         At = cell.v0 + ( cell.v4 - cell.v0 ) * t
@@ -1311,73 +1312,73 @@ cdef int test_internal(Cell cell, LutProvider luts, int case, int config, int su
         elif case == 13: edge = luts.TILING13_5_1.get3(config, subconfig, 0)
         
         if edge==0:
-            t  = cell.v0 / ( cell.v0 - cell.v1 )
+            t  = cell.v0 / ( cell.v0 - cell.v1 + FLT_EPSILON )
             At = 0
             Bt = cell.v3 + ( cell.v2 - cell.v3 ) * t
             Ct = cell.v7 + ( cell.v6 - cell.v7 ) * t
             Dt = cell.v4 + ( cell.v5 - cell.v4 ) * t
         elif edge==1:
-            t  = cell.v1 / ( cell.v1 - cell.v2 )
+            t  = cell.v1 / ( cell.v1 - cell.v2 + FLT_EPSILON )
             At = 0
             Bt = cell.v0 + ( cell.v3 - cell.v0 ) * t
             Ct = cell.v4 + ( cell.v7 - cell.v4 ) * t
             Dt = cell.v5 + ( cell.v6 - cell.v5 ) * t
         elif edge==2:
-            t  = cell.v2 / ( cell.v2 - cell.v3 )
+            t  = cell.v2 / ( cell.v2 - cell.v3 + FLT_EPSILON )
             At = 0
             Bt = cell.v1 + ( cell.v0 - cell.v1 ) * t
             Ct = cell.v5 + ( cell.v4 - cell.v5 ) * t
             Dt = cell.v6 + ( cell.v7 - cell.v6 ) * t
         elif edge==3:
-            t  = cell.v3 / ( cell.v3 - cell.v0 )
+            t  = cell.v3 / ( cell.v3 - cell.v0 + FLT_EPSILON )
             At = 0
             Bt = cell.v2 + ( cell.v1 - cell.v2 ) * t
             Ct = cell.v6 + ( cell.v5 - cell.v6 ) * t
             Dt = cell.v7 + ( cell.v4 - cell.v7 ) * t
         elif edge==4:
-            t  = cell.v4 / ( cell.v4 - cell.v5 )
+            t  = cell.v4 / ( cell.v4 - cell.v5 + FLT_EPSILON )
             At = 0
             Bt = cell.v7 + ( cell.v6 - cell.v7 ) * t
             Ct = cell.v3 + ( cell.v2 - cell.v3 ) * t
             Dt = cell.v0 + ( cell.v1 - cell.v0 ) * t
         elif edge==5:
-            t  = cell.v5 / ( cell.v5 - cell.v6 )
+            t  = cell.v5 / ( cell.v5 - cell.v6 + FLT_EPSILON )
             At = 0
             Bt = cell.v4 + ( cell.v7 - cell.v4 ) * t
             Ct = cell.v0 + ( cell.v3 - cell.v0 ) * t
             Dt = cell.v1 + ( cell.v2 - cell.v1 ) * t
         elif edge==6:
-            t  = cell.v6 / ( cell.v6 - cell.v7 )
+            t  = cell.v6 / ( cell.v6 - cell.v7 + FLT_EPSILON )
             At = 0
             Bt = cell.v5 + ( cell.v4 - cell.v5 ) * t
             Ct = cell.v1 + ( cell.v0 - cell.v1 ) * t
             Dt = cell.v2 + ( cell.v3 - cell.v2 ) * t
         elif edge==7:
-            t  = cell.v7 / ( cell.v7 - cell.v4 )
+            t  = cell.v7 / ( cell.v7 - cell.v4 + FLT_EPSILON )
             At = 0
             Bt = cell.v6 + ( cell.v5 - cell.v6 ) * t
             Ct = cell.v2 + ( cell.v1 - cell.v2 ) * t
             Dt = cell.v3 + ( cell.v0 - cell.v3 ) * t
         elif edge==8:
-            t  = cell.v0 / ( cell.v0 - cell.v4 )
+            t  = cell.v0 / ( cell.v0 - cell.v4 + FLT_EPSILON )
             At = 0
             Bt = cell.v3 + ( cell.v7 - cell.v3 ) * t
             Ct = cell.v2 + ( cell.v6 - cell.v2 ) * t
             Dt = cell.v1 + ( cell.v5 - cell.v1 ) * t
         elif edge==9:
-            t  = cell.v1 / ( cell.v1 - cell.v5 )
+            t  = cell.v1 / ( cell.v1 - cell.v5 + FLT_EPSILON )
             At = 0
             Bt = cell.v0 + ( cell.v4 - cell.v0 ) * t
             Ct = cell.v3 + ( cell.v7 - cell.v3 ) * t
             Dt = cell.v2 + ( cell.v6 - cell.v2 ) * t
         elif edge==10:
-            t  = cell.v2 / ( cell.v2 - cell.v6 )
+            t  = cell.v2 / ( cell.v2 - cell.v6 + FLT_EPSILON )
             At = 0
             Bt = cell.v1 + ( cell.v5 - cell.v1 ) * t
             Ct = cell.v0 + ( cell.v4 - cell.v0 ) * t
             Dt = cell.v3 + ( cell.v7 - cell.v3 ) * t
         elif edge==11:
-            t  = cell.v3 / ( cell.v3 - cell.v7 )
+            t  = cell.v3 / ( cell.v3 - cell.v7 + FLT_EPSILON )
             At = 0
             Bt = cell.v2 + ( cell.v6 - cell.v2 ) * t
             Ct = cell.v1 + ( cell.v5 - cell.v1 ) * t

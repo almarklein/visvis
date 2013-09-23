@@ -127,9 +127,8 @@ def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
         a topologically correct result.
     useValues : bool
         If True, the returned BaseMesh object will also have a value for
-        each vertex, which is relates to the maximum value in a local region
-        near the isosurface. In some situations this allows discerning
-        sharp edges from smooth ones.
+        each vertex, which is related to the maximum value in a local region
+        near the isosurface. 
     
     
     Notes about the algorithm
@@ -137,15 +136,16 @@ def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
     
     This is an implementation of:
         
-        Efficient implementation of Marching Cubes' cases with topological guarantees.
-        Thomas Lewiner, Helio Lopes, Antonio Wilson Vieira and Geovan Tavares.
-        Journal of Graphics Tools 8(2): pp. 1-15 (december 2003)
+        Efficient implementation of Marching Cubes' cases with
+        topological guarantees. Thomas Lewiner, Helio Lopes, Antonio
+        Wilson Vieira and Geovan Tavares. Journal of Graphics Tools
+        8(2): pp. 1-15 (december 2003)
     
     The algorithm is an improved version of Chernyaev's Marching Cubes 33
     algorithm, originally written in C++. It is an efficient algorithm
     that relies on heavy use of lookup tables to handle the many different 
     cases. This keeps the algorithm relatively easy. The current algorithm
-    is a port of Lewiner's algorithm in Cython.
+    is a port of Lewiner's algorithm and written in Cython.
     
     Although a lot of care was taken to reduce the risk of introducing errors
     during the porting process, this code should be taken as is and in no
