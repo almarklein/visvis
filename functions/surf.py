@@ -100,11 +100,6 @@ def surf(*args, **kwargs):
         # No texture -> colormap on the z value
         # Grayscale texture -> color mapping        
         texcoords = (c if c is not None else z).ravel()
-        
-        # Correct for min-max
-        mi, ma = texcoords.min(), texcoords.max()
-        if mi != ma:
-            texcoords = (texcoords-mi) / (ma-mi)
     
     elif c.ndim == 3:
         # color texture -> use texture mapping
