@@ -90,13 +90,18 @@ def plot(data1, data2=None, data3=None,
     
     ##  create the data
     
+    # If one argument is given, and it looks like a pointset stored
+    # in a numpy array, use it as such
+    if isinstance(data1, np.ndarray) and (data2 is None) and (data3 is None):
+        if data1.ndim == 2 and data1.shape[1] in (2,3):
+            data1 = Pointset(data1)  # Use shape as given
+    
     if is_Pointset(data1):
         pp = data1
     elif is_Point(data1):
         pp = Pointset(data1.ndim)
         pp.append(data1)
-    else:   
-        
+    else:
         if data1 is None:
             raise Exception("The first argument cannot be None!")
         data1 = np.asanyarray(data1)
