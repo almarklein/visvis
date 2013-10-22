@@ -4,6 +4,9 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
+# Modified for wxPython Pheonix 3.0.0.0
+# Keith Smith 15 Oct 2013
+
 """ The WX backend.
 
 
@@ -21,7 +24,7 @@ from visvis import BaseFigure, events, constants
 from visvis.core.misc import getResourceDir
 
 import wx
-from wx.glcanvas import GLCanvas
+from wx.glcanvas import GLCanvas, GLContext
 
 
 KEYMAP = {  wx.WXK_SHIFT: constants.KEY_SHIFT, 
@@ -54,10 +57,14 @@ def modifiers(event):
         mod += constants.KEY_ALT,
     return mod
 
-
+#===============================================================================
+# This is the Widget class prior to wxPython Phoenix
+#===============================================================================
 class GLWidget(GLCanvas):
     """ Implementation of the WX GLCanvas, which passes a number of
     events to the Figure object that wraps it.
+    
+    This is the original version with automatic glContext switching
     """
     
     def __init__(self, figure, parent, *args, **kwargs):     
@@ -66,7 +73,8 @@ class GLWidget(GLCanvas):
             wx.glcanvas.WX_GL_DOUBLEBUFFER]})
         # call GLCanvas' init method
         GLCanvas.__init__(self, parent, *args, **kwargs)        
-        
+        self._glContext = GLContext(self )
+        self._glContext.SetCurrent(self)
         self.figure = figure
         
         # find root window
@@ -103,7 +111,10 @@ class GLWidget(GLCanvas):
         #self.Bind(wx.EVT_MOUSE_CAPTURE_LOST, self.OnMouseUp)
         
         # onpaint is called when shown is called by figure() function.
-        
+    
+    
+    def GetContext(self):
+        return self._glContext    
 
     def OnLeftDown(self, event):
         x,y = event.GetPosition()
@@ -232,6 +243,37 @@ class GLWidget(GLCanvas):
         pass # This prevents flicker on Windows
 
 
+#===============================================================================
+# This is the new widget class for wxPython Phoenix
+#===============================================================================
+class GLWidgetPhoenix(GLWidget):
+    """ Implementation of the WX GLCanvas, which passes a number of
+    events to the Figure object that wraps it.
+    
+    This new Phoenix version must explicitly set the glContext
+    in OnFocus and OnPaint
+    """
+    
+    def OnFocus(self, event):
+        if self.figure and self.IsShownOnScreen():
+            # Must set glContext for Phoenix
+            self.SetCurrent(self._glContext)
+            BaseFigure._currentNr = self.figure.nr
+            event.Skip()
+
+    def OnPaint(self, event):
+        # I read that you should always create a PaintDC when implementing
+        # an OnPaint event handler.        
+        # a = wx.PaintDC(self) 
+        
+        # Must set glContext for Phoenix, but only if  shown on screen
+        if self.GetContext() and self.IsShownOnScreen(): 
+            
+            self.SetCurrent(self._glContext)
+            self.figure.OnDraw()
+        event.Skip()    
+
+
 class Figure(BaseFigure):
     """ This is the wxPython implementation of the figure class.
     
@@ -265,7 +307,13 @@ class Figure(BaseFigure):
             if 'create_widget' in kwargs:
                 updatePosition = True
                 del(kwargs['create_widget'])
-            self._widget = GLWidget(self, parent, *args, **kwargs)
+                
+            # Based on switch set in App the correct widget class is called   
+            if app._phoenix:
+                self._widget = GLWidgetPhoenix(self, parent, *args, **kwargs)
+            else:
+                self._widget = GLWidget(self, parent, *args, **kwargs)
+
             if updatePosition:
                 self.position._Changed()
         return self._widget
@@ -304,8 +352,8 @@ class Figure(BaseFigure):
                 widget = widget.GetParent()
             # apply
             #widget.SetDimensions(x, y, w, h)
-            widget.MoveXY(x,y)
-            widget.SetClientSizeWH(w,h)
+            widget.Move(x,y)
+            widget.SetClientSize(w,h)
     
     def _GetPosition(self):
         """ Get the position of the widget. """
@@ -317,8 +365,8 @@ class Figure(BaseFigure):
             # get and return
             #tmp = widget.GetRect()        
             #return tmp.left, tmp.top, tmp.width, tmp.height
-            size = widget.GetClientSizeTuple()
-            pos = widget.GetPositionTuple()
+            size = widget.GetClientSize()
+            pos = widget.GetPosition()
             return pos[0], pos[1], size[0], size[1]
         return 0, 0, 0, 0
     
@@ -364,7 +412,7 @@ def newFigure():
     frame = FigureFrame(None, -1, "Figure", size=refSize)
     
     # Correct size. The given size includes the window manager's frame
-    size = frame.GetClientSizeTuple()
+    size = frame.GetClientSize()
     w = refSize[0] + (refSize[0] - size[0])
     h = refSize[1] + (refSize[1] - size[1])
     frame.SetSize((w,h))
@@ -394,6 +442,8 @@ class VisvisEventsTimer(wx.Timer):
         events.processVisvisEvents()
 
 
+
+
 class App(events.App):
     """ App()
     
@@ -402,11 +452,22 @@ class App(events.App):
     
     This is the wxPython implementation.
     
+    Modifications added to check for wxPython Phoenix
+    
     """
     
     def __init__(self):
         # Timer to enable timers in visvis. Should be created AFTER the app
         self._timer = None
+        
+        # check which version of wx is installed, set _phoenix switch
+        # and select the correct _ProcessEvents
+        if "phoenix" in wx.version():
+            self._phoenix = True
+            self._ProcessEvents = self._ProcessEventsPhoenix
+        else:
+            self._phoenix = False
+            self._ProcessEvents = self._ProcessEvents1  
     
     def _GetNativeApp(self):
         # Get native app in save way. Taken from guisupport.py, 
@@ -423,9 +484,9 @@ class App(events.App):
             self._timer.Start(10, False)
         # Return
         return app
-    
-    def _ProcessEvents(self):
-        
+
+    def _ProcessEvents1(self):
+        # This is the original API
         # Get app
         app = self._GetNativeApp()
         
@@ -440,6 +501,23 @@ class App(events.App):
         app.ProcessIdle() # otherwise frames do not close
         # Set back the original
         wx.EventLoop.SetActive(old)  
+    
+    def _ProcessEventsPhoenix(self):
+        # this version uses the new Phoenix API
+        # Get app
+        app = self._GetNativeApp()
+        
+        # Keep reference of old eventloop instance
+        old = wx.EventLoopBase.GetActive()
+        # Create new eventloop and process
+        eventLoop = app.GetTraits().CreateEventLoop()
+        wx.EventLoopActivator(eventLoop)                        
+        while eventLoop.Pending():
+            eventLoop.Dispatch()
+        # Process idle
+        eventLoop.ProcessIdle() # otherwise frames do not close
+        # Set back the original
+        wx.EventLoopActivator(old)  
     
     def _Run(self):
         app = self._GetNativeApp()
