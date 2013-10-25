@@ -462,12 +462,12 @@ class App(events.App):
         
         # check which version of wx is installed, set _phoenix switch
         # and select the correct _ProcessEvents
-        if "phoenix" in wx.version():
+        if "phoenix" in wx.PlatformInfo:
             self._phoenix = True
             self._ProcessEvents = self._ProcessEventsPhoenix
         else:
             self._phoenix = False
-            self._ProcessEvents = self._ProcessEvents1  
+            self._ProcessEvents = self._ProcessEventsOriginal  
     
     def _GetNativeApp(self):
         # Get native app in save way. Taken from guisupport.py, 
@@ -485,7 +485,7 @@ class App(events.App):
         # Return
         return app
 
-    def _ProcessEvents1(self):
+    def _ProcessEventsOriginal(self):
         # This is the original API
         # Get app
         app = self._GetNativeApp()
