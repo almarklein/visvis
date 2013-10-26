@@ -40,11 +40,11 @@ For more help, see ...
   * the examples at the bottom of the function modules (in the functions dir)
   * the online docs: http://code.google.com/p/visvis/
 
-Visvis is maintained by `Science Applied <http://www.science-applied.nl>`_.
+Visvis is maintained by Almar Klein.
 
 """
 
-__version__  = '1.8.1' 
+__version__  = '1.9' 
 
 # Loose sub-modules and sub-packages
 from visvis.utils.pypoints import Point, Pointset, Aarray, Quaternion
