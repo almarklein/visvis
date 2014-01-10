@@ -64,6 +64,9 @@ class Node(Point):
         self._edges = []
     
     
+    def __hash__(self):
+        return id(self)
+    
     def GetEdge(self, otherNode):
         """ GetEdge(self, otherNode)
         Gives the edge from this node to the given node. If there
@@ -253,7 +256,7 @@ class Graph(list):
         # Store the properties of the edges. The propRefs array
         # Does contain redundant data, but it can be stored efficiently
         # because the compression handles that...
-        allProps = ''
+        allProps = b''
         propRefs = np.zeros((len(cc), 2), dtype=np.uint32)
         for i in range(len(cc)):
             tmp = serializeProps(cc[i].props)
@@ -555,22 +558,22 @@ def serializeProps(props):
     """
     
     # Init data bits
-    databits = ''
+    databits = b''
     
     # Create bits of data
     for prop in props:
         if isinstance(prop, float):
             tmp = np.array(prop, dtype=np.float32)
-            databits += '\x00'
+            databits += b'\x00'
             databits += tmp.tostring()
         elif isinstance(prop, int):
             tmp = np.array(prop, dtype=np.int32)
-            databits += '\x01'
+            databits += b'\x01'
             databits += tmp.tostring()
         elif isinstance(prop, Pointset):
-            databits += '\x09'
+            databits += b'\x09'
             databits += np.array(len(prop), dtype=np.int32).tostring()
-            databits += chr(prop.ndim)
+            databits += chr(prop.ndim).encode('utf-8')
             databits += prop.data.tostring()
         else:
             print('Warning: do not know how to store %s' % repr(prop))
@@ -590,19 +593,20 @@ def deserializeProps(bb):
     # Decode the string
     i = 0
     while i < len(bb):
-        if bb[i] == '\x00':
+        if bb[i] == b'\x00'[0]:
             # float
             tmp = np.frombuffer( bb[i+1:i+5], dtype=np.float32 )
             props.append( float(tmp) )
             i += 5
-        elif bb[i] == '\x01':
+        elif bb[i] == b'\x01'[0]:
             # int
             tmp = np.frombuffer( bb[i+1:i+5], dtype=np.int32 )
             props.append( int(tmp) )
             i += 5
-        elif bb[i] == '\x09':
+        elif bb[i] == b'\x09'[0]:
             n = np.frombuffer( bb[i+1:i+5], dtype=np.int32 )
-            ndim = ord(bb[i+5])
+            ndim = bb[i+5]  
+            if not isinstance(ndim, int): ndim = ord(ndim)
             nbytes = n*ndim*4
             tmp = np.frombuffer( bb[i+6:i+6+nbytes], dtype=np.float32 )
             tmp.shape = n, ndim
