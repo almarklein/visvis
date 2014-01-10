@@ -410,7 +410,10 @@ class GifWriter:
         # Obtain palette for all images and count each occurance
         palettes, occur = [], []
         for im in images:
-            palettes.append( getheader(im)[1] )
+            palette = getheader(im)[1]
+            if not palette:
+                palette = PIL.ImagePalette.ImageColor
+            palettes.append(palette)
         for palette in palettes:
             occur.append( palettes.count( palette ) )
         
@@ -454,9 +457,9 @@ class GifWriter:
                 if (palette != globalPalette) or (disposes[frames] != 2):
                     # Use local color palette
                     fp.write(graphext.encode('utf-8'))
-                    fp.write(lid) # write suitable image descriptor
+                    fp.write(lid.encode('utf-8')) # write suitable image descriptor
                     fp.write(palette) # write local color table
-                    fp.write('\x08') # LZW minimum size code
+                    fp.write('\x08'.encode('utf-8')) # LZW minimum size code
                 else:
                     # Use global color palette
                     fp.write(graphext.encode('utf-8'))
@@ -811,7 +814,7 @@ class NeuQuant:
             return self.a_s[(alpha, rad)]
         except KeyError:
             length = rad*2-1
-            mid = length/2
+            mid = int(length//2)
             q = np.array(list(range(mid-1,-1,-1))+list(range(-1,mid)))
             a = alpha*(rad*rad - q*q)/(rad*rad)
             a[mid] = 0
@@ -891,7 +894,7 @@ class NeuQuant:
         alpha = self.INITALPHA
         
         i = 0;
-        rad = biasRadius >> self.RADIUSBIASSHIFT
+        rad = biasRadius * 2**self.RADIUSBIASSHIFT
         if rad <= 1:
             rad = 0
         
@@ -939,7 +942,7 @@ class NeuQuant:
             if i%delta == 0:
                 alpha -= alpha / alphadec
                 biasRadius -= biasRadius / self.RADIUSDEC
-                rad = biasRadius >> self.RADIUSBIASSHIFT
+                rad = biasRadius * 2**self.RADIUSBIASSHIFT
                 if rad <= 1:
                     rad = 0
         
