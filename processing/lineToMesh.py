@@ -106,10 +106,10 @@ def lineToMesh(pp, radius, vertex_num, values=None):
     bufdist = min( radius.max(), dists.min()/2.2)
     
     # check if line is closed
-    lclosed = (pp[0]==pp[-1])
+    lclosed = np.all(pp[0]==pp[-1])
     
     # calculate normal vectors on each line point    
-    normals = pp[:-1].subtract( pp[1:] )
+    normals = pp[:-1].subtract( pp[1:] ).copy()
     if lclosed:        
         normals.append( pp[0]-pp[1] )
     else:        
