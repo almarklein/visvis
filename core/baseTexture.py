@@ -682,10 +682,8 @@ class Colormap(TextureObject):
             if args.ndim != 2 or args.shape[1] not in [3,4]:
                 raise ValueError('Colormap entries must have 3 or 4 elements.')
             elif args.shape[1]==3:
-                data = np.zeros((args.shape[0],4), dtype=np.float32)
-                data[:,3] = 1.0
-                for i in range(3):
-                    data[:,i] = args[i]
+                data = np.ones((args.shape[0], 4), dtype=np.float32)
+                data[:, 0:3] = args
             elif args.shape[1]==4:
                 data = args
             else:
