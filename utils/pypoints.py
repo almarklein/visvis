@@ -1776,7 +1776,7 @@ class Quaternion(object):
         
         # Init
         vecNorm = self.x**2 + self.y**2 + self.z**2
-        wPart = np.e**self.w        
+        wPart = np.exp(self.w)
         q = Quaternion()
         
         # Calculate
@@ -1784,6 +1784,8 @@ class Quaternion(object):
         q.x = wPart * self.x * np.sin(vecNorm) / vecNorm
         q.y = wPart * self.y * np.sin(vecNorm) / vecNorm
         q.z = wPart * self.z * np.sin(vecNorm) / vecNorm
+        
+        return q
     
     
     def log(self):
@@ -1805,6 +1807,8 @@ class Quaternion(object):
         q.x = np.log(norm) * self.x * np.arccos(tmp) / vecNorm
         q.y = np.log(norm) * self.y * np.arccos(tmp) / vecNorm
         q.z = np.log(norm) * self.z * np.arccos(tmp) / vecNorm
+        
+        return q
     
     
     def __add__(self, q):
@@ -1912,7 +1916,7 @@ class Quaternion(object):
             az = self.z / scale
         else:
             # No rotation, so arbitrary axis
-            ax, ay, ax = 1, 0, 0 
+            ax, ay, az = 1, 0, 0 
         
         # Return
         return angle, ax, ay, az
@@ -1940,9 +1944,9 @@ class Quaternion(object):
         """
         
         # Obtain quaternions
-        qx = Quaternion( np.cos(rx)/2, np.sin(rx/2), 0, 0 )
-        qy = Quaternion( np.cos(ry)/2, 0, np.sin(ry/2), 0 )
-        qz = Quaternion( np.cos(rz)/2, 0, 0, np.sin(rz/2) )
+        qx = Quaternion( np.cos(rx/2), np.sin(rx/2), 0, 0 ) 
+        qy = Quaternion( np.cos(ry/2), 0, np.sin(ry/2), 0 )
+        qz = Quaternion( np.cos(rz/2), 0, 0, np.sin(rz/2) )
         
         # Almost done
         return qx*qy*qz
