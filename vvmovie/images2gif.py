@@ -410,6 +410,13 @@ class GifWriter:
             palette = getheader(im)[1]
             if not palette:
                 palette = PIL.ImagePalette.ImageColor
+                if isinstance(palette, type(os)):
+                    # Older or newer? version of Pil(low)
+                    data = PIL.ImagePalette.ImagePalette().getdata()
+                    palette = data[0].encode('utf-8') + data[1]
+                    # Arg this does not work. Go use imageio
+                    raise RuntimeError('Cannot get palette. '
+                                       'Maybe you should try imageio instead.')
             palettes.append(palette)
         for palette in palettes:
             occur.append(palettes.count(palette))
