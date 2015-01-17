@@ -1601,7 +1601,7 @@ class FlyCamera(BaseCamera):
         # Create the space in 100 "units"
         ndaspect = self.daspectNormalized
         dv = Point([1.0/d for d in ndaspect])
-        # 
+        #
         vf = pf * dv * rel_speed * self._speed_trans / self._zoom
         vr = pr * dv * rel_speed * self._speed_trans / self._zoom
         vu = pu * dv * rel_speed * self._speed_trans / self._zoom
