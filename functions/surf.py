@@ -129,6 +129,8 @@ def surf(*args, **kwargs):
     # Should we apply a texture?
     if c is not None and c.ndim==3:
         m.SetTexture(c)
+    else:
+        m.clim = m.clim  # trigger correct limits
     
     # Adjust axes
     if axesAdjust:
@@ -153,4 +155,4 @@ if __name__ == "__main__":
     im /= 4
     # Surf
     m = vv.surf(im[:,:,0], im)
-    
+
