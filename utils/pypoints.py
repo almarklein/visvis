@@ -523,7 +523,7 @@ class BasePoints(object):
                 'bug in the minus operator. To prevent this message, use the ' +
                 'subtract method instead of the operator. To get the ' +
                 'same behavior as before, replace "A-B" with "B.subtract(A)". ' +
-                'Info: http://code.google.com/p/visvis/issues/detail?id=30. ' +
+                'Info: https://github.com/almarklein/visvis/issues/30. ' +
                 'Trace:')
                 self._showTrace()
                 print('+'*79)

@@ -12,7 +12,7 @@ def reportIssue():
     
     """
     import webbrowser
-    webbrowser.open("http://code.google.com/p/visvis/issues/list")
+    webbrowser.open("https://github.com/almarklein/visvis/issues")
 
 if __name__ == '__main__':
     vv.reportIssue()

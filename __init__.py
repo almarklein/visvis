@@ -38,7 +38,7 @@ For more help, see ...
   * the docstrings
   * the examples in the examples dir
   * the examples at the bottom of the function modules (in the functions dir)
-  * the online docs: http://code.google.com/p/visvis/
+  * the online docs: https://github.com/almarklein/visvis/wiki
 
 Visvis is maintained by Almar Klein.
 

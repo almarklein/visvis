@@ -463,7 +463,7 @@ def getResourceDir():
     return os.path.join(path, 'visvisResources')
 
 
-# From pyzolib/paths.py (https://code.google.com/p/pyzolib/source/browse/paths.py)
+# From pyzolib/paths.py
 import os, sys
 def appdata_dir(appname=None, roaming=False, macAsLinux=False):
     """ appdata_dir(appname=None, roaming=False,  macAsLinux=False)

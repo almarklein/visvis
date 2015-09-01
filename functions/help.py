@@ -15,7 +15,7 @@ def help():
     
     """
     import webbrowser
-    webbrowser.open("http://code.google.com/p/visvis/wiki/Documentation")
+    webbrowser.open("https://github.com/almarklein/visvis/wiki")
 
 if __name__ == '__main__':
     vv.help()

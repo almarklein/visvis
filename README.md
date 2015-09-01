@@ -22,31 +22,29 @@ Installation is best done via pip: ``pip install visvis``
 ### How visvis works
 
 With visvis a range of different data can be visualized by simply adding
-[world objects](https://code.google.com/p/visvis/wiki/cls_Wobject) to
+[world objects](https://github.com/almarklein/visvis/wiki/cls_Wobject) to
 a scene (i.e. an
-[axes](https://code.google.com/p/visvis/wiki/cls_Axes)). These world
+[axes](https://github.com/almarklein/visvis/wiki/cls_Axes)). These world
 objects can be
 anything from plots
-([lines](https://code.google.com/p/visvis/wiki/example_plotting) with
+([lines](https://github.com/almarklein/visvis/wiki/example_plotting) with
 markers), to
-[images](https://code.google.com/p/visvis/wiki/example_images), 3D
+[images](https://github.com/almarklein/visvis/wiki/example_images), 3D
 rendered
-[volumes](https://code.google.com/p/visvis/wiki/example_volumes), shaded
-[meshes](https://code.google.com/p/visvis/wiki/example_meshes), or you
+[volumes](https://github.com/almarklein/visvis/wiki/example_volumes), shaded
+[meshes](https://github.com/almarklein/visvis/wiki/example_meshes), or you
 can program your own world object class.
 If required, these data can also be
-[moved](https://code.google.com/p/visvis/wiki/example_fourDimensions)
+[moved](https://github.com/almarklein/visvis/wiki/example_fourDimensions)
 in time.
 
 ### Docs
 
-The docs are on the old [googlecode](https://code.google.com/p/visvis/)
-page, mostly because I don't have time to convert them to Sphinx
-docs.
+The docs are on the [wiki](https://github.com/almarklein/visvis/wiki).
 
 Online documentation is available for all
-[classes](https://code.google.com/p/visvis/wiki/classes) and
-[functions](https://code.google.com/p/visvis/wiki/functions). Any
+[classes](https://github.com/almarklein/visvis/wiki/classes) and
+[functions](https://github.com/almarklein/visvis/wiki/functions). Any
 questions can be asked in the visvis [discussion
 group](http://groups.google.com/group/visvis).
 

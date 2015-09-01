@@ -30,7 +30,7 @@ This module should ...
     that will fire the events of the appropriate wibjects and wobjects.
 
 There is a wiki page about implementing backend:
-http://code.google.com/p/visvis/wiki/Creating_a_backend
+https://github.com/almarklein/visvis/wiki/Creating_a_backend
 Also look at the already implemented backends!
 
 The backend is chosen/selected as follows:
