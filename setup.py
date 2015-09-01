@@ -25,8 +25,6 @@ Define the version:
 Generate and upload package (preferably on Windows)
   * python setup.py register
   * python setup.py sdist upload
-  * python setup.py bdist_wininst upload
-  * Upload the zipfile and exe to the google code page
 
 Announcing:
   * It can be worth waiting a day for eager users to report critical bugs
