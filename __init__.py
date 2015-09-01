@@ -44,7 +44,7 @@ Visvis is maintained by Almar Klein.
 
 """
 
-__version__  = '1.9.1' 
+__version__  = '1.9.2' 
 
 # Loose sub-modules and sub-packages
 from visvis.utils.pypoints import Point, Pointset, Aarray, Quaternion
