@@ -1,0 +1,11 @@
+*.pyc
+*.pyo
+*.orig
+.idea
+.ipynb_checkpoints
+.coverage*
+build
+dist
+MANIFEST
+htmlcov
+
