@@ -1,0 +1,38 @@
+# This thest file contains all the seven data types supported by SSDF
+# and contains some challanging versions of strings.
+# Furthermore, it contains a dictionary with invalid syntax, which should 
+# produce warnings, but not kill the reader.
+
+integer1 = 2  # this is an integer
+float1 = 3.0  # and this a float
+string1 = ''  # empty string
+string2 = 'more "complex" string that\'s got \ntwo lines and a single backslash here >> \ <<'
+string3 = 'double backslash should \\not trigger newline in front of an "n" \\'  # and before a quote, should still end that string
+nullvalue1 = Null
+nullvalue2 = None
+array1 = array 3x2 float32 1,2,3,4,5,6
+array2 = array 640x480x3 uint8 eJztzgEJAAAMA6C9f+nHGAxNYAIAAAAw4doBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWPQQvQAC
+noteOnArray2 = 'array2 is all zeros with a 1 at array2[3,2,1] (starting from 0, so [4,3,2] in Matlab)'
+smalList = [1, 2.0, 3, 'foo', '']  # Lists with only floats, ints and strings can be written on one line
+more = dict:
+    foo = 4.2
+    bar = 'foobar'
+
+largeList = list:
+    4
+    5.0
+    'the last two elements in this list are an empty dict and empty list'
+    dict:    
+    list:
+   
+# The following dict contains problems
+problems = dict:
+    crap1 = this cannot be parsed and should produce an error
+    crap2 = "neither can this"
+    # an empty line can be seen as Null
+    novalue = 
+      invalidIndent = 'a child of non-container element'
+    listwithnames = list:
+        foo = 8.1
+    dictwithnonames = dict:          
+        8.1

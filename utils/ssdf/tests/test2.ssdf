@@ -1,0 +1,29 @@
+# SSDF supports 7 datatypes
+
+# 1: float scalars
+a_float = 4.0 
+
+# 2: integer scalars
+an_int = 3 
+
+# 3: Unicode strings3
+a_string = 'SSDF is easy as py' 
+
+# 4: Lists are container elements (and can in turn contain lists or dictionaries)
+more_info = list:
+  'As in Python, structure is implemented through indentation,'
+  'and a colon behind the container element.'   
+  5
+  'as you can see, elements in a list have no name'
+
+# 5: A dictionary is a container too
+a_dict = dict:  
+  # lists with only floats, ints and strings can be on a single line
+  another_list = [1.0, 2, 'foo', 'bar']
+
+# 6: arrays - SSDF supports readable as well as binary (compressed) arrays.
+a_small_array = array 2x3 int32 1, 2, 3, 4, 5, 6
+an_array_with_all_zeros = array 32x32 float32 eJztwQENAAAAwqD3T20PBxQAAADwbhAAAAE=
+
+# 7: ...
+nothing = None # or Null
