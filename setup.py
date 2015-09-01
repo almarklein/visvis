@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2012, Almar Klein
+# Copyright (C) 2015, Almar Klein
 #
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
@@ -62,11 +62,10 @@ setup(
     name = name,
     version = __version__,
     author = 'Almar Klein',
-    author_email = 'a.klein@science-applied.nl',
+    author_email = 'almar.klein@gmail.com',
     license = '(new) BSD',
     
-    url = 'http://code.google.com/p/visvis/',
-    download_url = 'http://code.google.com/p/visvis/downloads/list',    
+    url = 'https://github.com/almarklein/visvis',   
     keywords = "visualization OpenGl medical imaging 3D plotting numpy",
     description = description,
     long_description = __doc__,
@@ -108,6 +107,8 @@ setup(
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3.2',
           'Programming Language :: Python :: 3.3',
+          'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
           ],
     )
 
