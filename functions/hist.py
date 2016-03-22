@@ -51,10 +51,7 @@ def hist(data, bins=None, drange=None, normed=False, weights=None):
         bins = stats.best_number_of_bins()
     
     # let numpy do the work
-    if np.__version__ < '1.3':
-        values, edges = np.histogram(data, bins, drange, normed, weights, new=True)
-    else:
-        values, edges = np.histogram(data, bins, drange, normed, weights)
+    values, edges = np.histogram(data, bins, drange, normed, weights)
     
     # the bins are the left bin edges, let's get the centers
     centers = np.empty(values.shape, np.float64)
