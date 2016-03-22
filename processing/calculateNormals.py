@@ -11,7 +11,7 @@ import time
 v = np.array([10,11,12,20,21,22,30,31,32,40,41,42,50,51,52,60,61,62])
 v.shape = 6,3
 N = v.shape[0]
-faces = np.arange(N); faces.shape = len(v)/3,3
+faces = np.arange(N); faces.shape = len(v)//3, 3
 
 
 def calculateNormals(mesh):
