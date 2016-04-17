@@ -164,9 +164,14 @@ colormaps['viridis'] = np.frombuffer(base64.decodestring(_viridis), np.float32).
 
 # Medical colormaps
 c1, c2 = 1200 / 4096.0, 1550 / 4096.0
-colormaps['ct1'] = {    'red': [(0,0), (c2,1), (1,0)], 
-                        'green': [(0,0), (c1,0), (c2,1)],
-                        'blue': [(0,0), (c1,0), (c2,1), (1,0) ]}
+colormaps['ct1'] = {    'r': [(0, 0), (c2, 1.0), (1.0, 0.0)], 
+                        'g': [(0, 0), (c1, 0.0), (c2, 1.0)],
+                        'b': [(0, 0), (c1, 0.0), (c2, 1.0), (1.0, 0.0) ]}
+# Colormap design by Maaike Koenrades, best viewed with clim (0, 2500)
+colormaps['ct2'] = {    'r': [(0, 0), (0.1773, 1.0)],
+                        'g': [(0, 0), (0.2727, 1.0)],
+                        'b': [(0, 0), (0.3454, 1.0)],
+                        'a': [(0, 1), (1.0, 1.0)]}
 del c1, c2, base64, np
 
 
