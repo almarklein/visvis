@@ -1,6 +1,6 @@
 include examples/*.py
 include visvisResources/*
-include io/*.py
+include vvio/*.py
 include processing/*.py
-include vvmoview/*.py
-
+include vvmovie/*.py
+include license.txt
