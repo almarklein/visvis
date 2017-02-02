@@ -55,7 +55,7 @@ More information about compression and limitations:
 
 """
 
-import os, time
+import os, time, warnings
 
 # Python 3 needs absolute import, which makes that this package
 # cannot be a subpackage anymore. We cannot use the dot-notation, 
@@ -155,6 +155,8 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     
     """
     
+    warnings.warn('Visvis movieRead() function and vvmovie module are supersceded by the imageio library.')
+    
     # Test images
     if not isinstance(images, (tuple, list)):
         raise ValueError("Images should be a tuple or list.")
@@ -211,6 +213,8 @@ def movieRead(filename, asNumpy=True, **kwargs):
       * There is a windows installer on the visvis website
     
     """
+    
+    warnings.warn('Visvis movieRead() function and vvmovie module are supersceded by the imageio library.')
     
     # Get extension
     EXT = os.path.splitext(filename)[1]
