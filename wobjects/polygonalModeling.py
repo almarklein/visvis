@@ -398,7 +398,7 @@ class BaseMesh(object):
             faces = self._faces
         # Reshape
         vpf = self._verticesPerFace
-        Nfaces = faces.size / vpf
+        Nfaces = int(faces.size / vpf)
         return faces.reshape((Nfaces, vpf))
 
 

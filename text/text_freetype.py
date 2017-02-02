@@ -219,7 +219,7 @@ class FreeTypeAtlas(AtlasTexture):
         ------
             A newly allocated region as (x,y,width,height) or (-1,-1,0,0)
         '''
-
+        width, height = int(width), int(height)  # issue #89
         best_height = self.data.shape[0] * 10
         best_index = -1
         best_width = self.data.shape[1] * 10
