@@ -144,12 +144,22 @@ class GLWidget(QtOpenGL.QGLWidget):
     
     def wheelEvent(self, event):
         # Get number of steps
-        numDegrees = event.delta() / 8.0
+       
+        if qtlib == "pyqt5":
+            numDegrees = event.angleDelta() / 8.0            
+        else:
+            numDegrees = event.delta() / 8.0
+                                    
         numSteps = numDegrees / 15.0
-        if event.orientation() == QtCore.Qt.Vertical:
+        
+        if qtlib == "pyqt5":
             horizontal, vertical = 0, numSteps
         else:
-            horizontal, vertical = numSteps, 0
+            if event.orientation() == QtCore.Qt.Vertical:
+                horizontal, vertical = 0, numSteps
+            else:
+                horizontal, vertical = numSteps, 0
+                
         # fire event   
         x, y = event.x(), event.y()
         self.figure._GenerateMouseEvent('scroll', x, y, horizontal, vertical, modifiers(event))
@@ -371,7 +381,7 @@ class App(events.App):
             QtWidgets._qApp = app
         else:
             QtGui._qApp = app
-            
+
         # Start timer
         if self._timer is None:
             # Instantiate timer
