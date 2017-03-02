@@ -54,11 +54,11 @@ import visvis
 from visvis.core.misc import isFrozen, getExceptionInstance
 
 # The order in which to try loading a backend (foo is a dummy backend)
-backendOrder = ['pyside', 'pyqt4', 'wx', 'gtk', 'fltk'] 
-backendMap = {'pyside':'PySide', 'pyqt4':'PyQt4', 'wx':'wx', 'gtk':'gtk', 'fltk':'fltk',}
+backendOrder = ['pyqt5', 'pyside', 'pyqt4', 'wx', 'gtk', 'fltk'] 
+backendMap = {'pyqt5':'PyQt5', 'pyside':'PySide', 'pyqt4':'PyQt4', 'wx':'wx', 'gtk':'gtk', 'fltk':'fltk',}
 
 # Define aliases for backend names (for backward compatibility)
-backendAliases = {'qt4': 'pyqt4'}
+backendAliases = {'qt4': 'pyqt4', 'qt5':'pyqt5'}
 
 # Set Qt lib to empty string (will be set by backend_pyside or backend_pyqt4)
 qtlib = ''

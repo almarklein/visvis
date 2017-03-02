@@ -20,6 +20,8 @@ if qtlib == 'pyside':
     from PySide import QtCore, QtGui, QtOpenGL
 elif qtlib == 'pyqt4':
     from PyQt4 import QtCore, QtGui, QtOpenGL
+elif qtlib == 'pyqt5':
+    from PyQt5 import QtCore, QtWidgets, QtGui, QtOpenGL
 else:
     raise ImportError('Cannot import Qt: invalid qtlib specified "%s".' %qtlib)
 
@@ -350,12 +352,26 @@ class App(events.App):
     
     def _GetNativeApp(self):
         # Get native app in save way. Taken from guisupport.py
-        app = QtGui.QApplication.instance()
+        app = None
+        if qtlib == "pyqt5":
+            app = QtWidgets.QApplication.instance()
+        else:
+            app = QtGui.QApplication.instance()
+
         if app is None:
-            app = QtGui.QApplication([''])
+            if qtlib == "pyqt5":
+                app = QtWidgets.QApplication([''])
+            else:
+                app = QtGui.QApplication([''])
+
         # Store so it won't be deleted, but not on a visvis object,
         # or an application may produce error when closed
-        QtGui._qApp = app
+
+        if qtlib == "pyqt5":
+            QtWidgets._qApp = app
+        else:
+            QtGui._qApp = app
+            
         # Start timer
         if self._timer is None:
             # Instantiate timer
