@@ -1039,10 +1039,7 @@ class Axes(base.Wibject):
     
     def _OnScroll(self, event):
         SCROLL_ZOOM_FACTOR = 1.1
-        if vv.backends.qtlib == "pyqt5":
-            self.camera.zoom *= SCROLL_ZOOM_FACTOR**event.verticalSteps.y()
-        else:
-            self.camera.zoom *= SCROLL_ZOOM_FACTOR**event.verticalSteps
+        self.camera.zoom *= SCROLL_ZOOM_FACTOR**event.verticalSteps
     
     def _OnKeyDown(self, event):
         """ Give user a lot of control via special keyboard input.

@@ -153,7 +153,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         numSteps = numDegrees / 15.0
         
         if qtlib == "pyqt5":
-            horizontal, vertical = 0, numSteps
+            horizontal, vertical = numSteps.x(), numSteps.y()
         else:
             if event.orientation() == QtCore.Qt.Vertical:
                 horizontal, vertical = 0, numSteps
