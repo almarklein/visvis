@@ -20,6 +20,8 @@ if qtlib == 'pyside':
     from PySide import QtCore, QtGui, QtOpenGL
 elif qtlib == 'pyqt4':
     from PyQt4 import QtCore, QtGui, QtOpenGL
+elif qtlib == 'pyqt5':
+    from PyQt5 import QtCore, QtWidgets, QtGui, QtOpenGL
 else:
     raise ImportError('Cannot import Qt: invalid qtlib specified "%s".' %qtlib)
 
@@ -142,12 +144,22 @@ class GLWidget(QtOpenGL.QGLWidget):
     
     def wheelEvent(self, event):
         # Get number of steps
-        numDegrees = event.delta() / 8.0
-        numSteps = numDegrees / 15.0
-        if event.orientation() == QtCore.Qt.Vertical:
-            horizontal, vertical = 0, numSteps
+       
+        if qtlib == "pyqt5":
+            numDegrees = event.angleDelta() / 8.0            
         else:
-            horizontal, vertical = numSteps, 0
+            numDegrees = event.delta() / 8.0
+                                    
+        numSteps = numDegrees / 15.0
+        
+        if qtlib == "pyqt5":
+            horizontal, vertical = numSteps.x(), numSteps.y()
+        else:
+            if event.orientation() == QtCore.Qt.Vertical:
+                horizontal, vertical = 0, numSteps
+            else:
+                horizontal, vertical = numSteps, 0
+                
         # fire event   
         x, y = event.x(), event.y()
         self.figure._GenerateMouseEvent('scroll', x, y, horizontal, vertical, modifiers(event))
@@ -350,12 +362,26 @@ class App(events.App):
     
     def _GetNativeApp(self):
         # Get native app in save way. Taken from guisupport.py
-        app = QtGui.QApplication.instance()
+        app = None
+        if qtlib == "pyqt5":
+            app = QtWidgets.QApplication.instance()
+        else:
+            app = QtGui.QApplication.instance()
+
         if app is None:
-            app = QtGui.QApplication([''])
+            if qtlib == "pyqt5":
+                app = QtWidgets.QApplication([''])
+            else:
+                app = QtGui.QApplication([''])
+
         # Store so it won't be deleted, but not on a visvis object,
         # or an application may produce error when closed
-        QtGui._qApp = app
+
+        if qtlib == "pyqt5":
+            QtWidgets._qApp = app
+        else:
+            QtGui._qApp = app
+
         # Start timer
         if self._timer is None:
             # Instantiate timer
