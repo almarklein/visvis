@@ -4,19 +4,15 @@
 for visualization of 1D to 4D data in an object oriented way.
 Essentially, visvis is an object oriented layer of Python on top of
 OpenGl, thereby combining the power of OpenGl with the usability of
-Python. A Matlab-like interface in the form of a set of functions allows
+Python. A Matlab/Matplotlib-like interface in the form of a set of functions allows
 easy creation of objects (e.g. plot(), imshow(), volshow(), surf()).
-
-The successor of Visvis, [Vispy](http://vispy.org), is taking shape and will
-eventually replace Visvis.
-
 
 ### Dependencies and installation
 
 Visvis is cross-platform and runs on Python 2.x and Python 3.x. It
 depends on numpy, pyopengl, and any of the supported GUI backends.
 
-Installation is best done via pip: ``pip install visvis``
+Installation is best done via conda (``conda install vispy``) or pip (``pip install visvis``).
 
 
 ### How visvis works
@@ -39,7 +35,7 @@ If required, these data can also be
 in time.
 
 
-## Example ##
+## Example
 [![](https://raw.githubusercontent.com/wiki/almarklein/visvis/images/overviewScreen.png)](https://github.com/almarklein/visvis/wiki/example_overview)
 
 Click on the figure to see the **code** and how the user can interact with the figure.
