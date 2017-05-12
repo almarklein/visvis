@@ -38,6 +38,13 @@ If required, these data can also be
 [moved](https://github.com/almarklein/visvis/wiki/example_fourDimensions)
 in time.
 
+
+## Example ##
+[![](https://raw.githubusercontent.com/wiki/almarklein/visvis/images/overviewScreen.png)](https://github.com/almarklein/visvis/wiki/example_overview)
+
+Click on the figure to see the **code** and how the user can interact with the figure.
+
+
 ### Docs
 
 The docs are on the [wiki](https://github.com/almarklein/visvis/wiki).
