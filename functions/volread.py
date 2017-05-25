@@ -26,24 +26,19 @@ def volread(filename):
     
     """
     
+    # Try loading our base volume(s)
     if filename == 'stent':
-        # Get full filename
         path = vv.misc.getResourceDir()
         filename2 = os.path.join(path, 'stent_vol.ssdf')
         if os.path.isfile(filename2):
             filename = filename2
-        else:
-            raise IOError("File '%s' does not exist." % filename)
-        # Load
-        s = vv.ssdf.load(filename)
-        return s.vol.astype('int16') * s.colorscale
+            s = vv.ssdf.load(filename)
+            return s.vol.astype('int16') * s.colorscale
     
-    elif imageio is not None:
-        return imageio.volread(filename)
-        
-    else:
+    # Use imageio (can also load from http, etc)
+    if imageio is None:
         raise RuntimeError("visvis.volread needs the imageio package to read arbitrary files.")
-        
+    return imageio.volread(filename)
 
 
 if __name__ == '__main__':
