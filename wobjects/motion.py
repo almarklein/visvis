@@ -349,7 +349,7 @@ class MotionDataContainer(Wobject, MotionMixin):
     Example
     -------
     # read image
-    ims = [vv.imread('lena.png')]
+    ims = [vv.imread('astronaut.png')]
 
     # make list of images: decrease red channel in subsequent images
     for i in range(9):

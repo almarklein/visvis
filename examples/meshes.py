@@ -31,7 +31,7 @@ line = vv.solidLine(pp+Point(9,3,0), radius = 0.2)
 # Let's put a face on that cylinder
 # This works because 2D texture coordinates are automatically generated for
 # the sphere, cone, cylinder and ring. 
-im = vv.imread('lena.png')
+im = vv.imread('astronaut.png')
 cylinder.SetTexture(im)
 
 # Make the ring green

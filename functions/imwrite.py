@@ -77,5 +77,5 @@ def imwrite(filename, image, format=None):
 
 
 if __name__ == '__main__':
-    im = vv.imread('lena.png')
-    vv.imwrite('lena_new.jpg', im)
+    im = vv.imread('astronaut.png')
+    vv.imwrite('astronaut_new.jpg', im)

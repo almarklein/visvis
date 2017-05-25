@@ -20,7 +20,7 @@ class OurCamera2(vv.cameras.TwoDCamera):
     _NAMES = ('our2', 9)
 
 # Draw an image    
-im = vv.imread('lena.png')
+im = vv.imread('astronaut.png')
 vv.imshow(im)
 vv.title('Press ALT+8 for cam1 and ALT+9 for cam2')
 

@@ -3,7 +3,7 @@
 import visvis as vv
 app = vv.use()
 
-im = vv.imread('lena.png')
+im = vv.imread('astronaut.png')
 im = im[:-1,:-1] # make not-power-of-two (to test if video driver is capable)
 print(im.shape)
 

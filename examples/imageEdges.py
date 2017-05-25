@@ -29,7 +29,7 @@ SH_2F_EDGE = vv.shaders.ShaderCodePart('edge', 'gradient magnitude',
 """)
 
 # Read image
-im = vv.imread('lena.png')
+im = vv.imread('astronaut.png')
 
 # Show two times, the second will be sharpened
 t = vv.imshow(im)

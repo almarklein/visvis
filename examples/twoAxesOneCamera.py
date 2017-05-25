@@ -9,7 +9,7 @@ import visvis as vv
 app = vv.use()
 
 # Read lena
-im1 = vv.imread('lena.png')
+im1 = vv.imread('astronaut.png')
 
 # Our second image is a thresholded image
 im2 = im1 > 100

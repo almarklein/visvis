@@ -44,7 +44,7 @@ SH_2F_SHARPEN = vv.shaders.ShaderCodePart('sharpen','unsharp masking',
 """)
 
 # Read image
-im = vv.imread('lena.png')
+im = vv.imread('astronaut.png')
 
 # Show two times, the second will be sharpened
 vv.subplot(121); t1 = vv.imshow(im)

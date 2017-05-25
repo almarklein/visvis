@@ -140,4 +140,4 @@ def solidCone(translation=None, scaling=None, direction=None, rotation=None,
 
 if __name__ == '__main__':
     m = vv.solidCone(N=12)
-    m.SetTexture( vv.imread('lena.png') )
+    m.SetTexture( vv.imread('astronaut.png') )

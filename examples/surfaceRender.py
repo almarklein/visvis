@@ -4,15 +4,15 @@ import numpy as np
 import visvis as vv
 
 # Read image and crop
-lena = vv.imread('lena.png').astype(np.float32)
-lena = lena[100:-100,100:-100, :]
+astro = vv.imread('astronaut.png').astype(np.float32)
+astro = astro[100:-100,100:-100, :]
 
 # Smooth a bit
-im = lena.copy()
-im[1:,:,:] = lena[:-1,:,:]
-im[:-1,:,:] += lena[1:,:,:]
-im[:,:-1,:] += lena[:,1:,:]
-im[:,1:,:] += lena[:,:-1,:]
+im = astro.copy()
+im[1:,:,:] = astro[:-1,:,:]
+im[:-1,:,:] += astro[1:,:,:]
+im[:,:-1,:] += astro[:,1:,:]
+im[:,1:,:] += astro[:,:-1,:]
 im /= 4
 
 # Prepare figure

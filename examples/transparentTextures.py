@@ -13,7 +13,7 @@ app = vv.use()
 
 # Lena is our original image
 vv.clf()
-im = vv.imread('lena.png')
+im = vv.imread('astronaut.png')
 
 # Find the regions where there's relatively much blue
 mask = (im[:,:,0] < 200) & (im[:,:,2]>0.7*im[:,:,0])

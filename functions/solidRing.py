@@ -137,4 +137,4 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
 if __name__ == '__main__':
     m1 = vv.solidRing((0,0,1), N=64, M=4, thickness=0.5)
     m2 = vv.solidRing((0,0,2), N=64, thickness=0.25)
-    m1.SetTexture( vv.imread('lena.png') )
+    m1.SetTexture( vv.imread('astronaut.png') )

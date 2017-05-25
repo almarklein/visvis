@@ -12,7 +12,7 @@ from visvis import Aarray
 app = vv.use()
 
 # Load image and make Aarray
-im = vv.imread('lena.png')
+im = vv.imread('astronaut.png')
 im = Aarray(im)
 
 # Cut in four pieces, but also change resolution using different step sizes

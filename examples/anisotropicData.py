@@ -5,7 +5,7 @@ app = vv.use()
 
 # Let's say we have lena, but only the even pixels in the y dimension.
 # So each pixel should have twice the size in the y direction.
-im = vv.imread('lena.png')
+im = vv.imread('astronaut.png')
 im = im[::2,:,:]
 
 # Init a figure with two axes

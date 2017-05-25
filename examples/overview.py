@@ -10,7 +10,7 @@ fig.position.w = 700
 a1 = vv.subplot(121)
 
 # Display an image
-im = vv.imread('lena.png') # returns a numpy array
+im = vv.imread('astronaut.png') # returns a numpy array
 texture2d = vv.imshow(im)
 texture2d.interpolate = True # if False the pixels are visible when zooming in
 

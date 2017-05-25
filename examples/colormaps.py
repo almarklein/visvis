@@ -4,7 +4,7 @@ import visvis as vv
 app = vv.use()
 
 # Get green channel of lena image
-im = vv.imread('lena.png')[:,:,1]
+im = vv.imread('astronaut.png')[:,:,1]
 
 # Make 4 subplots with different colormaps
 cmaps = [vv.CM_GRAY, vv.CM_JET, vv.CM_SUMMER, vv.CM_HOT]

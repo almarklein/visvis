@@ -40,5 +40,5 @@ def imread(filename):
 
 
 if __name__ == '__main__':
-    im = vv.imread('lena.png')
+    im = vv.imread('astronaut.png')
     t = vv.imshow(im)

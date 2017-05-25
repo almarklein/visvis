@@ -110,7 +110,7 @@ def imshow(im, clim=None, aa=2, interpolate=False, cm=None,
 
 
 if __name__ == '__main__':
-    im = vv.imread('lena.png')
+    im = vv.imread('astronaut.png')
     im = vv.Aarray(im[:,::4,:], (1,4,1)) # Keep every 4th pixel and make them wide
     # imshow knows about anisotropic arrays!
     t = vv.imshow(im)
