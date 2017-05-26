@@ -7,23 +7,19 @@
 import numpy as np
 import visvis as vv
 
-# Try importing imageio or PIL
+# Try importing imageio
 imageio = None
-PIL = None
-#
+
 try:
     import imageio
 except ImportError:
-    try:
-        import PIL.Image
-    except ImportError:
-        pass
+    pass
 
 
 def imwrite(filename, image, format=None):
     """ imwrite(filename, image, format=None)
     
-    Write image (numpy array) to file, requires imageio or PIL. 
+    Write image (numpy array) to file, requires imageio. 
     
     Parameters
     ----------
@@ -43,37 +39,10 @@ def imwrite(filename, image, format=None):
     
     """
     
-    if imageio is None and PIL is None:
-        raise RuntimeError("visvis.imwrite requires the imageio or PIL package.")
+    if imageio is None:
+        raise RuntimeError("visvis.imwrite requires the imageio package.")
     
-    # check image
-    if len(image.shape) == 2:
-        pass # grayscale
-    elif len(image.shape) == 3:
-        if image.shape[2] in [3, 4]:
-            pass # RGB or RGBA
-        else:
-            raise ValueError("Cannot write image: Too many values in third dim.")
-    else:
-        raise ValueError("Cannot write image: Invalid number of dimensions.")
-    
-    # check type -> convert
-    if image.dtype.name == 'uint8':
-        pass # ok
-    elif image.dtype.name in ['float32', 'float64']:
-        image = image.copy()
-        image[image<0] = 0
-        image[image>1] = 1
-        image = (image*255).astype(np.uint8)
-    else:
-        image = image.astype(np.uint8)
-    
-    # write image
-    if imageio:
-        imageio.imsave(filename, image, format)
-    elif PIL:
-        pim = PIL.Image.fromarray(image)
-        pim.save(filename, format)
+    imageio.imwrite(filename, image, format)
 
 
 if __name__ == '__main__':

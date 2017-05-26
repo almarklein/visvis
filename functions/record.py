@@ -77,7 +77,11 @@ class Recorder:
         
         """
         frames = self.GetFrames()
-        vv.movieWrite(filename, frames, duration, repeat, **kwargs)
+        if filename.lower().endswith('.gif'):
+            loop = 0 if repeat else 1
+            vv.movieWrite(filename, frames, fps=1/duration, loop=loop, **kwargs)
+        else:
+            vv.movieWrite(filename, frames, fps=1/duration, **kwargs)
 
 
 def record(ob):

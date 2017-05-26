@@ -6,14 +6,22 @@
 
 import os
 import visvis as vv
-from visvis.vvmovie import movieRead as _movieRead
 
-# todo: vvmovie will be replaced by imageio
-# todo: I tried some animated gifs from wiki using the PIL wrapper, and most did not read in correctly ...
+# Try importing imageio
+imageio = None
 
-# like newtons cradle and rotating earth
+try:
+    import imageio
+except ImportError:
+    pass
+
 
 def movieRead(filename, *args, **kwargs):
+    """ Proxy for imageio.mimread()
+    """
+    
+    if imageio is None:
+        raise RuntimeError("visvis.movieRead requires the imageio package.")
     
     if not os.path.isfile(filename):
         # try loadingpil from the resource dir
@@ -22,9 +30,7 @@ def movieRead(filename, *args, **kwargs):
         if os.path.isfile(filename2):
             filename = filename2
     
-    return _movieRead(filename, *args, **kwargs)
-
-movieRead.__doc__ = _movieRead.__doc__
+    return imageio.mimread(filename, *args, **kwargs)
 
 
 if __name__ == '__main__':

@@ -155,7 +155,7 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     
     """
     
-    warnings.warn('Visvis movieRead() function and vvmovie module are supersceded by the imageio library.')
+    warnings.warn('Visvis movieWrite() function and vvmovie module are supersceded by the imageio library.')
     
     # Test images
     if not isinstance(images, (tuple, list)):

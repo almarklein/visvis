@@ -5,7 +5,24 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-from visvis.vvmovie import movieWrite
+
+# Try importing imageio
+imageio = None
+
+try:
+    import imageio
+except ImportError:
+    pass
+
+
+def movieWrite(filename, images, *args, **kwargs):
+    """ Proxy for imageio.mimwrite()
+    """
+    
+    if imageio is None:
+        raise RuntimeError("visvis.movieWrite requires the imageio package.")
+    
+    return imageio.mimwrite(filename, images, *args, **kwargs)
 
 
 if __name__ == '__main__':
