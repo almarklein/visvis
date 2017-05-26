@@ -285,7 +285,7 @@ def lineToMesh(pp, radius, vertex_num, values=None):
     for i in range(n_cylinders-1):
         parts.append(oneRound+i*vertex_num)
     faces = np.concatenate(parts)
-    faces.shape = faces.shape[0]/4, 4
+    faces.shape = faces.shape[0]//4, 4
     
     # Done!
     return BaseMesh(vertices, faces, surfaceNormals, vvalues)

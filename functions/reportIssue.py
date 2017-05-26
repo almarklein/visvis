@@ -15,4 +15,5 @@ def reportIssue():
     webbrowser.open("https://github.com/almarklein/visvis/issues")
 
 if __name__ == '__main__':
+    import visvis as vv
     vv.reportIssue()

@@ -192,7 +192,7 @@ class MarkerManager:
             d += 4
         # what is the offset for the face
         #dd = ( d-(mw+2*mew) ) / 2
-        dd = (d-mw)/2
+        dd = (d-mw)//2
 
         # calc center
         c = mw/2.0

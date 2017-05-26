@@ -18,4 +18,5 @@ def help():
     webbrowser.open("https://github.com/almarklein/visvis/wiki")
 
 if __name__ == '__main__':
+    import visvis as vv
     vv.help()
