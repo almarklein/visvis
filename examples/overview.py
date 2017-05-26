@@ -15,12 +15,12 @@ texture2d = vv.imshow(im)
 texture2d.interpolate = True # if False the pixels are visible when zooming in
 
 # Display two lines (values obtained via vv.ginput())
-x = [220, 258, 308, 336, 356, 341, 318, 311, 253, 225, 220]
-y = [287, 247, 212, 201, 253, 318, 364, 385, 382, 358, 287]
+x = [182, 180, 161, 153, 191, 237, 293, 300, 272, 267, 254]
+y = [145, 131, 112, 59, 29, 14, 48, 91, 136, 137, 172]
 line1 = vv.plot(x, y, ms='.', mw=4, lw=2)
 #
-x = [237, 284, 326, 352, 381, 175, 195, 217, 232, 237]
-y = [385, 386, 394, 413, 507, 507, 476, 441, 399, 385]
+x = [507, 498, 483, 438, 364, 299, 278, 280]
+y = [483, 452, 389, 349, 347, 393, 448, 508]
 line2 = vv.plot(x, y, ms='s', mw=4, lw=2)
 
 # The appearance of the line objects can be set in their
@@ -29,7 +29,7 @@ line1.lc, line1.mc = 'g', 'b'
 line2.lc, line2.mc = 'y', 'r'
 
 # Display a legend
-a1.legend = "Lena's face", "Lena's shoulder"
+a1.legend = "Astronaut's face", "Astronaut's helmet"
 
 
 # Create second axes (with a black background)
