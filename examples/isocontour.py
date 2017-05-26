@@ -8,12 +8,15 @@ of the contour, see skimage.measure.find_contours.
 """
 
 import visvis as vv
-from visvis.utils.iso import isocontour  # Note: this imports skimage
 
 im = vv.imread('imageio:chelsea.png')[:,:,1]
-pp = isocontour(im)
+pp = vv.isocontour(im)
 
 vv.figure(1)
 vv.clf()
 vv.imshow(im)
 vv.plot(pp, ls='+', lw=2)
+
+vv.title('Isocontour')
+app = vv.use()
+app.Run()
