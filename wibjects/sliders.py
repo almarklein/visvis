@@ -14,7 +14,7 @@ import OpenGL.GL as gl
 
 from visvis.utils.pypoints import Pointset, Point
 from visvis.core.events import BaseEvent
-from visvis.core.misc import PropWithDraw, Range, unichr
+from visvis.core.misc import PropWithDraw, Range, unichr, getColor
 from visvis.core.axises import GetTicks
 from visvis import Box, Label
 
@@ -41,8 +41,8 @@ class BaseSlider(Box):
         self._showTicks = False
         
         # Set bgcolor and edge
-        self.bgcolor = (0.6, 0.8, 0.6)
-        self._frontColor = 0.5, 0.7, 0.9
+        self.bgcolor = 0.6, 0.8, 0.6
+        self._textColor = 0, 0, 0
         self.edgeWidth = 1
         
         # Create label centered at the box
@@ -113,6 +113,23 @@ class BaseSlider(Box):
             return self._showTicks
         def fset(self, value):
             self._showTicks = bool(value)
+        return locals()
+    
+    @PropWithDraw
+    def textColor():
+        """ The color of the text (the ticks and value label).
+        """
+        def fget(self):
+            return self._textColor
+        def fset(self, value):
+            value = getColor(value, 'setting textColor')
+            if value != self._textColor:
+                self._textColor = value
+                # Update existing
+                self._label.textColor = value
+                for label in self._labelPool.values():
+                    label.textColor = value
+                self.Draw()
         return locals()
     
     
@@ -326,8 +343,12 @@ class BaseSlider(Box):
             self._label.textAngle = -90
         
         # Draw slider bit
-        clr = self._frontColor
-        gl.glColor(clr[0], clr[1], clr[2], 1.0)            
+        clr = self._bgcolor
+        #if max(clr[0], clr[1], clr[2]) < 0.7:
+        if clr[0] + clr[1] + clr[2] < 1.5:
+            gl.glColor(1, 1, 1, 0.25)
+        else:
+            gl.glColor(0, 0, 0, 0.25)
         #
         gl.glBegin(gl.GL_POLYGON)
         gl.glVertex2f(x1,y1)
@@ -392,6 +413,7 @@ class BaseSlider(Box):
                 else:
                     label = Label(self, ' '+text+' ')
                     label.bgcolor = ''
+                    label.textColor = self._textColor
                 
                 # Position label and set text alignment
                 newLabelPool[tick] = label
