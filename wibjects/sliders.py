@@ -265,19 +265,46 @@ class BaseSlider(Box):
         return clr
     
     
-    def _getformat(self):
+    def _format_number(self, v):
         """ Get the format in which to display the slider limits. 
         """
-        if self._fullRange.range > 10000:
-            return '%1.4g'
-        elif self._fullRange.range > 1000:
-            return '%1.0f'
-        elif self._fullRange.range > 100:
-            return '%1.1f'
-        elif self._fullRange.range > 10:
-            return '%1.2f'
-        else:
-            return '%1.4g'
+        # Zero range ... meh
+        if self._fullRange.range == 0:
+            return '%1.4g' % v
+        
+        # Establish needed precesion, taking into account the possibility
+        # of high limits, but a small range.
+        s1 = abs(self._fullRange.min / self._fullRange.range)
+        s2 = abs(self._fullRange.max / self._fullRange.range)
+        significance = len(str(int(max(s1, s2)))) + 2
+        
+        # Apply format
+        fmt = '%%1.%ig' % significance
+        txt = fmt % v
+        
+        if significance == 3 and self._fullRange.range > 10:
+            # Large numbers, fixed precision
+            if self._fullRange.range >= 100000:
+                pass
+            elif self._fullRange.range >= 1000:
+                fmt = '%1.0f'
+            elif self._fullRange.range >= 100:
+                fmt = '%1.1f'
+            elif self._fullRange.range >= 10:
+                fmt = '%1.2f'
+            elif self._fullRange.range >= 1:
+                fmt = '%1.3f'
+            txt = fmt % v
+        
+        elif 'e' not in txt:
+            # Add zeros to avoid jumpy feel
+            actual_significance = len(txt.lstrip('+-0').replace('.', ''))
+            if actual_significance < significance:
+                if '.' not in txt:
+                    txt += '.'
+                txt += '0' * (significance - actual_significance)
+        
+        return txt
     
     
     def _SliderCalcDots(self, event=None):
@@ -471,8 +498,7 @@ class Slider(BaseSlider):
         self._range.min = self._fullRange.min
         
         # Set text
-        tmp = self._getformat()
-        self._label.text = tmp % self._range.max
+        self._label.text = self._format_number(self._range.max)
 
 
 class RangeSlider(BaseSlider):
@@ -514,6 +540,6 @@ class RangeSlider(BaseSlider):
         self._range.min = min(self._range.min, self._fullRange.max)
         
         # Set text
-        tmp = self._getformat()
-        tmp = tmp + '  ' + unichr(8211) + '  ' + tmp
-        self._label.text = tmp % (self._range.min, self._range.max)
+        self._label.text = (self._format_number(self._range.min) +
+                            '  ' + unichr(8211) + '  ' +
+                            self._format_number(self._range.max))
