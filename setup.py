@@ -74,7 +74,7 @@ setup(
     install_requires = ['numpy', 'pyOpenGl'],
     
     packages = ['visvis',
-                'visvis.functions',
+                #'visvis.functions',
                 'visvis.backends',
                 'visvis.processing',
                 'visvis.vvmovie',
