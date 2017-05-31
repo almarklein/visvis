@@ -9,7 +9,7 @@ import visvis as vv
 def zlabel(text, axes=None):
     """ zlabel(text, axes=None)
     
-    Set the zlabel of an axes. 
+    Set the zlabel of an axes.
     Note that you can also use "axes.axis.zLabel = text".
     
     Parameters

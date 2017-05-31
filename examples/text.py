@@ -21,7 +21,7 @@ a.SetLimits((0,8), (-1,10))
 t1 = vv.Text(a, 'Visvis text', 0.2, 9, 0, 'mono', 30)
 t2 = vv.Text(a, '... with FreeType!', 1, 8, 0, 'serif', 12)
 t3 = vv.Text(a, '... and Unicode: %s!' % hello, 1, 7)
-t3 = vv.Text(a, '\Gamma\rho\epsilon\epsilon\kappa letters and ' + 
+t3 = vv.Text(a, '\Gamma\rho\epsilon\epsilon\kappa letters and ' +
                 ' \rightarrow math \otimes symbols', 1, 6)
 
 t2 = vv.Text(a, '\b{bold}, \i{italic}, and \b{\i{bolditalic}} \bfon\its' +

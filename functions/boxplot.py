@@ -38,16 +38,16 @@ def boxplot(data1, data2=None, width=0.75, whiskers=1.5, axesAdjust=True, axes=N
     width : scalar
         The width of the boxes.
     whiskers : scalar or string
-        How to draw the whiskers. If a scalar is given, it defines the 
+        How to draw the whiskers. If a scalar is given, it defines the
         length of the whiskers as a function of the IQR. In this case any
         points lying beyond the whiskers are drawn as outliers.
         If 'minmax', the whiskers simply extend to the maximal data range.
         If 'std', the whiskers indicate the mean +/- the standard deviation.
-        If 'violin', a violin plot is drawn, which shows the probability 
+        If 'violin', a violin plot is drawn, which shows the probability
         density function completely.
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
-        the camera type to 3D. If daspectAuto has not been set yet, 
+        the camera type to 3D. If daspectAuto has not been set yet,
         it is set to False.
     axes : Axes instance
         Display the bars in the given axes, or the current axes if not given.
@@ -151,7 +151,7 @@ class BoxPlotBox(object):
         """ calculate()
         
         Calculate the stats, and storing them such that they can
-        be drawn easily. 
+        be drawn easily.
         
         """
         
@@ -383,7 +383,7 @@ class BoxPlot(vv.Wobject):
     
     @vv.misc.PropWithDraw
     def lc():
-        """ Get/Set the line color of the boxes. 
+        """ Get/Set the line color of the boxes.
         """
         def fget(self):
             return self._boxes[0]._lc
@@ -395,7 +395,7 @@ class BoxPlot(vv.Wobject):
     
     @vv.misc.PropWithDraw
     def lw():
-        """ Get/Set the line width of the boxes. 
+        """ Get/Set the line width of the boxes.
         """
         def fget(self):
             return self._boxes[0]._lw
@@ -407,7 +407,7 @@ class BoxPlot(vv.Wobject):
     
     @vv.misc.PropWithDraw
     def whiskers():
-        """ Get/Set the style of the whiskers. 
+        """ Get/Set the style of the whiskers.
         """
         def fget(self):
             return self._boxes[0]._whiskers

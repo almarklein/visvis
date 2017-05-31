@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """ This example illustrate different ways to shade mesh objects and
-shows an example with lighting. Two light sources are created and 
+shows an example with lighting. Two light sources are created and
 the diffuse reflection of the objects is varied.
 """
 
@@ -8,7 +8,7 @@ import visvis as vv
 vv.figure()
 
 # Define shadings to apply, and numbef of steps for diffuse reflection
-shading = [ ('plain', None), ('flat', None), ('smooth', None), 
+shading = [ ('plain', None), ('flat', None), ('smooth', None),
             ('smooth', 'plain'), (None, 'smooth')]
 ndiffuse = 4
 

@@ -6,17 +6,17 @@
 
 """ Module shaders_2
 
-Contains the source for various shaders for the Texture2D wobject, 
+Contains the source for various shaders for the Texture2D wobject,
 divided in different parts.
 
 The names consists of different parts, seperated by underscores:
   * SH: just to indicate its a shader
   * 2F, 3F, MF, 2V, 3V, MV: the kind of program, 2D/3D texture or mesh,
-    vertex or fragment shader. May be left out for some generic parts (such 
+    vertex or fragment shader. May be left out for some generic parts (such
     as color)
   * part name: can be BASE, STYLE, or anything else really.
-  * part name type: Optional. Some parts have alternatives, 
-    such as the STYLE part for 3D rendering techniques. Or the SHADING 
+  * part name type: Optional. Some parts have alternatives,
+    such as the STYLE part for 3D rendering techniques. Or the SHADING
     part for meshes
 
 """
@@ -88,12 +88,12 @@ SH_2F_BASE = ShaderCodePart('base', '2D-fragment-default',
     // --varyings--
     
     void main()
-    {    
+    {
         // Get centre location
         vec2 pos = gl_TexCoord[0].xy;
         
         // Init value
-        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0); 
+        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0);
         vec4 color2; // to set color later
         
         // Init kernel and number of steps
@@ -111,7 +111,7 @@ SH_2F_BASE = ShaderCodePart('base', '2D-fragment-default',
         for (int y=-sze; y<sze+1; y++)
         {
             for (int x=-sze; x<sze+1; x++)
-            {   
+            {
                 float k = kernel[int(abs(float(x)))] * kernel[int(abs(float(y)))];
                 vec2 dpos = vec2(float(x)*dx, float(y)*dy);
                 color1 += texture2D(texture, pos+dpos) * k;

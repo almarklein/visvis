@@ -10,7 +10,7 @@ import visvis as vv
 def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
     """ isosurface(vol, isovalue=None, step=1, useClassic=False, useValues=False)
     
-    Uses scikit-image to calculate the isosurface for the given 3D image. 
+    Uses scikit-image to calculate the isosurface for the given 3D image.
     Returns a vv.BaseMesh object.
     
     Parameters
@@ -18,7 +18,7 @@ def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
     vol : 3D numpy array
         The volume for which to calculate the isosurface.
     isovalue : float
-        The value at which the surface should be created. If not given or None, 
+        The value at which the surface should be created. If not given or None,
         the average of the min and max of vol is used.
     step : int
         The stepsize for stepping through the volume. Larger steps yield
@@ -31,9 +31,9 @@ def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
     useValues : bool
         If True, the returned BaseMesh object will also have a value for
         each vertex, which is related to the maximum value in a local region
-        near the isosurface. 
+        near the isosurface.
     
-    """ 
+    """
     
     from visvis.utils.iso import isosurface as _isosurface
     

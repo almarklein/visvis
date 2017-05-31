@@ -32,9 +32,9 @@ else:
 
 
 # The data types for arrays and how the struct (un)pack formatters.
-_DTYPES = { 'uint8':'<B', 'int8':'<b', 
-            'uint16':'<H', 'int16':'<h', 
-            'uint32':'<L', 'int32':'<l', 
+_DTYPES = { 'uint8':'<B', 'int8':'<b',
+            'uint16':'<H', 'int16':'<h',
+            'uint32':'<L', 'int32':'<l',
             'float32':'<f', 'float64':'<d' }
     
     
@@ -44,7 +44,7 @@ class TextSSDFReader(SSDFReader):
     def read_text_blocks(self, lines):
         """ read_text_blocks(lines)
         
-        Given a list of Unicode lines, create the block instances. 
+        Given a list of Unicode lines, create the block instances.
         This is a generator function.
         
         """
@@ -55,9 +55,9 @@ class TextSSDFReader(SSDFReader):
             # Strip line
             line2 = line.lstrip()
             
-            # Skip comments and empty lines        
-            if len(line2)==0 or line2[0] == '#':        
-                continue 
+            # Skip comments and empty lines
+            if len(line2)==0 or line2[0] == '#':
+                continue
             
             # Find the indentation
             indent = len(line) - len(line2)
@@ -133,7 +133,7 @@ class TextSSDFWriter(SSDFWriter):
     def write(self, object, f=None):
         """ write(object, f=None)
         
-        Serializes the given struct. If a file is given, writes 
+        Serializes the given struct. If a file is given, writes
         (utf-8 encoded)text to that file, otherwise returns a string.
         
         """
@@ -170,7 +170,7 @@ class TextBlock(Block):
             return self._to_unicode()
         elif data.startswith('array'):
             return self._to_array()
-        elif data.startswith('dict:'):  
+        elif data.startswith('dict:'):
             return self._to_dict()
         elif data.startswith('list:') or data[0] == '[':
             return self._to_list()
@@ -207,7 +207,7 @@ class TextBlock(Block):
     def _from_float(self, value):
         # Use general specifier with a very high precision.
         # Any spurious zeros are automatically removed. The precision
-        # should be sufficient such that any numbers saved and loaded 
+        # should be sufficient such that any numbers saved and loaded
         # back will have the exact same value again. 20 seems plenty.
         self._data = '%0.20g' % value
     
@@ -244,7 +244,7 @@ class TextBlock(Block):
         else:
             line = m.group(0)[1:-1]
         
-        # Decode stuff        
+        # Decode stuff
         line = line.replace('\\n','\n')
         line = line.replace('\\r','\r')
         line = line.replace('\\x0b', '\x0b').replace('\\x0c', '\x0c')
@@ -259,15 +259,15 @@ class TextBlock(Block):
         # Get keys sorted by name
         keys = [key for key in value]
         keys.sort()
-        # Process children        
+        # Process children
         for key in keys:
             # Skip all the buildin stuff
             if key.startswith("__"):
-                continue                
+                continue
             # We have the key, go get the value!
             val = value[key]
             # Skip methods, or anything else we can call
-            if hasattr(val,'__call__') and not hasattr(val, '__to_ssdf__'): 
+            if hasattr(val,'__call__') and not hasattr(val, '__to_ssdf__'):
                 # Note: py3.x does not have function callable
                 continue
             # Add!
@@ -310,10 +310,10 @@ class TextBlock(Block):
         if isSmallList:
             elements = [subBlock._data.strip() for subBlock in subBlocks]
             self._data = '[%s]' % (', '.join(elements))
-        else:            
+        else:
             self._data = "list:"
             for subBlock in subBlocks:
-                self._children.append(subBlock)        
+                self._children.append(subBlock)
     
     def _to_list(self):
         value = []
@@ -385,7 +385,7 @@ class TextBlock(Block):
             if elements:
                 elements.append('') # Make sure there's at least one komma
             # Build string
-            self._data = "array %s %s %s" % (shapestr, dtypestr, 
+            self._data = "array %s %s %s" % (shapestr, dtypestr,
                 ", ".join(elements) )
         
         else:
@@ -426,16 +426,16 @@ class TextBlock(Block):
         if shape:
             size = reduce( lambda a,b:a*b, shape)
         else:
-            size = 1 # Scalar 
+            size = 1 # Scalar
         
-        # Determine datatype 
+        # Determine datatype
         # Must use 1byte/char string in Py2.x, or numpy wont understand )
         dtypestr = ascii_type(word3)
         if dtypestr not in _DTYPES.keys():
             print("SSDF: invalid array data type on line %i."%self._blocknr)
             return None
         
-        # Stored as ASCII?         
+        # Stored as ASCII?
         asAscii = ( word4.find(',', 0, 100) > 0 ) or ( word4.endswith(',') )
         
         # Get data
@@ -468,7 +468,7 @@ class TextBlock(Block):
             # Stored binary
             # Get data: decode and decompress in blocks
             dataparts = []
-            for blockt in word4.split(';'):                
+            for blockt in word4.split(';'):
                 blockc = base64decode(blockt.encode('utf-8'))
                 block = zlib.decompress(blockc)
                 dataparts.append(block)

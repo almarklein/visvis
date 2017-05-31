@@ -12,11 +12,11 @@
 #     * Neither the name of the <organization> nor the
 #       names of its contributors may be used to endorse or promote products
 #       derived from this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY 
+# ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
 # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,7 +26,7 @@
 
 """ Package vvmovie (visvis-movie)
 
-All submodules have been designed to be work independent of each-other 
+All submodules have been designed to be work independent of each-other
 (except the image2avi module, which requires the images2ims module).
 
 Provides the following functions:
@@ -42,15 +42,15 @@ the right function depending on the used file extension:
 
 More information about compression and limitations:
   * GIF. Requires PIL. Animated GIF applies a color-table of maximal
-    256 colors and applies poor compression. It's widely applicable though. 
-  * SWF. Provides lossless storage of movie frames with good (ZLIB) 
+    256 colors and applies poor compression. It's widely applicable though.
+  * SWF. Provides lossless storage of movie frames with good (ZLIB)
     compression. Reading of SWF files is limited to images stored using ZLIB
     compression (no JPEG files). Requires no external libraries.
   * AVI. Requires ffmpeg. Most Linux can obtain it using their package
     manager. Windows users can use the installer at the visvis website.
     Provides excelent mpeg4 (or any other supported by ffmpeg) compression.
     Not intended for reading very large movies.
-  * IMS. Requires PIL. Quality depends on the used image type. Use png for  
+  * IMS. Requires PIL. Quality depends on the used image type. Use png for
     lossless compression and jpg otherwise.
 
 """
@@ -58,7 +58,7 @@ More information about compression and limitations:
 import os, time, warnings
 
 # Python 3 needs absolute import, which makes that this package
-# cannot be a subpackage anymore. We cannot use the dot-notation, 
+# cannot be a subpackage anymore. We cannot use the dot-notation,
 # because that doesnt work on Python 2.
 from visvis.vvmovie.images2gif import readGif, writeGif
 from visvis.vvmovie.images2swf import readSwf, writeSwf
@@ -81,8 +81,8 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
        The name of the file to write the image to. For a series of images,
         the `*` wildcard can be used.
     images : list
-        Should be a list consisting of PIL images or numpy arrays. 
-        The latter should be between 0 and 255 for integer types, 
+        Should be a list consisting of PIL images or numpy arrays.
+        The latter should be between 0 and 255 for integer types,
         and between 0 and 1 for float types.
     duration : scalar
         The duration for all frames. For GIF and SWF this can also be a list
@@ -90,7 +90,7 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
         are rounded to integer amounts of the smallest duration.)
     repeat : bool or integer
         Can be used in GIF and SWF to indicate that the movie should
-        loop. For GIF, an integer can be given to specify the number of loops.  
+        loop. For GIF, an integer can be given to specify the number of loops.
     
     Special GIF parameters
     ----------------------
@@ -101,13 +101,13 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
         the color palette. This algorithm is superior, but slower than
         the standard PIL algorithm. The value of nq is the quality
         parameter. 1 represents the best quality. 10 is in general a
-        good tradeoff between quality and speed. When using this option, 
+        good tradeoff between quality and speed. When using this option,
         better results are usually obtained when subRectangles is False.
     subRectangles : False, True, or a list of 2-element tuples
         Whether to use sub-rectangles. If True, the minimal rectangle that
         is required to update each frame is automatically detected. This
         can give significant reductions in file size, particularly if only
-        a part of the image changes. One can also give a list of x-y 
+        a part of the image changes. One can also give a list of x-y
         coordinates if you want to do the cropping yourself. The default
         is True.
     dispose : int
@@ -119,7 +119,7 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     Special AVI/MPEG parameters
     ---------------------------
     encoding : {'mpeg4', 'msmpeg4v2', ...}
-        The encoding to use. Hint for Windows users: the 'msmpeg4v2' codec 
+        The encoding to use. Hint for Windows users: the 'msmpeg4v2' codec
         is natively supported on Windows.
     inputOptions : string
         See the documentation of ffmpeg
@@ -128,9 +128,9 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     
     Notes for writing a series of images
     ------------------------------------
-    If the filenenumber contains an asterix, a sequence number is introduced 
+    If the filenenumber contains an asterix, a sequence number is introduced
     at its location. Otherwise the sequence number is introduced right before
-    the final dot. To enable easy creation of a new directory with image 
+    the final dot. To enable easy creation of a new directory with image
     files, it is made sure that the full path exists.
     
     Notes for writing AVI/MPEG
@@ -145,12 +145,12 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
         256 colors. It's widely applicable though. Reading back GIF images
         can be problematic due to the applied color reductions and because
         of problems with PIL.
-      * SWF: Provides lossless storage of movie frames with good (ZLIB) 
+      * SWF: Provides lossless storage of movie frames with good (ZLIB)
         compression. Reading of SWF files is limited to images stored using
-        ZLIB compression. Requires no external libraries.    
+        ZLIB compression. Requires no external libraries.
       * AVI: Requires ffmpeg. Provides excelent mpeg4 (or any other supported
         by ffmpeg) compression. Not intended for reading very large movies.
-      * IMS: Requires PIL. Quality depends on the used image type. Use png for  
+      * IMS: Requires PIL. Quality depends on the used image type. Use png for
         lossless compression and jpg otherwise.
     
     """
@@ -186,8 +186,8 @@ def movieWrite(filename, images, duration=0.1, repeat=True, **kwargs):
     t1 = time.time()
     dt = t1-t0
     
-    # Notify    
-    print("Wrote %i frames to %s in %1.2f seconds (%1.0f ms/frame)" % 
+    # Notify
+    print("Wrote %i frames to %s in %1.2f seconds (%1.0f ms/frame)" %
                         (len(images), EXT, dt, 1000*dt/len(images)) )
 
 
@@ -195,7 +195,7 @@ def movieRead(filename, asNumpy=True, **kwargs):
     """ movieRead(filename, asNumpy=True)
     
     Read the movie from GIF, SWF, AVI (or MPG), or a series of images (PNG,
-    JPG,TIF,BMP). 
+    JPG,TIF,BMP).
     
     Parameters
     ----------
@@ -203,7 +203,7 @@ def movieRead(filename, asNumpy=True, **kwargs):
         The name of the file that contains the movie. For a series of images,
         the `*` wildcard can be used.
     asNumpy : bool
-        If True, returns a list of numpy arrays. Otherwise return 
+        If True, returns a list of numpy arrays. Otherwise return
         a list if PIL images.
     
     Notes
@@ -239,13 +239,12 @@ def movieRead(filename, asNumpy=True, **kwargs):
     t1 = time.time()
     dt = t1-t0
     
-    # Notify 
+    # Notify
     if images:
-        print("Read %i frames from %s in %1.2f seconds (%1.0f ms/frame)" % 
+        print("Read %i frames from %s in %1.2f seconds (%1.0f ms/frame)" %
                     (len(images), EXT, dt, 1000*dt/len(images)) )
     else:
         print("Could not read any images.")
     
     # Done
     return images
-

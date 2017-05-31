@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" This example shows hoe the GLSL program for a 2D texture 
+""" This example shows hoe the GLSL program for a 2D texture
 can be modified to achieve all kinds of graphic effects.
 In this example we will demonstrate sharpening an image using
 unsharp masking.
@@ -8,7 +8,7 @@ unsharp masking.
 import visvis as vv
 
 # First define our part of the shading code
-# The '>>' Denote what piece of code we want to replace.  
+# The '>>' Denote what piece of code we want to replace.
 # There is a pre-loop section, that is executed before the anti-aliasing
 # loop. We use this to modify the aliasing kernel so it always does a fixed
 # amount of smoothing.
@@ -35,11 +35,11 @@ SH_2F_SHARPEN = vv.shaders.ShaderCodePart('sharpen','unsharp masking',
     >>--post-loop--
     float th = 0.05;
     vec4 normalColor = texture2D(texture, pos);
-    // Element-wise mask on blurred image (color1), using a threshold    
+    // Element-wise mask on blurred image (color1), using a threshold
     float mask = float(length(color1.rgb)-length(color2.rgb)>th);
     normalColor.rgb += mask * amount * (normalColor.rgb -color1.rgb);
     color1 = normalColor;
-    // --post-loop--    
+    // --post-loop--
 """)
 
 # Read image

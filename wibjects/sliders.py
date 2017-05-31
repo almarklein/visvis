@@ -86,7 +86,7 @@ class BaseSlider(Box):
         return self._eventSliding
     
     
-    @property    
+    @property
     def eventSliderChanged(self):
         """ Event fired when the user releases the moude while changing
         the slider.
@@ -155,7 +155,7 @@ class BaseSlider(Box):
         
         if x0 < x1+offset:
             # Move on left edge
-            self._sliderDown = 1 
+            self._sliderDown = 1
             self._sliderRefx = x1 - x0
         elif x0 > x2-offset:
             # Move on right edge
@@ -175,7 +175,7 @@ class BaseSlider(Box):
     def _SliderOnMotion(self, event):
         
         if not self._sliderDown:
-            return 
+            return
         
         # Calc current position in normalized units
         x0 = self._getNormalizedCurrentPos(event)
@@ -195,7 +195,7 @@ class BaseSlider(Box):
             self._range.max = self._fullRange.range * dx + offset
         elif self._sliderDown == 2:
             # Move whole slider
-            ra2 = self._refRange.range / 2.0 
+            ra2 = self._refRange.range / 2.0
             mi = self._fullRange.range * dx - ra2 + offset
             ma = self._fullRange.range * dx + ra2 + offset
             self._range.Set(mi,ma)
@@ -234,7 +234,7 @@ class BaseSlider(Box):
         (between 0 and 1, with the fullRange as a references).
         """
         w,h = self.position.size
-        if w > h:            
+        if w > h:
             return float(event.x) / self.position.width
         else:
             return float(event.y) / self.position.height
@@ -242,14 +242,14 @@ class BaseSlider(Box):
     
     def _getNormalizedSliderLimits(self):
         """ _getNormalizedSliderLimits()
-        Get the current limits of the slider expressed in normalized 
+        Get the current limits of the slider expressed in normalized
         units (between 0 and 1, with the fullRange as a references).
         """
         # Short names
         R1 = self._range
         R2 = self._fullRange
         #
-        factor = R2.range        
+        factor = R2.range
         x1 = (R1.min - R2.min) / factor
         x2 = x1 + R1.range / factor
         #
@@ -257,7 +257,7 @@ class BaseSlider(Box):
     
     
     def _GetBgcolorToDraw(self):
-        """ Can be overloaded to indicate mouse over in buttons. 
+        """ Can be overloaded to indicate mouse over in buttons.
         """
         clr = list(self._bgcolor)
         if self._isOver:
@@ -266,7 +266,7 @@ class BaseSlider(Box):
     
     
     def _format_number(self, v):
-        """ Get the format in which to display the slider limits. 
+        """ Get the format in which to display the slider limits.
         """
         # Zero range ... meh
         if self._fullRange.range == 0:
@@ -341,7 +341,7 @@ class BaseSlider(Box):
         d1 = 2
         d2 = d1+1
         
-        # Get normalize limits        
+        # Get normalize limits
         t1, t2 = self._getNormalizedSliderLimits()
         
         # Get widget shape
@@ -349,7 +349,7 @@ class BaseSlider(Box):
         
         # Calculate real dimensions of patch
         if w > h:
-            x1, x2 = max(d2, t1*w), min(w-d1, t2*w)            
+            x1, x2 = max(d2, t1*w), min(w-d1, t2*w)
             y1, y2 = d1, h-d2
             #
             dots1 = self._dots1 + Point(x1, 0)
@@ -358,7 +358,7 @@ class BaseSlider(Box):
             diff = abs(x1-x2)
             #
             self._label.textAngle = 0
-        else:            
+        else:
             x1, x2 = d2, w-d1
             y1, y2 = max(d1, t1*h), min(h-d2, t2*h)
             #
@@ -466,7 +466,7 @@ class Slider(BaseSlider):
     """ Slider(parent, fullRange=(0,1), value=0.5)
     
     A slider with which a scalar value can be interactively changed.
-    The slider can be horizontal or vertical, depending on its 
+    The slider can be horizontal or vertical, depending on its
     width/height ratio.
     
     """
@@ -479,7 +479,7 @@ class Slider(BaseSlider):
     
     @PropWithDraw
     def value():
-        """ The current value for this slider. 
+        """ The current value for this slider.
         """
         def fget(self):
             return self._range.max
@@ -505,7 +505,7 @@ class RangeSlider(BaseSlider):
     """ RangeSlider(parent, fullRange=(0,1), range=(0.25,0.75))
     
     A slider with which two scalar values (representing a range)
-    can be interactively changed. The slider can be horizontal or 
+    can be interactively changed. The slider can be horizontal or
     vertical, depending on its width/height ratio.
     
     """
@@ -519,7 +519,7 @@ class RangeSlider(BaseSlider):
     
     @PropWithDraw
     def range():
-        """ The current range for this slider. 
+        """ The current range for this slider.
         """
         def fget(self):
             return self._range

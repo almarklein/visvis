@@ -47,11 +47,11 @@ def getSpanVectors(normal, c, d):
 def getCircle(angles_cos, angles_sin, a, b):
     """ getCircle(angles_cos, angles_sin, a, b) -> circle_cords
     
-    Creates a circle of points around the origin, 
+    Creates a circle of points around the origin,
     the circle is spanned by the vectors a and b.
     
     """
-    X = np.empty((len(angles_cos),3),dtype=np.float32)    
+    X = np.empty((len(angles_cos),3),dtype=np.float32)
     X[:,0] = angles_cos * a.x + angles_sin * b.x
     X[:,1] = angles_cos * a.y + angles_sin * b.y
     X[:,2] = angles_cos * a.z + angles_sin * b.z
@@ -62,7 +62,7 @@ def getCircle(angles_cos, angles_sin, a, b):
 def lineToMesh(pp, radius, vertex_num, values=None):
     """ lineToMesh(pp, radius, vertex_num, values=None)
     
-    From a line, create a mesh that represents the line as a tube with 
+    From a line, create a mesh that represents the line as a tube with
     given diameter. Returns a BaseMesh instance.
     
     Parameters
@@ -71,13 +71,13 @@ def lineToMesh(pp, radius, vertex_num, values=None):
         The points along the line. If the first and last point are the same,
         the mesh-line is closed.
     radius : scalar
-        The radius of the tube that is created. Radius can also be a 
+        The radius of the tube that is created. Radius can also be a
         sequence of values (containing a radius for each point).
     vertex_num : int
-        The number of vertices to create along the circumference of the tube. 
+        The number of vertices to create along the circumference of the tube.
     values : list or numpy array (optional)
         A value per point. Can be Nx1, Nx2, Nx3 or Nx4. A list of scalars
-        can also be given. The values are propagated to the mesh vertices 
+        can also be given. The values are propagated to the mesh vertices
         and supplied as input to the Mesh constructor. This allows for example
         to define the color for the tube.
     
@@ -108,11 +108,11 @@ def lineToMesh(pp, radius, vertex_num, values=None):
     # check if line is closed
     lclosed = np.all(pp[0]==pp[-1])
     
-    # calculate normal vectors on each line point    
+    # calculate normal vectors on each line point
     normals = pp[:-1].subtract( pp[1:] ).copy()
-    if lclosed:        
+    if lclosed:
         normals.append( pp[0]-pp[1] )
-    else:        
+    else:
         normals.append( pp[-2]-pp[-1] )
     normals = -1 * normals.normalize()
     
@@ -152,15 +152,15 @@ def lineToMesh(pp, radius, vertex_num, values=None):
     a,b = getSpanVectors(normals[0], a, b)
     circm = getCircle(angle_cos, angle_sin, a, b)
     
-    # If not a closed line, add half sphere made with 5 cylinders at line start     
+    # If not a closed line, add half sphere made with 5 cylinders at line start
     if not lclosed:
         for j in range(5,0,-1):
             # Translate the circle on it's position on the line
             r = (1-(j/5.0)**2)**0.5
             circmp = float(r*radius[0])*circm + (pp[0]-(j/5.0)*bufdist*normals[0])
             # Calc normals
-            circmn = ( pp[0].subtract(circmp) ).normalize() 
-            # Store the vertex list            
+            circmn = ( pp[0].subtract(circmp) ).normalize()
+            # Store the vertex list
             vertices.extend( circmp )
             surfaceNormals.extend( -1*circmn )
             if vvalues is not None:
@@ -168,10 +168,10 @@ def lineToMesh(pp, radius, vertex_num, values=None):
                     vvalues.append(values[0])
             n_cylinders += 1
     
-    # Loop through all line pieces    
+    # Loop through all line pieces
     for i in range(len(pp)-1):
         
-        ## Create main cylinder between two line points 
+        ## Create main cylinder between two line points
         # which consists of two connected circles.
         
         # get normal and point
@@ -183,7 +183,7 @@ def lineToMesh(pp, radius, vertex_num, values=None):
         circm = getCircle(angle_cos, angle_sin, a, b)
         
         # Translate the circle, and store
-        circmp = float(radius[i])*circm + (point1+bufdist*normal1)        
+        circmp = float(radius[i])*circm + (point1+bufdist*normal1)
         vertices.extend( circmp )
         surfaceNormals.extend( circm )
         if vvalues is not None:
@@ -237,7 +237,7 @@ def lineToMesh(pp, radius, vertex_num, values=None):
             r = (1-(j/5.0)**2)**0.5
             circmp = float(r*radius[-1])*circm + (pp[-1]+(j/5.0)*bufdist*normals[-1])
             # Calc normals
-            circmn = ( pp[-1].subtract(circmp) ).normalize()            
+            circmn = ( pp[-1].subtract(circmp) ).normalize()
             # Store the vertex list
             vertices.extend( circmp )
             surfaceNormals.extend( -1*circmn )
@@ -250,12 +250,12 @@ def lineToMesh(pp, radius, vertex_num, values=None):
         normal1 = normals[-1]
         point1 = pp[-1]
         
-        # calculate the 3D circle coordinates        
+        # calculate the 3D circle coordinates
         a,b = getSpanVectors(normal1, a, b)
         circm = getCircle(angle_cos, angle_sin, a, b)
         
         # Translate the circle, and store
-        circmp = float(radius[0])*circm + (point1+bufdist*normal1)        
+        circmp = float(radius[0])*circm + (point1+bufdist*normal1)
         vertices.extend( circmp )
         surfaceNormals.extend( circm )
         if vvalues is not None:
@@ -267,12 +267,12 @@ def lineToMesh(pp, radius, vertex_num, values=None):
     # almost done, determine quad faces ...
     
     # define single faces
-    #firstFace = [0, 1, vertex_num+1, vertex_num]    
+    #firstFace = [0, 1, vertex_num+1, vertex_num]
     #lastFace = [vertex_num-1, 0, vertex_num, 2*vertex_num-1]
-    firstFace = [vertex_num, vertex_num+1, 1, 0]    
+    firstFace = [vertex_num, vertex_num+1, 1, 0]
     lastFace = [2*vertex_num-1, vertex_num, 0, vertex_num-1]
     
-    # define single round    
+    # define single round
     oneRound = []
     for i in range(vertex_num-1):
         oneRound.extend( [val+i for val in firstFace] )

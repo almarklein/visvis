@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" 
+"""
 This example illustrates embedding a visvis figure in a Qt application.
 This example works for the pyqt4 and pyside backends.
 """
@@ -14,7 +14,7 @@ except ImportError:
 import visvis as vv
 
 # Create a visvis app instance, which wraps a qt4 application object.
-# This needs to be done *before* instantiating the main window. 
+# This needs to be done *before* instantiating the main window.
 app = vv.use(backend)
 
 class MainWindow(QtGui.QWidget):
@@ -38,7 +38,7 @@ class MainWindow(QtGui.QWidget):
         # Make callback
         but.pressed.connect(self._Plot)
         
-        # Apply sizers        
+        # Apply sizers
         self.setLayout(self.sizer)
         
         # Finish
@@ -49,7 +49,7 @@ class MainWindow(QtGui.QWidget):
     
     def _Plot(self):
         
-        # Make sure our figure is the active one. 
+        # Make sure our figure is the active one.
         # If only one figure, this is not necessary.
         #vv.figure(self.fig.nr)
         
@@ -58,7 +58,7 @@ class MainWindow(QtGui.QWidget):
         
         # Plot
         vv.plot([1,2,3,1,6])
-        vv.legend(['this is a line'])        
+        vv.legend(['this is a line'])
         #self.fig.DrawNow()
     
 
@@ -71,6 +71,6 @@ if True:
 
 else:
     # The native way.
-    qtApp = QtGui.QApplication([''])    
+    qtApp = QtGui.QApplication([''])
     m = MainWindow()
     qtApp.exec_()

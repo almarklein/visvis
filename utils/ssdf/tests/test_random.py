@@ -42,7 +42,7 @@ if not os.path.isdir(homedir):
     homedir = 'c:/almar/'
 
 # Get printabel chars, add some Unicode characters
-CHARS = string.printable + (unichr(169) + unichr(181) + unichr(202) + 
+CHARS = string.printable + (unichr(169) + unichr(181) + unichr(202) +
                             unichr(1220) + unichr(1138) + unichr(1297))
 NAMECHARS = str('abcdefghijklmnopqrstuvwxyz_0123456789')
 
@@ -134,10 +134,10 @@ def compare(ob1, ob2, verbose=True):
     """ compare(ob1, ob2, verbose=True)
     
     Compare two (ssdf-compatible) objects. If verbose is True (the default)
-    and the objects are not equal, a message is printed indicating the 
+    and the objects are not equal, a message is printed indicating the
     first found inequality.
     
-    """ 
+    """
     not_equal = ssdf.ssdf_base._not_equal(ob1, ob2)
     if verbose and not_equal:
         print(not_equal)
@@ -239,12 +239,12 @@ class Tester:
         
         for iter in range(amount):
             
-            # Random struct            
+            # Random struct
             s = Generator.create_struct()
             self._s = s
             
             # Text with numpy on writing
-            self.enable_np()            
+            self.enable_np()
             text = ssdf.saves(s)
             #
             self.disable_np()
@@ -255,15 +255,15 @@ class Tester:
             s3 = ssdf.loads(text)
 #             if not compare(s, s2):
 #                 print('Test text failed after %i iterations.' % iter)
-#                 break  
+#                 break
             if not compare(s, s3):
                 print('Test text failed after %i iterations.' % iter)
-                break  
+                break
             
             # Binary with numpy on writing
             self.enable_np()
             bb = ssdf.saveb(s)
-            #            
+            #
             self.disable_np()
             s2 = ssdf.loadb(bb)
             bb = ssdf.saveb(s2)
@@ -272,10 +272,10 @@ class Tester:
             s3 = ssdf.loadb(bb)
 #             if not compare(s, s2):
 #                 print('Test bin failed after %i iterations.' % iter)
-#                 break  
+#                 break
             if not compare(s, s3):
                 print('Test bin failed after %i iterations.' % iter)
-                break  
+                break
             
             print('%i tests successfull' % iter)
             time.sleep(0.001)
@@ -293,13 +293,13 @@ class Tester:
 #             s3 = ssdf.loads(text)
 #             if not compare(s, s3):
 #                 print('Test text failed after %i iterations.' % iter)
-#                 break  
-#             
+#                 break
+#
 #             # Binary with numpy on writing
 #             self.disable_np()
 #             s = Generator.create_struct()
 #             bb = ssdf.saveb(s)
-#             #            
+#             #
 #             self.enable_np()
 #             s2 = ssdf.loadb(bb)
 #             bb = ssdf.saveb(s2)
@@ -308,7 +308,7 @@ class Tester:
 #             s3 = ssdf.loadb(bb)
 #             if not compare(s, s3):
 #                 print('Test bin failed after %i iterations.' % iter)
-#                 break  
+#                 break
         
         # Finish
         self.enable_np()

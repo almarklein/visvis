@@ -10,7 +10,7 @@ import numpy as np
 def kde(data, bins=None, kernel=None, **kwargs):
     """ kde(a, bins=None, range=None, **kwargs)
     
-    Make a kernerl density estimate plot of the data. This is like a 
+    Make a kernerl density estimate plot of the data. This is like a
     histogram, but produces a smoother result, thereby better represening
     the probability density function.
     
@@ -21,7 +21,7 @@ def kde(data, bins=None, kernel=None, **kwargs):
     a : array_like
         The data to calculate the historgam of.
     bins : int (optional)
-        The number of bins. If not given, the best number of bins is 
+        The number of bins. If not given, the best number of bins is
         determined automatically using the Freedman-Diaconis rule.
     kernel : float or sequence (optional)
         The kernel to use for distributing the values. If a scalar is given,
@@ -45,5 +45,5 @@ def kde(data, bins=None, kernel=None, **kwargs):
 
 if __name__ == '__main__':
     vv.clf()
-    data = np.random.normal(7,2,size=(100,100))    
+    data = np.random.normal(7,2,size=(100,100))
     b = vv.kde(data, lc='r')

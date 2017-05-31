@@ -10,10 +10,10 @@ def processEvents():
     """ processEvents()
     
     Processes all GUI events (and thereby all visvis events).
-    Users can periodically call this function during running 
+    Users can periodically call this function during running
     an algorithm to keep the figures responsove.
     
-    Note that IEP and IPython can integrate the GUI event loop to 
+    Note that IEP and IPython can integrate the GUI event loop to
     periodically update the GUI events when idle.
     
     Also see Figure.DrawNow()

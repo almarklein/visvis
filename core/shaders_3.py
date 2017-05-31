@@ -6,17 +6,17 @@
 
 """ Module shaders_3
 
-Contains the source for various shaders for the Texture3D wobject, 
+Contains the source for various shaders for the Texture3D wobject,
 divided in different parts.
 
 The names consists of different parts, seperated by underscores:
   * SH: just to indicate its a shader
   * 2F, 3F, MF, 2V, 3V, MV: the kind of program, 2D/3D texture or mesh,
-    vertex or fragment shader. May be left out for some generic parts (such 
+    vertex or fragment shader. May be left out for some generic parts (such
     as color)
   * part name: can be BASE, STYLE, or anything else really.
-  * part name type: Optional. Some parts have alternatives, 
-    such as the STYLE part for 3D rendering techniques. Or the SHADING 
+  * part name type: Optional. Some parts have alternatives,
+    such as the STYLE part for 3D rendering techniques. Or the SHADING
     part for meshes
 
 """
@@ -41,7 +41,7 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
     // --varyings--
     
     void main()
-    {    
+    {
         
         // First of all, set projected position.
         // (We need to do this because this shader replaces the original shader.)
@@ -89,7 +89,7 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
         
         ray = (p2.xyz/p2.w) - (p1.xyz/p1.w);
         
-        // Normalize ray to unit length.    
+        // Normalize ray to unit length.
         ray = normalize(ray);
         
         // Make the ray represent the length of a single voxel.
@@ -128,7 +128,7 @@ SH_3F_BASE = ShaderCodePart('base', '3D-fragment-default',
     // ----- End of functions -----
     
     void main()
-    {   
+    {
         
         // Get current pixel location.
         vec3 edgeLoc = vec3(gl_TexCoord[0]);
@@ -188,7 +188,7 @@ SH_3F_CALCSTEPS = ShaderCodePart('calcsteps', 'default',
     float d2P(vec3 p, vec3 d, vec4 P)
     {
         // calculate the distance of a point p to a plane P along direction d.
-        // plane P is defined as ax + by + cz = d    
+        // plane P is defined as ax + by + cz = d
         // line is defined as two points on that line
         
         // calculate nominator and denominator
@@ -236,13 +236,13 @@ SH_3F_STYLE_MIP = ShaderCodePart('renderstyle', 'mip',
 """
     >>--pre-loop--
     
-    // Remember that we made sure that the total range of the data is 
+    // Remember that we made sure that the total range of the data is
     // mapped between 0 and 1 (also for signed data types).
     // We track best color because resampling is inconsistent for some reason
     float val; // to store the current value
     float maxval = -99999.0; // The maximum encountered value
     float maxi = 0.0;  // Where the maximum value was encountered
-    vec4 maxcolor; // The color found at the maximum value 
+    vec4 maxcolor; // The color found at the maximum value
     vec4 color1; // What we sample from the texture
     vec4 color2; // What should be displayed
     // --pre-loop--
@@ -322,7 +322,7 @@ SH_3F_STYLE_RAY = ShaderCodePart('renderstyle', 'ray',
 # with the alpha channel in the ColormapEditor.
 
 SH_3F_STYLE_EDGERAY = ShaderCodePart('renderstyle', 'edgeray',
-"""   
+"""
     >>--uniforms--
     uniform float stepRatio;
     // --uniforms--
@@ -340,7 +340,7 @@ SH_3F_STYLE_EDGERAY = ShaderCodePart('renderstyle', 'edgeray',
     color1 = texture3D( texture, loc );
     vec4 betterColor = color1;
     
-    // Look in neighborhood    
+    // Look in neighborhood
     // calculate normal vector from gradient
     vec3 N; // normal
     color1 = texture3D( texture, loc+vec3(-step[0],0.0,0.0) );
@@ -422,7 +422,7 @@ SH_3F_STYLE_ISO = ShaderCodePart('renderstyle', 'iso',
         
         // Update value by adding contribution of this voxel
         float a = color2.a * max(0.0, 1.0-color3.a) / stepRatio;
-        //float a = color2.a / ( color2.a + color3.a + 0.00001); 
+        //float a = color2.a / ( color2.a + color3.a + 0.00001);
         color3.rgb += color2.rgb*a;
         color3.a += a; // color3.a counts total color contribution.
         
@@ -538,7 +538,7 @@ SH_3F_LITVOXEL = ShaderCodePart('litvoxel', 'default',
     }
     
     vec4 calculateColor(vec4 betterColor, vec3 loc, vec3 step)
-    {   
+    {
         // Calculate color by incorporating lighting
         vec4 color1;
         vec4 color2;
@@ -576,9 +576,9 @@ SH_3F_LITVOXEL = ShaderCodePart('litvoxel', 'default',
         
         int nlights = 1;
         for (int i=0; i<nlights; i++)
-        { 
+        {
             // Get light direction (make sure to prevent zero devision)
-            vec3 L = lightDirs[i]; 
+            vec3 L = lightDirs[i];
             float lightEnabled = float( length(L) > 0.0 );
             L = normalize(L+(1.0-lightEnabled));
             

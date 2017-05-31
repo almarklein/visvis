@@ -18,14 +18,14 @@ from visvis.utils.pypoints import Pointset
 import visvis as vv
 from visvis.core import base
 from visvis.core.base import DRAW_NORMAL, DRAW_FAST, DRAW_SHAPE, DRAW_SCREEN
-from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+from visvis.core.misc import Property, PropWithDraw, DrawAfter
 from visvis.core.misc import Range, getColor, basestring
 #
 from visvis.core.baseWibjects import Box, DraggableBox
 from visvis.core import cameras
 from visvis.core.cameras import ortho
 from visvis.text import Label
-from visvis.core.line import Line 
+from visvis.core.line import Line
 from visvis.core.axises import BaseAxis, CartesianAxis, PolarAxis2D
 from visvis.core.light import Light
 
@@ -35,7 +35,7 @@ def _Screenshot():
     
     Capture the screen as a numpy array to use it later.
     Used by the object picker helper to determine which item is
-    under the mouse, and by the axes to buffer its content. 
+    under the mouse, and by the axes to buffer its content.
     
     """
     gl.glReadBuffer(gl.GL_BACK)
@@ -52,7 +52,7 @@ class _BaseFigure(base.Wibject):
     """ Abstract class that the BaseFigure inherits from. It solves
     the mutual dependence of the Axes and BaseFigure classes.
     """
-    pass  
+    pass
 
 
 class AxesContainer(Box):
@@ -61,7 +61,7 @@ class AxesContainer(Box):
     A simple container wibject class to contain one Axes instance.
     Each Axes in contained in an AxesContainer instance. By default
     the axes position is expressed in pixel coordinates, while the
-    container's position is expressed in unit coordinates. This 
+    container's position is expressed in unit coordinates. This
     enables advanced positioning of the Axes.
     
     When there is one axes in a figure, the container position will
@@ -70,12 +70,12 @@ class AxesContainer(Box):
     are positioned in pixels, such that when resizing, the margins for
     the tickmarks and labels remains equal.
     
-    The only correct way to create (and obtain a reference to) 
+    The only correct way to create (and obtain a reference to)
     an AxesContainer instance is to use:
       * axes = vv.Axes(figure)
       * container = axes.parent
     
-    This container is automatically destroyed once the axes is removed. 
+    This container is automatically destroyed once the axes is removed.
     You can attach wibjects to an instance of this class, but note that
     the container object is destroyed as soon as the axes is gone.
     
@@ -83,7 +83,7 @@ class AxesContainer(Box):
     
     def __init__(self, parent, *args, **kwargs):
         
-        # check that the parent is a Figure 
+        # check that the parent is a Figure
         if not isinstance(parent, _BaseFigure):
             raise Exception("The given parent for an AxesContainer " +
                             "should be a Figure.")
@@ -101,7 +101,7 @@ class AxesContainer(Box):
     def GetAxes(self):
         """ GetAxes()
         
-        Get the axes. Creates a new axes object if it has none. 
+        Get the axes. Creates a new axes object if it has none.
         
         """
         if self._children:
@@ -114,7 +114,7 @@ class AxesContainer(Box):
     def _DrawTree(self, mode, *args, **kwargs):
         """ _DrawTree(mode, *args, **kwargs)
         
-        Pass on, but Destroy itself if axes is gone. 
+        Pass on, but Destroy itself if axes is gone.
         
         """
         axes = self.GetAxes()
@@ -128,33 +128,33 @@ class AxesContainer(Box):
 class Axes(base.Wibject):
     """ Axes(parent, axisClass=None)
     
-    An Axes instance represents the scene with a local coordinate system 
-    in which wobjects can be drawn. It has various properties to influence 
-    the appearance of the scene, such as aspect ratio and lighting. 
+    An Axes instance represents the scene with a local coordinate system
+    in which wobjects can be drawn. It has various properties to influence
+    the appearance of the scene, such as aspect ratio and lighting.
     
-    To set the appearance of the axis (the thing that indicates x, y and z), 
+    To set the appearance of the axis (the thing that indicates x, y and z),
     use the properties of the Axis instance. For example:
     Axes.axis.showGrid = True
     
-    The cameraType determines how the data is visualized and how the user 
+    The cameraType determines how the data is visualized and how the user
     can interact with the data.
     
     The daspect property represents the aspect ratio of the data as a
-    three element tuple. The sign of the elements indicate dimensions 
-    being flipped. (The function imshow() for example flips the 
+    three element tuple. The sign of the elements indicate dimensions
+    being flipped. (The function imshow() for example flips the
     y-dimension). If daspectAuto is False, all dimensions are always
     equally zoomed (The function imshow() sets this to False).
     
     An Axes can be created with the function vv.subplot() or vv.gca().
     
-    """ 
+    """
     
     def __init__(self, parent, axisClass=None):
         
         # check that the parent is a Figure or AxesContainer
         if isinstance(parent, AxesContainer):
-            figure = parent.parent 
-        elif isinstance(parent, _BaseFigure):            
+            figure = parent.parent
+        elif isinstance(parent, _BaseFigure):
             figure = parent
             parent = AxesContainer(figure)
         else:
@@ -166,7 +166,7 @@ class Axes(base.Wibject):
         
         # objects in the scene. The Axes is the only wibject that
         # can contain wobjects. Basically, the Axes is the root
-        # for all the wobjects in it.    
+        # for all the wobjects in it.
         self._wobjects = []
         
         # data aspect ratio. If daspectAuto is True, the values
@@ -222,7 +222,7 @@ class Axes(base.Wibject):
     def SetLimits(self, rangeX=None, rangeY=None, rangeZ=None, margin=0.02):
         """ SetLimits(rangeX=None, rangeY=None, rangeZ=None, margin=0.02)
         
-        Set the limits of the scene. For the 2D camera, these are taken 
+        Set the limits of the scene. For the 2D camera, these are taken
         as hints to set the camera view. For the 3D camear, they determine
         where the axis is drawn.
         
@@ -242,7 +242,7 @@ class Axes(base.Wibject):
         
         Notes
         -----
-        Each range can be None, a 2 element iterable, or a visvis.Range 
+        Each range can be None, a 2 element iterable, or a visvis.Range
         object. If a range is None, the range is automatically obtained
         from the wobjects currently in the scene. To set the range that
         will fit all wobjects, simply use "SetLimits()"
@@ -256,19 +256,19 @@ class Axes(base.Wibject):
         # if tuples, convert to ranges
         if rangeX is None or isinstance(rangeX, Range):
             pass # ok
-        elif hasattr(rangeX,'__len__') and len(rangeX)==2:            
+        elif hasattr(rangeX,'__len__') and len(rangeX)==2:
             rangeX = Range(rangeX[0], rangeX[1])
         else:
             raise ValueError("Limits should be Ranges or two-element iterables.")
         if rangeY is None or isinstance(rangeY, Range):
             pass # ok
-        elif hasattr(rangeY,'__len__') and len(rangeY)==2:            
+        elif hasattr(rangeY,'__len__') and len(rangeY)==2:
             rangeY = Range(rangeY[0], rangeY[1])
         else:
             raise ValueError("Limits should be Ranges or two-element iterables.")
         if rangeZ is None or isinstance(rangeZ, Range):
             pass # ok
-        elif hasattr(rangeZ,'__len__') and len(rangeZ)==2:            
+        elif hasattr(rangeZ,'__len__') and len(rangeZ)==2:
             rangeZ = Range(rangeZ[0], rangeZ[1])
         else:
             raise ValueError("Limits should be Ranges or two-element iterables.")
@@ -284,7 +284,7 @@ class Axes(base.Wibject):
                 # Ask object what it's limits are
                 tmp = ob._GetLimits()
                 if not tmp:
-                    continue                
+                    continue
                 tmpX, tmpY, tmpZ = tmp
                 
                 # Check for NaNs
@@ -328,7 +328,7 @@ class Axes(base.Wibject):
             if rangeX is None:
                 tmp = rX.range * margin
                 if tmp == 0: tmp = margin
-                rX = Range( rX.min-tmp, rX.max+tmp )            
+                rX = Range( rX.min-tmp, rX.max+tmp )
             if rangeY is None:
                 tmp = rY.range * margin
                 if tmp == 0: tmp = margin
@@ -343,7 +343,7 @@ class Axes(base.Wibject):
             cam.SetLimits(rX, rY, rZ)
         
         # return
-        return rX, rY, rZ 
+        return rX, rY, rZ
     
     
     def GetLimits(self):
@@ -390,8 +390,8 @@ class Axes(base.Wibject):
     def Draw(self, fast=False):
         """ Draw(fast=False)
         
-        Calls Draw(fast) on its figure, as the total opengl canvas 
-        has to be redrawn. This might change in the future though. 
+        Calls Draw(fast) on its figure, as the total opengl canvas
+        has to be redrawn. This might change in the future though.
         
         """
         
@@ -426,7 +426,7 @@ class Axes(base.Wibject):
     
     @property
     def wobjects(self):
-        """ Get a shallow copy of the list of wobjects in the scene. 
+        """ Get a shallow copy of the list of wobjects in the scene.
         """
         return [child for child in self._wobjects]
     
@@ -434,7 +434,7 @@ class Axes(base.Wibject):
     def _CorrectPositionForLabels(self):
         """ _CorrectPositionForLabels()
         
-        Correct the position for the labels and title etc. 
+        Correct the position for the labels and title etc.
         
         """
         
@@ -485,7 +485,7 @@ class Axes(base.Wibject):
                 self._bgcolors = None
                 return
             # Check
-            try:                
+            try:
                 if len(value) not in [2,4]:
                     raise ValueError('bgcolors must have 2 or 4 elements.')
             except Exception:
@@ -499,7 +499,7 @@ class Axes(base.Wibject):
     
     @property
     def axis(self):
-        """ Get the axis object associated with this axes. 
+        """ Get the axis object associated with this axes.
         A new instance is created if it does not yet exist. This object
         can be used to change the appearance of the axis (tickmarks, labels,
         grid, etc.).
@@ -518,12 +518,12 @@ class Axes(base.Wibject):
     
     @PropWithDraw
     def axisType():
-        """ Get/Set the axis type to use. 
+        """ Get/Set the axis type to use.
         
         Currently supported are:
           * 'cartesian' - a normal axis (default)
           * 'polar' - a polar axis.
-        """        
+        """
         def fget(self):
             D = {PolarAxis2D:'polar', CartesianAxis:'cartesian'}
             if self._axisClass in D:
@@ -538,7 +538,7 @@ class Axes(base.Wibject):
                     raise ValueError('Invalid axis class.')
                 axisClass = D[axisClass.lower()]
             if axisClass is not self._axisClass:
-                # Store class            
+                # Store class
                 self._axisClass = axisClass
                 # Remove previous
                 axisList = self.FindObjects(BaseAxis)
@@ -551,20 +551,20 @@ class Axes(base.Wibject):
     
     @PropWithDraw
     def camera():
-        """ Get/Set the current camera. 
+        """ Get/Set the current camera.
         
         Setting can be done using:
           * The index of the camera; 1,2,3 for fly, 2d and 3d respectively.
           * A value as in the 'cameraType' property.
-          * A new camera instance. This will replace any existing camera 
+          * A new camera instance. This will replace any existing camera
             of the same type. To have multiple 3D cameras at the same axes,
             one needs to subclass cameras.ThreeDCamera.
         
         Shared cameras
         --------------
         One can set the camera to the camera of another Axes, so that they
-        share the same camera. A camera that is shared uses daspectAuto 
-        property of the first axes it was attached to. 
+        share the same camera. A camera that is shared uses daspectAuto
+        property of the first axes it was attached to.
         
         Interactively changing a camera
         -------------------------------
@@ -600,7 +600,7 @@ class Axes(base.Wibject):
     
     @PropWithDraw
     def cameraType():
-        """ Get/Set the camera type to use. 
+        """ Get/Set the camera type to use.
         
         Currently supported are:
           * '2d' or 2  - two dimensional camera that looks down the z-dimension.
@@ -630,7 +630,7 @@ class Axes(base.Wibject):
     
     @property
     def mousepos(self):
-        """ Get position of mouse in screen pixels, relative to this axes. 
+        """ Get position of mouse in screen pixels, relative to this axes.
         """
         figure = self.GetFigure()
         if not figure:
@@ -647,14 +647,14 @@ class Axes(base.Wibject):
         
         The daspect is a 3-element tuple (x,y,z). If a 2-element tuple is
         given, z is assumed 1. Note that only the ratio between the values
-        matters (i.e. (1,1,1) equals (2,2,2)). When a value is negative, the 
-        corresponding dimension is flipped. 
+        matters (i.e. (1,1,1) equals (2,2,2)). When a value is negative, the
+        corresponding dimension is flipped.
         
         Note that if daspectAuto is True, the camera automatically changes
         its daspect to nicely scale the data to fit the screen (but the sign
         is preserved).
         """
-        def fget(self):            
+        def fget(self):
             return self.camera.daspect
         def fset(self, value):
             # Set on all cameras
@@ -664,12 +664,12 @@ class Axes(base.Wibject):
             # Set on self so new cameras can see what the user set.
             # Use camera's daspect, in case a 2-element tuple was used.
             if camera is not None:
-                self._daspect = camera.daspect 
+                self._daspect = camera.daspect
         return locals()
     
     @property
     def daspectNormalized(self):
-        """ Get the data aspect ratio, normalized such that the x scaling 
+        """ Get the data aspect ratio, normalized such that the x scaling
         is +/- 1.
         """
         return self.camera.daspectNormalized
@@ -678,12 +678,12 @@ class Axes(base.Wibject):
     def daspectAuto():
         """ Get/Set whether to scale the dimensions independently.
         
-        If True, the camera changes the value of its daspect to nicely fit 
-        the data on screen (but the sign is preserved). This can happen 
-        (depending on the type of camera) during resetting, zooming, and 
+        If True, the camera changes the value of its daspect to nicely fit
+        the data on screen (but the sign is preserved). This can happen
+        (depending on the type of camera) during resetting, zooming, and
         resizing of the axes.
         
-        If set to False, the daspect of all cameras is reverted to 
+        If set to False, the daspect of all cameras is reverted to
         the user-set daspect.
         """
         def fget(self):
@@ -700,18 +700,18 @@ class Axes(base.Wibject):
     @PropWithDraw
     def legend():
         """ Get/Set the string labels for the legend. Upon setting,
-        a legend wibject is automatically shown. 
+        a legend wibject is automatically shown.
         """
         def fget(self):
             return self.legendWibject._stringList
-        def fset(self, value):            
+        def fset(self, value):
             self.legendWibject.SetStrings(value)
         return locals()
     
     @property
     def legendWibject(self):
         """ Get the legend wibject, so for exampe its position
-        can be changed programatically. 
+        can be changed programatically.
         """
         legendWibjects = self.FindObjects(Legend)
         if not legendWibjects:
@@ -721,14 +721,14 @@ class Axes(base.Wibject):
     
     @property
     def light0(self):
-        """ Get the default light source in the scene. 
+        """ Get the default light source in the scene.
         """
         return self._lights[0]
     
     @property
     def lights(self):
         """ Get a list of all available lights in the scene. Only light0 is
-        enabeled by default. 
+        enabeled by default.
         """
         return [light for light in self._lights]
         
@@ -737,12 +737,12 @@ class Axes(base.Wibject):
     def useBuffer():
         """ Get/Set whether to use a buffer; after drawing, a screenshot
         of the result is obtained and stored. When the axes needs to
-        be redrawn, but has not changed, the buffer can be used to 
+        be redrawn, but has not changed, the buffer can be used to
         draw the contents at great speed (default True).
         """
         def fget(self):
             return self._useBuffer
-        def fset(self, value): 
+        def fset(self, value):
             self._useBuffer = bool(value)
         return locals()
     
@@ -750,12 +750,12 @@ class Axes(base.Wibject):
     @Property
     def motionBlur():
         """ Get/Set the amount of motion blur when interacting with
-        this axes. The value should be a number between 0 and 1. 
-        Note: this is a rather useless feature :) 
+        this axes. The value should be a number between 0 and 1.
+        Note: this is a rather useless feature :)
         """
         def fget(self):
             return self._motionBlur
-        def fset(self, value): 
+        def fset(self, value):
             tmp = float(value)
             self._motionBlur = min(max(tmp,0.0),1.0)
         return locals()
@@ -798,8 +798,8 @@ class Axes(base.Wibject):
         
         # Prepare for wibject children (draw in full viewport)
         gl.glViewport(0,0,w,h)
-        gl.glDisable(gl.GL_DEPTH_TEST)                
-        gl.glMatrixMode(gl.GL_PROJECTION)        
+        gl.glDisable(gl.GL_DEPTH_TEST)
+        gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         ortho( 0, w, h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -840,7 +840,7 @@ class Axes(base.Wibject):
             
             # Set viewport (note that OpenGL has origin in lower-left, visvis
             # in upper-left)
-            gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)        
+            gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)
             
             # Select screenshot
             sshot = self._screenshot
@@ -851,17 +851,17 @@ class Axes(base.Wibject):
         if self._useBuffer and fig.enableUserInteraction:
             
             # Test if we can use the screenshot
-            canUseScreenshot = (    (sshot is not None) and 
-                                    sshot.shape[0] == pos.h and 
+            canUseScreenshot = (    (sshot is not None) and
+                                    sshot.shape[0] == pos.h and
                                     sshot.shape[1] == pos.w )
             
             # Test if we want to blur with the screenshot
-            blurWithScreenshot = (  bool(self._motionBlur) and 
+            blurWithScreenshot = (  bool(self._motionBlur) and
                                     self._isdirty and
                                     mode==DRAW_FAST )
             
             # Test whether we should use the screenshot
-            shouldUseScreenshot = ( canUseScreenshot and 
+            shouldUseScreenshot = ( canUseScreenshot and
                                     (not self._isdirty or blurWithScreenshot) )
         
         else:
@@ -892,8 +892,8 @@ class Axes(base.Wibject):
             
             # Set view
             gl.glMatrixMode(gl.GL_PROJECTION)
-            gl.glLoadIdentity()        
-            ortho( 0, 1, 0, 1)             
+            gl.glLoadIdentity()
+            ortho( 0, 1, 0, 1)
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
             
@@ -911,14 +911,14 @@ class Axes(base.Wibject):
         
         # Draw axis if using the 2D camera
         if isinstance(self.camera, cameras.TwoDCamera):
-            # Let axis object for 2D-camera draw in screen coordinates 
+            # Let axis object for 2D-camera draw in screen coordinates
             # in the full viewport.
             # Note that if the buffered screenshot is used and the content
             # is not drawn, the axis' OnDraw method is not called, and the
             # ticks are therefore not re-calculated (which is time-consuming).
             
-            # Set view            
-            gl.glMatrixMode(gl.GL_PROJECTION)        
+            # Set view
+            gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glLoadIdentity()
             ortho( 0, w, 0, h)  # Note that 0 and h are swapped
             gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -927,14 +927,14 @@ class Axes(base.Wibject):
             # Draw
             for item in self._wobjects:
                 if isinstance(item, BaseAxis):
-                    item._DrawTree(DRAW_SCREEN)      
+                    item._DrawTree(DRAW_SCREEN)
         
         
-        # Prepare for drawing child wibjects in screen coordinates 
+        # Prepare for drawing child wibjects in screen coordinates
         if True:
             
-            # Set view            
-            gl.glMatrixMode(gl.GL_PROJECTION)        
+            # Set view
+            gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glLoadIdentity()
             ortho( 0, w, h, 0)
             gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -956,8 +956,8 @@ class Axes(base.Wibject):
         if bgcolor:
             
             # Set view
-            gl.glMatrixMode(gl.GL_PROJECTION)        
-            gl.glLoadIdentity()        
+            gl.glMatrixMode(gl.GL_PROJECTION)
+            gl.glLoadIdentity()
             ortho( 0, 1, 0, 1)
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
@@ -996,7 +996,7 @@ class Axes(base.Wibject):
             # Setup the camera
             self.camera.SetView()
             
-            # Draw stuff, but wait with lines     
+            # Draw stuff, but wait with lines
             lines2draw = []
             for item in self._wobjects:
                 if isinstance(item, (Line, BaseAxis)):
@@ -1004,7 +1004,7 @@ class Axes(base.Wibject):
                 else:
                     item._DrawTree(mode, pickerHelper)
             
-            # Lines (and the axis) are a special case. In order to blend 
+            # Lines (and the axis) are a special case. In order to blend
             # them well, we should draw textures, meshes etc, first.
             # Note that this does not work if lines textures are children
             # of each-other. in that case they should be added to the scene
@@ -1093,7 +1093,7 @@ class Legend(DraggableBox):
     """ Legend(parent)
     
     A legend is a wibject that should be a child (does not have
-    to be the direct child) of an axes. It displays a description for 
+    to be the direct child) of an axes. It displays a description for
     each line in the axes, and is draggable.
     
     A Legend can be shown with the function vv.legend(), or using the
@@ -1106,8 +1106,8 @@ class Legend(DraggableBox):
         
         # params for the layout
         self._linelen = 40
-        self._xoffset = 10        
-        self._yoffset = 3        
+        self._xoffset = 10
+        self._yoffset = 3
         self._yspacing = 16
         
         # position in upper left by default
@@ -1127,21 +1127,21 @@ class Legend(DraggableBox):
         """ Add a line and label to our pool. """
         # get y position
         index = len(self._wobjects)
-        y = self._yoffset + yspacing * (index)        
+        y = self._yoffset + yspacing * (index)
         # create label
         label = Label(self, text)
-        label.bgcolor = ''        
+        label.bgcolor = ''
         label.position = self._xoffset*2 + twoPoints*self._linelen, y
         deltax, deltay = label.GetVertexLimits()
         #y2 = label.position.h / 2
-        y2 = (deltay[1] + deltay[0]) / 2 
+        y2 = (deltay[1] + deltay[0]) / 2
         # create 2-element pointset
-        pp = Pointset(2)        
+        pp = Pointset(2)
         pp.append(self._xoffset, y + y2)
         if twoPoints:
             pp.append(self._xoffset + self._linelen, y + y2)
         # create line
-        line = Line(self, pp) # line has no parent        
+        line = Line(self, pp) # line has no parent
         # return
         return line, label
     
@@ -1194,11 +1194,11 @@ class Legend(DraggableBox):
         # create new lines and labels
         maxWidth = 0
         nr = -1
-        for lineProps in lines:            
+        for lineProps in lines:
             nr += 1
             if nr >= len(stringList):
                 break
-            # get new line and label                
+            # get new line and label
             text = stringList[nr]
             yspacing = self._yspacing * fig._relativeFontSize
             line, label = self._AddLineAndLabel(text, yspacing, twoPoints)
@@ -1226,10 +1226,10 @@ class Legend(DraggableBox):
     
     def OnDraw(self):
         
-        # draw box 
+        # draw box
         DraggableBox.OnDraw(self)
         
-        # draw lines        
+        # draw lines
         for line in self._wobjects:
             line.OnDraw()
         

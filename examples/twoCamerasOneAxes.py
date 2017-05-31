@@ -19,7 +19,7 @@ class OurCamera1(vv.cameras.TwoDCamera):
 class OurCamera2(vv.cameras.TwoDCamera):
     _NAMES = ('our2', 9)
 
-# Draw an image    
+# Draw an image
 im = vv.imread('astronaut.png')
 vv.imshow(im)
 vv.title('Press ALT+8 for cam1 and ALT+9 for cam2')
@@ -32,7 +32,7 @@ a.camera = OurCamera1()
 a.camera = OurCamera2()
 a.cameraType = 'our1' # We can do this because we set the _NAMES attribute
 
-# Increase zoom 
+# Increase zoom
 a.camera.zoom *= 2
 
 # Enter mainloop

@@ -4,8 +4,8 @@ import OpenGL.GL as gl
 
 
 class CustomWobject(vv.Wobject):
-    """ Example Custom wobject.   
-    This example is not optimal, it is just to illustrate how Wobject 
+    """ Example Custom wobject.
+    This example is not optimal, it is just to illustrate how Wobject
     can be subclassed.
     """
     
@@ -28,7 +28,7 @@ class CustomWobject(vv.Wobject):
     
     def _GetLimits(self):
         """ Tell the axes how big this object is.
-        """ 
+        """
         # Get limits
         x1, x2 = 0, 1
         y1, y2 = 0, 1
@@ -38,7 +38,7 @@ class CustomWobject(vv.Wobject):
     
     def OnDraw(self):
         """ To draw the object.
-        """ 
+        """
         self._drawTraingles(gl.GL_TRIANGLES, (0.2, 0.8, 0.4))
         gl.glLineWidth(3)
         self._drawTraingles(gl.GL_LINE_LOOP, (0,0,0))

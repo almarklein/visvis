@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-""" This example shows how to use the same camera for multiple axes, 
-which can be helpful if for example the axes show a different view 
+""" This example shows how to use the same camera for multiple axes,
+which can be helpful if for example the axes show a different view
 on the same data.
 """
 

@@ -6,18 +6,18 @@
 
 """ Package visvis.backends
 
-Visvis allows multiple backends. I tried to make implementing a 
+Visvis allows multiple backends. I tried to make implementing a
 backend as easy as possible. Each backend is defined in a single
-module called "backend_xx.py", where xx is the backend name, which 
+module called "backend_xx.py", where xx is the backend name, which
 we recommend making all lowercase.
 
 This module should ...
-1.  ... contain a class called "Figure" (inherited from visvis.BaseFigure). 
-    The Figure class should wrap (not inherit from) a widget native to 
-    the backend, in which visvis can draw with OpenGl. The Figure class 
-    should also overload a number of functions (such as _SwapBuffers()).    
-2.  ... contain a function called "newFigure". This function should generate 
-    a window with a single Figure widget in it, and return the Figure 
+1.  ... contain a class called "Figure" (inherited from visvis.BaseFigure).
+    The Figure class should wrap (not inherit from) a widget native to
+    the backend, in which visvis can draw with OpenGl. The Figure class
+    should also overload a number of functions (such as _SwapBuffers()).
+2.  ... contain a function called "newFigure". This function should generate
+    a window with a single Figure widget in it, and return the Figure
     Object.
 3.  Contain a class called "App" (inherited from vv.events.App) that
     implements the methods "_GetNativeApp", "_ProcessEvents" and "_Run".
@@ -25,7 +25,7 @@ This module should ...
 4.  ... call vv.events.processVisvisEvents on a regular basis (every 10 ms
     or so). To keep visvis' own event system running.
 5.  ... pass through the events enter, leaver, keydown, keyup, resize, close
-    via visvis' event system. Pass through events mouseDown, mouseUp, 
+    via visvis' event system. Pass through events mouseDown, mouseUp,
     mouseDoubleClick, mouseMove via the figure's _GenerateMouseEvent() method,
     that will fire the events of the appropriate wibjects and wobjects.
 
@@ -34,12 +34,12 @@ https://github.com/almarklein/visvis/wiki/Creating_a_backend
 Also look at the already implemented backends!
 
 The backend is chosen/selected as follows:
-- A user can call vv.use() to load a specific backend and obtain the 
+- A user can call vv.use() to load a specific backend and obtain the
   App instance.
 - When a figure is created it is checked whether a backend is already
   selected. If not, one is selected automatically; it tries loading the
-  backends in the order that is defined in the variable "backendOrder" 
-  in this file. 
+  backends in the order that is defined in the variable "backendOrder"
+  in this file.
 
 """
 
@@ -55,7 +55,7 @@ import visvis
 from visvis.core.misc import isFrozen, getExceptionInstance
 
 # The order in which to try loading a backend (foo is a dummy backend)
-backendOrder = ['pyqt5', 'pyside', 'pyqt4', 'wx', 'gtk', 'fltk'] 
+backendOrder = ['pyqt5', 'pyside', 'pyqt4', 'wx', 'gtk', 'fltk']
 backendMap = {'pyqt5':'PyQt5',
               'pyside':'PySide',
               'pyqt4':'PyQt4',
@@ -109,7 +109,7 @@ def testLoaded():
     """
     
     if isFrozen():
-        return "" 
+        return ""
     
     else:
         
@@ -189,18 +189,18 @@ def use(backendName=None):
     Use the specified backend and return an App instance that has a run()
     method to enter the GUI toolkit's mainloop.
     
-    If no backend is given, a suitable backend is tried automatically. 
+    If no backend is given, a suitable backend is tried automatically.
     
     """
     
     # Make case insensitive and check
     if backendName:
-        backendName = backendName.lower()   
-        backendName = backendAliases.get(backendName, backendName) 
+        backendName = backendName.lower()
+        backendName = backendAliases.get(backendName, backendName)
         if backendName not in backendOrder:
             raise RuntimeError('Invalid backend name given: "%s".'%backendName)
     
-    # Get name of the backend currently loaded (can be '')            
+    # Get name of the backend currently loaded (can be '')
     loadedName = testLoaded()
     
     # Prevent resetting the backend to use
@@ -220,7 +220,7 @@ def use(backendName=None):
         if not _loadBackend(loadedName):
             raise RuntimeError('Could not reload backend "%s".' % loadedName)
     else:
-        # Try any backend        
+        # Try any backend
         for name in backendOrder:
             if _loadBackend(name):
                 break

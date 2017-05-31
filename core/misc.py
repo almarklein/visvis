@@ -7,7 +7,7 @@
 """ Module misc
 
 Various things are defined here that did not fit nicely in any
-other module. 
+other module.
 
 This module is also meant to be imported by many
 other visvis modules, and therefore should not depend on other
@@ -72,9 +72,9 @@ def ensureString(s):
 def getOpenGlInfo():
     """ getOpenGlInfo()
     
-    Get information about the OpenGl version on this system. 
-    Returned is a tuple (version, vendor, renderer, extensions) 
-    Note that this function will return 4 Nones if the openGl 
+    Get information about the OpenGl version on this system.
+    Returned is a tuple (version, vendor, renderer, extensions)
+    Note that this function will return 4 Nones if the openGl
     context is not set.
     
     """
@@ -93,10 +93,10 @@ _glLimitations = {}
 def getOpenGlCapable(version, what=None):
     """ getOpenGlCapable(version, what)
     
-    Returns True if the OpenGl version on this system is equal or higher 
+    Returns True if the OpenGl version on this system is equal or higher
     than the one specified and False otherwise.
     
-    If False, will display a message to inform the user, but only the first 
+    If False, will display a message to inform the user, but only the first
     time that this limitation occurs (identified by the second argument).
     
     """
@@ -145,7 +145,7 @@ def Property(function):
     class Example(object):
         @Property
         def myattr():
-            ''' This is the doc string. 
+            ''' This is the doc string.
             '''
             def fget(self):
                 return self._value
@@ -226,7 +226,7 @@ def DrawAfter(function):
     """ DrawAfter(function)
     
     Decorator for methods that make self.Draw() be called right after
-    the function is called. 
+    the function is called.
     
     """
     def newFunc(self, *args, **kwargs):
@@ -290,26 +290,26 @@ class Range(object):
     Represents a range (a minimum and a maximum ). Can also be instantiated
     using a tuple.
     
-    If max is set smaller than min, the min and max are flipped.    
+    If max is set smaller than min, the min and max are flipped.
     
     """
     def __init__(self, min=0, max=1):
         self.Set(min,max)
     
     def Set(self, min=0, max=1):
-        """ Set the values of min and max with one call. 
+        """ Set the values of min and max with one call.
         Same signature as constructor.
         """
         if isinstance(min, Range):
             min, max = min.min, min.max
         elif isinstance(min, (tuple,list)):
-            min, max = min[0], min[1]        
+            min, max = min[0], min[1]
         self._min = float(min)
         self._max = float(max)
         self._Check()
     
     @property
-    def range(self):        
+    def range(self):
         return self._max - self._min
     
     @Property # visvis.Property
@@ -350,7 +350,7 @@ class Range(object):
 class Transform_Base(object):
     """ Transform_Base
     
-    Base transform object. 
+    Base transform object.
     Inherited by classes for translation, scale and rotation.
     
     """
@@ -359,7 +359,7 @@ class Transform_Base(object):
 class Transform_Translate(Transform_Base):
     """ Transform_Translate(dx=0.0, dy=0.0, dz=0.0)
     
-    Translates the wobject. 
+    Translates the wobject.
     
     """
     def __init__(self, dx=0.0, dy=0.0, dz=0.0):
@@ -370,7 +370,7 @@ class Transform_Translate(Transform_Base):
 class Transform_Scale(Transform_Base):
     """ Transform_Scale(sx=1.0, sy=1.0, sz=1.0)
     
-    Scales the wobject. 
+    Scales the wobject.
     
     """
     def __init__(self, sx=1.0, sy=1.0, sz=1.0):
@@ -379,15 +379,15 @@ class Transform_Scale(Transform_Base):
         self.sz = sz
 
 class Transform_Rotate(Transform_Base):
-    """ Transform_Rotate( angle=0.0, ax=0, ay=0, az=1, angleInRadians=None) 
+    """ Transform_Rotate( angle=0.0, ax=0, ay=0, az=1, angleInRadians=None)
     
-    Rotates the wobject. Angle is in degrees. 
-    Use angleInRadians to specify the angle in radians, 
-    which is then converted in degrees. 
+    Rotates the wobject. Angle is in degrees.
+    Use angleInRadians to specify the angle in radians,
+    which is then converted in degrees.
     """
     def __init__(self, angle=0.0, ax=0, ay=0, az=1, angleInRadians=None):
         if angleInRadians is not None:
-            angle = angleInRadians * 180 / np.pi 
+            angle = angleInRadians * 180 / np.pi
         self.angle = angle
         self.ax = ax
         self.ay = ay
@@ -423,13 +423,13 @@ def getColor(value, descr='getColor'):
             value = colorDict[value]
     elif isinstance(value, (list, tuple)):
         if len(value) != 3:
-            tmp = "tuple color must be length 3!"                
+            tmp = "tuple color must be length 3!"
         value = tuple(value)
     else:
         tmp = "color must be a three element tuple or a character!"
     # error or ok?
     if tmp:
-        raise ValueError("Error in %s: %s" % (descr, tmp) )        
+        raise ValueError("Error in %s: %s" % (descr, tmp) )
     return value
 
 
@@ -450,7 +450,7 @@ def isFrozen():
 def getResourceDir():
     """ getResourceDir()
     
-    Get the directory to the visvis resources. 
+    Get the directory to the visvis resources.
     
     """
     if isFrozen():
@@ -469,7 +469,7 @@ def appdata_dir(appname=None, roaming=False, macAsLinux=False):
     Get the path to the application directory, where applications are allowed
     to write user specific files (e.g. configurations). For non-user specific
     data, consider using common_appdata_dir().
-    If appname is given, a subdir is appended (and created if necessary). 
+    If appname is given, a subdir is appended (and created if necessary).
     If roaming is True, will prefer a roaming directory (Windows Vista/7).
     If macAsLinux is True, will return the Linux-like location on Mac.
     """
@@ -488,7 +488,7 @@ def appdata_dir(appname=None, roaming=False, macAsLinux=False):
     if not (path and os.path.isdir(path)):
         path = userDir
     
-    # Maybe we should store things local to the executable (in case of a 
+    # Maybe we should store things local to the executable (in case of a
     # portable distro or a frozen application that wants to be portable)
     prefix = sys.prefix
     if getattr(sys, 'frozen', None): # See application_dir() function
@@ -521,10 +521,10 @@ class Settings(object):
     """ Global settings object.
     
     This object can be used to set the visvis settings in an easy way
-    from the Python interpreter. 
+    from the Python interpreter.
     
     The settings are stored in a file in the user directory (the filename
-    can be obtained using the _fname attribute). 
+    can be obtained using the _fname attribute).
     
     Note that some settings require visvis to restart.
     
@@ -561,13 +561,13 @@ class Settings(object):
     
     @PropertyForSettings
     def preferredBackend():
-        """ The preferred backend GUI toolkit to use 
-        ('pyside', 'pyqt4', 'wx', 'gtk', 'fltk'). 
+        """ The preferred backend GUI toolkit to use
+        ('pyside', 'pyqt4', 'wx', 'gtk', 'fltk').
           * If the selected backend is not available, another one is selected.
-          * If preferAlreadyLoadedBackend is True, will prefer a backend that 
+          * If preferAlreadyLoadedBackend is True, will prefer a backend that
             is already imported.
           * Requires a restart.
-        """ 
+        """
         def fget(self, key):
             if key in self._s:
                 return self._s[key]
@@ -588,7 +588,7 @@ class Settings(object):
         imported backend (even if it's not the preferredBackend). This is
         usefull in interactive session in for example IEP, Spyder or IPython.
         Requires a restart.
-        """ 
+        """
         def fget(self, key):
             if key in self._s:
                 return bool(self._s[key])
@@ -634,7 +634,7 @@ class Settings(object):
     def volshowPreference():
         """ Whether the volshow() function prefers the volshow2() or volshow3()
         function. By default visvis prefers volshow3(), but falls back to
-        volshow2() when the OpenGl version is not high enough. Some OpenGl 
+        volshow2() when the OpenGl version is not high enough. Some OpenGl
         drivers, however, support volume rendering only in ultra-slow software
         mode (seen on ATI). In this case, or if you simply prefer volshow2()
         you can set this setting to '2'.
@@ -652,7 +652,7 @@ class Settings(object):
     
     @PropertyForSettings
     def defaultFontName():
-        """ The default font to use. Can be 'mono', 'sans' or 'serif', with 
+        """ The default font to use. Can be 'mono', 'sans' or 'serif', with
         'sans' being the default.
         """
         def fget(self, key):

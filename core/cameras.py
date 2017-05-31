@@ -12,7 +12,7 @@ A lot of blood sweat and tears went into this module to get the
 OpenGL transformations right and calculate screen to world coordinates
 etc. Please be carefull when changing stuff here.
 
-The models were designed such that the order of transformations makes 
+The models were designed such that the order of transformations makes
 sense, and that as much as possible "just works". Also the diffent
 models were designed to be as consistent as possible.
 
@@ -49,7 +49,7 @@ def getDepthValue():
     For 24 bits and more, we're fine with 100.000, but for 16 bits we
     need 3000 or so. The criterion is that at the center, we should be
     able to distinguish between 0.1, 0.0 and -0.1 etc. So we can draw lines
-    on top (0.1) then the gridlines (0.0) and then 2d textures 
+    on top (0.1) then the gridlines (0.0) and then 2d textures
     (0.1, 0.2, etc.).
     
     """
@@ -70,7 +70,7 @@ def ortho(x1, x2, y1,y2):
     Like gl.glOrtho() but the z-values are automatically determined
     dependent on the amount of bits in the depth buffer.
     
-    """    
+    """
     val = getDepthValue()
     gl.glOrtho(x1, x2, y1, y2, -val, val)
 
@@ -78,7 +78,7 @@ def ortho(x1, x2, y1,y2):
 def depthToZ(depth):
     """ depthToZ(depth)
     
-    Get the z-coord, given the depth value. 
+    Get the z-coord, given the depth value.
     
     """
     val = getDepthValue()
@@ -105,7 +105,7 @@ class BaseCamera(object):
         # Init list of axeses that this camera applies to
         self._axeses = []
         
-        # Init limits of what to visualize        
+        # Init limits of what to visualize
         self._xlim = Range(0,1)
         self._ylim = Range(0,1)
         self._zlim = Range(0,1)
@@ -139,10 +139,10 @@ class BaseCamera(object):
         # Bind to events
         axes.eventPosition.Bind(self.OnResize)
         axes.eventKeyDown.Bind(self.OnKeyDown)
-        axes.eventKeyUp.Bind(self.OnKeyUp)        
-        # 
+        axes.eventKeyUp.Bind(self.OnKeyUp)
+        #
         axes.eventMouseDown.Bind(self.OnMouseDown)
-        axes.eventMouseUp.Bind(self.OnMouseUp)        
+        axes.eventMouseUp.Bind(self.OnMouseUp)
         axes.eventMotion.Bind(self.OnMotion)
         axes.eventDoubleClick.Bind(self.OnDoubleClick)
     
@@ -161,10 +161,10 @@ class BaseCamera(object):
         # Unbind events
         axes.eventPosition.Unbind(self.OnResize)
         axes.eventKeyDown.Unbind(self.OnKeyDown)
-        axes.eventKeyUp.Unbind(self.OnKeyUp)        
-        # 
+        axes.eventKeyUp.Unbind(self.OnKeyUp)
+        #
         axes.eventMouseDown.Unbind(self.OnMouseDown)
-        axes.eventMouseUp.Unbind(self.OnMouseUp)        
+        axes.eventMouseUp.Unbind(self.OnMouseUp)
         axes.eventMotion.Unbind(self.OnMotion)
         axes.eventDoubleClick.Unbind(self.OnDoubleClick)
     
@@ -206,18 +206,18 @@ class BaseCamera(object):
     
     @Property
     def daspect():
-        """ Get/Set the data aspect ratio as a three element tuple. 
+        """ Get/Set the data aspect ratio as a three element tuple.
         
         The daspect is a 3-element tuple (x,y,z). If a 2-element tuple is
         given, z is assumed 1. Note that only the ratio between the values
-        matters (i.e. (1,1,1) equals (2,2,2)). When a value is negative, the 
-        corresponding dimension is flipped. 
+        matters (i.e. (1,1,1) equals (2,2,2)). When a value is negative, the
+        corresponding dimension is flipped.
         
-        Note that if axes.daspectAuto is True, the daspect is changed by the 
+        Note that if axes.daspectAuto is True, the daspect is changed by the
         camera to nicely scale the data to fit the screen (but the sign
         is preserved).
         """
-        def fget(self):            
+        def fget(self):
             return self._daspect
         def fset(self, value):
             try:
@@ -226,18 +226,18 @@ class BaseCamera(object):
                 raise Exception("You can only set daspect with a sequence.")
             if 0 in value:
                 raise Exception("The given daspect should not contain zeros.")
-            if l==2:            
+            if l==2:
                 self._daspect = (float(value[0]), float(value[1]), 1.0)
             elif l==3:
                 self._daspect = tuple([float(v) for v in value])
-            else:            
+            else:
                 raise Exception("daspect should be a length 2 or 3 sequence!")
         return locals()
     
     
     @property
     def daspectNormalized(self):
-        """ Get the data aspect ratio, normalized such that the x scaling 
+        """ Get the data aspect ratio, normalized such that the x scaling
         is +/- 1.
         """
         return tuple(d/abs(self._daspect[0]) for d in self._daspect)
@@ -303,10 +303,10 @@ class BaseCamera(object):
     def GetViewParams(self):
         """ GetViewParams()
         
-        Get a dictionary with view parameters. 
+        Get a dictionary with view parameters.
         
         """
-        return dict([(key, getattr(self, key)) 
+        return dict([(key, getattr(self, key))
                      for key in self.__class__._viewparams])
     
     def SetViewParams(self, s=None, **kw):
@@ -359,7 +359,7 @@ class BaseCamera(object):
         """ ScreenToWorld(x_y=None)
         
         Given a tuple of screen coordinates,
-        calculate the world coordinates.        
+        calculate the world coordinates.
         If not given, the current mouse position is used.
         
         This basically simulates the actions performed in SetView
@@ -375,17 +375,17 @@ class BaseCamera(object):
         
         # get window size
         w, h = self.axes.position.size
-        w, h = float(w), float(h) 
+        w, h = float(w), float(h)
         
         # Calculate viewing range for x and y
         fx = abs( 1.0 / self._zoom )
         fy = abs( 1.0 / self._zoom )
         
-        # correct zoom factor for window size              
+        # correct zoom factor for window size
         if w > h:
             fx *= w/h
         else:
-            fy *= h/w                
+            fy *= h/w
         
         # determine position in projection. Here is a conversion
         # of the coordinate system... (flip y)
@@ -413,7 +413,7 @@ class BaseCamera(object):
         
         """
         
-        # Make sure that the ratio is absolute        
+        # Make sure that the ratio is absolute
         ratio = abs(ratio)
         
         # Get daspect from reference daspect
@@ -434,7 +434,7 @@ class BaseCamera(object):
             else:
                 daspect2.append(daspect[i])
         
-        # Done 
+        # Done
         self.daspect = daspect2
         return daspect2
 
@@ -442,10 +442,10 @@ class BaseCamera(object):
 class TwoDCamera(BaseCamera):
     """ TwoDCamera()
     
-    The default camera for viewing 2D data. 
+    The default camera for viewing 2D data.
     
     This camera uses orthografic projection and looks
-    down the z-axis from inifinitly far away. 
+    down the z-axis from inifinitly far away.
     
     Interaction
     -----------
@@ -463,7 +463,7 @@ class TwoDCamera(BaseCamera):
         # reference stuff for interaction
         self._ref_loc = 0,0,0    # view_loc when clicked
         self._ref_mloc = 0,0     # mouse location when clicked
-        self._ref_but = 0        # mouse button when clicked   
+        self._ref_but = 0        # mouse button when clicked
         self._ref_axes = None
         #
         self._ref_zoom = 1.0
@@ -513,7 +513,7 @@ class TwoDCamera(BaseCamera):
     def Reset(self, event=None):
         """ Reset()
         
-        Reset the view.        
+        Reset the view.
         
         """
         
@@ -526,7 +526,7 @@ class TwoDCamera(BaseCamera):
         w,h = float(w), float(h)
         self._windowSizeFactor = h / w
         
-        # Get range and translation for x and y   
+        # Get range and translation for x and y
         rx, ry = self._xlim.range, self._ylim.range
         
         # Correct ranges for window size.
@@ -543,7 +543,7 @@ class TwoDCamera(BaseCamera):
         ndaspect = self.daspectNormalized
         rx, ry = abs(rx*ndaspect[0]), abs(ry*ndaspect[1])
         
-        # Convert to screen coordinates. (just for clarity and to be 
+        # Convert to screen coordinates. (just for clarity and to be
         # consistent with the 3D camera)
         rxs = rx
         rys = ry
@@ -577,14 +577,14 @@ class TwoDCamera(BaseCamera):
 
     
     
-    def OnMouseDown(self, event): 
+    def OnMouseDown(self, event):
         
         # store mouse position and button
         self._ref_mloc = event.x, event.y
         self._ref_but = event.button
         self._ref_axes = event.owner
         
-        # store current view parameters        
+        # store current view parameters
         self._ref_loc = self._view_loc
         self._ref_zoom = self._zoom
         self._ref_daspect = self.daspect
@@ -594,7 +594,7 @@ class TwoDCamera(BaseCamera):
 
     def OnMouseUp(self, event):
         self._ref_but = 0
-        # Draw without the fast flag      
+        # Draw without the fast flag
         for axes in self.axeses:
             axes.Draw()
 
@@ -623,7 +623,7 @@ class TwoDCamera(BaseCamera):
             dy = loc[1] - refloc[1]
             
             # apply
-            self._view_loc = (  self._ref_loc[0] - dx,  
+            self._view_loc = (  self._ref_loc[0] - dx,
                                 self._ref_loc[1] - dy,
                                 self._ref_loc[2])
         
@@ -638,7 +638,7 @@ class TwoDCamera(BaseCamera):
             factory = float(self._ref_mloc[1] - mloc[1])
             factory /= self.axes.position.height
             
-            # apply 
+            # apply
             if self.axes.daspectAuto:
                 # Zooming in pure x goes via daspect.
                 # Zooming in pure y goes via zoom factor.
@@ -669,7 +669,7 @@ class TwoDCamera(BaseCamera):
         # correct for window size
         if True:
             w, h = self.axes.position.size
-            w, h = float(w), float(h)        
+            w, h = float(w), float(h)
             if w / h > 1:
                 fx *= w/h
             else:
@@ -680,11 +680,11 @@ class TwoDCamera(BaseCamera):
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         
-        # Remember, in terms of a global coordinate system, 
+        # Remember, in terms of a global coordinate system,
         # the transformations are done backwards... (See the Red Book ch. 3)
         
         # 3. Define part that we view. Remember, we're looking down the
-        # z-axis. We zoom here.        
+        # z-axis. We zoom here.
         ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         
         # Prepare for models ...
@@ -693,15 +693,15 @@ class TwoDCamera(BaseCamera):
         
         # Set camera lights
         for light in self.axes._lights:
-            if light.isCamLight:                
+            if light.isCamLight:
                 light._Apply()
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
         ndaspect = self.daspectNormalized
         gl.glScale( ndaspect[0], ndaspect[1], ndaspect[2] )
         
-        # 1. Translate to view location (coordinate where we look at). 
-        # Do this first because otherwise the translation is not in world 
+        # 1. Translate to view location (coordinate where we look at).
+        # Do this first because otherwise the translation is not in world
         # coordinates.
         gl.glTranslate(-self._view_loc[0], -self._view_loc[1], 0.0)
         
@@ -717,23 +717,23 @@ class TwoDCamera(BaseCamera):
 class ThreeDCamera(BaseCamera):
     """ ThreeDCamera()
     
-    The ThreeDCamera camera is a camera to visualise 3D data. 
+    The ThreeDCamera camera is a camera to visualise 3D data.
     
     In contrast to the 2D camera, this camera can be rotated around
-    the data to look at it from different angles. By default the 
-    field of view of this camera is set to 0, corresponding to an 
+    the data to look at it from different angles. By default the
+    field of view of this camera is set to 0, corresponding to an
     orthografic projection. If the field of view is larger than 0,
-    projective projection is applied.    
+    projective projection is applied.
     
     
     Interaction
     -----------
-      * Hold down the LMB and then move the mouse to change the azimuth 
+      * Hold down the LMB and then move the mouse to change the azimuth
         and elivation (i.e. rotate around the scene).
       * Hold down the RMB and then move the mouse to zoom.
       * Hold down SHIFT + LMB and then move to pan.
       * Hold down SHIFT + RMB and then move to change the vield of view.
-      * Hold down CONTROL + LMB and then move to rotate the whole scene 
+      * Hold down CONTROL + LMB and then move to rotate the whole scene
         around the axis of the camera.
     
     """
@@ -776,7 +776,7 @@ class ThreeDCamera(BaseCamera):
         def fset(self, value):
             # Set
             self._view_az = float(value)
-            # keep within bounds            
+            # keep within bounds
             while self._view_az < -180:
                 self._view_az += 360
             while self._view_az >180:
@@ -788,7 +788,7 @@ class ThreeDCamera(BaseCamera):
     
     @Property
     def elevation():
-        """ Get/set the current elevation angle (rotation with respect to 
+        """ Get/set the current elevation angle (rotation with respect to
         the x-y plane). This angle is between -90 and 90 degrees.
         """
         def fget(self):
@@ -796,7 +796,7 @@ class ThreeDCamera(BaseCamera):
         def fset(self, value):
             # Set
             self._view_el = float(value)
-            # keep within bounds            
+            # keep within bounds
             if self._view_el < -90:
                 self._view_el = -90
             if self._view_el > 90:
@@ -808,7 +808,7 @@ class ThreeDCamera(BaseCamera):
     
     @Property
     def roll():
-        """ Get/set the current roll angle (rotation around the camera's 
+        """ Get/set the current roll angle (rotation around the camera's
         viewing axis). This angle is between -90 and 90 degrees.
         """
         def fget(self):
@@ -816,7 +816,7 @@ class ThreeDCamera(BaseCamera):
         def fset(self, value):
             # Set
             self._view_ro = float(value)
-            # keep within bounds  
+            # keep within bounds
             if self._view_ro < -90:
                 self._view_ro = -90
             if self._view_ro > 90:
@@ -828,7 +828,7 @@ class ThreeDCamera(BaseCamera):
     
     @Property
     def fov():
-        """ Get/set the current field of view (i.e. camera aperture). 
+        """ Get/set the current field of view (i.e. camera aperture).
         This value is between 0 (orthographic projection) and 180.
         """
         def fget(self):
@@ -836,7 +836,7 @@ class ThreeDCamera(BaseCamera):
         def fset(self, value):
             # Set
             self._fov = float(value)
-            # keep within bounds  
+            # keep within bounds
             if self._fov > 179:
                 self._fov = 179
             if self._fov < 0:
@@ -893,7 +893,7 @@ class ThreeDCamera(BaseCamera):
         # Set angles
         self._view_az = -10.0
         self._view_el = 30.0
-        self._view_ro = 0.0 
+        self._view_ro = 0.0
         self._fov = 0.0
         
         # Get window size (and store factor now to sync with resizing)
@@ -901,7 +901,7 @@ class ThreeDCamera(BaseCamera):
         w,h = float(w), float(h)
         self._windowSizeFactor = h / w
         
-        # Get range and translation for x and y   
+        # Get range and translation for x and y
         rx, ry, rz = self._xlim.range, self._ylim.range, self._zlim.range
         
         # Correct ranges for window size. Note that the window width
@@ -924,7 +924,7 @@ class ThreeDCamera(BaseCamera):
         
         # Convert to screen coordinates. In screen x, only x and y have effect.
         # In screen y, all three dimensions have effect. The idea of the lines
-        # below is to calculate the range on screen when that will fit the 
+        # below is to calculate the range on screen when that will fit the
         # data under any rotation.
         rxs = ( rx**2 + ry**2 )**0.5
         rys = ( rx**2 + ry**2 + rz**2 )**0.5
@@ -973,7 +973,7 @@ class ThreeDCamera(BaseCamera):
         self.SetRef()
 
    
-    def OnMouseUp(self, event):        
+    def OnMouseUp(self, event):
         self._ref_but = 0
         for axes in self.axeses:
             axes.Draw()
@@ -1006,15 +1006,15 @@ class ThreeDCamera(BaseCamera):
             # calculate translation
             sro, saz, sel = list(map(sind, (self._view_ro, self._view_az, self._view_el)))
             cro, caz, cel = list(map(cosd, (self._view_ro, self._view_az, self._view_el)))
-            dx = (  distx * (cro * caz + sro * sel * saz) + 
+            dx = (  distx * (cro * caz + sro * sel * saz) +
                     distz * (sro * caz - cro * sel * saz) ) / ar[0]
-            dy = (  distx * (cro * saz - sro * sel * caz) + 
+            dy = (  distx * (cro * saz - sro * sel * caz) +
                     distz * (sro * saz + cro * sel * caz) ) / ar[1]
             dz = ( -distx * sro * cel + distz * cro * cel) / ar[2]
             
             # apply
-            self._view_loc = (  self._ref_loc[0] + dx,  
-                                self._ref_loc[1] + dy, 
+            self._view_loc = (  self._ref_loc[0] + dx,
+                                self._ref_loc[1] + dy,
                                 self._ref_loc[2] + dz )
         
         elif constants.KEY_CONTROL in event.modifiers and self._ref_but==1:
@@ -1027,7 +1027,7 @@ class ThreeDCamera(BaseCamera):
             # change az and el accordingly
             self._view_ro = self._ref_ro + d_ro * 90.0
             
-            # keep within bounds    
+            # keep within bounds
             if self._view_ro < -90:
                 self._view_ro = -90
             if self._view_ro > 90:
@@ -1045,7 +1045,7 @@ class ThreeDCamera(BaseCamera):
             self._view_az = self._ref_az + d_az * 90.0
             self._view_el = self._ref_el + d_el * 90.0
             
-            # keep within bounds            
+            # keep within bounds
             while self._view_az < -180:
                 self._view_az += 360
             while self._view_az >180:
@@ -1082,7 +1082,7 @@ class ThreeDCamera(BaseCamera):
             factory = float(self._ref_mloc[1] - mloc[1])
             factory /= self.axes.position.height
             
-            # apply 
+            # apply
             if self.axes.daspectAuto:
                 # Zooming in x and y goes via daspect.
                 # Zooming in z goes via zoom factor.
@@ -1090,9 +1090,9 @@ class ThreeDCamera(BaseCamera):
                 # Motion to right or top should always zoom in, regardless of rotation
                 sro, saz, sel = list(map(sind, (self._view_ro, self._view_az, self._view_el)))
                 cro, caz, cel = list(map(cosd, (self._view_ro, self._view_az, self._view_el)))
-                dx = ( -factorx * abs(cro * caz + sro * sel * saz) + 
+                dx = ( -factorx * abs(cro * caz + sro * sel * saz) +
                         factory * abs(sro * caz - cro * sel * saz) )
-                dy = ( -factorx * abs(cro * saz - sro * sel * caz) + 
+                dy = ( -factorx * abs(cro * saz - sro * sel * caz) +
                         factory * abs(sro * saz + cro * sel * caz) )
                 dz =    factorx * abs(sro * cel) + factory * abs(cro * cel)
                 
@@ -1124,10 +1124,10 @@ class ThreeDCamera(BaseCamera):
         fx = abs( 1.0 / self._zoom )
         fy = abs( 1.0 / self._zoom )
         
-        # Correct for window size        
+        # Correct for window size
         if True:
             w, h = self.axes.position.size
-            w, h = float(w), float(h)        
+            w, h = float(w), float(h)
             if w / h > 1:
                 fx *= w/h
             else:
@@ -1137,11 +1137,11 @@ class ThreeDCamera(BaseCamera):
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         
-        # Remember, in terms of a global coordinate system, 
+        # Remember, in terms of a global coordinate system,
         # the transformations are done backwards... (See the Red Book ch. 3)
         
         # 4. Define part that we view. Remember, we're looking down the
-        # z-axis. We zoom here.                
+        # z-axis. We zoom here.
         if self._fov == 0:
             ortho( -0.5*fx, 0.5*fx, -0.5*fy, 0.5*fy)
         else:
@@ -1157,7 +1157,7 @@ class ThreeDCamera(BaseCamera):
         
         # Set camera lights
         for light in self.axes._lights:
-            if light.isCamLight:                
+            if light.isCamLight:
                 light._Apply()
         
         # 3. Set viewing angle (this is the only difference with the 2D camera)
@@ -1166,7 +1166,7 @@ class ThreeDCamera(BaseCamera):
         gl.glRotate(-self._view_az, 0.0, 0.0, 1.0)
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
-        ndaspect = self.daspectNormalized    
+        ndaspect = self.daspectNormalized
         gl.glScale( ndaspect[0], ndaspect[1] , ndaspect[2] )
         
         # 1. Translate to view location. Do this first because otherwise
@@ -1182,7 +1182,7 @@ class ThreeDCamera(BaseCamera):
 class FlyCamera(BaseCamera):
     """ FlyCamera()
     
-    The fly camera provides a fun way to visualise 3D data using an 
+    The fly camera provides a fun way to visualise 3D data using an
     interaction style that resembles a flight sim.
     
     Think of the fly camera as a remote controlled vessel with
@@ -1190,7 +1190,7 @@ class FlyCamera(BaseCamera):
     
     Interaction
     -----------
-    Notice: interacting with this camera might need a bit of practice. 
+    Notice: interacting with this camera might need a bit of practice.
     
     Moving:
       * w,a,s,d keys to move forward, backward, left and right
@@ -1203,7 +1203,7 @@ class FlyCamera(BaseCamera):
       * Alternatively, the pitch and yaw can be changed using the keys i,k,j,l.
       * The camera auto-rotates to make the bottom of the vessel point down,
         manual rolling can be performed using q and e.
-      * Using the RMB, one can zoom in, like looking through binoculars. 
+      * Using the RMB, one can zoom in, like looking through binoculars.
         This will also make you move slightly faster.
     
     """
@@ -1242,7 +1242,7 @@ class FlyCamera(BaseCamera):
         self._acc_yaw = 0
         
         # Motion speed in each direction.
-        self._speed_forward = 0 
+        self._speed_forward = 0
         self._speed_right = 0
         self._speed_up = 0
         #
@@ -1269,7 +1269,7 @@ class FlyCamera(BaseCamera):
                 del self._keymap[k]
         
         # create timer and bind to it. This timer is started when clicked
-        # and stopped when the mouse is released. This is to make a 
+        # and stopped when the mouse is released. This is to make a
         # smoother flying possible. 20 fps
         self._timer = vv.Timer(self, 50, False)
         self._timer.Bind(self.OnTimer)
@@ -1277,7 +1277,7 @@ class FlyCamera(BaseCamera):
         
     @Property
     def fov():
-        """ Get/set the current field of view (i.e. camera aperture). 
+        """ Get/set the current field of view (i.e. camera aperture).
         This value is between 10 and 90.
         """
         def fget(self):
@@ -1285,7 +1285,7 @@ class FlyCamera(BaseCamera):
         def fset(self, value):
             # Set
             self._fov = float(value)
-            # keep within bounds  
+            # keep within bounds
             if self._fov > 90:
                 self._fov = 90
             if self._fov < 10:
@@ -1314,7 +1314,7 @@ class FlyCamera(BaseCamera):
     @property
     def _rotation(self):
         """ Get the full rotation for internal use. This rotation is composed
-        of the normal rotation plus the extra rotation due to the current 
+        of the normal rotation plus the extra rotation due to the current
         interaction of the user.
         """
         rotation = self._rotation2 * self._rotation1
@@ -1365,7 +1365,7 @@ class FlyCamera(BaseCamera):
         w,h = float(w), float(h)
         self._windowSizeFactor = h / w
         
-        # Get range and translation for x and y   
+        # Get range and translation for x and y
         rx, ry, rz = self._xlim.range, self._ylim.range, self._zlim.range
         
         # Correct ranges for window size. Note that the window width
@@ -1394,8 +1394,8 @@ class FlyCamera(BaseCamera):
         self._zoom = min(1/rx, 1/ry, 1/rz)
         
         # Set initial position to a corner of the scene
-        dx,dy,dz = self._xlim.min, self._ylim.min, self._zlim.max        
-        #dd = (rx**2 + ry**2 + rz**2 )**0.5        
+        dx,dy,dz = self._xlim.min, self._ylim.min, self._zlim.max
+        #dd = (rx**2 + ry**2 + rz**2 )**0.5
         self._view_loc = dx, dy, dz
         
         # Refreshw
@@ -1406,7 +1406,7 @@ class FlyCamera(BaseCamera):
     def OnKeyDown(self, event):
         
         if self.axes.camera is not self:
-            return 
+            return
         elif not self._timer.isRunning:
             # Make sure the timer runs
             self._timer.Start()
@@ -1440,7 +1440,7 @@ class FlyCamera(BaseCamera):
     def OnKeyUp(self, event):
         
         if self.axes.camera is not self:
-            return 
+            return
         
         # Get action (or None)
         action = self._keymap.get(event.key, None)
@@ -1473,18 +1473,18 @@ class FlyCamera(BaseCamera):
         
         # store current view parameters
         self._ref_loc = self._view_loc
-        self._ref_zoom = self._zoom 
+        self._ref_zoom = self._zoom
         self._ref_fov = self._fov
     
     
-    def OnMouseUp(self, event):        
+    def OnMouseUp(self, event):
         
         # Apply rotation
         self._rotation1 = ( self._rotation2 * self._rotation1 ).normalize()
         self._rotation2 = Quaternion()
         
         # Set not-motion
-        self._ref_but = 0        
+        self._ref_but = 0
         for axes in self.axeses:
             axes.Draw()
     
@@ -1492,7 +1492,7 @@ class FlyCamera(BaseCamera):
     def OnMotion(self, event):
        
         if self.axes.camera is not self:
-            return 
+            return
         elif not self._timer.isRunning:
             # Make sure the timer runs
             self._timer.Start()
@@ -1556,7 +1556,7 @@ class FlyCamera(BaseCamera):
             factory = float(self._ref_mloc[1] - mloc[1])
             factory /= self.axes.position.height
             
-            # apply 
+            # apply
             self._zoom = self._ref_zoom * math.exp(factory)
         
         
@@ -1577,7 +1577,7 @@ class FlyCamera(BaseCamera):
         rotation = self._rotation.inverse()
         
         # Transform to real coordinates
-        pf = rotation.rotate_point(pf).normalize() 
+        pf = rotation.rotate_point(pf).normalize()
         pr = rotation.rotate_point(pr).normalize()
         pl = rotation.rotate_point(pl).normalize()
         pu = rotation.rotate_point(pu).normalize()
@@ -1712,7 +1712,7 @@ class FlyCamera(BaseCamera):
                 #
                 angle = 10 * magnitude * math.pi/180
                 q = Quaternion.create_from_axis_angle(angle, 0,0,1)
-                self._rotation1 = ( q * self._rotation1 ).normalize() 
+                self._rotation1 = ( q * self._rotation1 ).normalize()
         
         # Break if there is no motion
         if not (self._speed_forward or self._speed_right or self._speed_up
@@ -1732,19 +1732,19 @@ class FlyCamera(BaseCamera):
         This applies the camera model.
         
         """
-        # Note that this method is almost identical to the 3D 
+        # Note that this method is almost identical to the 3D
         # camera's implementation. The only difference is that
         # this implementation uses gluPerspective rather than
-        # glOrtho, and some signs for the angles are changed.    
+        # glOrtho, and some signs for the angles are changed.
         
         # Calculate viewing range for x and y
         fx = abs( 1.0 / self._zoom )
         fy = abs( 1.0 / self._zoom )
         
-        # Correct for window size        
+        # Correct for window size
         if True:
             w, h = self.axes.position.size
-            w, h = float(w), float(h)        
+            w, h = float(w), float(h)
             if w / h > 1:
                 fx *= w/h
             else:
@@ -1755,11 +1755,11 @@ class FlyCamera(BaseCamera):
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         
-        # Remember, in terms of a global coordinate system, 
+        # Remember, in terms of a global coordinate system,
         # the transformations are done backwards... (See the Red Book ch. 3)
         
         # 4. Define part that we view. Remember, we're looking down the
-        # z-axis. We zoom here.        
+        # z-axis. We zoom here.
         # Figure distance to center in order to have correct FoV and fy.
         d = fy / (2 * math.tan(math.radians(self._fov)/2))
         val = math.sqrt(getDepthValue())
@@ -1772,7 +1772,7 @@ class FlyCamera(BaseCamera):
         
         # Set camera lights
         for light in self.axes._lights:
-            if light.isCamLight:                
+            if light.isCamLight:
                 light._Apply()
         
         # 3. Set viewing angle from the quaternion
@@ -1784,7 +1784,7 @@ class FlyCamera(BaseCamera):
         gl.glRotate(angle, *axis_angle[1:])
         
         # 2. Set aspect ratio (scale the whole world), and flip any axis...
-        ndaspect = self.daspectNormalized    
+        ndaspect = self.daspectNormalized
         gl.glScale( ndaspect[0], ndaspect[1] , ndaspect[2] )
         
         # 1. Translate to view location. Do this first because otherwise

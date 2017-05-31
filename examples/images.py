@@ -9,6 +9,6 @@ print(im.shape)
 
 t = vv.imshow(im)
 t.aa = 2 # more anti-aliasing (default=1)
-t.interpolate = True # interpolate pixels 
+t.interpolate = True # interpolate pixels
 
 app.Run()

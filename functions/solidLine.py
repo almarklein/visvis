@@ -11,7 +11,7 @@ from visvis.processing import lineToMesh
 def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):
     """ solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None)
     
-    Creates a solid line in 3D space. 
+    Creates a solid line in 3D space.
     
     Parameters
     ----------
@@ -20,14 +20,14 @@ def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):
     pp : Pointset
         The sequence of points of which the line consists.
     radius : scalar or sequence
-        The radius of the line to create. If a sequence if given, it 
+        The radius of the line to create. If a sequence if given, it
         specifies the radius for each point in pp.
     N : int
         The number of subdivisions around its centerline. If smaller
-        than 8, flat shading is used instead of smooth shading. 
+        than 8, flat shading is used instead of smooth shading.
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
-        the camera type to 3D. If daspectAuto has not been set yet, 
+        the camera type to 3D. If daspectAuto has not been set yet,
         it is set to False.
     axes : Axes instance
         Display the bars in the given axes, or the current axes if not given.
@@ -66,7 +66,7 @@ def solidLine(pp, radius=1.0, N=16, axesAdjust=True, axes=None):
     
     
     
-if __name__ == '__main__': 
+if __name__ == '__main__':
     # Create series of points
     pp = Pointset(3)
     pp.append(0,1,0)

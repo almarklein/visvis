@@ -4,7 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-def reportIssue():    
+def reportIssue():
     """ help()
     
     Open a webbrowser with the visvis website at the issue list.

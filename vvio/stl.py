@@ -6,7 +6,7 @@
 
 """ Module stl
 
-This module produces functionality to read and write STL files 
+This module produces functionality to read and write STL files
 (binary and ascii).
 
 http://en.wikipedia.org/wiki/STL_%28file_format%29
@@ -14,7 +14,7 @@ http://en.wikipedia.org/wiki/STL_%28file_format%29
 STL is intended to describe solids; the mesh represents the outer boundary.
 Therefore it is important that the faces face the right way (to the outside).
 
-The format specifies a normal for each face, therefore the normal is 
+The format specifies a normal for each face, therefore the normal is
 actually redundant information. We do not use the normal when reading,
 and write a dummy normal on writing. The format also unly supports triangular
 faces.
@@ -45,7 +45,7 @@ class StlReader(object):
             The name of the file to read.
         check : bool
             If check is True and the file is in ascii, some checks to the
-            integrity of the file are done (which is a bit slower). 
+            integrity of the file are done (which is a bit slower).
         
         """
         
@@ -181,7 +181,7 @@ class StlWriter(object):
                 writer.writeLine('solid %s' % name)
             # Write vertices
             for i in range(len(vv1)):
-                writer.writeFace(vv1[i], vv2[i], vv3[i])        
+                writer.writeFace(vv1[i], vv2[i], vv3[i])
             # Write end
             if not bin:
                 writer.writeLine('endsolid %s' % name)
@@ -233,7 +233,7 @@ class StlAsciiReader(StlReader):
         for i in range(3):
             line_vertex = self.readline()
             numbers = [num for num in line_vertex.split(' ')]
-            numbers = [float(num) for num in numbers[1:] if num] 
+            numbers = [float(num) for num in numbers[1:] if num]
             vertices.append(*numbers)
         
         # Read two more identifiers
@@ -309,7 +309,7 @@ class StlBinReader(StlReader):
         if self._count >= self._n:
             raise EOFError()
         
-        # Read data. 
+        # Read data.
         # 12 32bit floating point numbers + short int used by some apps
         n = 12*4+2
         data = self._f.read(n)

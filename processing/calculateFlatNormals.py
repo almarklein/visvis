@@ -10,7 +10,7 @@ from visvis.processing.unwindFaces import unwindFaces
 def calculateFlatNormals(mesh):
     """ calculateFlatNormals(mesh)
     
-    Calculate a variant of the normals that is more suited for 
+    Calculate a variant of the normals that is more suited for
     flat shading. This is done by setting the first normal for each
     face (the one used when flat shading is used) to the average
     of all normals of that face. This can in some cases lead to
@@ -28,7 +28,7 @@ def calculateFlatNormals(mesh):
         return
     
     # Allocate new array
-    N = normals.shape[0]        
+    N = normals.shape[0]
     flatNormals = np.zeros((N,3), dtype='float32')
     
     # obtain faces array
@@ -36,7 +36,7 @@ def calculateFlatNormals(mesh):
     
     # For each face add the contribution of each others vertices.
     vpf = mesh._verticesPerFace
-    for i in range(vpf):    
+    for i in range(vpf):
         I = faces[:,i]
         for j in range(vpf):
             J = faces[:,j]

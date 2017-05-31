@@ -18,12 +18,12 @@ except ImportError:
 def imwrite(filename, image, format=None):
     """ imwrite(filename, image, format=None)
     
-    Write image (numpy array) to file, requires imageio. 
+    Write image (numpy array) to file, requires imageio.
     
     Parameters
     ----------
     filename : string
-        The name of the file to store the screenshot to. If filename is None, 
+        The name of the file to store the screenshot to. If filename is None,
         the interpolated image is returned as a numpy array.
     image : numpy array
         The image to write.

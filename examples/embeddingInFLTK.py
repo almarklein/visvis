@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" 
+"""
 This example illustrates embedding a visvis figure in an FLTK application.
 """
 
@@ -7,7 +7,7 @@ import fltk
 import visvis as vv
 
 # Create a visvis app instance, which wraps an fltk application object.
-# This needs to be done *before* instantiating the main window. 
+# This needs to be done *before* instantiating the main window.
 app = vv.use('fltk')
 
 
@@ -45,7 +45,7 @@ class MainWindow(fltk.Fl_Window):
         
         # Plot
         vv.plot([1,2,3,1,6])
-        vv.legend(['this is a line'])        
+        vv.legend(['this is a line'])
 
 
 # Two ways to create the application and start the main loop

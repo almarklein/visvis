@@ -12,7 +12,7 @@ with markers. It is the object created with the plot() function.
 The lines are drawn simply with OpenGL lines. The markers are drawn
 with OpenGl points if possible, and using sprites otherwise.
 
-Since this is such a fundamental part of visvis, and it's uses by 
+Since this is such a fundamental part of visvis, and it's uses by
 for example the Legend class, this module is part of the core.
 
 """
@@ -36,7 +36,7 @@ lineStyles = {  ':':int('1010101010101010',2),  '--':int('1111000011110000',2),
 class Sprite:
     """ Sprite(data, width)
     
-    Represents an OpenGL sprite object. 
+    Represents an OpenGL sprite object.
     
     """
 
@@ -89,7 +89,7 @@ class Sprite:
         if not self._canUse:
             gl.glEnable(gl.GL_POINT_SMOOTH)
             gl.glPointSize(self._width)
-            return # proceed if None; canUse is assigned in Create()    
+            return # proceed if None; canUse is assigned in Create()
         
         # bind to texture
         gl.glEnable(gl.GL_TEXTURE_2D)
@@ -402,7 +402,7 @@ class Line(Wobject):
     @PropWithDraw
     def lw():
         """ Get/Set the lineWidth: the width of the line in pixels.
-        If zero, the line is not drawn. 
+        If zero, the line is not drawn.
         """
         def fget(self):
             return self._lw
@@ -436,7 +436,7 @@ class Line(Wobject):
     def lc():
         """ Get/Set the lineColor: the color of the line, as a 3-element
         tuple or as a single character string (shown in uppercase):
-        Red, Green, Blue, Yellow, Cyan, Magenta, blacK, White. 
+        Red, Green, Blue, Yellow, Cyan, Magenta, blacK, White.
         """
         def fget(self):
             return self._lc
@@ -496,7 +496,7 @@ class Line(Wobject):
     @PropWithDraw
     def mew():
         """ Get/Set the markerEdgeWidth: the width of the edge of the marker.
-        If zero, no edge is drawn. 
+        If zero, no edge is drawn.
         """
         def fget(self):
             return self._mew
@@ -573,7 +573,7 @@ class Line(Wobject):
         that can be converted to a pointset. (From version 1.7 this method
         also works with 2D pointsets.)
         
-        The data is copied, so changes to original data will not affect 
+        The data is copied, so changes to original data will not affect
         the visualized points. If you do want this, use the points property.
         
         """
@@ -862,7 +862,7 @@ class PolarLine(Line):
     """ PolarLine(parent, angle(radians), mag)
     
     The Polarline class represents a set of points (locations)
-    in world coordinates. This class can draw lines between the points, 
+    in world coordinates. This class can draw lines between the points,
     markers at the point coordinates, or both.
     
     There are several linestyles that can be used:

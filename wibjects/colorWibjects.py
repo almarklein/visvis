@@ -46,7 +46,7 @@ class BaseMapableEditor(DraggableBox):
         """ GetMapables()
         
         Get a list of mappable objects that was given earlier using
-        SetMapables. If an axes or figure was given, all eligable 
+        SetMapables. If an axes or figure was given, all eligable
         objects are queried from their children.
         
         """
@@ -75,7 +75,7 @@ class BaseMapableEditor(DraggableBox):
         wibject or wobject that inherits from Colormapable (and can
         be recognized by having a colormap and clim property).
         
-        The argument may also be a list or tuple of objects, or an Axes 
+        The argument may also be a list or tuple of objects, or an Axes
         or Figure instance, in which case all mapable children are used.
         If args is not given, the parent is used.
         
@@ -104,8 +104,8 @@ class ClimEditor(BaseMapableEditor):
     A wibject to edit the clim property of textures (thereby setting
     window-width and window-level).
     
-    During initialization, SetMapables(*args) is called. The easiest way 
-    to use this wibject is to attach it to an axes or figure instance. 
+    During initialization, SetMapables(*args) is called. The easiest way
+    to use this wibject is to attach it to an axes or figure instance.
     The wibject then controls the colormaps of all mapable objects in them.
     
     """
@@ -168,10 +168,10 @@ class ClimEditor(BaseMapableEditor):
 class ColormapEditor(BaseMapableEditor):
     """ ColormapEditor(parent *args)
     
-    A wibject to edit colormaps. 
+    A wibject to edit colormaps.
     
-    During initialization, SetMapables(*args) is called. The easiest way 
-    to use this wibject is to attach it to an axes or figure instance. 
+    During initialization, SetMapables(*args) is called. The easiest way
+    to use this wibject is to attach it to an axes or figure instance.
     The wibject then controls the colormaps of all mapable objects in them.
     
     """
@@ -235,7 +235,7 @@ class ColormapEditor(BaseMapableEditor):
         # Get event of nodwWibject and its position
         event2 = self._nodeWidget.eventMouseUp
         event2.Set(event.absx, event.absy, event.button)
-        # Fire!        
+        # Fire!
         event2.Fire()
     
     
@@ -247,7 +247,7 @@ class ColormapEditor(BaseMapableEditor):
         # Calc location and limit
 #         pos = self._nodeWidget.position
 #         event2.Set(event.x-pos.left, event.y-pos.top, event.button)
-        event2.Set(event.absx, event.absy, event.button) 
+        event2.Set(event.absx, event.absy, event.button)
         # Fire!
         event2.Fire()
     
@@ -338,7 +338,7 @@ class ColormapEditor(BaseMapableEditor):
 class CM_NodeWidget(Box):
     """ CM_NodeWidget(parent)
     
-    Class to modify node positions using the mouse. 
+    Class to modify node positions using the mouse.
     
     """
     
@@ -375,7 +375,7 @@ class CM_NodeWidget(Box):
         
         # The node and line currently in control
         self._nodes = self._allNodes[3]
-        self._line = self._allLines[3] 
+        self._line = self._allLines[3]
         
         # Bind events
         self.eventMotion.Bind(self._OnMotion)
@@ -442,7 +442,7 @@ class CM_NodeWidget(Box):
         # Apply to line
         self._NodesToLine(self._nodes, self._line)
         
-        # Draw (fast)        
+        # Draw (fast)
         self.Draw(True)
     
     
@@ -500,7 +500,7 @@ class CM_NodeWidget(Box):
         if update:
             # Create colormap
             map = {}
-            for i in range(4):            
+            for i in range(4):
                 nn = self._allNodes[i]
                 tmp = []
                 for ii in range(len(nn)):
@@ -520,7 +520,7 @@ class CM_NodeWidget(Box):
         Box.OnDraw(self)
         
         # Create color dict
-        colors = {  self._allLines[0]:(1,0,0), self._allLines[1]:(0,1,0), 
+        colors = {  self._allLines[0]:(1,0,0), self._allLines[1]:(0,1,0),
                     self._allLines[2]:(0,0,1), self._allLines[3]:(0,0,0) }
 
         # prepare scaling
@@ -529,7 +529,7 @@ class CM_NodeWidget(Box):
         gl.glScale(w, h, 1)
         
         
-        # prepare         
+        # prepare
         gl.glPointSize(7)
         gl.glLineWidth(1)
         gl.glEnable(gl.GL_POINT_SMOOTH) # round points
@@ -571,7 +571,7 @@ class Colorbar(Box):
     
     """
     
-    def __init__(self, parent):        
+    def __init__(self, parent):
         Box.__init__(self, parent)
         
         self._label = Label(self, '')
@@ -587,7 +587,7 @@ class Colorbar(Box):
             
             # Init position
             x = parent.position.width + 5
-            self.position = x, 0.0, 30, 1.0 
+            self.position = x, 0.0, 30, 1.0
             
             # Keep informed of axes movment
             self.parent.eventPosition.Bind(self._OnAxesPositionChange)
@@ -623,7 +623,7 @@ class Colorbar(Box):
     
     @property
     def label(self):
-        """ Get the label instance for this colorbar. 
+        """ Get the label instance for this colorbar.
         """
         return self._label
     
@@ -658,7 +658,7 @@ class Colorbar(Box):
             mapable = mapables[-1]
         
         
-        # get dimensions        
+        # get dimensions
         w,h = self.position.size
         
         # Calc map direction
@@ -688,10 +688,10 @@ class Colorbar(Box):
             gl.glFlush()
             mapable._DisableColormap()
         
-        # prepare                
+        # prepare
         gl.glDisable(gl.GL_LINE_SMOOTH)
         
-        # draw edges        
+        # draw edges
         if self.edgeWidth and self.edgeColor:
             clr = self.edgeColor
             gl.glColor(clr[0], clr[1], clr[2], 1.0)
@@ -756,5 +756,5 @@ class Colorbar(Box):
             gl.glVertexPointerf(linePieces.data)
             gl.glDrawArrays(gl.GL_LINES, 0, len(linePieces))
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        # clean up        
+        # clean up
         gl.glEnable(gl.GL_LINE_SMOOTH)

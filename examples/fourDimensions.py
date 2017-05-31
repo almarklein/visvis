@@ -25,7 +25,7 @@ for vol in vols:
     t.colormap = vv.CM_HOT
     # Remove comments to use iso-surface rendering
     #t.renderStyle = 'iso'
-    #t.isoThreshold = 0.2    
+    #t.isoThreshold = 0.2
 
 # set some settings
 a.daspect = 1,1,-1

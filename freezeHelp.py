@@ -20,10 +20,10 @@ import visvis as vv
 backendAliases = {'qt4': 'pyqt4'}
 
 
-def copyResources(destPath):   
+def copyResources(destPath):
     """ copyResources(destinationPath)
     
-    Copy the visvis resource dir to the specified folder 
+    Copy the visvis resource dir to the specified folder
     (The folder containing the frozen executable).
     
     """
@@ -44,7 +44,7 @@ def copyResources(destPath):
         ft_filename = None
     if ft_filename and not os.path.isfile(ft_filename):
         # Try harder to get absolute path for the freetype lib
-        for dir in ['/usr/lib/', '/usr/local/lib/', 
+        for dir in ['/usr/lib/', '/usr/local/lib/',
                     '/usr/lib/x86_64-linux-gnu/', '/usr/lib/i386-linux-gnu/']:
             if os.path.isfile(dir+ft_filename):
                 ft_filename = dir+ft_filename
@@ -61,7 +61,7 @@ def getIncludes(backendName):
     
     Get a list of includes to extend the 'includes' list
     with of py2exe or bbfreeze. The list contains:
-      * the module of the specified backend 
+      * the module of the specified backend
       * all the functionnames, which are dynamically loaded and therefore
         not included by default.
       * opengl stuff
@@ -89,16 +89,16 @@ def getIncludes(backendName):
     
     # opengl stuff
     arrayModules = ["nones", "strings","lists","numbers","ctypesarrays",
-        "ctypesparameters", "ctypespointers", "numpymodule", 
+        "ctypesparameters", "ctypespointers", "numpymodule",
         "formathandler"]
     GLUModules = ["glustruct"]
     for name in arrayModules:
         name = 'OpenGL.arrays.'+name
-        if name in sys.modules:        
+        if name in sys.modules:
             includes.append(name)
     for name in GLUModules:
         name = 'OpenGL.GLU.'+name
-        if name in sys.modules:        
+        if name in sys.modules:
             includes.append(name)
     if sys.platform.startswith('win'):
         includes.append("OpenGL.platform.win32")

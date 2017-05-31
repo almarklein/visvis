@@ -17,7 +17,7 @@ except ImportError:
 
 
 def volread(filename):
-    """ volread(filename) 
+    """ volread(filename)
     
     Read volume from a file. If filename is 'stent', read a dedicated
     test dataset. For reading any other kind of volume, the imageio
@@ -43,4 +43,4 @@ def volread(filename):
 if __name__ == '__main__':
     vol = vv.volread('stent')
     t = vv.volshow(vol)
-    t.renderStyle = 'mip' # maximum intensity projection (is the default) 
+    t.renderStyle = 'mip' # maximum intensity projection (is the default)

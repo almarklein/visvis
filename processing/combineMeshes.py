@@ -38,7 +38,7 @@ def combineMeshes(meshes):
             hasNormals = hasNormals and (mesh._normals is not None)
             hasValues = hasValues and (mesh._values is not None)
     
-    # Combine vertices    
+    # Combine vertices
     vertices = np.concatenate( [m._vertices for m in meshes] )
     
     # Combine faces
@@ -46,7 +46,7 @@ def combineMeshes(meshes):
     if hasFaces:
         facesList = []
         startIndex = 0
-        for mesh in meshes:            
+        for mesh in meshes:
             facesList.append( mesh._faces + startIndex )
             startIndex += mesh._vertices.shape[0]
         faces = np.concatenate( facesList )

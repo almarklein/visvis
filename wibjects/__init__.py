@@ -13,7 +13,7 @@ inserted in the root visvis namespace.
 
 """
 
-from visvis.core import (  Wibject, BaseFigure, AxesContainer, Axes, 
+from visvis.core import (  Wibject, BaseFigure, AxesContainer, Axes,
                            Box, DraggableBox, Label, Legend,
                         )
 

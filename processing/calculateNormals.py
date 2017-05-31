@@ -36,7 +36,7 @@ def calculateNormals(mesh):
     faces = mesh._GetFaces()
     _, vpf = faces.shape
     
-    # Apply    
+    # Apply
     
     # Select lists of vertices. v1,v2,v3 are lists of vertices
     # corresponding to the first, second, third vertices of the faces.
@@ -92,7 +92,7 @@ def _vectorsToNormals(a, b, faces, normals):
     normalsPerFace[:,1] = a[:,2]*b[:,0] - a[:,0]*b[:,2]
     normalsPerFace[:,2] = a[:,0]*b[:,1] - a[:,1]*b[:,0]
     
-    # Get number of faces. 
+    # Get number of faces.
     Nfaces = faces.shape[0]
     
     # The normals can be distributed over the normals per vertex
@@ -106,7 +106,7 @@ def _vectorsToNormals(a, b, faces, normals):
         # The right (but slower) way. We could make a cython function of this.
         # On the teapot (6000+ faces) this takes less then 0.1 secs on my
         # i3 laptop. Since this only has to be done once for each Mesh object,
-        # that's not too bad, but waiting for over a second can become 
+        # that's not too bad, but waiting for over a second can become
         # iritating.
         for f in range(faces.shape[1]):
             for i in range(faces.shape[0]):
@@ -128,7 +128,7 @@ def calculateNormals_old(mesh):
         return
     
     # Init normal array
-    N = vertices.shape[0]        
+    N = vertices.shape[0]
     normals = np.zeros((N,3), dtype='float32')
     defaultNormal = np.array([1,0,0], dtype='float32')
     

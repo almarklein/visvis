@@ -15,15 +15,15 @@ information for each character.
 To make this even easier, I made a .bat file on which you can drop a
 text file with the options to pass to BMFontGenerator.exe.
 
-Next, run this script to collect the data and store it in 
+Next, run this script to collect the data and store it in
 an ssdf file. All created fonts are recognized and packed
-in a single file. Do make sure the font is distributed in a 
+in a single file. Do make sure the font is distributed in a
 single png file (if multiple files appear, make the size larger).
 
 The result is fonts.ssdf.
 
-the fontfiles should be named 
-"<fontname>_<type>.xml", 
+the fontfiles should be named
+"<fontname>_<type>.xml",
 "<fontname>_<type>-0.png",
 "<fontname>_<type>-1.png"
 etc.
@@ -31,7 +31,7 @@ for instance "mono_r.xml", "mono_i-0.png".
 
 """
 
-# The info is in an xml file but I chose to parse it line by line, 
+# The info is in an xml file but I chose to parse it line by line,
 # and hope the xml file is always produced one line per char.
 
 from visvis import ssdf
@@ -70,8 +70,8 @@ def processFont(fontname):
         # find character code
         i = line.find('code=')
         if i<0: continue
-        ch = line[i+6:i+10]    
-        ch = int(ch,16)    
+        ch = line[i+6:i+10]
+        ch = int(ch,16)
         # create char
         char = Char()
         # find location in texture
@@ -81,7 +81,7 @@ def processFont(fontname):
         i2 = line.find("\"",i1+1)
         if i2<0: continue
         tmp = line[i1+1:i2]
-        tmp = tmp.split(',')    
+        tmp = tmp.split(',')
         if len(tmp)!=2: continue
         char.origin = [int(i) for i in tmp]
         # find size
@@ -91,7 +91,7 @@ def processFont(fontname):
         i2 = line.find("\"",i1+1)
         if i2<0: continue
         tmp = line[i1+1:i2]
-        tmp = tmp.split('x')    
+        tmp = tmp.split('x')
         if len(tmp)!=2: continue
         char.size = [int(float(i)+0.5) for i in tmp]
         # find width
@@ -100,9 +100,9 @@ def processFont(fontname):
         if i<0 or i1<0: continue
         i2 = line.find("\"",i1+1)
         if i2<0: continue
-        tmp = line[i1+1:i2]    
-        char.aw = int(tmp)    
-        # store char    
+        tmp = line[i1+1:i2]
+        char.aw = int(tmp)
+        # store char
         entries[ch] = char
 
     ## make lists of the information
@@ -129,7 +129,7 @@ def processFont(fontname):
     h, w = im.shape
 
 
-    ## store data    
+    ## store data
     s = ssdf.new()
     s.charcodes = np.array(charcodes, dtype=np.uint16)
     s.origin = origin
@@ -146,7 +146,7 @@ base = ssdf.new()
 for font in ['mono', 'sans', 'serif']:
     ss = []
     for fonttype in ['r', 'b', 'i']:  # regular, bold, italic
-        fontname = font+'_'+fonttype        
+        fontname = font+'_'+fonttype
         s = processFont(fontname)
         ss.append(s)
     

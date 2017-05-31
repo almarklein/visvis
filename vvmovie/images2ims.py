@@ -13,11 +13,11 @@
 #     * Neither the name of the <organization> nor the
 #       names of its contributors may be used to endorse or promote products
 #       derived from this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY 
+# ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
 # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -36,11 +36,11 @@ import os
 try:
     import numpy as np
 except ImportError:
-    np = None    
+    np = None
 
 try:
     import PIL
-    from PIL import Image    
+    from PIL import Image
 except ImportError:
     PIL = None
 
@@ -49,7 +49,7 @@ def checkImages(images):
     """ checkImages(images)
     Check numpy images and correct intensity range etc.
     The same for all movie formats.
-    """ 
+    """
     # Init results
     images2 = []
     
@@ -130,16 +130,16 @@ def _getSequenceNumber(filename, part1, part2):
 def writeIms(filename, images):
     """ writeIms(filename, images)
     
-    Export movie to a series of image files. If the filenenumber 
-    contains an asterix, a sequence number is introduced at its 
-    location. Otherwise the sequence number is introduced right 
+    Export movie to a series of image files. If the filenenumber
+    contains an asterix, a sequence number is introduced at its
+    location. Otherwise the sequence number is introduced right
     before the final dot.
     
-    To enable easy creation of a new directory with image files, 
+    To enable easy creation of a new directory with image files,
     it is made sure that the full path exists.
     
-    Images should be a list consisting of PIL images or numpy arrays. 
-    The latter should be between 0 and 255 for integer types, and 
+    Images should be a list consisting of PIL images or numpy arrays.
+    The latter should be between 0 and 255 for integer types, and
     between 0 and 1 for float types.
     
     """
@@ -170,7 +170,7 @@ def writeIms(filename, images):
         fname = os.path.join(dirname, filename%seq)
         # Write image
         if np and isinstance(frame, np.ndarray):
-            frame =  PIL.Image.fromarray(frame)        
+            frame =  PIL.Image.fromarray(frame)
         frame.save(fname)
 
 
@@ -178,7 +178,7 @@ def writeIms(filename, images):
 def readIms(filename, asNumpy=True):
     """ readIms(filename, asNumpy=True)
     
-    Read images from a series of images in a single directory. Returns a 
+    Read images from a series of images in a single directory. Returns a
     list of numpy arrays, or, if asNumpy is false, a list if PIL images.
     
     """
@@ -214,8 +214,8 @@ def readIms(filename, asNumpy=True):
             im = PIL.Image.open(os.path.join(dirname, fname))
             images.append((im.copy(), nr))
     
-    # Sort images 
-    images.sort(key=lambda x:x[1])    
+    # Sort images
+    images.sort(key=lambda x:x[1])
     images = [im[0] for im in images]
     
     # Convert to numpy if needed

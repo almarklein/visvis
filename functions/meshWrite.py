@@ -33,13 +33,13 @@ def meshWrite(fname, mesh, name='', bin=True):
     ----------
     fname : string
         The filename to write to. The extension should be one of the
-        following: .obj .stl .ssdf .bsdf 
+        following: .obj .stl .ssdf .bsdf
     mesh : vv.BaseMesh
         The mesh instance to write.
     name : string (optional)
         The name of the object (e.g. 'teapot')
     bin : bool
-        For the STL format: whether to write binary, which is much 
+        For the STL format: whether to write binary, which is much
         more compact then ascii.
     
     Notes on formats

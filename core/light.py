@@ -67,7 +67,7 @@ def _getColor(color, ref):
 class Light(object):
     """ Light(axes, index)
     
-    A Light object represents a light source in the scene. It 
+    A Light object represents a light source in the scene. It
     determines how lit objects (such as Mesh objects) are visualized.
     
     Each axes has 8 light sources, of which the 0th is turned on
@@ -77,7 +77,7 @@ class Light(object):
     properties.
     
     The 0th light source is a directional camera light by default; it
-    shines in the direction in which you look. The other lights are 
+    shines in the direction in which you look. The other lights are
     oriented at the origin by default.
     
     """
@@ -118,7 +118,7 @@ class Light(object):
     def color():
         """ Get/Set the reference color of the light. If the ambient,
         diffuse or specular properties specify a scalar, that scalar
-        represents the fraction of *this* color. 
+        represents the fraction of *this* color.
         """
         def fget(self):
             return self._color
@@ -130,11 +130,11 @@ class Light(object):
     @PropWithDraw
     def ambient():
         """ Get/Set the ambient color of the light. This is the color
-        that is everywhere, coming from all directions, independent of 
-        the light position. 
+        that is everywhere, coming from all directions, independent of
+        the light position.
         
-        The value can be a 3- or 4-element tuple, a character in 
-        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        The value can be a 3- or 4-element tuple, a character in
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the
         fraction of the reference color.
         """
         def fget(self):
@@ -148,7 +148,7 @@ class Light(object):
     def diffuse():
         """ Get/Set the diffuse color of the light. This component is the
         light that comes from one direction, so it's brighter if it comes
-        squarely down on a surface than if it barely glances off the 
+        squarely down on a surface than if it barely glances off the
         surface. It depends on the light position how a material is lit.
         """
         def fget(self):
@@ -162,11 +162,11 @@ class Light(object):
     def specular():
         """ Get/Set the specular color of the light. This component
         represents the light that comes from the light source and bounces
-        off a surface in a particular direction. This is what makes 
+        off a surface in a particular direction. This is what makes
         materials appear shiny.
         
-        The value can be a 3- or 4-element tuple, a character in 
-        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        The value can be a 3- or 4-element tuple, a character in
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the
         fraction of the reference color.
         """
         def fget(self):
@@ -212,7 +212,7 @@ class Light(object):
             else:
                 fourth = 1
             # Set position
-            tmp = self._position 
+            tmp = self._position
             self._position = tmp[0], tmp[1], tmp[2], fourth
         return locals()
     
@@ -260,7 +260,7 @@ class Light(object):
         """
         thisLight = gl.GL_LIGHT0 + self._index
         if self._on:
-            # Enable and set position            
+            # Enable and set position
             gl.glEnable(thisLight)
             gl.glLightfv(thisLight, gl.GL_POSITION, self._position)
             # Set colors

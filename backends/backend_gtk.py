@@ -24,7 +24,7 @@ MOUSEMAP = {gtk.gdk.BUTTON_PRESS   : 'down',
             gtk.gdk.BUTTON_RELEASE : 'up',
             gtk.gdk._2BUTTON_PRESS : 'double'}
 
-KEYMAP = {  gtk.keysyms.Shift_L: constants.KEY_SHIFT, 
+KEYMAP = {  gtk.keysyms.Shift_L: constants.KEY_SHIFT,
             gtk.keysyms.Shift_R: constants.KEY_SHIFT,
             gtk.keysyms.Alt_L: constants.KEY_ALT,
             gtk.keysyms.Alt_R: constants.KEY_ALT,
@@ -205,7 +205,7 @@ class Figure(BaseFigure):
         """Create the Figure's widget if necessary, and return the
         widget."""
         if self._widget is None:
-            # Make sure there is a native app and the timer is started 
+            # Make sure there is a native app and the timer is started
             # (also when embedded)
             app.Create()
             
@@ -306,7 +306,7 @@ def newFigure():
     window.set_reallocate_redraws(True)
     
     window.add(figure._widget)
-    size = visvis.settings.figureSize 
+    size = visvis.settings.figureSize
     figure._widget.set_size_request(size[0], size[1])
     window.set_geometry_hints(min_width=100, min_height=100)
     window.show_all()

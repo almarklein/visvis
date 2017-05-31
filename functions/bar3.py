@@ -13,7 +13,7 @@ class Bars3D(vv.Wobject):
     The Bars3D class represents a bar chart. It has a few methods to
     change the appearance of the bars.
     
-    This class is a container for a series of Mesh objects created using 
+    This class is a container for a series of Mesh objects created using
     solidBox.
     
     This wobject is created by the function vv.bar3().
@@ -22,8 +22,8 @@ class Bars3D(vv.Wobject):
     
     @vv.misc.Property
     def ambient():
-        """ Get/Set the ambient reflectance of the bars. 
-        The getter returns the ambient reflectance of the first bar, 
+        """ Get/Set the ambient reflectance of the bars.
+        The getter returns the ambient reflectance of the first bar,
         or None if there are no bars.
         """
         def fget(self):
@@ -38,12 +38,12 @@ class Bars3D(vv.Wobject):
     
     @vv.misc.Property
     def diffuse():
-        """ Get/Set the diffuse reflectance of the bars. 
-        The getter returns the diffuse reflectance of the first bar, 
+        """ Get/Set the diffuse reflectance of the bars.
+        The getter returns the diffuse reflectance of the first bar,
         or None if there are no bars.
         """
         def fget(self):
-            if self._children:                
+            if self._children:
                 return self._children[0].diffuse
             else:
                 return None
@@ -54,12 +54,12 @@ class Bars3D(vv.Wobject):
     
     @vv.misc.Property
     def specular():
-        """ Get/Set the specular reflectance of the bars. 
-        The getter returns the specular reflectance of the first bar, 
+        """ Get/Set the specular reflectance of the bars.
+        The getter returns the specular reflectance of the first bar,
         or None if there are no bars.
         """
         def fget(self):
-            if self._children:                
+            if self._children:
                 return self._children[0].specular
             else:
                 return None
@@ -74,7 +74,7 @@ class Bars3D(vv.Wobject):
         of the first bar, or None if there are no bars.
         """
         def fget(self):
-            if self._children:                
+            if self._children:
                 return self._children[0].faceColor
             else:
                 return None
@@ -88,8 +88,8 @@ class Bars3D(vv.Wobject):
         """ Get/Set the colors of all bars at once. The number of colors
         should match the number of bars. """
         def fget(self):
-            if self._children:                
-                return [child.faceColor for child in self.children 
+            if self._children:
+                return [child.faceColor for child in self.children
                                     if hasattr(child, 'faceColor')]
             else:
                 return None
@@ -100,7 +100,7 @@ class Bars3D(vv.Wobject):
 
 
 
-def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):    
+def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
     """ bar3(*args, width=0.75, axesAdjust=True, axes=None)
     
     Create a 3D bar chart and returns a Bars3D instance that can be
@@ -119,7 +119,7 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
         The width of the bars.
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
-        the camera type to 3D. If daspectAuto has not been set yet, 
+        the camera type to 3D. If daspectAuto has not been set yet,
         it is set to False.
     axes : Axes instance
         Display the bars in the given axes, or the current axes if not given.
@@ -157,7 +157,7 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
         yy = [0] * len(hh)
     elif data3 is None:
         # Height and x given
-        xx = data1 
+        xx = data1
         hh = data2
         yy = [0] * len(hh)
     else:
@@ -177,7 +177,7 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
     # Create Bars instance
     bars = Bars3D(axes)
     
-    # Create boxes    
+    # Create boxes
     for x,y,h in zip(xx,yy, hh):
         pos = (x,y,h/2.0)
         scale = (width,width,h)
@@ -198,7 +198,7 @@ def bar3(data1, data2=None, data3=None, width=0.75, axesAdjust=True, axes=None):
     
     
 if __name__ == '__main__':
-    a = vv.gca()   
+    a = vv.gca()
     b = vv.bar3([1,2,3,2,4,3], width=0.5)
     a.axis.showGrid = 1
     a.axis.xTicks = ['Januari', 'Februari', 'March', 'April', 'May', 'June']

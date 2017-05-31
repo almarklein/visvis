@@ -42,7 +42,7 @@ class PrerenderedFontManager(FontManager):
         
         Get a font instance. If that font was created earlier,
         that font is returned, otherwise it is created and stored
-        for reuse. 
+        for reuse.
         
         """
         if fontname in self.fonts:
@@ -57,7 +57,7 @@ class PrerenderedFontManager(FontManager):
     
     def Compile(self, textObject):
         """ Create a series of glyphs from the text in the textObject.
-        From these Glyphs. Also the relative vertices are calculated, 
+        From these Glyphs. Also the relative vertices are calculated,
         which are then corrected
         for angle and alignment in Position().
         """
@@ -70,22 +70,22 @@ class PrerenderedFontManager(FontManager):
         font = self.GetFont(textObject.fontName)
         
         # clear glyphs
-        glyphs = [] 
+        glyphs = []
         
         # Create reference character (used in Position)
-        textObject._xglyph = Glyph(font, 'X', textObject.fontSize)     
+        textObject._xglyph = Glyph(font, 'X', textObject.fontSize)
         
         # Get text string with escaped text converted to Unicode
         tt = self.ConvertEscapedText(textObject.text)
         
         
-        # build list of glyphs, take sub/super scripting into account.        
+        # build list of glyphs, take sub/super scripting into account.
         escape = False
         styles = []
         style = None # Style to set
         for i in range(len(tt)):
-            c = tt[i]            
-            if escape:                
+            c = tt[i]
+            if escape:
                 g = Glyph(font, c, textObject.fontSize, styles)
                 glyphs.append( g )
                 escape = False
@@ -97,7 +97,7 @@ class PrerenderedFontManager(FontManager):
             elif c=='}':
                 # Remove style
                 if styles:
-                    styles.pop()                    
+                    styles.pop()
             elif c=='^':
                 style = MiniStyle(2)
             elif c=='_':
@@ -114,7 +114,7 @@ class PrerenderedFontManager(FontManager):
                 glyphs.append( g )
                 style = None
         
-        # build arrays with vertices and coordinates        
+        # build arrays with vertices and coordinates
         x1, y1, z = 0, 0, 0
         vertices = Pointset(3)
         texCords = Pointset(2)
@@ -140,7 +140,7 @@ class PrerenderedFontManager(FontManager):
             vertices.append(x1, y2+dy, z)
             
             # prepare for next glyph
-            x1 = x1 + g.width + 1     
+            x1 = x1 + g.width + 1
         
         # Scale text according to global text size property
         fig = textObject.GetFigure()
@@ -239,10 +239,10 @@ class Glyph(object):
         # Note: italic is now realized by printing it skewed rather using the
         # italic glyphs. The reason is that when using the texture one would
         # see artifacts from neighbouring characters. Additionally, it's now
-        # possible to mix bold and italic text, and one can make any supported 
+        # possible to mix bold and italic text, and one can make any supported
         # unicode character italic.
         #         if style.italic and ac in info.charcodes_i:
-#             # italic text            
+#             # italic text
 #             infoSize, infoOrigin, infoWidth = (
 #                 info.size_i, info.origin_i, info.width_i)
         if style.bold and ac in info.charcodes_b:
@@ -250,9 +250,9 @@ class Glyph(object):
             infoSize, infoOrigin, infoWidth = (
                 info.size_b, info.origin_b, info.width_b)
         
-        # Find position in texture, normalized to texture coordinates        
+        # Find position in texture, normalized to texture coordinates
         x1 = infoOrigin[ac,0]
-        x2 = x1 + infoSize[ac,0]        
+        x2 = x1 + infoSize[ac,0]
         tmp = float(info.data.shape[1])
         self.s1, self.s2 = (x1) / tmp, (x2-1) / tmp
         y1 = infoOrigin[ac,1]
@@ -268,14 +268,14 @@ class Glyph(object):
         # calculate width on screen, given the size
         factor = size / float(info.fontsize)
         self.sizex = infoSize[ac,0] * factor
-        self.sizey = infoSize[ac,1] * factor        
+        self.sizey = infoSize[ac,1] * factor
         self.width = float(infoWidth[ac]) * factor # is spacing?
         
         smaller = 0.6
-        self.dy = 0.0 # normal script        
+        self.dy = 0.0 # normal script
         if style.script == 1:
-            # sub script            
-            self.dy = (1-smaller) * self.sizey        
+            # sub script
+            self.dy = (1-smaller) * self.sizey
         if style.script:
             # super or subscript
             self.skewFactor *= smaller
@@ -307,8 +307,8 @@ class MiniStyle:
         if script == 0:
             script = self.script
         # done
-        return MiniStyle(   script, 
-                            self.bold or other.bold, 
+        return MiniStyle(   script,
+                            self.bold or other.bold,
                             self.italic or other.italic )
     
     def __repr__(self):

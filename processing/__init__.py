@@ -7,7 +7,7 @@
 """ Package visvis.processing
 
 Each module in this directory contains a function with the same
-name as the module it's in. These functions are automatically loaded 
+name as the module it's in. These functions are automatically loaded
 in Visvis, thus making it easy to expand Visvis' functionality.
 
 In the future, I may make it possible to supply a cython implementation
@@ -18,7 +18,7 @@ As for now, I'm ok with processing whole arrays at once using numpy.
 in Cython.)
 
 There are three things to take into account when making a new function:
-- The function to add should be the same name as the module in which 
+- The function to add should be the same name as the module in which
   it is defined. Other helper functions or classes can be defined, but
   these are not inserted in the Visvis namespace.
 - The function's docstring should be very descriptive and starting with
@@ -45,7 +45,7 @@ def _insertFunctions():
     if zipfilename:
         # get list of files from zipfile
         z = zipfile.ZipFile(zipfilename)
-        files = [os.path.split(i)[1] for i in z.namelist() 
+        files = [os.path.split(i)[1] for i in z.namelist()
                     if i.startswith('visvis') and i.count('processing')]
     else:
         # get list of files from file system
@@ -62,7 +62,7 @@ def _insertFunctions():
             if file[:-1] in files:
                 continue # only try import once
         elif not file.endswith('.py'):
-            continue    
+            continue
         # build name
         funname = os.path.splitext(file)[0]
         # import module

@@ -9,7 +9,7 @@ import visvis as vv
 def title(text, axes=None):
     """ title(text, axes=None)
     
-    Show title above axes. Remove title by suplying an empty string. 
+    Show title above axes. Remove title by suplying an empty string.
     
     Parameters
     ----------

@@ -31,7 +31,7 @@ def makeArray(data):
 def _SetLimitsAfterDraw(event):
     """ To be able to set the limits after the first draw. """
     # Set limits
-    fig = event.owner 
+    fig = event.owner
     for axis in fig.FindObjects(vv.axises.PolarAxis2D):
         limits = axis.GetLimits()
         axis.SetLimits(rangeTheta=limits[0], rangeR=limits[1])
@@ -47,7 +47,7 @@ def polarplot(data1, data2=None, inRadians=False,
             lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k',
             alpha=1, axesAdjust=True, axes=None):
     
-    Plot 2D polar data, using a polar axis to draw a polar grid. 
+    Plot 2D polar data, using a polar axis to draw a polar grid.
     
     Usage
     -----
@@ -57,29 +57,29 @@ def polarplot(data1, data2=None, inRadians=False,
     
     Keyword arguments
     -----------------
-    (The longer names for the line properties can also be used)    
+    (The longer names for the line properties can also be used)
     lw : scalar
         lineWidth. The width of the line. If zero, no line is drawn.
     mw : scalar
         markerWidth. The width of the marker. If zero, no marker is drawn.
     mew : scalar
-        markerEdgeWidth. The width of the edge of the marker.    
+        markerEdgeWidth. The width of the edge of the marker.
     lc : 3-element tuple or char
         lineColor. The color of the line. A tuple should represent the RGB
         values between 0 and 1. If a char is given it must be
-        one of 'rgbmcywk', for reg, green, blue, magenta, cyan, yellow, 
+        one of 'rgbmcywk', for reg, green, blue, magenta, cyan, yellow,
         white, black, respectively.
     mc : 3-element tuple or char
         markerColor. The color of the marker. See lineColor.
     mec : 3-element tuple or char
-        markerEdgeColor. The color of the edge of the marker.    
+        markerEdgeColor. The color of the edge of the marker.
     ls : string
         lineStyle. The style of the line. (See below)
     ms : string
         markerStyle. The style of the marker. (See below)
     axesAdjust : bool
         If axesAdjust==True, this function will call axes.SetLimits(), and set
-        the camera type to 2D. 
+        the camera type to 2D.
     axes : Axes instance
         Display the image in this axes, or the current axes if not given.
     
@@ -107,7 +107,7 @@ def polarplot(data1, data2=None, inRadians=False,
     Polar axis
     ----------
     This polar axis has a few specialized methods for adjusting the polar
-    plot. Access these via vv.gca().axis.    
+    plot. Access these via vv.gca().axis.
       * SetLimits(thetaRange, radialRange)
       * thetaRange, radialRange = GetLimits()
       * angularRefPos: Get and Set methods for the relative screen
@@ -118,8 +118,8 @@ def polarplot(data1, data2=None, inRadians=False,
     
     Interaction
     -----------
-      * Drag mouse up/down to translate radial axis.    
-      * Drag mouse left/right to rotate angular ref position.    
+      * Drag mouse up/down to translate radial axis.
+      * Drag mouse left/right to rotate angular ref position.
       * Drag mouse + shift key up/down to rescale radial axis (min R fixed).
     
     """
@@ -193,9 +193,9 @@ def polarplot(data1, data2=None, inRadians=False,
         axes.cameraType = '2d'
         axes.SetLimits()
     
-    # Subsribe after-draw event handler 
+    # Subsribe after-draw event handler
     # (unsubscribe first in case we do multiple plots)
-    fig.eventAfterDraw.Unbind(_SetLimitsAfterDraw) 
+    fig.eventAfterDraw.Unbind(_SetLimitsAfterDraw)
     fig.eventAfterDraw.Bind(_SetLimitsAfterDraw)
     
     # Return
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     angs = 0.1 + np.linspace(-90, 90, 181)  # 0.1+ get rid of singularity
     angsRads = np.pi * angs / 180.0
     mag = 10 * np.log10(np.abs(np.sin(10 * angsRads) / angsRads)) + angsRads
-    mag = mag - np.max(mag)    
+    mag = mag - np.max(mag)
     # Show data
     vv.polarplot( angs, mag, lc='b')
     vv.polarplot(angs+20, mag, lc='r', lw=2)

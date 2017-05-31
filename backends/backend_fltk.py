@@ -15,9 +15,9 @@ from visvis.core.misc import basestring
 
 import fltk
 
-KEYMAP = {  fltk.FL_SHIFT: constants.KEY_SHIFT, 
-            fltk.FL_Shift_L: constants.KEY_SHIFT, 
-            fltk.FL_Shift_R: constants.KEY_SHIFT, 
+KEYMAP = {  fltk.FL_SHIFT: constants.KEY_SHIFT,
+            fltk.FL_Shift_L: constants.KEY_SHIFT,
+            fltk.FL_Shift_R: constants.KEY_SHIFT,
             fltk.FL_ALT : constants.KEY_ALT,
             fltk.FL_Alt_L : constants.KEY_ALT,
             fltk.FL_Alt_R : constants.KEY_ALT,
@@ -55,8 +55,8 @@ class GLWidget(fltk.Fl_Gl_Window):
     events to the Figure object that wraps it.
     """
     
-    def __init__(self, figure, *args, **kwargs):     
-        fltk.Fl_Gl_Window.__init__(self, *args, **kwargs)        
+    def __init__(self, figure, *args, **kwargs):
+        fltk.Fl_Gl_Window.__init__(self, *args, **kwargs)
         self.figure = figure
         
         # Callback when closed
@@ -76,14 +76,14 @@ class GLWidget(fltk.Fl_Gl_Window):
             but = buttons[fltk.Fl.event_button()]
             self.figure._GenerateMouseEvent('down', x, y, but, modifiers())
         
-        elif event == fltk.FL_RELEASE:            
+        elif event == fltk.FL_RELEASE:
             x, y = fltk.Fl.event_x(), fltk.Fl.event_y()
             but = buttons[fltk.Fl.event_button()]
             if fltk.Fl.event_clicks() == 1:
-                # double click                
+                # double click
                 self.figure._GenerateMouseEvent('double', x, y, but, modifiers())
             else:
-                # normal release                
+                # normal release
                 self.figure._GenerateMouseEvent('up', x, y, but, modifiers())
         
         elif event in [fltk.FL_MOVE, fltk.FL_DRAG]:
@@ -107,7 +107,7 @@ class GLWidget(fltk.Fl_Gl_Window):
             self.OnClose(None)
         
         elif event == fltk.FL_FOCUS:
-            self.OnFocus(None)        
+            self.OnFocus(None)
         else:
             return 1 # maybe someone else knows what to do with it
         return 1 # event was handled.
@@ -121,7 +121,7 @@ class GLWidget(fltk.Fl_Gl_Window):
     
     def draw(self):
         # Do the draw commands now
-        self.figure.OnDraw() 
+        self.figure.OnDraw()
     
     
     def OnMotion(self, event):
@@ -140,8 +140,8 @@ class GLWidget(fltk.Fl_Gl_Window):
         key, text = self._ProcessKey()
         self.figure._GenerateKeyEvent('keydown', key, text, modifiers())
     
-    def OnKeyUp(self, event):        
-        key, text = self._ProcessKey()        
+    def OnKeyUp(self, event):
+        key, text = self._ProcessKey()
         self.figure._GenerateKeyEvent('keyup', key, text, modifiers())
     
     def _ProcessKey(self):
@@ -155,20 +155,20 @@ class GLWidget(fltk.Fl_Gl_Window):
         if key in KEYMAP:
             return KEYMAP[key], ''
         else:
-            # other key, try producing text            
+            # other key, try producing text
             #print(key, self._shiftDown)
             if (97 <= key <= 122) and fltk.Fl.event_shift():
-                key -= 32                
+                key -= 32
             try:
                 return key, chr(key)
             except ValueError:
                 return key, ''
     
     
-    def OnClose(self, event=None):    
+    def OnClose(self, event=None):
         if self.figure:
             self.figure.Destroy()
-        self.hide()        
+        self.hide()
     
     
     def OnFocus(self, event):
@@ -198,7 +198,7 @@ class Figure(BaseFigure):
         """ Create the Figure's widget if necessary, and return the
         widget. """
         if self._widget is None:
-            # Make sure there is a native app and the timer is started 
+            # Make sure there is a native app and the timer is started
             # (also when embedded)
             app.Create()
             
@@ -235,8 +235,8 @@ class Figure(BaseFigure):
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
         if self._widget:
-            # select widget to resize. If it 
-            widget = self._widget       
+            # select widget to resize. If it
+            widget = self._widget
             # apply
             widget.position(x,y)
             widget.size(w, h)
@@ -244,9 +244,9 @@ class Figure(BaseFigure):
     def _GetPosition(self):
         """ Get the position of the widget. """
         if self._widget:
-            # select widget to resize. If it 
-            widget = self._widget        
-            # get and return        
+            # select widget to resize. If it
+            widget = self._widget
+            # get and return
             return widget.x(), widget.y(), widget.w(), widget.h()
         return 0, 0, 0, 0
     
@@ -255,13 +255,13 @@ class Figure(BaseFigure):
             self._widget.redraw()
     
     def _ProcessGuiEvents(self):
-        fltk.Fl.wait(0) 
+        fltk.Fl.wait(0)
     
     def _Close(self, widget=None):
         if widget is None:
             widget = self._widget
         if widget:
-            widget.OnClose()        
+            widget.OnClose()
     
 
 def newFigure():
@@ -270,9 +270,9 @@ def newFigure():
     
     # Create figure
     size = visvis.settings.figureSize
-    figure = Figure(size[0], size[1], "Figure")    
+    figure = Figure(size[0], size[1], "Figure")
     figure._widget.size_range(100,100,0,0,0,0)
-    figure._widget.show() # Show AFTER canvas is added    
+    figure._widget.show() # Show AFTER canvas is added
     
     # Make OpenGl Initialize and return
     # Also call draw(), otherwise it will not really draw and crash on Linux
@@ -322,7 +322,7 @@ class App(events.App):
     
     def _ProcessEvents(self):
         app = self._GetNativeApp()
-        app.wait(0) 
+        app.wait(0)
     
     def _Run(self):
         app = self._GetNativeApp()

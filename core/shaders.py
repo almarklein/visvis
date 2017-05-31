@@ -27,12 +27,12 @@ alwaysShowShaderInfoLog = False
 class Shader(object):
     """ Shader()
     
-    A Shader object represents the shading code for a GLSL shader. It 
+    A Shader object represents the shading code for a GLSL shader. It
     provides the main interface for users to control the code, set uniforms
     etc.
     
-    This class wraps three objects which can be accessed easily via 
-    properties: 
+    This class wraps three objects which can be accessed easily via
+    properties:
       * program: the relatively low level interface to OpenGl.
       * vertex: represents the source code for the vertex shader.
       * fragment: represents the source code for the fragment shader.
@@ -186,10 +186,10 @@ class Shader(object):
     def SetUniform(self, name, value):
         """ SetUniform(name, value)
         
-        Set uniform value for shader code. This is the glsl system for 
+        Set uniform value for shader code. This is the glsl system for
         getting data into the GLSL shader.
         
-        The given uniform is used during the next or current draw. This 
+        The given uniform is used during the next or current draw. This
         method is therefore to be used inside OnDraw() methods.
         
         The value can be:
@@ -215,7 +215,7 @@ class Shader(object):
     def SetStaticUniform(self, name, value):
         """ SetStaticUniform(name, value)
         
-        Set uniform value for shader code. This is the glsl system for 
+        Set uniform value for shader code. This is the glsl system for
         getting data into the GLSL shader.
         
         The given uniform is used in all draws. This method provides
@@ -263,7 +263,7 @@ class Shader(object):
             raise ValueError('Uniform name must be at least 1 character.')
         
         # Check value
-        if not ((   isinstance(value, (float, int))    ) or 
+        if not ((   isinstance(value, (float, int))    ) or
                 (   isinstance(value, (list, tuple)) and len(value)<5   ) or
                 (   isinstance(value, vv.core.baseTexture.TextureObject) )
                 ):
@@ -281,7 +281,7 @@ class Shader(object):
             if isinstance(value[0], float):
                 self.program.SetUniformf(name, value)
             elif isinstance(value[0], int):
-                self.program.SetUniformi(name, value)        
+                self.program.SetUniformi(name, value)
         elif isinstance(value, vv.core.baseTexture.TextureObject):
             #print('uniform texture', name, 'at', self._textureId)
             # Enable and register as uniform
@@ -334,7 +334,7 @@ class GlslProgram:
         self._programId = 0
         self._shaderIds = []
         
-        # code for the shaders        
+        # code for the shaders
         self._fragmentCode = ''
         self._vertexCode = ''
         
@@ -344,7 +344,7 @@ class GlslProgram:
     def IsUsable(self):
         """ Returns whether the program is usable. In other words, whether
         the OpenGl driver supports GLSL.
-        """ 
+        """
         if self._usable is None: # Not True nor False
             usable = getOpenGlCapable('2.0',
                 'anti-aliasing, the clim property, colormaps and 3D rendering')
@@ -384,7 +384,7 @@ class GlslProgram:
     
     
     def Disable(self):
-        """ Stop using the program. 
+        """ Stop using the program.
         """
         if not self.IsUsable():
             return
@@ -430,7 +430,7 @@ class GlslProgram:
                 if not code:
                     continue
                 
-                # create shader object            
+                # create shader object
                 myshader = gla.glCreateShaderObjectARB(type)
                 self._shaderIds.append(myshader)
                 
@@ -464,7 +464,7 @@ class GlslProgram:
         
         A uniform is a parameter for shading code.
         Set the parameters right after enabling the program.
-        values should be a list of up to four floats ( which 
+        values should be a list of up to four floats ( which
         are converted to float32).
         
         """
@@ -474,17 +474,17 @@ class GlslProgram:
         # convert to floats
         values = [float(v) for v in values]
         
-        # get loc, encode varname to ensure it's in byte format  
+        # get loc, encode varname to ensure it's in byte format
         # (pyopengl will support both bytes and str as input, but at the time
-        #  of writing this is not yet implemented.)   
-        loc = gla.glGetUniformLocationARB(self._programId, varname.encode('ascii'))        
+        #  of writing this is not yet implemented.)
+        loc = gla.glGetUniformLocationARB(self._programId, varname.encode('ascii'))
         
         try:
             # set values
             if len(values) == 1:
                 gl.glUniform1f(loc, values[0])
             elif len(values) == 2:
-                gl.glUniform2f(loc, values[0], values[1])            
+                gl.glUniform2f(loc, values[0], values[1])
             elif len(values) == 3:
                 gl.glUniform3f(loc, values[0], values[1], values[2])
             elif len(values) == 4:
@@ -497,7 +497,7 @@ class GlslProgram:
         
         A uniform is a parameter for shading code.
         Set the parameters right after enabling the program.
-        values should be a list of up to four ints ( which 
+        values should be a list of up to four ints ( which
         are converted to int).
         
         """
@@ -507,16 +507,16 @@ class GlslProgram:
         # convert to floats
         values = [int(v) for v in values]
         
-        # get loc, encode varname to ensure it's in byte format  
+        # get loc, encode varname to ensure it's in byte format
         # (pyopengl will support both bytes and str as input, but at the time
-        #  of writing this is not yet implemented.)        
-        loc = gla.glGetUniformLocationARB(self._programId, varname.encode('ascii'))        
+        #  of writing this is not yet implemented.)
+        loc = gla.glGetUniformLocationARB(self._programId, varname.encode('ascii'))
         
         # set values
         if len(values) == 1:
             gl.glUniform1i(loc, values[0])
         elif len(values) == 2:
-            gl.glUniform2i(loc, values[0], values[1])            
+            gl.glUniform2i(loc, values[0], values[1])
         elif len(values) == 3:
             gl.glUniform3i(loc, values[0], values[1], values[2])
         elif len(values) == 4:
@@ -527,7 +527,7 @@ class GlslProgram:
         """ Check for errors in compiling and linking the given shader.
         Prints the info log if there's an error.
         Returns True if an error was found.
-        """         
+        """
         if checkCompile:
             ok = gl.glGetShaderiv(glObject, gl.GL_COMPILE_STATUS)
             if not ok:
@@ -545,21 +545,21 @@ class GlslProgram:
     
     
     def _PrintInfoLog(self, glObject, preamble=""):
-        """ Print the info log. 
+        """ Print the info log.
         """
         log = gla.glGetInfoLogARB(glObject)
         if not isinstance(log, str):
             log = log.decode('ascii') # Make it work on Python 3
         if log:
             print(preamble + ' ' + log.rstrip())
-            # If this is a renderstyle, notify user to use an alternative    
+            # If this is a renderstyle, notify user to use an alternative
             if '3D_FRAGMENT_SHADER' in self._fragmentCode:
                 print('Try using a different render style.')
     
     def DestroyGl(self):
         """ DestroyGl()
         
-        Clear the program. 
+        Clear the program.
         
         """
         # clear OpenGL stuff
@@ -584,27 +584,27 @@ class GlslProgram:
 class ShaderCode(object):
     """ ShaderCode()
     
-    This class represents the source code for a GLSL shader program, 
+    This class represents the source code for a GLSL shader program,
     composed of multiple parts. By describing programs as a composition
     of different parts, pieces of code can be more easily re-used,
-    and programs can be altered in a very flexible way. This allows 
+    and programs can be altered in a very flexible way. This allows
     users to for example modify existing volume renderers.
     
     Parts
     -----
-    A ShaderCode instance has one or more parts which are inserted in 
-    one another. The first part is the base code, the next is "inserted" 
+    A ShaderCode instance has one or more parts which are inserted in
+    one another. The first part is the base code, the next is "inserted"
     into it, and the next is inserted in the result, etc.
     
-    Every part has a name, representing what it does or represents. 
-    Different parts that do the same thing (but in different ways) 
+    Every part has a name, representing what it does or represents.
+    Different parts that do the same thing (but in different ways)
     have the same way. This enables replacing parts (such as the render
     style for 3D textures) in a very easy and natural way. All parts
     in a ShaderCode instance must have unique names.
     
     Composition
     -----------
-    Insertion of one part in the base code happens via replacement. 
+    Insertion of one part in the base code happens via replacement.
     The code of a ShaderCodePart consists of multiple sections, where
     each section starts with a specification of what is removed. For
     this we use two greater than characters '>>':
@@ -613,13 +613,13 @@ class ShaderCode(object):
     someValue = 4;
     }}}
     
-    All code following the replacement-lines is inserted in the base 
+    All code following the replacement-lines is inserted in the base
     code. Note that both the replace-code as the replacing code may
-    consist of multiple lines. 
+    consist of multiple lines.
     
     The matching of code is based on the stripped code, so spaces do not
-    matter. The replace-code (the code behind '>>') needs to be an exact 
-    match, but in the source there may be other code in front and after 
+    matter. The replace-code (the code behind '>>') needs to be an exact
+    match, but in the source there may be other code in front and after
     the code; this works:
     {{{
     // == Base code ==
@@ -639,8 +639,8 @@ class ShaderCode(object):
     
     Standard sections
     -----------------
-    For clarity we define a few standard sections: '--uniforms--', 
-    '--varying--', '--functions--'. When defining a function/uniform/varying, 
+    For clarity we define a few standard sections: '--uniforms--',
+    '--varying--', '--functions--'. When defining a function/uniform/varying,
     don't forget to include the functions/uniforms/varyings of any next parts:
     {{{
         >>--uniforms--
@@ -661,20 +661,20 @@ class ShaderCode(object):
         # Init buffer. None means it's dirty
         self._buffer = None
         
-        # Flag for the program. Is set to True by the isDirty property. Is 
+        # Flag for the program. Is set to True by the isDirty property. Is
         # only set to False by the special private property _needRecompile.
         self._needRecompileFlag = True
     
     
     @property
     def parts(self):
-        """ Get a list of the parts in the shader. 
+        """ Get a list of the parts in the shader.
         """
         return [part for part in self._parts]
     
     @property
     def partNames(self):
-        """ Get a list of the part names in the shader. 
+        """ Get a list of the part names in the shader.
         """
         return [part.name for part in self._parts]
     
@@ -760,7 +760,7 @@ class ShaderCode(object):
     def ReplacePart(self, part):
         """ ReplacePart(part)
         
-        Replace an existing part, based on the name. If the given 
+        Replace an existing part, based on the name. If the given
         ShaderCodePart object would replace itself, no action is taken.
         This makes it possible to call this method on each draw without
         the risk of the code being recompiled each time.
@@ -788,7 +788,7 @@ class ShaderCode(object):
     def AddOrReplace(self, part, before=None, after=None):
         """ AddOrReplace(part, before=None, after=None)
         
-        Convenience function to add a part or replace it if 
+        Convenience function to add a part or replace it if
         a part of this name already exists.
         
         """
@@ -801,7 +801,7 @@ class ShaderCode(object):
     def RemovePart(self, part):
         """ RemovePart(part)
         
-        Remove a part. Returns True on success, and False if no part exists 
+        Remove a part. Returns True on success, and False if no part exists
         for the given name. Also accepts a part name.
         
         """
@@ -967,8 +967,8 @@ class ShaderCode(object):
 class ShaderCodePart(object):
     """ ShaderCodePart(name, version, code)
     
-    A ShaderCodePart instance represents a part of GLSL code. Multiple 
-    parts can be combined by replacing lines in the preceding parts. 
+    A ShaderCodePart instance represents a part of GLSL code. Multiple
+    parts can be combined by replacing lines in the preceding parts.
     This makes code-reuse much easier, and allows users to for example
     implement a volume renderer without the hassle of calculating ray
     direction etc.; they can simply modify an existing renderer.
@@ -977,7 +977,7 @@ class ShaderCodePart(object):
     ----------
     name : str
       The name of the part, showing what it does. Different parts that
-      have the same purpose have the same name. The different render 
+      have the same purpose have the same name. The different render
       styles are for example implemented using parts all having the
       name 'renderstyle'.
     version : str
@@ -989,7 +989,7 @@ class ShaderCodePart(object):
       with one or more lines that start with '>>'. The text behind the lines
       is what shall be replaced in the preceding code part. The following
       lines are the one that shall be inserted. Indentation does not matter.
-      See core/shaders_src.py for examples.      
+      See core/shaders_src.py for examples.
     
     """
     def __init__(self, name, version, code):
@@ -1054,7 +1054,7 @@ class ShaderCodePart(object):
         
         Returns a two-element tuple with two list elements:
           * the replace-code for each section (can be multi-line)
-          * the corresponding code to replace it with. 
+          * the corresponding code to replace it with.
           
         """
         
@@ -1064,7 +1064,7 @@ class ShaderCodePart(object):
         codes = []
         
         # Collect all section needles
-        linenr = 0    
+        linenr = 0
         lastLinenr = -10
         for line in self.code.splitlines():
             linenr += 1
@@ -1104,8 +1104,8 @@ from visvis.core.shaders_m import *  # noqa
 if __name__ == '__main__':
     
     S1 = ShaderCodePart('s1','',
-    """ 
-        // Cast ray. 
+    """
+        // Cast ray.
         int i=0;
         while (i<n)
         {

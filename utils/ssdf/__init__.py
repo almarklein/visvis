@@ -65,7 +65,7 @@ def _get_mode(filename, mode):
     
     Given filename and mode returns the mode (as 1 or 2).
     
-    """ 
+    """
     
     # Determine mode from extension
     mode_ext = 0
@@ -101,7 +101,7 @@ def save(filename, struct, mode=None):
     
     Save the given struct or dict to the filesystem using the given filename.
     
-    Two modes are supported: text mode stores in a human readable format, 
+    Two modes are supported: text mode stores in a human readable format,
     and binary mode stores in a more efficient (compressed) binary format.
     
     Parameters
@@ -114,7 +114,7 @@ def save(filename, struct, mode=None):
     struct : {Struct, dict}
         The object to save.
     mode : optional {'text', 'str', 1, 'bin', 'bytes', 2}
-        This parameter can be used to explicitly specify the mode. Note 
+        This parameter can be used to explicitly specify the mode. Note
         that it is an error to use binary mode on a '.ssdf' file or text
         mode on a '.bsdf' file.
     
@@ -195,7 +195,7 @@ def load(filename):
     
     Load a struct from the filesystem using the given filename.
     
-    Two modes are supported: text mode stores in a human readable format, 
+    Two modes are supported: text mode stores in a human readable format,
     and binary mode stores in a more efficient (compressed) binary format.
     
     Parameters
@@ -275,7 +275,7 @@ def loads(ss):
 def update(filename, struct):
     """ update(filename, struct)
     
-    Update an existing ssdf file with the given struct. 
+    Update an existing ssdf file with the given struct.
     
     For every dict in the data tree, the elements are updated.
     Note that any lists occuring in both data trees are simply replaced.
@@ -288,7 +288,7 @@ def update(filename, struct):
     # Insert stuff
     def insert(ob1, ob2):
         for name in ob2:
-            if ( name in ob1 and isstruct(ob1[name]) and 
+            if ( name in ob1 and isstruct(ob1[name]) and
                                  isstruct(ob2[name]) ):
                 insert(ob1[name], ob2[name])
             else:
@@ -321,9 +321,9 @@ def clear(struct):
 def count(object):
     """ count(object):
     
-    Count the number of elements in the given object. 
+    Count the number of elements in the given object.
     
-    An element is defined as one of the 7 datatypes supported by ssdf 
+    An element is defined as one of the 7 datatypes supported by ssdf
     (dict/struct, tuple/list, array, string, int, float, None).
     
     """

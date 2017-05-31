@@ -12,10 +12,10 @@ def imshow(im, clim=None, aa=2, interpolate=False, cm=None,
     """ imshow(im, clim=None, aa=2, interpolate=False, cm=CM_GRAY,
                 axesAdjust=True, axes=None)
     
-    Display a 2D image and returns the Texture2D object. 
+    Display a 2D image and returns the Texture2D object.
     
     If the image is an anisotropic array (vv.Aaray), the appropriate
-    scale and translate transformations are applied. 
+    scale and translate transformations are applied.
     
     Parameters
     ----------
@@ -34,7 +34,7 @@ def imshow(im, clim=None, aa=2, interpolate=False, cm=None,
         Set the colormap to apply in case the image is grayscale.
     axesAdjust : bool
         If axesAdjust==True, this function will call axes.SetLimits(), set
-        the camera type to 2D, and make axes.daspect[1] negative (i.e. flip 
+        the camera type to 2D, and make axes.daspect[1] negative (i.e. flip
         the y-axis). If daspectAuto has not been set yet, it is set to False.
     axes : Axes instance
         Display the image in this axes, or the current axes if not given.
@@ -43,11 +43,11 @@ def imshow(im, clim=None, aa=2, interpolate=False, cm=None,
     -----
     New images are positioned on z=-0.1, such that lines and points are
     visible over the image. This z-pos of textures already in the axes
-    are moved backwards if new images are displayed with imshow, such that 
+    are moved backwards if new images are displayed with imshow, such that
     the new image is displayed over the older ones.
     (the changed value is `Texture2D._trafo_trans.dz`)
     
-    Visvis does not use the "hold on / hold off" system. So if updating 
+    Visvis does not use the "hold on / hold off" system. So if updating
     an image, better use Texture2D.Refresh() or call Axes.Clear() first.
     
     """
@@ -84,7 +84,7 @@ def imshow(im, clim=None, aa=2, interpolate=False, cm=None,
     t.aa = aa
     t.interpolate = interpolate
     
-    # set clim 
+    # set clim
     if isinstance(clim,list):
         clim = tuple(clim)
     if isinstance(clim, tuple):

@@ -11,7 +11,7 @@ def gcf():
     """ gcf()
     
     Get the current figure. If there is no figure yet, figure() is
-    called to create one. To make a figure current, 
+    called to create one. To make a figure current,
     use Figure.MakeCurrent().
     
     See also gca()
@@ -20,9 +20,9 @@ def gcf():
     
     if not BaseFigure._figures:
         # no figure yet
-        return vv.figure()    
+        return vv.figure()
     
-    nr = BaseFigure._currentNr    
+    nr = BaseFigure._currentNr
     if not nr in BaseFigure._figures:
         # erroneous nr
         nr = list(BaseFigure._figures.keys())[0]

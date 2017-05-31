@@ -9,7 +9,7 @@ import visvis as vv
 def ylabel(text, axes=None):
     """ ylabel(text, axes=None)
     
-    Set the ylabel of an axes. 
+    Set the ylabel of an axes.
     Note that you can also use "axes.axis.yLabel = text".
     
     Parameters
@@ -26,5 +26,5 @@ def ylabel(text, axes=None):
 
 if __name__=='__main__':
     a = vv.gca()
-    a.cameraType = '2d'    
+    a.cameraType = '2d'
     vv.ylabel('label test')

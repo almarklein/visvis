@@ -7,8 +7,8 @@
 """ Package visvis.utils
 
 This package contains a few modules and packages that are stand-alone
-and maybe useful outside visvis. Some utilities are used inside visvis 
-(such as ssdf), others extend the functionality of visvis or have some 
+and maybe useful outside visvis. Some utilities are used inside visvis
+(such as ssdf), others extend the functionality of visvis or have some
 relation to visualization.
 
 The intended way to import utilities is: "from visvis.utils import utilname".

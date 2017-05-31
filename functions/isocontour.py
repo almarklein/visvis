@@ -14,7 +14,7 @@ def isocontour(im, isovalue=None):
     image. If isovalue is not given or None, a value between the min
     and max of the image is used.
     
-    Returns a pointset in which each two subsequent points form a line 
+    Returns a pointset in which each two subsequent points form a line
     piece. This van be best visualized using "vv.plot(result, ls='+')".
     
     """

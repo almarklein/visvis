@@ -97,35 +97,35 @@ TT_NAME_IDS: Possible values of the `name' identifier field in the name
 # An enumeration type used to describe the format of pixels in a given
 # bitmap. Note that additional formats may be added in the future.
 #
-# FT_PIXEL_MODE_NONE	
+# FT_PIXEL_MODE_NONE
 # Value 0 is reserved.
 #
-# FT_PIXEL_MODE_MONO	
+# FT_PIXEL_MODE_MONO
 # A monochrome bitmap, using 1 bit per pixel. Note that pixels are stored in
 # most-significant order (MSB), which means that the left-most pixel in a byte
 # has value 128.
 #
-# FT_PIXEL_MODE_GRAY	
+# FT_PIXEL_MODE_GRAY
 # An 8-bit bitmap, generally used to represent anti-aliased glyph images. Each
 # pixel is stored in one byte. Note that the number of 'gray' levels is stored
 # in the 'num_grays' field of the FT_Bitmap structure (it generally is 256).
 #
-# FT_PIXEL_MODE_GRAY2	
+# FT_PIXEL_MODE_GRAY2
 # A 2-bit per pixel bitmap, used to represent embedded anti-aliased bitmaps in
 # font files according to the OpenType specification. We haven't found a single
 # font using this format, however.
 #
-# FT_PIXEL_MODE_GRAY4	
+# FT_PIXEL_MODE_GRAY4
 # A 4-bit per pixel bitmap, representing embedded anti-aliased bitmaps in font
 # files according to the OpenType specification. We haven't found a single font
 # using this format, however.
 #
-# FT_PIXEL_MODE_LCD	
+# FT_PIXEL_MODE_LCD
 # An 8-bit bitmap, representing RGB or BGR decimated glyph images used for
 # display on LCD displays; the bitmap is three times wider than the original
 # glyph image. See also FT_RENDER_MODE_LCD.
 #
-# FT_PIXEL_MODE_LCD_V	
+# FT_PIXEL_MODE_LCD_V
 # An 8-bit bitmap, representing RGB or BGR decimated glyph images used for
 # display on rotated LCD displays; the bitmap is three times taller than the
 # original glyph image. See also FT_RENDER_MODE_LCD_V.
@@ -149,19 +149,19 @@ ft_pixel_mode_pal4  = FT_PIXEL_MODE_GRAY4
 # -----------------------------------------------------------------------------
 # The mode how the values of FT_Glyph_Get_CBox are returned.
 #
-# FT_GLYPH_BBOX_UNSCALED	
+# FT_GLYPH_BBOX_UNSCALED
 # Return unscaled font units.
 #
 # FT_GLYPH_BBOX_SUBPIXELS
 # Return unfitted 26.6 coordinates.
 #
-# FT_GLYPH_BBOX_GRIDFIT	
+# FT_GLYPH_BBOX_GRIDFIT
 # Return grid-fitted 26.6 coordinates.
 #
-# FT_GLYPH_BBOX_TRUNCATE	
+# FT_GLYPH_BBOX_TRUNCATE
 # Return coordinates in integer pixels.
 #
-# FT_GLYPH_BBOX_PIXELS	
+# FT_GLYPH_BBOX_PIXELS
 # Return grid-fitted pixel coordinates.
 #
 FT_GLYPH_BBOX_MODES = {'FT_GLYPH_BBOX_UNSCALED'  : 0,
@@ -178,7 +178,7 @@ globals().update(FT_GLYPH_BBOX_MODES)
 # that this version of FreeType only supports two image formats, even though
 # future font drivers will be able to register their own format.
 #
-# FT_GLYPH_FORMAT_NONE	
+# FT_GLYPH_FORMAT_NONE
 # The value 0 is reserved.
 
 # FT_GLYPH_FORMAT_COMPOSITE
@@ -186,7 +186,7 @@ globals().update(FT_GLYPH_BBOX_MODES)
 # used with FT_LOAD_NO_RECURSE, and is used to report compound glyphs (like
 # accented characters).
 #
-# FT_GLYPH_FORMAT_BITMAP	
+# FT_GLYPH_FORMAT_BITMAP
 # The glyph image is a bitmap, and can be described as an FT_Bitmap. You
 # generally need to access the 'bitmap' field of the FT_GlyphSlotRec structure
 # to read it.
@@ -223,10 +223,10 @@ ft_glyph_format_plotter   = FT_GLYPH_FORMAT_PLOTTER
 # An enumeration used to specify character sets supported by charmaps. Used in
 # the FT_Select_Charmap API function.
 #
-# FT_ENCODING_NONE	
+# FT_ENCODING_NONE
 # The encoding value 0 is reserved.
 #
-# FT_ENCODING_UNICODE	
+# FT_ENCODING_UNICODE
 # Corresponds to the Unicode character set. This value covers all versions of
 # the Unicode repertoire, including ASCII and Latin-1. Most fonts include a
 # Unicode charmap, but not all of them.
@@ -234,29 +234,29 @@ ft_glyph_format_plotter   = FT_GLYPH_FORMAT_PLOTTER
 # For example, if you want to access Unicode value U+1F028 (and the font
 # contains it), use value 0x1F028 as the input value for FT_Get_Char_Index.
 #
-# FT_ENCODING_MS_SYMBOL	
+# FT_ENCODING_MS_SYMBOL
 # Corresponds to the Microsoft Symbol encoding, used to encode mathematical
 # symbols in the 32..255 character code range. For more information, see
 # 'http://www.ceviz.net/symbol.htm'.
 #
-# FT_ENCODING_SJIS	
+# FT_ENCODING_SJIS
 # Corresponds to Japanese SJIS encoding. More info at at
 # 'http://langsupport.japanreference.com/encoding.shtml'. See note on
 # multi-byte encodings below.
 #
-# FT_ENCODING_GB2312	
+# FT_ENCODING_GB2312
 # Corresponds to an encoding system for Simplified Chinese as used used in
 # mainland China.
 #
-# FT_ENCODING_BIG5	
+# FT_ENCODING_BIG5
 # Corresponds to an encoding system for Traditional Chinese as used in Taiwan
 # and Hong Kong.
 #
-# FT_ENCODING_WANSUNG	
+# FT_ENCODING_WANSUNG
 # Corresponds to the Korean encoding system known as Wansung. For more
 # information see 'http://www.microsoft.com/typography/unicode/949.txt'.
 #
-# FT_ENCODING_JOHAB	
+# FT_ENCODING_JOHAB
 # The Korean standard character set (KS C 5601-1992), which corresponds to MS
 # Windows code page 1361. This character set includes all possible Hangeul
 # character combinations.
@@ -316,24 +316,24 @@ globals().update(FT_ENCODINGS)
 #
 # All modes except FT_RENDER_MODE_MONO use 256 levels of opacity.
 #
-# FT_RENDER_MODE_NORMAL	
+# FT_RENDER_MODE_NORMAL
 # This is the default render mode; it corresponds to 8-bit anti-aliased
 # bitmaps.
 #
-# FT_RENDER_MODE_LIGHT	
+# FT_RENDER_MODE_LIGHT
 # This is equivalent to FT_RENDER_MODE_NORMAL. It is only defined as a separate
 # value because render modes are also used indirectly to define hinting
 # algorithm selectors. See FT_LOAD_TARGET_XXX for details.
 #
-# FT_RENDER_MODE_MONO	
+# FT_RENDER_MODE_MONO
 # This mode corresponds to 1-bit bitmaps (with 2 levels of opacity).
 #
-# FT_RENDER_MODE_LCD	
+# FT_RENDER_MODE_LCD
 # This mode corresponds to horizontal RGB and BGR sub-pixel displays like LCD
 # screens. It produces 8-bit bitmaps that are 3 times the width of the original
 # glyph outline in pixels, and which use the FT_PIXEL_MODE_LCD mode.
 #
-# FT_RENDER_MODE_LCD_V	
+# FT_RENDER_MODE_LCD_V
 # This mode corresponds to vertical RGB and BGR sub-pixel displays (like PDA
 # screens, rotated LCD displays, etc.). It produces 8-bit bitmaps that are 3
 # times the height of the original glyph outline in pixels and use the
@@ -360,27 +360,27 @@ globals().update(FT_RENDER_MODES)
 # Also note that FT_LOAD_TARGET_LIGHT is an exception, in that it always
 # implies FT_LOAD_FORCE_AUTOHINT.
 #
-# FT_LOAD_TARGET_NORMAL	
+# FT_LOAD_TARGET_NORMAL
 # This corresponds to the default hinting algorithm, optimized for standard
 # gray-level rendering. For monochrome output, use FT_LOAD_TARGET_MONO instead.
 #
-# FT_LOAD_TARGET_LIGHT	
+# FT_LOAD_TARGET_LIGHT
 # A lighter hinting algorithm for non-monochrome modes. Many generated glyphs
 # are more fuzzy but better resemble its original shape. A bit like rendering
 # on Mac OS X.
 #
 # As a special exception, this target implies FT_LOAD_FORCE_AUTOHINT.
 #
-# FT_LOAD_TARGET_MONO	
+# FT_LOAD_TARGET_MONO
 # Strong hinting algorithm that should only be used for monochrome output. The
 # result is probably unpleasant if the glyph is rendered in non-monochrome
 # modes.
 #
-# FT_LOAD_TARGET_LCD	
+# FT_LOAD_TARGET_LCD
 # A variant of FT_LOAD_TARGET_NORMAL optimized for horizontally decimated LCD
 # displays.
 #
-# FT_LOAD_TARGET_LCD_V	
+# FT_LOAD_TARGET_LCD_V
 # A variant of FT_LOAD_TARGET_NORMAL optimized for vertically decimated LCD
 # displays.
 
@@ -401,7 +401,7 @@ globals().update(FT_LOAD_TARGETS)
 # A list of bit-field constants used with FT_Load_Glyph to indicate what kind
 # of operations to perform during glyph loading.
 #
-# FT_LOAD_DEFAULT	
+# FT_LOAD_DEFAULT
 # Corresponding to 0, this value is used as the default glyph load
 # operation. In this case, the following happens:
 #
@@ -418,26 +418,26 @@ globals().update(FT_LOAD_TARGETS)
 # bitmaps. The following flags are used to modify this default behaviour to
 # more specific and useful cases.
 #
-# FT_LOAD_NO_SCALE	
+# FT_LOAD_NO_SCALE
 # Don't scale the outline glyph loaded, but keep it in font units.
 #
 # This flag implies FT_LOAD_NO_HINTING and FT_LOAD_NO_BITMAP, and unsets
 # FT_LOAD_RENDER.
 #
-# FT_LOAD_NO_HINTING	
+# FT_LOAD_NO_HINTING
 # Disable hinting. This generally generates 'blurrier' bitmap glyph when the
 # glyph is rendered in any of the anti-aliased modes. See also the note below.
 #
 # This flag is implied by FT_LOAD_NO_SCALE.
 #
-# FT_LOAD_RENDER	
+# FT_LOAD_RENDER
 # Call FT_Render_Glyph after the glyph is loaded. By default, the glyph is
 # rendered in FT_RENDER_MODE_NORMAL mode. This can be overridden by
 # FT_LOAD_TARGET_XXX or FT_LOAD_MONOCHROME.
 #
 # This flag is unset by FT_LOAD_NO_SCALE.
 #
-# FT_LOAD_NO_BITMAP	
+# FT_LOAD_NO_BITMAP
 # Ignore bitmap strikes when loading. Bitmap-only fonts ignore this flag.
 #
 # FT_LOAD_NO_SCALE always sets this flag.
@@ -446,15 +446,15 @@ globals().update(FT_LOAD_TARGETS)
 # Load the glyph for vertical text layout. Don't use it as it is problematic
 # currently.
 #
-# FT_LOAD_FORCE_AUTOHINT	
+# FT_LOAD_FORCE_AUTOHINT
 # Indicates that the auto-hinter is preferred over the font's native
 # hinter. See also the note below.
 #
-# FT_LOAD_CROP_BITMAP	
+# FT_LOAD_CROP_BITMAP
 # Indicates that the font driver should crop the loaded bitmap glyph (i.e.,
 # remove all space around its black bits). Not all drivers implement this.
 #
-# FT_LOAD_PEDANTIC	
+# FT_LOAD_PEDANTIC
 # Indicates that the font driver should perform pedantic verifications during
 # glyph loading. This is mostly used to detect broken glyphs in fonts. By
 # default, FreeType tries to handle broken fonts also.
@@ -466,7 +466,7 @@ globals().update(FT_LOAD_TARGETS)
 #
 # This flag exists for historical reasons (to support buggy CJK fonts).
 #
-# FT_LOAD_NO_RECURSE	
+# FT_LOAD_NO_RECURSE
 # This flag is only used internally. It merely indicates that the font driver
 # should not load composite glyphs recursively. Instead, it should set the
 # 'num_subglyph' and 'subglyphs' values of the glyph slot accordingly, and set
@@ -479,7 +479,7 @@ globals().update(FT_LOAD_TARGETS)
 # FT_LOAD_IGNORE_TRANSFORM
 # Indicates that the transform matrix set by FT_Set_Transform should be ignored.
 #
-# FT_LOAD_MONOCHROME	
+# FT_LOAD_MONOCHROME
 # This flag is used with FT_LOAD_RENDER to indicate that you want to render an
 # outline glyph to a 1-bit monochrome bitmap glyph, with 8 pixels packed into
 # each byte of the bitmap data.
@@ -488,12 +488,12 @@ globals().update(FT_LOAD_TARGETS)
 # use FT_LOAD_TARGET_MONO so that the monochrome-optimized hinting algorithm is
 # used.
 #
-# FT_LOAD_LINEAR_DESIGN	
+# FT_LOAD_LINEAR_DESIGN
 # Indicates that the 'linearHoriAdvance' and 'linearVertAdvance' fields of
 # FT_GlyphSlotRec should be kept in font units. See FT_GlyphSlotRec for
 # details.
 #
-# FT_LOAD_NO_AUTOHINT	
+# FT_LOAD_NO_AUTOHINT
 # Disable auto-hinter. See also the note below.
 #
 FT_LOAD_FLAGS = { 'FT_LOAD_DEFAULT'                      : 0x0,
@@ -519,10 +519,10 @@ globals().update(FT_LOAD_FLAGS)
 # A list of bit-flags used to indicate the style of a given face. These are
 # used in the 'style_flags' field of FT_FaceRec.
 #
-# FT_STYLE_FLAG_ITALIC	
+# FT_STYLE_FLAG_ITALIC
 # Indicates that a given face style is italic or oblique.
 #
-# FT_STYLE_FLAG_BOLD	
+# FT_STYLE_FLAG_BOLD
 # Indicates that a given face is bold.
 #
 FT_STYLE_FLAGS = {'FT_STYLE_FLAG_ITALIC' : 1,
@@ -536,7 +536,7 @@ globals().update(FT_STYLE_FLAGS)
 # structure. They inform client applications of properties of the corresponding
 # face.
 #
-# FT_FACE_FLAG_SCALABLE	
+# FT_FACE_FLAG_SCALABLE
 # Indicates that the face contains outline glyphs. This doesn't prevent bitmap
 # strikes, i.e., a face can have both this and and FT_FACE_FLAG_FIXED_SIZES
 # set.
@@ -549,7 +549,7 @@ globals().update(FT_STYLE_FLAGS)
 # Indicates that the face contains fixed-width characters (like Courier,
 # Lucido, MonoType, etc.).
 #
-# FT_FACE_FLAG_SFNT	
+# FT_FACE_FLAG_SFNT
 # Indicates that the face uses the 'sfnt' storage scheme. For now, this means
 # TrueType and OpenType.
 #
@@ -557,11 +557,11 @@ globals().update(FT_STYLE_FLAGS)
 # Indicates that the face contains horizontal glyph metrics. This should be set
 # for all common formats.
 #
-# FT_FACE_FLAG_VERTICAL	
+# FT_FACE_FLAG_VERTICAL
 # Indicates that the face contains vertical glyph metrics. This is only
 # available in some formats, not all of them.
 #
-# FT_FACE_FLAG_KERNING	
+# FT_FACE_FLAG_KERNING
 # Indicates that the face contains kerning information. If set, the kerning
 # distance can be retrieved through the function FT_Get_Kerning. Otherwise the
 # function always return the vector (0,0). Note that FreeType doesn't handle
@@ -583,13 +583,13 @@ globals().update(FT_STYLE_FLAGS)
 # the client application and should not be destroyed when FT_Done_Face is
 # called. Don't read or test this flag.
 #
-# FT_FACE_FLAG_HINTER	
+# FT_FACE_FLAG_HINTER
 # Set if the font driver has a hinting machine of its own. For example, with
 # TrueType fonts, it makes sense to use data from the SFNT 'gasp' table only if
 # the native TrueType hinting engine (with the bytecode interpreter) is
 # available and active.
 #
-# FT_FACE_FLAG_CID_KEYED	
+# FT_FACE_FLAG_CID_KEYED
 # Set if the font is CID-keyed. In that case, the font is not accessed by glyph
 # indices but by CID values. For subsetted CID-keyed fonts this has the
 # consequence that not all index values are a valid argument to
@@ -601,7 +601,7 @@ globals().update(FT_STYLE_FLAGS)
 # set since the glyphs are accessed in the normal way (using contiguous
 # indices); the 'CID-ness' isn't visible to the application.
 #
-# FT_FACE_FLAG_TRICKY	
+# FT_FACE_FLAG_TRICKY
 # Set if the font is 'tricky', this is, it always needs the font format's
 # native hinting engine to get a reasonable result. A typical example is the
 # Chinese font 'mingli.ttf' which uses TrueType bytecode instructions to move
@@ -638,10 +638,10 @@ globals().update(FT_FACE_FLAGS)
 # A list of bit-field constants use for the flags in an outline's 'flags'
 # field.
 #
-# FT_OUTLINE_NONE	
+# FT_OUTLINE_NONE
 # Value 0 is reserved.
 #
-# FT_OUTLINE_OWNER	
+# FT_OUTLINE_OWNER
 # If set, this flag indicates that the outline's field arrays (i.e., 'points',
 # 'flags', and 'contours') are 'owned' by the outline object, and should thus
 # be freed when it is destroyed.
@@ -677,7 +677,7 @@ globals().update(FT_FACE_FLAGS)
 # small character sizes. Note that this is only a hint that might be completely
 # ignored by a given scan-converter.
 #
-# FT_OUTLINE_SINGLE_PASS	
+# FT_OUTLINE_SINGLE_PASS
 # This flag is set to force a given scan-converter to only use a single pass
 # over the outline to render a bitmap glyph image. Normally, it is set for very
 # large character sizes. It is only a hint that might be completely ignored by
@@ -699,20 +699,20 @@ globals().update(FT_OUTLINE_FLAGS)
 # -----------------------------------------------------------------------------
 # A list of bit-field constants used within the 'flags' field of the
 # FT_Open_Args structure.
-# 
-# FT_OPEN_MEMORY	
+#
+# FT_OPEN_MEMORY
 # This is a memory-based stream.
 #
-# FT_OPEN_STREAM	
+# FT_OPEN_STREAM
 # Copy the stream from the 'stream' field.
 #
-# FT_OPEN_PATHNAME	
+# FT_OPEN_PATHNAME
 # Create a new input stream from a C path name.
 #
-# FT_OPEN_DRIVER	
+# FT_OPEN_DRIVER
 # Use the 'driver' field.
 #
-# FT_OPEN_PARAMS	
+# FT_OPEN_PARAMS
 # Use the 'num_params' and 'params' fields.
 #
 FT_OPEN_MODES = {'FT_OPEN_MEMORY':   0x1,
@@ -728,13 +728,13 @@ globals().update(FT_OPEN_MODES)
 # An enumeration used to specify which kerning values to return in
 # FT_Get_Kerning.
 #
-# FT_KERNING_DEFAULT	
+# FT_KERNING_DEFAULT
 # Return scaled and grid-fitted kerning distances (value is 0).
 #
-# FT_KERNING_UNFITTED	
+# FT_KERNING_UNFITTED
 # Return scaled but un-grid-fitted kerning distances.
 #
-# FT_KERNING_UNSCALED	
+# FT_KERNING_UNSCALED
 # Return the kerning vector in original font units.
 #
 FT_KERNING_MODES = { 'FT_KERNING_DEFAULT'  : 0,
@@ -791,7 +791,7 @@ globals().update(FT_STROKER_LINECAPS)
 # These values are used to select a given stroke border in
 # FT_Stroker_GetBorderCounts and FT_Stroker_ExportBorder.
 #
-# FT_STROKER_BORDER_LEFT	
+# FT_STROKER_BORDER_LEFT
 # Select the left border, relative to the drawing direction.
 #
 # FT_STROKER_BORDER_RIGHT
@@ -815,20 +815,20 @@ globals().update(FT_STROKER_BORDERS)
 # -----------------------------------------------------------------------------
 # A list of values to identify various types of LCD filters.
 #
-# FT_LCD_FILTER_NONE	
+# FT_LCD_FILTER_NONE
 # Do not perform filtering. When used with subpixel rendering, this results in
 # sometimes severe color fringes.
 #
-# FT_LCD_FILTER_DEFAULT	
+# FT_LCD_FILTER_DEFAULT
 # The default filter reduces color fringes considerably, at the cost of a
 # slight blurriness in the output.
 #
-# FT_LCD_FILTER_LIGHT	
+# FT_LCD_FILTER_LIGHT
 # The light filter is a variant that produces less blurriness at the cost of
 # slightly more color fringes than the default one. It might be better,
 # depending on taste, your monitor, or your personal vision.
 #
-# FT_LCD_FILTER_LEGACY	
+# FT_LCD_FILTER_LEGACY
 # This filter corresponds to the original libXft color filter. It provides high
 # contrast output but can exhibit really bad color fringes if glyphs are not
 # extremely well hinted to the pixel grid. In other words, it only works well
@@ -855,26 +855,26 @@ globals().update(FT_LCD_FILTERS)
 # TT_APPLE_ID_XXX for corresponding 'encoding_id' values. Note that name
 # entries in this format are coded as big-endian UCS-2 character codes only.
 #
-# TT_PLATFORM_MACINTOSH	
+# TT_PLATFORM_MACINTOSH
 # Used by Apple to indicate a MacOS-specific charmap and/or name entry. See
 # TT_MAC_ID_XXX for corresponding 'encoding_id' values. Note that most TrueType
 # fonts contain an Apple roman charmap to be usable on MacOS systems (even if
 # they contain a Microsoft charmap as well).
 #
-# TT_PLATFORM_ISO	
+# TT_PLATFORM_ISO
 # This value was used to specify ISO/IEC 10646 charmaps. It is however now
 # deprecated. See TT_ISO_ID_XXX for a list of corresponding 'encoding_id'
 # values.
 #
-# TT_PLATFORM_MICROSOFT	
+# TT_PLATFORM_MICROSOFT
 # Used by Microsoft to indicate Windows-specific charmaps. See TT_MS_ID_XXX for
 # a list of corresponding 'encoding_id' values. Note that most fonts contain a
 # Unicode charmap using (TT_PLATFORM_MICROSOFT, TT_MS_ID_UNICODE_CS).
 #
-# TT_PLATFORM_CUSTOM	
+# TT_PLATFORM_CUSTOM
 # Used to indicate application-specific charmaps.
 #
-# TT_PLATFORM_ADOBE	
+# TT_PLATFORM_ADOBE
 # This value isn't part of any font format specification, but is used by
 # FreeType to report Adobe-specific charmaps in an FT_CharMapRec structure. See
 # TT_ADOBE_ID_XXX.
@@ -893,19 +893,19 @@ globals().update(TT_PLATFORMS)
 # A list of valid values for the 'encoding_id' for TT_PLATFORM_APPLE_UNICODE
 # charmaps and name entries.
 #
-# TT_APPLE_ID_DEFAULT	
+# TT_APPLE_ID_DEFAULT
 # Unicode version 1.0.
 #
 # TT_APPLE_ID_UNICODE_1_1
 # Unicode 1.1; specifies Hangul characters starting at U+34xx.
 #
-# TT_APPLE_ID_ISO_10646	
+# TT_APPLE_ID_ISO_10646
 # Deprecated (identical to preceding).
 #
 # TT_APPLE_ID_UNICODE_2_0
 # Unicode 2.0 and beyond (UTF-16 BMP only).
 #
-# TT_APPLE_ID_UNICODE_32	
+# TT_APPLE_ID_UNICODE_32
 # Unicode 3.1 and beyond, using UTF-32.
 #
 # TT_APPLE_ID_VARIANT_SELECTOR
@@ -967,31 +967,31 @@ globals().update(TT_MAC_IDS)
 # A list of valid values for the 'encoding_id' for TT_PLATFORM_MICROSOFT
 # charmaps and name entries.
 #
-# TT_MS_ID_SYMBOL_CS	
+# TT_MS_ID_SYMBOL_CS
 # Corresponds to Microsoft symbol encoding. See FT_ENCODING_MS_SYMBOL.
 #
-# TT_MS_ID_UNICODE_CS	
+# TT_MS_ID_UNICODE_CS
 # Corresponds to a Microsoft WGL4 charmap, matching Unicode. See
 # FT_ENCODING_UNICODE.
 #
-# TT_MS_ID_SJIS	
+# TT_MS_ID_SJIS
 # Corresponds to SJIS Japanese encoding. See FT_ENCODING_SJIS.
 #
-# TT_MS_ID_GB2312	
+# TT_MS_ID_GB2312
 # Corresponds to Simplified Chinese as used in Mainland China. See
 # FT_ENCODING_GB2312.
 #
-# TT_MS_ID_BIG_5	
+# TT_MS_ID_BIG_5
 # Corresponds to Traditional Chinese as used in Taiwan and Hong Kong. See
 # FT_ENCODING_BIG5.
 #
-# TT_MS_ID_WANSUNG	
+# TT_MS_ID_WANSUNG
 # Corresponds to Korean Wansung encoding. See FT_ENCODING_WANSUNG.
 #
-# TT_MS_ID_JOHAB	
+# TT_MS_ID_JOHAB
 # Corresponds to Johab encoding. See FT_ENCODING_JOHAB.
 #
-# TT_MS_ID_UCS_4	
+# TT_MS_ID_UCS_4
 # Corresponds to UCS-4 or UTF-32 charmaps. This has been added to the OpenType
 # specification version 1.4 (mid-2001.)
 
@@ -1011,16 +1011,16 @@ globals().update(TT_MS_IDS)
 # A list of valid values for the 'encoding_id' for TT_PLATFORM_ADOBE
 # charmaps. This is a FreeType-specific extension!
 #
-# TT_ADOBE_ID_STANDARD	
+# TT_ADOBE_ID_STANDARD
 # Adobe standard encoding.
 #
-# TT_ADOBE_ID_EXPERT	
+# TT_ADOBE_ID_EXPERT
 # Adobe expert encoding.
 #
-# TT_ADOBE_ID_CUSTOM	
+# TT_ADOBE_ID_CUSTOM
 # Adobe custom encoding.
 #
-# TT_ADOBE_ID_LATIN_1	
+# TT_ADOBE_ID_LATIN_1
 # Adobe Latin 1 encoding.
 
 TT_ADOBE_IDS = {
@@ -1415,7 +1415,7 @@ globals().update(TT_MS_LANGIDS)
 # -----------------------------------------------------------------------------
 # Possible values of the 'name' identifier field in the name records of the TTF
 # 'name' table.  These values are platform independent.
-TT_NAME_IDS = {                                                                       
+TT_NAME_IDS = {
     'TT_NAME_ID_COPYRIGHT'            :  0,
     'TT_NAME_ID_FONT_FAMILY'          :  1,
     'TT_NAME_ID_FONT_SUBFAMILY'       :  2,
@@ -1425,7 +1425,7 @@ TT_NAME_IDS = {
     'TT_NAME_ID_PS_NAME'              :  6,
     'TT_NAME_ID_TRADEMARK'            :  7,
 
-    # the following values are from the OpenType spec 
+    # the following values are from the OpenType spec
     'TT_NAME_ID_MANUFACTURER'         :  8,
     'TT_NAME_ID_DESIGNER'             :  9,
     'TT_NAME_ID_DESCRIPTION'          : 10,
@@ -1433,7 +1433,7 @@ TT_NAME_IDS = {
     'TT_NAME_ID_DESIGNER_URL'         : 12,
     'TT_NAME_ID_LICENSE'              : 13,
     'TT_NAME_ID_LICENSE_URL'          : 14,
-    # number 15 is reserved 
+    # number 15 is reserved
     'TT_NAME_ID_PREFERRED_FAMILY'     : 16,
     'TT_NAME_ID_PREFERRED_SUBFAMILY'  : 17,
     'TT_NAME_ID_MAC_FULL_NAME'        : 18,
@@ -1441,10 +1441,10 @@ TT_NAME_IDS = {
     # The following code is new as of 2000-01-21
     'TT_NAME_ID_SAMPLE_TEXT'          : 19,
 
-    # This is new in OpenType 1.3 
+    # This is new in OpenType 1.3
     'TT_NAME_ID_CID_FINDFONT_NAME'    : 20,
 
-    # This is new in OpenType 1.5 
+    # This is new in OpenType 1.5
     'TT_NAME_ID_WWS_FAMILY'           : 21,
     'TT_NAME_ID_WWS_SUBFAMILY'        : 22 }
 globals().update(TT_NAME_IDS)

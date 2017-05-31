@@ -40,7 +40,7 @@ class BinarySSDFReader(SSDFReader):
     def read_binary_blocks(self, f):
         """ read_binary_blocks(f)
         
-        Given a file, creates the block instances. 
+        Given a file, creates the block instances.
         This is a generator function.
         
         """
@@ -173,7 +173,7 @@ class BinarySSDFWriter(SSDFWriter):
         root = BinaryBlock.from_object(-1, binary_type(), object)
         
         # Collect blocks and write
-        blocks = self.flatten_tree(root) 
+        blocks = self.flatten_tree(root)
         self.write_binary_blocks(blocks, fc)
         fc.flush()
         
@@ -244,7 +244,7 @@ class BinaryBlock(Block):
         f.write_string(str(value.dtype))
         # Write data
         # tostring() returns bytes, not a string on py3k
-        self._data = [f.get_bytes(), value.tostring()] 
+        self._data = [f.get_bytes(), value.tostring()]
     
     def _to_array(self):
         f = _VirtualFile(self._data)
@@ -257,7 +257,7 @@ class BinaryBlock(Block):
         if not np:
             return VirtualArray(shape, dtypestr, self._data[i:])
         else:
-            if i < len(self._data):                
+            if i < len(self._data):
                 value = np.frombuffer(self._data, dtype=dtypestr, offset=i)
             else:
                 value = np.array([], dtype=dtypestr)
@@ -274,7 +274,7 @@ class BinaryBlock(Block):
         # Get keys sorted by name
         keys = [key for key in value]
         keys.sort()
-        # Process children        
+        # Process children
         for key in keys:
             # Skip all the buildin stuff
             if key.startswith("__"):
@@ -282,7 +282,7 @@ class BinaryBlock(Block):
             # We have the key, go get the value!
             val = value[key]
             # Skip methods, or anything else we can call
-            if hasattr(val,'__call__') and not hasattr(val, '__to_ssdf__'): 
+            if hasattr(val,'__call__') and not hasattr(val, '__to_ssdf__'):
                 # Note: py3.x does not have function callable
                 continue
             # Add!
@@ -317,7 +317,7 @@ class BinaryBlock(Block):
         for element in value:
             # Add element as subblock
             subBlock = BinaryBlock.from_object(self._indent+1, None, element)
-            self._children.append(subBlock)   
+            self._children.append(subBlock)
     
     def _to_list(self):
         value = []
@@ -365,8 +365,8 @@ class _FileWithExtraMethods:
 class _VirtualFile(_FileWithExtraMethods):
     """ _VirtualFile(bb=None)
     
-    Wraps a bytes instance to provide a file-like interface. Also 
-    represents a file like object to which bytes can be written, and 
+    Wraps a bytes instance to provide a file-like interface. Also
+    represents a file like object to which bytes can be written, and
     the resulting bytes can be obtained using get_bytes().
     
     """
@@ -396,7 +396,7 @@ class _CompressedFile(_FileWithExtraMethods):
     """ _CompressedFile(file)
     
     Wraps a file object to transparantly support reading and writing
-    data from/to a compressed file. 
+    data from/to a compressed file.
     
     Data is compressed in partitions of say 1MB. A partition in the file
     consists of a small header and a body. The header consists of 4 bytes
@@ -522,7 +522,7 @@ class _CompressedFile(_FileWithExtraMethods):
         """
         
         # Get how many bytes we have beyond _PARTITION_SIZE
-        i = (self._pp + len(data)) - _PARTITION_SIZE 
+        i = (self._pp + len(data)) - _PARTITION_SIZE
         
         if i > 0:
             # Add portion to buffer, store remainder

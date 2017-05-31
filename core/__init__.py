@@ -8,18 +8,18 @@
 """ Subpackage core
 
 The core of visvis. Defines the core classes of visvis (such as Wibject
-and Wobject), and the core visualization system (such as the BaseFigure 
-and Axes classes, and auxiliary classes).  
+and Wobject), and the core visualization system (such as the BaseFigure
+and Axes classes, and auxiliary classes).
 
 Notes for developers
 --------------------
 In this __init__ of this class, all classes that we want to expose to
 the user are imported. In the root __init__ of visvis, we do an "import *",
 such that all these classes are inserted in the main visvis namespace.
-Note that the modules in this package are also insertect in the root 
+Note that the modules in this package are also insertect in the root
 namespace. This is ok, since it makes it easier for people to access
-the deeper functionality of visvis if they want to. 
-("Flat is better than nested") 
+the deeper functionality of visvis if they want to.
+("Flat is better than nested")
 
 """
 

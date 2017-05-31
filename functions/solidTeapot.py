@@ -8,7 +8,7 @@ import visvis as vv
 
 # About the vertex data ...
 # The teapot model is a well-known and often used geometric model
-# originally based on Bezier patches. 
+# originally based on Bezier patches.
 
 
 def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
@@ -35,7 +35,7 @@ def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
         direction vector.
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
-        the camera type to 3D. If daspectAuto has not been set yet, 
+        the camera type to 3D. If daspectAuto has not been set yet,
         it is set to False.
     axes : Axes instance
         Display the bars in the given axes, or the current axes if not given.

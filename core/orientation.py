@@ -20,9 +20,9 @@ from visvis.utils.pypoints import Point, is_Point
 class OrientationForWobjects_mixClass(object):
     """ OrientationForWobjects_mixClass()
     
-    This class can be mixed with a wobject class to enable easy 
-    orientation of the objects in space. It makes use of the 
-    tranformation list that each wobject has. 
+    This class can be mixed with a wobject class to enable easy
+    orientation of the objects in space. It makes use of the
+    tranformation list that each wobject has.
     
     The functionality provided by this class is not made part of the
     Wobject class because it does not make sense for all kind of wobjects
@@ -64,7 +64,7 @@ class OrientationForWobjects_mixClass(object):
                 self._scaleTransform.sx = float(value)
                 self._scaleTransform.sy = float(value)
                 self._scaleTransform.sz = float(value)
-            elif isinstance(value, (list, tuple)) and len(value) == 3:                
+            elif isinstance(value, (list, tuple)) and len(value) == 3:
                 self._scaleTransform.sx = float(value[0])
                 self._scaleTransform.sy = float(value[1])
                 self._scaleTransform.sz = float(value[2])
@@ -87,7 +87,7 @@ class OrientationForWobjects_mixClass(object):
             d = self._translateTransform
             return Point(d.dx, d.dy, d.dz)
         def fset(self, value):
-            if isinstance(value, (list, tuple)) and len(value) == 3:                
+            if isinstance(value, (list, tuple)) and len(value) == 3:
                 self._translateTransform.dx = value[0]
                 self._translateTransform.dy = value[1]
                 self._translateTransform.dz = value[2]
@@ -102,9 +102,9 @@ class OrientationForWobjects_mixClass(object):
     
     @misc.PropWithDraw
     def direction():
-        """ Get/Set the direction (i.e. orientation) of the object. Can 
-        be set using a 3-element tuple or a 3D point. The getter always 
-        returns a Point. 
+        """ Get/Set the direction (i.e. orientation) of the object. Can
+        be set using a 3-element tuple or a 3D point. The getter always
+        returns a Point.
         """
         def fget(self):
             return self._direction.copy()
@@ -119,7 +119,7 @@ class OrientationForWobjects_mixClass(object):
             
             # Normalize
             if self._direction.norm()==0:
-                raise ValueError('Direction vector must have a non-zero length.')            
+                raise ValueError('Direction vector must have a non-zero length.')
             self._direction = self._direction.normalize()
             
             # Create ref point
@@ -154,7 +154,7 @@ class OrientationForWobjects_mixClass(object):
     
     @misc.PropWithDraw
     def rotation():
-        """ Get/Set the rotation of the object (in degrees, around its 
+        """ Get/Set the rotation of the object (in degrees, around its
         direction vector).
         """
         def fget(self):

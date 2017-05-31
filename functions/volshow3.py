@@ -7,12 +7,12 @@
 import visvis as vv
 import numpy as np
 
-def volshow3(vol, clim=None, renderStyle='mip', cm=None, 
+def volshow3(vol, clim=None, renderStyle='mip', cm=None,
             axesAdjust=True, axes=None):
-    """ volshow3(vol, clim=None, renderStyle='mip', cm=CM_GRAY, 
+    """ volshow3(vol, clim=None, renderStyle='mip', cm=CM_GRAY,
                 axesAdjust=True, axes=None)
     
-    Display a 3D image (a volume) using volume rendering, 
+    Display a 3D image (a volume) using volume rendering,
     and returns the Texture3D object.
     
     Parameters
@@ -25,7 +25,7 @@ def volshow3(vol, clim=None, renderStyle='mip', cm=None,
         The color limits to scale the intensities of the image. If not given,
         the im.min() and im.max() are used (neglecting nan and inf).
     renderStyle : {'mip', 'iso', 'ray'}
-        The render style to use. Maximum intensity projection (default), 
+        The render style to use. Maximum intensity projection (default),
         isosurface rendering (using lighting), raycasting.
     cm : Colormap
         Set the colormap to apply in case the volume is grayscale.

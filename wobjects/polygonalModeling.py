@@ -19,7 +19,7 @@ from visvis.utils.pypoints import is_Pointset
 from visvis.core.misc import PropWithDraw, DrawAfter, basestring
 from visvis import Wobject, Colormapable, OrientationForWobjects_mixClass
 from visvis.core.light import _testColor, _getColor
-from visvis.wobjects.textures import TextureObjectToVisualize 
+from visvis.wobjects.textures import TextureObjectToVisualize
 from visvis.core import shaders
 from visvis.wobjects.textures import minmax
 
@@ -118,7 +118,7 @@ class BaseMesh(object):
         verticesPerFace = int(verticesPerFace)
         if verticesPerFace in [3, 4]:
             self._verticesPerFace = verticesPerFace
-        else:        
+        else:
             raise ValueError('VerticesPerFace should be 3 or 4.')
         
         # Set all things (checks are performed in set methods)
@@ -147,10 +147,10 @@ class BaseMesh(object):
             except Exception:
                 return ob
         
-        intDtypes = [   np.uint8, np.uint16, np.uint32, 
+        intDtypes = [   np.uint8, np.uint16, np.uint32,
                         np.int8, np.int16, np.int32 ]
         
-        # Get values 
+        # Get values
         vertices = getArgAsArrayIfPossible(0)
         faces_new = getArgAsArrayIfPossible(1)
         normals_new = getArgAsArrayIfPossible(2)
@@ -216,7 +216,7 @@ class BaseMesh(object):
     def SetVertices(self, vertices):
         """ SetVertices(vertices)
         
-        Set the vertex data as a Nx3 numpy array or as a 3D Pointset. 
+        Set the vertex data as a Nx3 numpy array or as a 3D Pointset.
         
         """
         try:
@@ -229,7 +229,7 @@ class BaseMesh(object):
     def SetNormals(self, normals):
         """ SetNormals(normals)
         
-        Set the normal data as a Nx3 numpy array or as a 3D Pointset. 
+        Set the normal data as a Nx3 numpy array or as a 3D Pointset.
         
         """
         if normals is not None:
@@ -311,7 +311,7 @@ class BaseMesh(object):
         
         Deprecated: use SetValues() instead.
         
-        Set the color data as a Nx3 numpy array or as a 3D Pointset. 
+        Set the color data as a Nx3 numpy array or as a 3D Pointset.
         Use None as an argument to remove the color data.
         
         
@@ -368,7 +368,7 @@ class BaseMesh(object):
                 # Check data type
                 if faces.dtype in [np.uint8, np.uint16, np.uint32]:
                     self._faces = faces.reshape((faces.size,))
-                else:                    
+                else:
                     self._faces = faces.astype(np.uint32)
                     self._faces.shape = (faces.size,)
             else:
@@ -389,9 +389,9 @@ class BaseMesh(object):
         Get 2D array with face indices (even if the mesh has no faces array).
         To be used for mesh processing. On the 0th axis are the different
         faces. Along the 1st axis are the different vertex indices that
-        make up that face. 
+        make up that face.
         
-        """   
+        """
         if self._faces is None:
             faces = np.arange(len(self._vertices))
         else:
@@ -408,12 +408,12 @@ import visvis.processing as processing
 class Mesh(Wobject, BaseMesh, Colormapable):
     """ Mesh(parent, vertices, faces=None, normals=None, values=None, verticesPerFace=3)
     
-    A mesh is a generic object to visualize a 3D object made up of 
+    A mesh is a generic object to visualize a 3D object made up of
     polygons. These polygons can be triangles or quads. The mesh
-    is affected by lighting and its material properties can be 
+    is affected by lighting and its material properties can be
     changed using properties. The reference color and shading can
     be set individually for the faces and edges (using the faceColor,
-    edgeColor, faceShading and edgeShading properties). 
+    edgeColor, faceShading and edgeShading properties).
     
     A mesh can also be created from another mesh using Mesh(parent, otherMesh),
     where otherMesh should be an instance of BaseMesh.
@@ -424,7 +424,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     Parameters
     ----------
-    vertices : Nx3 numpy array 
+    vertices : Nx3 numpy array
         The vertex positions in 3D space.
     faces : (optional) numpy array or list of indices
         Defines the faces. If this array is Nx3 or Nx4, verticesPerFace is
@@ -438,7 +438,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         The value data for each vertex. If Nx1, they represent the indices
         in the colormap. If Nx2, they represent the texture coordinates for
         the texturegiven with SetTexture(). If Nx3 or Nx4 they represent
-        the ambient and diffuse color for each vertex. 
+        the ambient and diffuse color for each vertex.
     verticesPerFace : 3 or 4
         Determines whether the faces are triangles or quads. If faces is
         specified and is 2D, the number of vertices per face is determined
@@ -449,7 +449,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     The texture color is multiplied after the ambient and diffuse
     lighting calculations, but before calculating the specular component.
     
-    """ 
+    """
     
     
     def __init__(self, parent, *args, **kwargs):
@@ -518,11 +518,11 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     @PropWithDraw
     def ambient():
         """ Get/Set the ambient reflection color of the material. Ambient
-        light is the light that is everywhere, coming from all directions, 
-        independent of the light position. 
+        light is the light that is everywhere, coming from all directions,
+        independent of the light position.
         
-        The value can be a 3- or 4-element tuple, a character in 
-        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        The value can be a 3- or 4-element tuple, a character in
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the
         fraction of the reference color.
         """
         def fget(self):
@@ -536,11 +536,11 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     def diffuse():
         """ Get/Set the diffuse reflection color of the material. Diffuse
         light comes from one direction, so it's brighter if it comes
-        squarely down on a surface than if it barely glances off the 
+        squarely down on a surface than if it barely glances off the
         surface. It depends on the light position how a material is lit.
         
-        The value can be a 3- or 4-element tuple, a character in 
-        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        The value can be a 3- or 4-element tuple, a character in
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the
         fraction of the reference color.
         """
         def fget(self):
@@ -567,11 +567,11 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     def specular():
         """ Get/Set the specular reflection color of the material. Specular
         light represents the light that comes from the light source and bounces
-        off a surface in a particular direction. It is what makes 
+        off a surface in a particular direction. It is what makes
         materials appear shiny.
         
-        The value can be a 3- or 4-element tuple, a character in 
-        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        The value can be a 3- or 4-element tuple, a character in
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the
         fraction of white (1,1,1).
         """
         def fget(self):
@@ -598,12 +598,12 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     @PropWithDraw
     def emission():
-        """ Get/Set the emission color of the material. It is the 
+        """ Get/Set the emission color of the material. It is the
         "self-lighting" property of the material, and usually only makes
         sense for objects that represent lamps or candles etc.
         
-        The value can be a 3- or 4-element tuple, a character in 
-        "rgbycmkw", or a scalar between 0 and 1 that indicates the 
+        The value can be a 3- or 4-element tuple, a character in
+        "rgbycmkw", or a scalar between 0 and 1 that indicates the
         fraction of the reference color.
         """
         def fget(self):
@@ -619,7 +619,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     def faceColor():
         """ Get/Set the face reference color of the object. If the
         ambient, diffuse or emissive properties specify a scalar, that
-        scalar represents the fraction of *this* color for the faces. 
+        scalar represents the fraction of *this* color for the faces.
         """
         def fget(self):
             return self._faceColor
@@ -632,7 +632,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     def edgeColor():
         """ Get/Set the edge reference color of the object. If the
         ambient, diffuse or emissive properties specify a scalar, that
-        scalar represents the fraction of *this* color for the edges. 
+        scalar represents the fraction of *this* color for the edges.
         """
         def fget(self):
             return self._edgeColor
@@ -641,7 +641,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         return locals()
     
     
-    @PropWithDraw    
+    @PropWithDraw
     def useNativeShading():
         """ Get/set whether to use the native OpenGl shading. The default
         is False, which means that GLSL-based shading is used, allowing for
@@ -657,23 +657,23 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         return locals()
     
     
-    @PropWithDraw    
+    @PropWithDraw
     def faceShading():
-        """ Get/Set the type of shading to apply for the faces. 
+        """ Get/Set the type of shading to apply for the faces.
           * None - Do not show the faces.
           * 'plain' - Display the faces in the faceColor (without lighting).
           * 'flat' - Lit shading uniform for each face
-          * 'gouraud' - Lighting is calculated at vertices and interpolated 
+          * 'gouraud' - Lighting is calculated at vertices and interpolated
             over the face.
-          * 'smooth' - Lighting is calculated for each fragment (aka 
+          * 'smooth' - Lighting is calculated for each fragment (aka
             phong-shading or phong-interpolation).
           * 'toon' - A cartoonish look (aka cel-shading).
         
         Notes
         -----
         In native mode 'smooth' and 'toon' fall back to 'gouraud'.
-        In both native and nonnative mode the blinn-phong reflectance model 
-        is used. 
+        In both native and nonnative mode the blinn-phong reflectance model
+        is used.
         """
         def fget(self):
             return self._faceShading
@@ -681,8 +681,8 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             # Process value
             if value is None:
                 self._faceShading = None
-            elif isinstance(value, basestring) and (value.lower() in 
-                    ['plain', 'flat', 'gouraud', 'smooth', 'toon']):                
+            elif isinstance(value, basestring) and (value.lower() in
+                    ['plain', 'flat', 'gouraud', 'smooth', 'toon']):
                 self._faceShading = value.lower()
             else:
                 tmp = "Shading must be None, 'plain', 'flat', 'gouraud, 'smooth' or 'toon.'"
@@ -693,22 +693,22 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         return locals()
     
     
-    @PropWithDraw    
+    @PropWithDraw
     def edgeShading():
-        """ Get/Set the type of shading to apply for the edges. 
+        """ Get/Set the type of shading to apply for the edges.
           * None - Do not show the faces.
           * 'plain' - Display the faces in the faceColor (without lighting).
           * 'flat' - Lit shading uniform for each face
-          * 'gouraud' - Lighting is calculated at vertices and interpolated 
+          * 'gouraud' - Lighting is calculated at vertices and interpolated
             over the face.
-          * 'smooth' - Lighting is calculated for each fragment (aka 
+          * 'smooth' - Lighting is calculated for each fragment (aka
             phong-shading or phong-interpolation).
         
         Notes
         -----
         In native mode 'smooth' falls back to 'gouraud'.
-        In both native and nonnative mode the blinn-phong reflectance model 
-        is used. 
+        In both native and nonnative mode the blinn-phong reflectance model
+        is used.
         """
         def fget(self):
             return self._edgeShading
@@ -716,7 +716,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             # Process value
             if value is None:
                 self._edgeShading = None
-            elif isinstance(value, basestring) and (value.lower() in 
+            elif isinstance(value, basestring) and (value.lower() in
                     ['plain', 'flat', 'gouraud', 'smooth']):
                 self._edgeShading = value.lower()
             else:
@@ -748,20 +748,20 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             else:
                 return
             
-            # Change shaders accordingly. Does not cause recompile if new 
+            # Change shaders accordingly. Does not cause recompile if new
             # part replaces itself.
-            if shader.vertex.HasPart('shading'):                
+            if shader.vertex.HasPart('shading'):
                 shader.vertex.ReplacePart(vShading)
-            if shader.fragment.HasPart('shading'):                
+            if shader.fragment.HasPart('shading'):
                 shader.fragment.ReplacePart(fShading)
     
     
     @PropWithDraw
     def cullFaces():
         """ Get/Set the culling of faces.
-        Values can be 'front', 'back', or None (default). If 'back', 
+        Values can be 'front', 'back', or None (default). If 'back',
         backfacing faces are not drawn. If 'front', frontfacing faces
-        are not drawn. The front of the face is defined using the 
+        are not drawn. The front of the face is defined using the
         right-hand-rule.
         """
         def fget(self):
@@ -782,7 +782,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     @property
     def faceShader(self):
-        """ Get the shader object for the faces. This can 
+        """ Get the shader object for the faces. This can
         be used to add code of your own and customize the vertex and
         fragment part of the shader.
         """
@@ -790,7 +790,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     @property
     def edgeShader(self):
-        """ Get the shader object for the edges. This can 
+        """ Get the shader object for the edges. This can
         be used to add code of your own and customize the vertex and
         fragment part of the shader.
         """
@@ -798,7 +798,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     @property
     def shapeShader(self):
-        """ Get the shader object for the shape. This can 
+        """ Get the shader object for the shape. This can
         be used to add code of your own and customize the vertex and
         fragment part of the shader.
         """
@@ -888,7 +888,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         self._faceShader.Destroy()
         self._edgeShader.Destroy()
         self._shapeShader.Destroy()
-        self._colormap.Destroy()        
+        self._colormap.Destroy()
         if self._texture is not None:
             self._texture.Destroy()
     
@@ -936,7 +936,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             return
         
         # Prepare normals
-        if shading != 'plain':            
+        if shading != 'plain':
             # Need normals
             if self._normals is None:
                 processing.calculateNormals(self)
@@ -944,7 +944,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             if shading == 'flat':
                 if self._flatNormals is None:
                     processing.calculateFlatNormals(self)
-                normals = self._flatNormals 
+                normals = self._flatNormals
             else:
                 normals = self._normals
             #
@@ -964,7 +964,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
                 values2 = self._values2
             if values.shape[1] == 1:
                 # Colormap: use values2
-                values = values2 
+                values = values2
                 # useTexCords = True
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, values)
@@ -979,7 +979,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
                 SH_ALBEIDO = shaders.SH_MF_ALBEIDO_LUT2
             elif values.shape[1] in [3,4]:
                 # Color, use values2
-                values = values2 
+                values = values2
                 gl.glEnable(gl.GL_COLOR_MATERIAL)
                 gl.glColorMaterial(gl.GL_FRONT_AND_BACK,
                                     gl.GL_AMBIENT_AND_DIFFUSE)
@@ -994,7 +994,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         if shading == 'plain':
             gl.glColor(*refColor)
         else:
-            # Set glColor: unless ALBEIDO is RGB or RGBA, 
+            # Set glColor: unless ALBEIDO is RGB or RGBA,
             # this is used to dermine the alpha value
             gl.glColor(*refColor)
             # Set material properties
@@ -1035,7 +1035,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         self._EnsureRightNumberOfLights(axes, shader)
         
         # Ensure that the right albeido shader part is selected
-        if shader.fragment.HasPart('albeido'):            
+        if shader.fragment.HasPart('albeido'):
             shader.fragment.AddOrReplace(SH_ALBEIDO)
         
         
@@ -1108,7 +1108,7 @@ class OrientableMesh(Mesh, OrientationForWobjects_mixClass):
                                                             verticesPerFace=3)
     
     An OrientableMesh is a generic object to visualize a 3D object made
-    up of polygons. OrientableMesh differs from the Mesh class in that 
+    up of polygons. OrientableMesh differs from the Mesh class in that
     it provides additional properties to easily orient the mesh in 3D
     space: scaling, translation, direction, rotation.
     

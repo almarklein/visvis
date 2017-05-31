@@ -17,7 +17,7 @@ from scipy.spatial import Delaunay
 import visvis as vv
 
 
-def plot3D( vuvi,   
+def plot3D( vuvi,
             coordSys='Cartesian',
             raised = True,
             depRange=[-40,0],
@@ -31,7 +31,7 @@ def plot3D( vuvi,
             shininess = 50,
             specular = 0.35,
             emission = 0.45 ):
-    """ plot3D(vxyz,   
+    """ plot3D(vxyz,
             coordSys=['Cartesian', 'Spherical'],
             raised = True,
             depRange=[-40,0], #Note: second range limit not currently used
@@ -64,7 +64,7 @@ def plot3D( vuvi,
         vxyz = vuvi
         vxyz[vxyz[:,2] < depRange[0], 2] = depRange[0]
         numOfPts = np.shape(vxyz)[0]
-        depVal = vxyz[:,2] 
+        depVal = vxyz[:,2]
         # set to convex surface for meshing
         # find center of data
         center = np.average(vxyz, 0)
@@ -90,8 +90,8 @@ def plot3D( vuvi,
     # Check each triangle facet and flip if
     # vertex order puts back side out
     for index, (I1, I2, I3) in enumerate(meshIndx):
-        a = vxyz[I1,:] - vxyz[I2,:] 
-        b = vxyz[I2,:] - vxyz[I3,:] 
+        a = vxyz[I1,:] - vxyz[I2,:]
+        b = vxyz[I2,:] - vxyz[I3,:]
         c = np.cross(a, b)
         if np.dot(c, vxyz[I2,:]) > 0:
             meshIndx[index] = (I1, I3, I2)
@@ -112,16 +112,16 @@ def plot3D( vuvi,
         if coordSys == 'Spherical':
             depRange[0] = 1.0
         else:
-            # Since qhull encloses the data with Delaunay triangles there will be 
+            # Since qhull encloses the data with Delaunay triangles there will be
             # a set of facets which cover the bottom of the data.  For flat
             # contours, the bottom facets need to be separated a fraction from
             # the top facets else you don't see colormap colors
             depValRange = np.max(vxyz[:numOfPts,2]) - np.min(vxyz[:numOfPts,2])
-            vxyz[:numOfPts,2] = vxyz[:numOfPts,2] /   (10 * depValRange )   
+            vxyz[:numOfPts,2] = vxyz[:numOfPts,2] /   (10 * depValRange )
             
-    #normalize depVal for color mapping   
+    #normalize depVal for color mapping
     dataRange = np.max(depVal) - np.min(depVal)
-    depVal = (depVal- np.min(depVal)) /  dataRange    
+    depVal = (depVal- np.min(depVal)) /  dataRange
 
     # Get axes
     ax = vv.gca()
@@ -138,8 +138,8 @@ def plot3D( vuvi,
     ms.shininess = shininess
     ms.specular = specular
     ms.emission = emission
-    ax.SetLimits(rangeX=[-depRange[0],depRange[0]], 
-                 rangeY=[-depRange[0],depRange[0]], 
+    ax.SetLimits(rangeX=[-depRange[0],depRange[0]],
+                 rangeY=[-depRange[0],depRange[0]],
                  rangeZ=[-depRange[0], depRange[0]])
 
 
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     
     
     # Cartesian plot
-    numOfPts = 2000    
+    numOfPts = 2000
     scale = 1
     
     # Create random points
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     
     
     # Sperical plot
-    numOfPts = 1000    
+    numOfPts = 1000
     
     # Create random points
     ThetaPhiR = np.zeros((numOfPts,3))

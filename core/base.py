@@ -17,7 +17,7 @@ import weakref
 
 from visvis.core import misc
 from visvis.core.misc import basestring
-from visvis.core.misc import (Transform_Base, Transform_Translate, 
+from visvis.core.misc import (Transform_Base, Transform_Translate,
                                     Transform_Scale, Transform_Rotate)
 from visvis.core import events
 from visvis.utils.pypoints import Pointset, Quaternion, is_Point
@@ -34,13 +34,13 @@ class BaseObject(object):
     """ BaseObject(parent)
     
     The base class for wibjects and wobjects.
-    Instances of classes inherited from this class represent 
-    something that can be drawn. 
+    Instances of classes inherited from this class represent
+    something that can be drawn.
     
-    Wibjects and wobjects can have children and have a parent 
-    (which can be None in which case they are in orphan and never 
-    drawn). To change the structure, use the ".parent" property. 
-    They also can be set visible/invisible using the property ".visible". 
+    Wibjects and wobjects can have children and have a parent
+    (which can be None in which case they are in orphan and never
+    drawn). To change the structure, use the ".parent" property.
+    They also can be set visible/invisible using the property ".visible".
     
     """
     
@@ -54,7 +54,7 @@ class BaseObject(object):
         # whether the object should draw its shape
         self._hitTest = False
         # the parent object
-        self._parent = None        
+        self._parent = None
         # the children of this object
         self._children = []
         # the id of this object (can change on every draw)
@@ -67,11 +67,11 @@ class BaseObject(object):
         self.parent = parent
         
         # create events
-        self._eventMouseDown = events.EventMouseDown(self) 
-        self._eventMouseUp = events.EventMouseUp(self)       
+        self._eventMouseDown = events.EventMouseDown(self)
+        self._eventMouseUp = events.EventMouseUp(self)
         self._eventDoubleClick = events.EventDoubleClick(self)
         self._eventEnter = events.EventEnter(self)
-        self._eventLeave = events.EventLeave(self)        
+        self._eventLeave = events.EventLeave(self)
         #
         self._eventMotion = events.EventMotion(self)
         self._eventScroll = events.EventScroll(self)
@@ -81,7 +81,7 @@ class BaseObject(object):
     
     @property
     def eventMouseDown(self):
-        """ Fired when the mouse is pressed down on this object. (Also 
+        """ Fired when the mouse is pressed down on this object. (Also
         fired the first click of a double click.)
         """
         return self._eventMouseDown
@@ -89,50 +89,50 @@ class BaseObject(object):
     def eventMouseUp(self):
         """ Fired when the mouse is released after having been clicked down
         on this object (even if the mouse is now not over the object). (Also
-        fired on the first click of a double click.) 
+        fired on the first click of a double click.)
         """
         return self._eventMouseUp
     @property
     def eventDoubleClick(self):
-        """ Fired when the mouse is double-clicked on this object. 
+        """ Fired when the mouse is double-clicked on this object.
         """
         return self._eventDoubleClick
     @property
     def eventEnter(self):
-        """ Fired when the mouse enters this object or one of its children. 
+        """ Fired when the mouse enters this object or one of its children.
         """
         return self._eventEnter
     @property
     def eventLeave(self):
         """ Fired when the mouse leaves this object (and is also not over any
-        of it's children). 
+        of it's children).
         """
         return self._eventLeave
     
     @property
     def eventMotion(self):
         """ Fires when the mouse is moved over the object. Not fired when
-        the mouse is over one of its children. 
+        the mouse is over one of its children.
         """
-        return self._eventMotion    
+        return self._eventMotion
     
     @property
     def eventScroll(self):
-        """ Fires when the scroll wheel is used while over the object. 
-        Not fired when the mouse is over one of its children. 
+        """ Fires when the scroll wheel is used while over the object.
+        Not fired when the mouse is over one of its children.
         """
-        return self._eventScroll   
+        return self._eventScroll
     
     @property
-    def eventKeyDown(self):        
+    def eventKeyDown(self):
         """ Fires when the mouse is moved over the object. Not fired when
-        the mouse is over one of its children. 
+        the mouse is over one of its children.
         """
-        return self._eventKeyDown    
+        return self._eventKeyDown
     @property
-    def eventKeyUp(self):        
+    def eventKeyUp(self):
         """ Fires when the mouse is moved over the object. Not fired when
-        the mouse is over one of its children. 
+        the mouse is over one of its children.
         """
         return self._eventKeyUp
     
@@ -153,13 +153,13 @@ class BaseObject(object):
     
     
     def _DrawTree(self, mode=DRAW_NORMAL, pickerHelper=None):
-        """ Draw the wibject/wobject and all of its children. 
+        """ Draw the wibject/wobject and all of its children.
         """
         
         # are we alive
         if self._destroyed:
             print("Warning, cannot draw destroyed object: %s" % str(self))
-            return 
+            return
         
         # only draw if visible
         if not self.visible:
@@ -177,13 +177,13 @@ class BaseObject(object):
                     clr = pickerHelper.GetColorFromId(self._id)
                     self.OnDrawShape(clr)
             elif mode==DRAW_SCREEN:
-                self.OnDrawScreen()            
+                self.OnDrawScreen()
             elif mode==DRAW_FAST:
                 self.OnDrawFast()
             elif mode==DRAW_NORMAL:
                 self.OnDraw()
             else:
-                raise Exception("Invalid mode for _DrawTree.")        
+                raise Exception("Invalid mode for _DrawTree.")
             
             # draw children
             for item in self._children:
@@ -205,16 +205,16 @@ class BaseObject(object):
           * Calls Destroy() on all its children
           * Calls OnDestroyGl and OnDestroy on itself
         
-        Note1: do not overload, overload OnDestroy(). 
+        Note1: do not overload, overload OnDestroy().
         Note2: it's best not to reuse destroyed objects. To temporary disable
         an object, better use "ob.parent=None", or "ob.visible=False".
         
         """
         
-        # Post draw event 
+        # Post draw event
         self.Draw()
         
-        # We must make this the current OpenGL context because OnDestroy 
+        # We must make this the current OpenGL context because OnDestroy
         # methods of objects may want to remove textures etc.
         # When you do not do this, you can get really weird bugs.
         # This works nice, the children will not need to do this,
@@ -227,7 +227,7 @@ class BaseObject(object):
         # Destroy children. This will unwind to the leafs of the tree, and
         # thus call OnDestroy() on childless objects only. This means the
         # parent of all objects remain intact, which can be necessary for
-        # some objects to clean up nicely. 
+        # some objects to clean up nicely.
         for child in self.children:
             child.Destroy(False)
         
@@ -236,10 +236,10 @@ class BaseObject(object):
         self.OnDestroy()
         self._destroyed = True
         
-        # Leave home (using the property causes recursion)        
+        # Leave home (using the property causes recursion)
         if hasattr(self._parent, '_children'):
             while self in self._parent._children:
-                self._parent._children.remove(self)                
+                self._parent._children.remove(self)
         if hasattr(self._parent, '_wobjects'):
             while self in self._parent._wobjects:
                 self._parent._wobjects.remove(self)
@@ -247,13 +247,13 @@ class BaseObject(object):
     
     
     def DestroyGl(self, setContext=True):
-        """ DestroyGl() 
+        """ DestroyGl()
         
         Destroy the OpenGl objects managed by this object.
           * Calls DestroyGl() on all its children.
           * Calls OnDestroyGl() on itself.
         
-        Note: do not overload, overload OnDestroyGl(). 
+        Note: do not overload, overload OnDestroyGl().
         
         """
         
@@ -277,14 +277,14 @@ class BaseObject(object):
     
     def _Transform(self):
         """ Add transformations to modelview matrix such that the object
-        is displayed properly. 
+        is displayed properly.
         """
         pass # implemented diffently by the wibject and wobject class
     
     
     def OnDraw(self):
         """ OnDraw()
-        Perform the opengl commands to draw this wibject/wobject. 
+        Perform the opengl commands to draw this wibject/wobject.
         Objects should overload this method to draw themselves.
         """
         pass
@@ -297,13 +297,13 @@ class BaseObject(object):
         By default, this calls OnDraw()
         
         """
-        self.OnDraw()    
+        self.OnDraw()
     
     def OnDrawShape(self, color):
         """ OnDrawShape(color)
         
         Perform  the opengl commands to draw the shape of the object
-        in the given color.         
+        in the given color.
         If not implemented, the object cannot be picked.
         
         """
@@ -313,7 +313,7 @@ class BaseObject(object):
         """ OnDrawScreen()
         
         Draw in screen coordinates. To be used for wobjects that
-        need drawing in screen coordinates (like text). Wibjects are 
+        need drawing in screen coordinates (like text). Wibjects are
         always drawn in screen coordinates (using OnDraw).
         
         """
@@ -322,7 +322,7 @@ class BaseObject(object):
     def OnDestroy(self):
         """ OnDestroy()
         
-        Overload this to clean up any resources other than the GL objects. 
+        Overload this to clean up any resources other than the GL objects.
         
         """
         for att in list(self.__dict__.values()):
@@ -333,15 +333,15 @@ class BaseObject(object):
     def OnDestroyGl(self):
         """ OnDestroyGl()
         
-        Overload this to clean up any OpenGl resources. 
+        Overload this to clean up any OpenGl resources.
         
         """
-        pass 
+        pass
     
     @misc.PropWithDraw
     def visible():
-        """ Get/Set whether the object should be drawn or not. 
-        If set to False, the hittest is also not performed. 
+        """ Get/Set whether the object should be drawn or not.
+        If set to False, the hittest is also not performed.
         """
         def fget(self):
             return self._visible
@@ -353,7 +353,7 @@ class BaseObject(object):
     @misc.Property
     def hitTest():
         """ Get/Set whether mouse events are generated for this object.
-        From v1.7 this property is set automatically, and need not be set 
+        From v1.7 this property is set automatically, and need not be set
         to receive mouse events.
         """
         def fget(self):
@@ -385,7 +385,7 @@ class BaseObject(object):
             tmp = "Cannot change to that parent, "
             if value is None:
                 # an object can be an orphan
-                pass 
+                pass
             elif value is self:
                 # an object cannot be its own parent
                 raise TypeError(tmp+"because that is the object itself!")
@@ -401,19 +401,19 @@ class BaseObject(object):
                 # a wobject can only hold wobjects
                 if isinstance(self, Wibject):
                     raise TypeError(tmp+"a wibject cant have a wobject-parent!")
-            else:            
+            else:
                 raise TypeError(tmp+"it is not a wibject or wobject or None!")
             
-            # remove from parents childrens list 
+            # remove from parents childrens list
             if hasattr(self._parent, '_children'):
                 while self in self._parent._children:
-                    self._parent._children.remove(self)                
+                    self._parent._children.remove(self)
             if hasattr(self._parent, '_wobjects'):
                 while self in self._parent._wobjects:
                     self._parent._wobjects.remove(self)
             
-            # Should we destroy GL objects (because we are removed 
-            # from an OpenGL context)? 
+            # Should we destroy GL objects (because we are removed
+            # from an OpenGL context)?
             figure1 = self.GetFigure()
             figure2 = None
             if hasattr(value, 'GetFigure'):
@@ -431,7 +431,7 @@ class BaseObject(object):
     
     @property
     def children(self):
-        """ Get a shallow copy of the list of children. 
+        """ Get a shallow copy of the list of children.
         """
         return [child for child in self._children]
     
@@ -443,7 +443,7 @@ class BaseObject(object):
         The figure represents the OpenGL context.
         Returns None if it has no figure.
         
-        """ 
+        """
         # init
         iter = 0
         object = self
@@ -482,10 +482,10 @@ class BaseObject(object):
         """ FindObjects(pattern)
         
         Find the objects in this objects' children, and its childrens
-        children, etc, that correspond to the given pattern. 
+        children, etc, that correspond to the given pattern.
         
-        The pattern can be a class or tuple of classes, an attribute name 
-        (as a string) that the objects should have, or a callable that 
+        The pattern can be a class or tuple of classes, an attribute name
+        (as a string) that the objects should have, or a callable that
         returns True or False given an object. For example
         'lambda x: ininstance(x, cls)' will do the same as giving a class.
         
@@ -510,7 +510,7 @@ class BaseObject(object):
         # Init list with result
         result = []
         
-        # Try all children recursively        
+        # Try all children recursively
         for child in self._children:
             if callback(child):
                 result.append(child)
@@ -526,9 +526,9 @@ class BaseObject(object):
     
     
     def GetWeakref(self):
-        """ GetWeakref()    
+        """ GetWeakref()
         
-        Get a weak reference to this object. 
+        Get a weak reference to this object.
         Call the weakref to obtain the real reference (or None if it's dead).
         
         """
@@ -538,13 +538,13 @@ class BaseObject(object):
 class Wibject(BaseObject):
     """ Wibject(parent)
     
-    A Wibject (widget object) is a 2D object drawn in 
-    screen coordinates. A Figure is a widget and so are an Axes and a 
+    A Wibject (widget object) is a 2D object drawn in
+    screen coordinates. A Figure is a widget and so are an Axes and a
     PushButton. Wibjects have a position property to set their location
     and size. They also have a background color and multiple event properties.
     
-    This class may also be used as a container object for other wibjects. 
-    An instance of this class has no visual appearance. The Box class 
+    This class may also be used as a container object for other wibjects.
+    An instance of this class has no visual appearance. The Box class
     implements drawing a rectangle with an edge.
     
     """
@@ -552,7 +552,7 @@ class Wibject(BaseObject):
     def __init__(self, parent):
         BaseObject.__init__(self, parent)
         
-        # the position of the widget within its parent        
+        # the position of the widget within its parent
         self._position = Position( 10,10,50,50, self)
         
         # colors and edge
@@ -564,8 +564,8 @@ class Wibject(BaseObject):
     
     @property
     def eventPosition(self):
-        """ Fired when the position (or size) of this wibject changes. 
-        """ 
+        """ Fired when the position (or size) of this wibject changes.
+        """
         return self._eventPosition
     
     
@@ -587,7 +587,7 @@ class Wibject(BaseObject):
     
     @misc.PropWithDraw
     def bgcolor():
-        """ Get/Set the background color of the wibject. 
+        """ Get/Set the background color of the wibject.
         """
         def fget(self):
             return self._bgcolor
@@ -598,12 +598,12 @@ class Wibject(BaseObject):
     
     def _Transform(self):
         """ _Transform()
-        Apply a translation such that the wibject is 
-        drawn in the correct place. 
+        Apply a translation such that the wibject is
+        drawn in the correct place.
         """
         # skip if we are on top
         if not self.parent:
-            return            
+            return
         # get posision in screen coordinates
         pos = self.position
         # apply
@@ -626,21 +626,21 @@ class Wibject(BaseObject):
 class Wobject(BaseObject):
     """ Wobject(parent)
     
-    A Wobject (world object) is a visual element that 
-    is drawn in 3D world coordinates (in the scene). Wobjects can be 
+    A Wobject (world object) is a visual element that
+    is drawn in 3D world coordinates (in the scene). Wobjects can be
     children of other wobjects or of an Axes object (which is the
-    wibject that represents the scene). 
+    wibject that represents the scene).
     
-    To each wobject, several transformations can be applied, 
-    which are also applied to its children. This way complex models can 
-    be build. For example, in a robot arm the fingers would be children 
+    To each wobject, several transformations can be applied,
+    which are also applied to its children. This way complex models can
+    be build. For example, in a robot arm the fingers would be children
     of the hand, so that when the hand moves or rotates, the fingers move
-    along automatically. The fingers can then also be moved without affecting 
-    the hand or other fingers. 
+    along automatically. The fingers can then also be moved without affecting
+    the hand or other fingers.
     
-    The transformations are represented by Transform_* objects in 
+    The transformations are represented by Transform_* objects in
     the list named "transformations". The transformations are applied
-    in the order as they appear in the list. 
+    in the order as they appear in the list.
     
     """
     
@@ -656,14 +656,14 @@ class Wobject(BaseObject):
         """ Get the list of transformations of this wobject. These
         can be Transform_Translate, Transform_Scale, or Transform_Rotate
         instances.
-        """        
+        """
         return self._transformations
     
     
     def GetAxes(self):
         """ GetAxes()
         
-        Get the axes in which this wobject resides. 
+        Get the axes in which this wobject resides.
         
         Note that this is not necesarily an Axes instance (like the line
         objects in the Legend wibject).
@@ -672,7 +672,7 @@ class Wobject(BaseObject):
         par = self.parent
         if par is None:
             return None
-        while not isinstance(par, Wibject):            
+        while not isinstance(par, Wibject):
             par = par.parent
             if par is None:
                 return None
@@ -697,13 +697,13 @@ class Wobject(BaseObject):
     def _GetLimits(self, *args):
         """ _GetLimits(self, x1, x2, y1, y2, z1, z2)
         
-        Get the limits in world coordinates between which the object 
+        Get the limits in world coordinates between which the object
         exists. This is used by the Axes class to set the camera correctly.
-        If None is returned, the limits are undefined. 
+        If None is returned, the limits are undefined.
         
         Inheriting Wobject classes should overload this method. However, they
         can use this method to take all transformations into account by giving
-        the cornerpoints of the untransformed object. 
+        the cornerpoints of the untransformed object.
         
         Returns a 3 element tuple of vv.Range instances: xlim, ylim, zlim.
         
@@ -711,7 +711,7 @@ class Wobject(BaseObject):
         
         # Examine args
         if not args:
-            minx, maxx, miny, maxy, minz, maxz = [], [], [], [], [], []            
+            minx, maxx, miny, maxy, minz, maxz = [], [], [], [], [], []
         elif len(args) == 6:
             minx, maxx, miny, maxy, minz, maxz = tuple([[arg] for arg in args])
         else:
@@ -757,7 +757,7 @@ class Wobject(BaseObject):
         
         Transform a point in the local coordinate system of this wobject
         to the coordinate system of the given baseWobject (which should be
-        a parent of this wobject), or to the global (Axes) coordinate 
+        a parent of this wobject), or to the global (Axes) coordinate
         system if not given.
         
         This is done by taking into account the transformations applied
@@ -801,8 +801,8 @@ class Wobject(BaseObject):
     
     def _Transform(self):
         """ _Transform()
-        Apply all listed transformations of this wobject. 
-        """   
+        Apply all listed transformations of this wobject.
+        """
         for t in self.transformations:
             if not isinstance(t, Transform_Base):
                 continue
@@ -817,39 +817,39 @@ class Wobject(BaseObject):
 class Position(object):
     """ Position(x,y,w,h, wibject_instance)
     
-    The position class stores and manages the position of wibjects. Each 
-    wibject has one Position instance associated with it, which can be 
+    The position class stores and manages the position of wibjects. Each
+    wibject has one Position instance associated with it, which can be
     obtained (and updated) using its position property.
     
     The position is represented using four values: x, y, w, h. The Position
     object can also be indexed to get or set these four values.
     
     Each element (x,y,w,h) can be either:
-      * The integer amount of pixels relative to the wibjects parent's position. 
+      * The integer amount of pixels relative to the wibjects parent's position.
       * The fractional amount (float value between 0.0 and 1.0) of the parent's width or height.
     
-    Each value can be negative. For x and y this simply means a negative 
-    offset from the parent's left and top. For the width and height the 
+    Each value can be negative. For x and y this simply means a negative
+    offset from the parent's left and top. For the width and height the
     difference from the parent's full width/height is taken.
     
-    An example: a position (-10, 0.5, 150,-100), with a parent's size of 
+    An example: a position (-10, 0.5, 150,-100), with a parent's size of
     (500,500) is equal to (-10, 250, 150, 400) in pixels.
     
     Remarks:
       * fractional, integer and negative values may be mixed.
-      * x and y are considered fractional on <-1, 1> 
-      * w and h are considered fractional on [-1, 1]    
-      * the value 0 can always be considered to be in pixels 
+      * x and y are considered fractional on <-1, 1>
+      * w and h are considered fractional on [-1, 1]
+      * the value 0 can always be considered to be in pixels
     
     The position class also implements several "long-named" properties that
     express the position in pixel coordinates. Internally a version in pixel
-    coordinates is buffered, which is kept up to date. These long-named 
+    coordinates is buffered, which is kept up to date. These long-named
     (read-only) properties are:
     left, top, right, bottom, width, height,
     
-    Further, there are a set of properties which express the position in 
+    Further, there are a set of properties which express the position in
     absolute coordinates (not relative to the wibject's parent):
-    absLeft, absTop, absRight, absBottom    
+    absLeft, absTop, absRight, absBottom
     
     Finally, there are properties that return a two-element tuple:
     topLeft, bottomRight, absTopLeft, absBottomRight, size
@@ -869,7 +869,7 @@ class Position(object):
         self._x, self._y, self._w, self._h = x, y, w, h
         
         # store owner using a weak reference
-        self._owner = weakref.ref(owner) 
+        self._owner = weakref.ref(owner)
         
         # init position in pixels and absolute (as a tuples)
         self._inpixels = None
@@ -885,7 +885,7 @@ class Position(object):
     def Copy(self):
         """ Copy()
         
-        Make a copy of this position instance. 
+        Make a copy of this position instance.
         
         """
         p = Position(self._x, self._y, self._w, self._h, self._owner())
@@ -897,7 +897,7 @@ class Position(object):
     def InPixels(self):
         """ InPixels()
         
-        Return a copy, but in pixel coordinates. 
+        Return a copy, but in pixel coordinates.
         
         """
         p = Position(self.left,self.top,self.width,self.height, self._owner())
@@ -936,7 +936,7 @@ class Position(object):
     def _Changed(self):
         """ _Changed()
         
-        To be called when the position was changed. 
+        To be called when the position was changed.
         Will fire the owners eventPosition and will call
         _Update() on the position objects of all the owners
         children.
@@ -944,7 +944,7 @@ class Position(object):
         """
         # only notify if this is THE position of the owner (not a copy)
         owner = self._owner()
-        if owner and owner._position is self:           
+        if owner and owner._position is self:
             if hasattr(owner, 'eventPosition'):
                 owner.eventPosition.Fire()
                 #print('firing position event for', owner)
@@ -954,16 +954,16 @@ class Position(object):
     
     
     def _GetFractionals(self):
-        """ Get a list which items are considered relative.         
+        """ Get a list which items are considered relative.
         Also int()'s the items which are not.
         """
         # init
-        fractionals = [0,0,0,0]        
+        fractionals = [0,0,0,0]
         # test
         for i in range(2):
             if self[i] > -1 and self[i] < 1 and self[i]!=0:
                 fractionals[i] = 1
-        for i in range(2,4):            
+        for i in range(2,4):
             if self[i] >= -1 and self[i] <= 1 and self[i]!=0:
                 fractionals[i] = 1
         # return
@@ -971,7 +971,7 @@ class Position(object):
     
     
     def _CalculateInPixels(self):
-        """ Return the position in screen coordinates as a tuple. 
+        """ Return the position in screen coordinates as a tuple.
         """
         
         # to test if this is easy
@@ -984,7 +984,7 @@ class Position(object):
         # if owner is a figure, it cannot have relative values
         if hasattr(owner, '_SwapBuffers'):
             self._inpixels = (self._x, self._y, self._w, self._h)
-            self._absolute = self._inpixels 
+            self._absolute = self._inpixels
             return
         
         # test if we can calculate
@@ -1015,7 +1015,7 @@ class Position(object):
                 # make sure it's int (even if user supplied floats > 1)
                 pos[i] = int(pos[i])
         
-        # abs pos is based on the inpixels version, but x,y corrected. 
+        # abs pos is based on the inpixels version, but x,y corrected.
         apos = [p for p in pos]
         if ppos._owner().parent:
             apos[0] += ppos.absLeft
@@ -1070,13 +1070,13 @@ class Position(object):
         
         # apply correction if we can
         if dx and not fractionals[0]:
-            self._x += int(dx) 
+            self._x += int(dx)
         if dy and not fractionals[1]:
             self._y += int(dy)
         if dw and not fractionals[2]:
-            self._w += int(dw) 
+            self._w += int(dw)
         if dh and not fractionals[3]:
-            self._h += int(dh) 
+            self._h += int(dh)
         
         # we need an update now
         self._Update()
@@ -1084,7 +1084,7 @@ class Position(object):
     
     def __getitem__(self,index):
         if not isinstance(index,int):
-            raise IndexError("Position only accepts single indices!")        
+            raise IndexError("Position only accepts single indices!")
         if index==0: return self._x
         elif index==1: return self._y
         elif index==2: return self._w
@@ -1107,7 +1107,7 @@ class Position(object):
     
     
     def Draw(self):
-        # Redraw owner        
+        # Redraw owner
         owner = self._owner()
         if owner is not None:
             owner.Draw()
@@ -1115,9 +1115,9 @@ class Position(object):
     
     @misc.PropWithDraw
     def x():
-        """ Get/Set the x-element of the position. This value can be 
-        an integer value or a float expressing the x-position as a fraction 
-        of the parent's width. The value can also be negative. 
+        """ Get/Set the x-element of the position. This value can be
+        an integer value or a float expressing the x-position as a fraction
+        of the parent's width. The value can also be negative.
         """
         def fget(self):
             return self._x
@@ -1128,9 +1128,9 @@ class Position(object):
     
     @misc.PropWithDraw
     def y():
-        """ Get/Set the y-element of the position. This value can be 
-        an integer value or a float expressing the y-position as a fraction 
-        of the parent's height. The value can also be negative. 
+        """ Get/Set the y-element of the position. This value can be
+        an integer value or a float expressing the y-position as a fraction
+        of the parent's height. The value can also be negative.
         """
         def fget(self):
             return self._y
@@ -1141,10 +1141,10 @@ class Position(object):
     
     @misc.PropWithDraw
     def w():
-        """ Get/Set the w-element of the position. This value can be 
-        an integer value or a float expressing the width as a fraction 
+        """ Get/Set the w-element of the position. This value can be
+        an integer value or a float expressing the width as a fraction
         of the parent's width. The value can also be negative, in which
-        case it's subtracted from the parent's width. 
+        case it's subtracted from the parent's width.
         """
         def fget(self):
             return self._w
@@ -1155,10 +1155,10 @@ class Position(object):
     
     @misc.PropWithDraw
     def h():
-        """ Get/Set the h-element of the position. This value can be 
-        an integer value or a float expressing the height as a fraction 
+        """ Get/Set the h-element of the position. This value can be
+        an integer value or a float expressing the height as a fraction
         of the parent's height. The value can also be negative, in which
-        case it's subtracted from the parent's height. 
+        case it's subtracted from the parent's height.
         """
         def fget(self):
             return self._h
@@ -1171,7 +1171,7 @@ class Position(object):
     
     @property
     def left(self):
-        """ Get the x-element of the position, expressed in pixels. 
+        """ Get the x-element of the position, expressed in pixels.
         """
         tmp = self._inpixels
         return tmp[0]
@@ -1185,21 +1185,21 @@ class Position(object):
     
     @property
     def width(self):
-        """ Get the w-element of the position, expressed in pixels. 
+        """ Get the w-element of the position, expressed in pixels.
         """
         tmp = self._inpixels
         return tmp[2]
     
     @property
     def height(self):
-        """ Get the h-element of the position, expressed in pixels. 
+        """ Get the h-element of the position, expressed in pixels.
         """
         tmp = self._inpixels
         return tmp[3]
     
     @property
     def right(self):
-        """ Get left+width. 
+        """ Get left+width.
         """
         tmp = self._inpixels
         return tmp[0] + tmp[2]
@@ -1213,7 +1213,7 @@ class Position(object):
     
     @property
     def topLeft(self):
-        """ Get a tuple (left, top). 
+        """ Get a tuple (left, top).
         """
         tmp = self._inpixels
         return tmp[0], tmp[1]
@@ -1227,7 +1227,7 @@ class Position(object):
     
     @property
     def size(self):
-        """ Get a tuple (width, height). 
+        """ Get a tuple (width, height).
         """
         tmp = self._inpixels
         return tmp[2], tmp[3]
@@ -1237,7 +1237,7 @@ class Position(object):
     @property
     def absLeft(self):
         """ Get the x-element of the position, expressed in absolute pixels
-        instead of relative to the parent. 
+        instead of relative to the parent.
         """
         tmp = self._absolute
         return tmp[0]
@@ -1245,35 +1245,35 @@ class Position(object):
     @property
     def absTop(self):
         """ Get the y-element of the position, expressed in absolute pixels
-        instead of relative to the parent. 
+        instead of relative to the parent.
         """
         tmp = self._absolute
         return tmp[1]
     
     @property
     def absTopLeft(self):
-        """ Get a tuple (absLeft, absTop). 
+        """ Get a tuple (absLeft, absTop).
         """
         tmp = self._absolute
         return tmp[0], tmp[1]
     
     @property
     def absRight(self):
-        """ Get absLeft+width. 
+        """ Get absLeft+width.
         """
         tmp = self._absolute
         return tmp[0] + tmp[2]
     
     @property
     def absBottom(self):
-        """ Get absTop+height. 
+        """ Get absTop+height.
         """
         tmp = self._absolute
         return tmp[1] + tmp[3]
     
     @property
     def absBottomRight(self):
-        """ Get a tuple (right, bottom). 
+        """ Get a tuple (right, bottom).
         """
         tmp = self._absolute
         return tmp[0] + tmp[2], tmp[1] + tmp[3]

@@ -39,9 +39,9 @@ def meshRead(fname, check=False):
     fname : string
         The name of the file to read.
     check : bool
-        For the STL format: if check is True and the file is in ascii, 
-        some checks to the integrity of the file are done (which is a 
-        bit slower). 
+        For the STL format: if check is True and the file is in ascii,
+        some checks to the integrity of the file are done (which is a
+        bit slower).
     
     Notes on formats
     ----------------

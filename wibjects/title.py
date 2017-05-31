@@ -31,8 +31,8 @@ class Title(Label):
         self.position = 0, -20, 1, 15
         
         # correct axes' position
-        dy = -20        
-        axes.position.Correct(0, -dy, 0, dy) 
+        dy = -20
+        axes.position.Correct(0, -dy, 0, dy)
     
     
     def OnDestroy(self):
@@ -42,4 +42,4 @@ class Title(Label):
         axes = self.parent
         if axes:
             dy = 20
-            axes.position.Correct(0, -dy, 0, dy) 
+            axes.position.Correct(0, -dy, 0, dy)

@@ -53,13 +53,13 @@ class Recorder:
         """ Continue()
         Continue recording. """
         f = self._ob.GetFigure()
-        f.eventAfterDraw.Unbind(self._OnAfterDraw)        
+        f.eventAfterDraw.Unbind(self._OnAfterDraw)
         f.eventAfterDraw.Bind(self._OnAfterDraw)
     
     
     def GetFrames(self):
         """ GetFrames()
-        Get a copy of the list (the frames itself are not copied) 
+        Get a copy of the list (the frames itself are not copied)
         recorded up to now. """
         return [frame for frame in self._frames]
     
@@ -69,7 +69,7 @@ class Recorder:
         
         Export recorded movie to either:
           * a series of images
-          * an animated GIF 
+          * an animated GIF
           * an SWF (shockwave flash) file
           * an AVI file
         
@@ -96,7 +96,7 @@ def record(ob):
         raise ValueError("The given object is not a figure nor an axes.")
     
     # create recorder
-    return Recorder(ob)    
+    return Recorder(ob)
 
 
 if __name__ == '__main__':

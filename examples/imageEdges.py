@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" This example shows hoe the GLSL program for a 2D texture 
+""" This example shows hoe the GLSL program for a 2D texture
 can be modified to achieve all kinds of graphic effects.
 In this example we will demonstrate showing the edges of an image.
 Also see the unsharpMasking example.

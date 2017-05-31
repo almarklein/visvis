@@ -33,7 +33,7 @@ class Box(Wibject):
     
     @misc.PropWithDraw
     def edgeColor():
-        """ Get/Set the edge color of the wibject. 
+        """ Get/Set the edge color of the wibject.
         """
         def fget(self):
             return self._edgeColor
@@ -43,32 +43,32 @@ class Box(Wibject):
     
     @misc.PropWithDraw
     def edgeWidth():
-        """ Get/Set the edge width of the wibject. 
+        """ Get/Set the edge width of the wibject.
         """
         def fget(self):
             return self._edgeWidth
-        def fset(self, value):            
+        def fset(self, value):
             self._edgeWidth = float(value)
         return locals()
     
     def _GetBgcolorToDraw(self):
-        """ Can be overloaded to indicate mouse over in buttons.         
+        """ Can be overloaded to indicate mouse over in buttons.
         """
         return self._bgcolor
     
     def OnDraw(self, fast=False):
         
-        # get dimensions        
+        # get dimensions
         w, h = self.position.size
         
         # draw plane
-        if self._bgcolor:        
-            # Get positions 
+        if self._bgcolor:
+            # Get positions
             x1, x2 = 0, w
             y1, y2 = 0, h
             # Set color
             clr = self._GetBgcolorToDraw()
-            gl.glColor(clr[0], clr[1], clr[2], 1.0)            
+            gl.glColor(clr[0], clr[1], clr[2], 1.0)
             #
             gl.glBegin(gl.GL_POLYGON)
             gl.glVertex2f(x1,y1)
@@ -77,10 +77,10 @@ class Box(Wibject):
             gl.glVertex2f(x2,y1)
             gl.glEnd()
         
-        # prepare                
+        # prepare
         gl.glDisable(gl.GL_LINE_SMOOTH)
         
-        # draw edges        
+        # draw edges
         if self.edgeWidth and self.edgeColor:
             
             # Get positions
@@ -99,14 +99,14 @@ class Box(Wibject):
             gl.glVertex2f(x2,y1)
             gl.glEnd()
         
-        # clean up        
+        # clean up
         gl.glEnable(gl.GL_LINE_SMOOTH)
 
 
 class DraggableBox(Box):
     """ DraggableBox(parent)
     
-    A Box wibject, but draggable and resizable. 
+    A Box wibject, but draggable and resizable.
     Intended as a base class.
     
     """
@@ -136,7 +136,7 @@ class DraggableBox(Box):
     def _DragCalcDots(self, event=None):
         w,h = self.position.size
         dots = Pointset(2)
-        #        
+        #
         dots.append(3,3); dots.append(3,6); dots.append(3,9)
         dots.append(6,3); dots.append(6,6); dots.append(6,9)
         dots.append(9,3); dots.append(9,6); dots.append(9,9)
@@ -154,7 +154,7 @@ class DraggableBox(Box):
         self._dragMouseOver = False
         self.Draw()
    
-    def _DragOnDown(self, event):   
+    def _DragOnDown(self, event):
         pos = self.position
         # Store position if clicked on draggable arreas
         if event.x < 10 and event.y < 10:

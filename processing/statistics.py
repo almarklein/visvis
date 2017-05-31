@@ -21,8 +21,8 @@ class StatData:
     Allows easy calculation of statistics such as mean, std, median,
     any percentile, histogram data and kde's.
     
-    This class was initially designed for the boxplot functionality. 
-    This interface was made public because it can be usefull to the 
+    This class was initially designed for the boxplot functionality.
+    This interface was made public because it can be usefull to the
     generic user too.
     
     """
@@ -47,7 +47,7 @@ class StatData:
     
     def __str__(self):
         s = 'Summary of StatData object:\n'
-        for key in ['size', 'dmin', 'dmax', 'drange', 'mean', 'std', 
+        for key in ['size', 'dmin', 'dmax', 'drange', 'mean', 'std',
                     'Q1', 'Q2', 'Q3', 'IQR']:
             value = str(getattr(self, key))
             line = key.rjust(10) + ' = ' + value + '\n'
@@ -158,7 +158,7 @@ class StatData:
         
         If nbins is not given, a good value is chosen using
         the Freedman-Diaconis rule.
-        Returns a 2-element tuple containing the bin centers and the 
+        Returns a 2-element tuple containing the bin centers and the
         counts.
         
         See also the kde() method.
@@ -173,25 +173,25 @@ class StatData:
             using the Freedman-Diaconis rule.
         range : (float, float)
             The lower and upper range of the bins. If not provided, range is
-            simply (a.min(), a.max()). Values outside the range are ignored. 
+            simply (a.min(), a.max()). Values outside the range are ignored.
         normed : bool
-            If False, the result will contain the number of samples in each bin. 
-            If True, the result is the value of the probability *density* 
-            function at the bin, normalized such that the *integral* over the 
-            range is 1. Note that the sum of the histogram values will not be 
-            equal to 1 unless bins of unity width are chosen; it is not a 
+            If False, the result will contain the number of samples in each bin.
+            If True, the result is the value of the probability *density*
+            function at the bin, normalized such that the *integral* over the
+            range is 1. Note that the sum of the histogram values will not be
+            equal to 1 unless bins of unity width are chosen; it is not a
             probability *mass* function.
         weights : array_like
-            An array of weights, of the same shape as `a`. Each value in `a` 
-            only contributes its associated weight towards the bin count 
-            (instead of 1). If `normed` is True, the weights are normalized, 
-            so that the integral of the density over the range remains 1.     
+            An array of weights, of the same shape as `a`. Each value in `a`
+            only contributes its associated weight towards the bin count
+            (instead of 1). If `normed` is True, the weights are normalized,
+            so that the integral of the density over the range remains 1.
         
         """
         if nbins is None:
             nbins = self.best_number_of_bins()
         
-        # Get histogram        
+        # Get histogram
         if np.__version__ < '1.3':
             values, edges = np.histogram(self._data, nbins, drange, normed, weights, new=True)
         else:
@@ -229,8 +229,8 @@ class StatData:
         Calculate the kernel density estimation of the data.
         
         If nbins is not given, a good value is chosen using
-        the Freedman-Diaconis rule. If kernel is not given, 
-        a Gaussian kernel is used, with a sigma depending 
+        the Freedman-Diaconis rule. If kernel is not given,
+        a Gaussian kernel is used, with a sigma depending
         on nbins.
         
         """
@@ -247,10 +247,10 @@ class StatData:
     def best_number_of_bins(self, minbins=8, maxbins=256):
         """ best_number_of_bins(minbins=8, maxbins=256)
         
-        Calculates the best number of bins to make a histogram 
+        Calculates the best number of bins to make a histogram
         of this data, according to Freedman-Diaconis rule.
         
-        """ 
+        """
         # Get data
         data = self._data
         
@@ -312,7 +312,7 @@ class StatData:
         # the bin splatting very efficient.
         kde = np.zeros_like(bins)
         xx = (data-dmin) * (1.0/dbin) # no +ktail here, no j-ktail at kernel index
-        xxi = (xx).astype('int32') 
+        xxi = (xx).astype('int32')
         #
         # Init binary search
         step = max(1, int(data.size/n))
@@ -324,7 +324,7 @@ class StatData:
         while i1<i2:
             if xxi[i2] > val:
                 if xxi[i2-1] == val:
-                    # === found it! 
+                    # === found it!
                     # Splat kernel
                     nSplats = i2-i0
                     kde[val:val+k.size] += k * nSplats

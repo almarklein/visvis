@@ -3,10 +3,10 @@
 """ This example illustrates picking using the simple event system.
 It also shows the working of the picking in an environment.
 
-Notice for example that the leave event is not fired when you move 
+Notice for example that the leave event is not fired when you move
 the mouse beyond the boundaries of the yellow rectangle as long
 as it's still inside the red rectangle. This is because the red
-rectangle is a child of the yellow rectangle. 
+rectangle is a child of the yellow rectangle.
 """
 
 import visvis as vv
@@ -26,7 +26,7 @@ l1.description = 'blue line'
 #
 l2 = vv.plot([4,6,5,1,3], lc='r', lw=7)
 l2.description = 'red line'
-# 
+#
 l3 = vv.plot([2,3,1,3,2], lc='c', lw=7)
 l3.description = 'cyan line'
 
@@ -78,7 +78,7 @@ def ignoringKeyCallback(event):
 # and that clicking on it is equivalent to clicking on the axes;
 # the event is propagated to the line's parent.
 #
-# Same goes for key events. But in addition, the figure *always* 
+# Same goes for key events. But in addition, the figure *always*
 # receives a key event.
 
 for ob in [f, a, b1, b2, l1, l2, l3]:

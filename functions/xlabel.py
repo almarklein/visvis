@@ -9,7 +9,7 @@ import visvis as vv
 def xlabel(text, axes=None):
     """ xlabel(text, axes=None)
     
-    Set the xlabel of an axes. 
+    Set the xlabel of an axes.
     Note that you can also use "axes.axis.xLabel = text".
     
     Parameters
@@ -26,5 +26,5 @@ def xlabel(text, axes=None):
 
 if __name__=='__main__':
     a = vv.gca()
-    a.cameraType = '2d'    
+    a.cameraType = '2d'
     vv.xlabel('label test')

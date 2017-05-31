@@ -9,7 +9,7 @@ import visvis as vv
 def clf():
     """ clf()
     
-    Clear current figure. 
+    Clear current figure.
     
     """
     f = vv.gcf()

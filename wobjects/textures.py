@@ -7,7 +7,7 @@
 """ Module textures
 
 Defines the texture base class and the Texture2D and Texture3D
-wobjects. 
+wobjects.
 
 2D textures can be visualized without using GLSL. If GLSL is enabled, it
 allows using clim, colormap and antialiasing (aa property).
@@ -37,7 +37,7 @@ from visvis.wobjects.motion import MotionMixin
 # A correction for the clim. For a datatype of uint8, the fragents
 # are mapped between 0 and 1 for 0 and 255 respectively. For int8
 # the values are mapped between -1 and 1 for -127 and 128 respectively.
-climCorrection = { 'uint8':2**8, 'int8':2**7, 'uint16':2**16, 'int16':2**15, 
+climCorrection = { 'uint8':2**8, 'int8':2**7, 'uint16':2**16, 'int16':2**15,
                    'uint32':2**32, 'int32':2**31, 'float32':1, 'float64':1,
                    'bool':2**8}
 
@@ -53,7 +53,7 @@ def minmax(data):
     M1 = np.isnan(data)
     M2 = np.isinf(data)
     
-    # Select all 'normal' elements 
+    # Select all 'normal' elements
     if np.any(M1) or np.any(M2):
         data2 = data[ ~(M1|M2) ]
     else:
@@ -66,7 +66,7 @@ def minmax(data):
 class TextureObjectToVisualize(TextureObject):
     """ TextureObjectToVisualize(ndim, data, interpolate=False)
     
-    A texture object aimed towards visualization. 
+    A texture object aimed towards visualization.
     This is what is actually used in Texture2D and Texture3D objects.
     It has no propererties, but some private attributes
     which are set by the real interface (the Texture*D objects).
@@ -95,8 +95,8 @@ class TextureObjectToVisualize(TextureObject):
         """
         
         # Set alignment to 1. It is 4 by default, but my data array has no
-        # strides, so in order for the image not to be distorted, I set it 
-        # to 1. I assume graphics cards can still render in hardware. If 
+        # strides, so in order for the image not to be distorted, I set it
+        # to 1. I assume graphics cards can still render in hardware. If
         # not, I would have to add one or two rows to my data instead.
         gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT,1)
         
@@ -106,7 +106,7 @@ class TextureObjectToVisualize(TextureObject):
         # create texture
         TextureObject._UploadTexture(self, data, *args)
         
-        # set interpolation and extrapolation parameters            
+        # set interpolation and extrapolation parameters
         tmp1 = gl.GL_NEAREST
         tmp2 = {False:gl.GL_NEAREST, True:gl.GL_LINEAR}[self._interpolate]
         gl.glTexParameteri(self._texType, gl.GL_TEXTURE_MIN_FILTER, tmp1)
@@ -144,7 +144,7 @@ class TextureObjectToVisualize(TextureObject):
     
     def _ScaleBias_init(self, datatype):
         """ Given the climRef (which is set to data.min() and data.max())
-        in constructor, set the scale 
+        in constructor, set the scale
         and bias for copying data to opengl memory. Correct for the dataype.
         Also set the default value for clim to the full data range.
         
@@ -191,14 +191,14 @@ class TextureObjectToVisualize(TextureObject):
             r2 = 1.0
         # calculate scale and bias
         scale = self._climRef.range / r1
-        bias = (self._climRef.min - self._clim.min) / r2    
+        bias = (self._climRef.min - self._clim.min) / r2
         return scale, bias
 
 
 class BaseTexture(Wobject, Colormapable):
     """ BaseTexture(parent, data)
     
-    Base texture class for visvis 2D and 3D textures. 
+    Base texture class for visvis 2D and 3D textures.
     
     """
     
@@ -222,12 +222,12 @@ class BaseTexture(Wobject, Colormapable):
         self._trafo_scale = Transform_Scale()
         self._trafo_trans = Transform_Translate()
         self.transformations.append(self._trafo_trans)
-        self.transformations.append(self._trafo_scale)        
+        self.transformations.append(self._trafo_scale)
     
     
     @property
     def shader(self):
-        """ Get the shader object for the texture. This can 
+        """ Get the shader object for the texture. This can
         be used to add code of your own and customize the vertex and
         fragment part of the shader.
         """
@@ -240,12 +240,12 @@ class BaseTexture(Wobject, Colormapable):
         
         (Re)Set the data to display. If the data has the same shape
         as the data currently displayed, it can be updated very
-        efficiently. 
+        efficiently.
         
         If the data is an anisotripic array (vv.Aarray)
         the sampling and origin are (re-)applied.
         
-        """ 
+        """
         
         # set data to texture
         self._SetData(data)
@@ -286,7 +286,7 @@ class BaseTexture(Wobject, Colormapable):
     def _SetData(self, data):
         """ _SetData(data)
         
-        Give reference to the raw data. For internal use. Inheriting 
+        Give reference to the raw data. For internal use. Inheriting
         classes can override this to store data in their own way and
         update the OpenGL textures accordingly.
         
@@ -306,7 +306,7 @@ class BaseTexture(Wobject, Colormapable):
     def Refresh(self):
         """ Refresh()
         
-        Refresh the data. If the numpy array was changed, calling this 
+        Refresh the data. If the numpy array was changed, calling this
         function will re-upload the data to OpenGl, making the change
         visible. This can be done efficiently.
         
@@ -326,7 +326,7 @@ class BaseTexture(Wobject, Colormapable):
         # clear shader
         self._shader.DestroyGl()
         
-        # remove colormap's texture from memory        
+        # remove colormap's texture from memory
         if hasattr(self, '_colormap'):
             self._colormap.DestroyGl()
     
@@ -346,8 +346,8 @@ class BaseTexture(Wobject, Colormapable):
     
     @PropWithDraw
     def interpolate():
-        """ Get/Set whether to interpolate the image when zooming in 
-        (using linear interpolation). 
+        """ Get/Set whether to interpolate the image when zooming in
+        (using linear interpolation).
         """
         def fget(self):
             return self._texture1._interpolate
@@ -380,7 +380,7 @@ class BaseTexture(Wobject, Colormapable):
             # set default values
             data = self._GetData()
             if data is None:
-                return 
+                return
             mima = minmax(data)
         
         elif len(mima)==1:
@@ -402,7 +402,7 @@ class Texture2D(BaseTexture):
     """ Texture2D(parent, data)
     
     A data type that represents structured data in
-    two dimensions (an image). Supports grayscale, RGB, 
+    two dimensions (an image). Supports grayscale, RGB,
     and RGBA images.
     
     Texture2D objects can be created with the function vv.imshow().
@@ -509,7 +509,7 @@ class Texture2D(BaseTexture):
             l = k[0]
         k = [float(e)/l for e in k]
         
-        # Done   
+        # Done
         return k
     
     
@@ -553,12 +553,12 @@ class Texture2D(BaseTexture):
     
     
     def _DrawQuads(self):
-        """ Draw the quads of the texture. 
-        This is done in a seperate method to reuse code in 
-        OnDraw() and OnDrawShape(). 
-        """        
+        """ Draw the quads of the texture.
+        This is done in a seperate method to reuse code in
+        OnDraw() and OnDrawShape().
+        """
         if not self._texture1._shape:
-            return        
+            return
         
         # The -0.5 offset is to center pixels/voxels. This works correctly
         # for anisotropic data.
@@ -580,7 +580,7 @@ class Texture2D(BaseTexture):
         """ Get the limits in world coordinates between which the object exists.
         """
         
-        # Obtain untransformed coords 
+        # Obtain untransformed coords
         shape = self._texture1._dataRef.shape
         #shape = self._texture1._shape
         x1, x2 = -0.5, shape[1]-0.5
@@ -603,7 +603,7 @@ class Texture2D(BaseTexture):
         but may be slower on older hardware.
         
         Note that in previous versions of visvis, this property influenced
-        the *amount* of aliasing. We now use a better kernel (Lanczos instead 
+        the *amount* of aliasing. We now use a better kernel (Lanczos instead
         of Gaussian), such that the amount can be fixed without negatively
         affecting the visualization.
         """
@@ -633,9 +633,9 @@ class Texture3D(BaseTexture):
     
     A data type that represents structured data in three dimensions (a volume).
     
-    If the drawing hangs, your video drived decided to render in 
-    software mode. This is unfortunately (as far as I know) not possible 
-    to detect programatically. It might help if your data is shaped a 
+    If the drawing hangs, your video drived decided to render in
+    software mode. This is unfortunately (as far as I know) not possible
+    to detect programatically. It might help if your data is shaped a
     power of 2. The mip renderer is the 'easiest' for most systems to render.
     
     Texture3D objects can be created with the function vv.volshow().
@@ -646,7 +646,7 @@ class Texture3D(BaseTexture):
         BaseTexture.__init__(self, parent, data)
         self._ndim = 3
         
-        # create texture 
+        # create texture
         self._texture1 = TextureObjectToVisualize(3, data)
         
         # Init vertex and fragment shader
@@ -725,7 +725,7 @@ class Texture3D(BaseTexture):
     
     def OnDrawShape(self, clr):
         # Implementation of the OnDrawShape method.
-        gl.glColor(clr[0], clr[1], clr[2], 1.0)        
+        gl.glColor(clr[0], clr[1], clr[2], 1.0)
         self._DrawQuads()
     
     
@@ -743,7 +743,7 @@ class Texture3D(BaseTexture):
         
         
         # Prepare by setting things to their defaults. This might release some
-        # memory so result in a bigger chance that the shader is run in 
+        # memory so result in a bigger chance that the shader is run in
         # hardware mode. On ATI, the line and point smoothing should be off
         # if you want to use gl_FragCoord. (Yeah, I do not see the connection
         # either...)
@@ -773,12 +773,12 @@ class Texture3D(BaseTexture):
         
         if self.shader.isUsable and self.shader.hasCode:
             # turn glsl shader on
-            ok = self.shader.Enable() 
+            ok = self.shader.Enable()
             if (not ok) and (self.renderStyle != 'mip'):
                 print('Texture3D detected shader problem; ' +
                     'reverting render style from %s to MIP.' % self.renderStyle)
                 self.renderStyle = 'mip'
-                self.shader.Enable() 
+                self.shader.Enable()
         else:
             # Fixed function pipeline, but does not make sense
             self.shader.EnableTextureOnly('texture')
@@ -788,7 +788,7 @@ class Texture3D(BaseTexture):
         self._DrawQuads()
         
         # clean up
-        gl.glFlush()        
+        gl.glFlush()
         self.shader.Disable()
         #
         gl.glDisable(gl.GL_CULL_FACE)
@@ -865,16 +865,16 @@ class Texture3D(BaseTexture):
         t0, t1 = 0, 1
         
         # I previously swapped coordinates to make sure the right faces
-        # were frontfacing. Now I apply culling to achieve the same 
+        # were frontfacing. Now I apply culling to achieve the same
         # result in a better way.
         
         # using glTexCoord* is the same as glMultiTexCoord*(GL_TEXTURE0)
         # Therefore we need to bind the base texture to 0.
         
         # So we draw the six planes of the cube (well not a cube,
-        # a 3d rectangle thingy). The inside is only rendered if the 
-        # vertex is facing front, so only 3 planes are rendered at a        
-        # time...                
+        # a 3d rectangle thingy). The inside is only rendered if the
+        # vertex is facing front, so only 3 planes are rendered at a
+        # time...
         
         
         # Define the 8 corners of the cube.
@@ -885,7 +885,7 @@ class Texture3D(BaseTexture):
         tex_coord0.append((t1,t1,t0)); ver_coord0.append((x1, y1, z0)) # 2
         tex_coord0.append((t0,t1,t0)); ver_coord0.append((x0, y1, z0)) # 3
         # top
-        tex_coord0.append((t0,t0,t1)); ver_coord0.append((x0, y0, z1)) # 4    
+        tex_coord0.append((t0,t0,t1)); ver_coord0.append((x0, y0, z1)) # 4
         tex_coord0.append((t0,t1,t1)); ver_coord0.append((x0, y1, z1)) # 5
         tex_coord0.append((t1,t1,t1)); ver_coord0.append((x1, y1, z1)) # 6
         tex_coord0.append((t1,t0,t1)); ver_coord0.append((x1, y0, z1)) # 7
@@ -905,7 +905,7 @@ class Texture3D(BaseTexture):
                 io = iQuad * 4
                 for i1 in range(4):
                     for i2 in range(4):
-                        i3 = (i1 + i2)%4                    
+                        i3 = (i1 + i2)%4
                         tex_coord2.append( 0.5*(tex_coord1[io+i1] + tex_coord1[io+i3]) )
                         ver_coord2.append( 0.5*(ver_coord1[io+i1] + ver_coord1[io+i3]) )
             #print('partition from %i to %i vertices' % (len(tex_coord1), len(tex_coord2)))
@@ -920,10 +920,10 @@ class Texture3D(BaseTexture):
     
     
     def _DrawQuads(self):
-        """ Draw the quads of the texture. 
-        This is done in a seperate method to reuse code in 
-        OnDraw() and OnDrawShape(). 
-        """        
+        """ Draw the quads of the texture.
+        This is done in a seperate method to reuse code in
+        OnDraw() and OnDrawShape().
+        """
         
         # Get axes
         axes = self.GetAxes()
@@ -932,24 +932,24 @@ class Texture3D(BaseTexture):
         
         # should we draw?
         if not self._texture1._shape:
-            return 
+            return
         
         # should we create quads?
-        if (    (not self._quads) or 
+        if (    (not self._quads) or
                 (self._daspectStored != axes.daspect) or
-                (self._qcountStored != self._quadPartitionCount(axes.camera)) 
+                (self._qcountStored != self._quadPartitionCount(axes.camera))
             ):
             self._CreateQuads()
         
         # get data
         tex_coord, ver_coord = self._quads
         
-        # Set culling (take data aspect into account!)        
-        tmp = 1        
+        # Set culling (take data aspect into account!)
+        tmp = 1
         for i in axes.daspect:
             if i<0:
                 tmp *= -1
-        gl.glFrontFace({1:gl.GL_CW, -1:gl.GL_CCW}[tmp])        
+        gl.glFrontFace({1:gl.GL_CW, -1:gl.GL_CCW}[tmp])
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glCullFace(gl.GL_BACK)
         
@@ -962,7 +962,7 @@ class Texture3D(BaseTexture):
         # draw
         gl.glDrawArrays(gl.GL_QUADS, 0, len(tex_coord))
         
-        # disable vertex array        
+        # disable vertex array
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
         #
@@ -973,7 +973,7 @@ class Texture3D(BaseTexture):
         """ Get the limits in world coordinates between which the object exists.
         """
         
-        # Obtain untransformed coords 
+        # Obtain untransformed coords
         shape = self._texture1._dataRef.shape
         x1, x2 = -0.5, shape[2]-0.5
         y1, y2 = -0.5, shape[1]-0.5
@@ -986,14 +986,14 @@ class Texture3D(BaseTexture):
     @PropWithDraw
     def renderStyle():
         """ Get/Set the render style to render the volumetric data:
-          * MIP: maximum intensity projection. Shows the voxel with the 
+          * MIP: maximum intensity projection. Shows the voxel with the
             maxiumum value.
-          * ISO: isosurface rendering. Casts ray until value is above 
-            threshold. Ligthing is calculated at that voxel. Use together 
+          * ISO: isosurface rendering. Casts ray until value is above
+            threshold. Ligthing is calculated at that voxel. Use together
             with isoThreshold property.
-          * RAY: ray casting. All voxels along the ray contribute to final 
+          * RAY: ray casting. All voxels along the ray contribute to final
             color, weighted by the alpha value.
-          * EDGERAY: ray casting in which alpha is scaled with the gradient 
+          * EDGERAY: ray casting in which alpha is scaled with the gradient
             magnitude.
           * LITRAY: ray casting in which all voxels are lit. Most pretty and
             most demanding for GPU.
@@ -1005,7 +1005,7 @@ class Texture3D(BaseTexture):
         the alpha channel using the ColormapEditor wibject.
         
         If drawing takes really long, your system renders in software
-        mode. Try rendering data that is shaped with a power of two. This 
+        mode. Try rendering data that is shaped with a power of two. This
         helps on some cards.
         
         You can also create your own render style by modyfying the GLSL code.
@@ -1013,7 +1013,7 @@ class Texture3D(BaseTexture):
         """
         def fget(self):
             return self._renderStyle
-        def fset(self, style):     
+        def fset(self, style):
             style = style.lower()
             shader = self.shader.fragment
             # Set color (done automatically!)
@@ -1180,7 +1180,7 @@ class MultiTexture3D(Texture3D):
             return
         
         # Prepare by setting things to their defaults. This might release some
-        # memory so result in a bigger chance that the shader is run in 
+        # memory so result in a bigger chance that the shader is run in
         # hardware mode. On ATI, the line and point smoothing should be off
         # if you want to use gl_FragCoord. (Yeah, I do not see the connection
         # either...)
@@ -1204,7 +1204,7 @@ class MultiTexture3D(Texture3D):
         # fragment shader on
         if self.shader.isUsable and self.shader.hasCode:
             # turn glsl shader on
-            self.shader.Enable() 
+            self.shader.Enable()
         else:
             pass # glsl not available, or someone cleared the code
             
@@ -1230,7 +1230,7 @@ class MultiTexture3D(Texture3D):
         # clear shaders
         self._shader.DestroyGl()
         
-        # remove colormap's texture from memory        
+        # remove colormap's texture from memory
         if hasattr(self, '_colormap'):
             self._colormap.DestroyGl()
     

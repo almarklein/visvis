@@ -23,7 +23,7 @@ from visvis.wobjects.textures import BaseTexture, TextureObjectToVisualize
 class SliceTexture(BaseTexture):
     """ SliceTexture
     
-    A slice texture is a 2D texture of a 3D data volume. It enables 
+    A slice texture is a 2D texture of a 3D data volume. It enables
     visualizing 3D data without the need for glsl renderering (and can
     therefore be used on older systems.
     
@@ -47,7 +47,7 @@ class SliceTexture(BaseTexture):
         self.SetData(data)
         
         # init interpolation
-        self._texture1._interpolate = True 
+        self._texture1._interpolate = True
         
         # For edge
         self._edgeColor = None
@@ -102,7 +102,7 @@ class SliceTexture(BaseTexture):
     def _SetData(self, data):
         """ _SetData(data)
         
-        Give reference to the raw data. For internal use. Inheriting 
+        Give reference to the raw data. For internal use. Inheriting
         classes can override this to store data in their own way and
         update the OpenGL textures accordingly.
         
@@ -137,7 +137,7 @@ class SliceTexture(BaseTexture):
         """ Get the limits in world coordinates between which the object exists.
         """
         
-        # Obtain untransformed coords 
+        # Obtain untransformed coords
         shape = self._dataRef3D.shape
         x1, x2 = -0.5, shape[2]-0.5
         y1, y2 = -0.5, shape[1]-0.5
@@ -155,7 +155,7 @@ class SliceTexture(BaseTexture):
     
     def OnDrawShape(self, clr):
         # Implementation of the OnDrawShape method.
-        gl.glColor(clr[0], clr[1], clr[2], 1.0)        
+        gl.glColor(clr[0], clr[1], clr[2], 1.0)
         self._DrawQuads()
     
     
@@ -209,12 +209,12 @@ class SliceTexture(BaseTexture):
     
     
     def _DrawQuads(self, clr=None):
-        """ Draw the quads of the texture. 
-        This is done in a seperate method to reuse code in 
-        OnDraw() and OnDrawShape(). 
-        """        
+        """ Draw the quads of the texture.
+        This is done in a seperate method to reuse code in
+        OnDraw() and OnDrawShape().
+        """
         if not self._texture1._shape:
-            return        
+            return
         
         # The -0.5 offset is to center pixels/voxels. This works correctly
         # for anisotropic data.
@@ -314,14 +314,14 @@ class SliceTexture(BaseTexture):
         # Number of indexes to change
         n = vec.dot(V) / L
         
-        # Apply!        
+        # Apply!
         self.index = int(self._refIndex + n)
     
     
     ## Properties
     
     
-    @PropWithDraw 
+    @PropWithDraw
     def index():
         """ The index of the slice in the volume to display.
         """
@@ -340,7 +340,7 @@ class SliceTexture(BaseTexture):
         return locals()
     
     
-    @PropWithDraw 
+    @PropWithDraw
     def axis():
         """ The axis of the slice in the volume to display.
         """
@@ -356,7 +356,7 @@ class SliceTexture(BaseTexture):
         return locals()
     
     
-    @PropWithDraw 
+    @PropWithDraw
     def edgeColor():
         """ The color of the edge of the slice (can be None).
         """
@@ -367,7 +367,7 @@ class SliceTexture(BaseTexture):
         return locals()
     
     
-    @PropWithDraw 
+    @PropWithDraw
     def edgeColor2():
         """ The color of the edge of the slice when interacting.
         """
@@ -382,11 +382,11 @@ class SliceTextureProxy(Wobject, Colormapable):
     """ SliceTextureProxy(*sliceTextures)
     
     A proxi class for multiple SliceTexture instances. By making them
-    children of an instance of this class, their properties can be 
+    children of an instance of this class, their properties can be
     changed simultaneously.
     
     This makes it possible to call volshow() and stay agnostic of how
-    the volume is vizualized (using a 3D render, or with 3 slice 
+    the volume is vizualized (using a 3D render, or with 3 slice
     textures); all public texture-specific methods and properties are
     transferred to all children automatically.
     
@@ -422,9 +422,9 @@ class SliceTextureProxy(Wobject, Colormapable):
         for s in self.children:
             s._SetClim(value)
     
-    @Property 
+    @Property
     def renderStyle():
-        """ Not available for SliceTextures. This 
+        """ Not available for SliceTextures. This
         property is implemented to be able to produce a warning when
         it is used.
         """
@@ -434,9 +434,9 @@ class SliceTextureProxy(Wobject, Colormapable):
             print('Warning: SliceTexture instances have no renderStyle.')
         return locals()
     
-    @Property 
+    @Property
     def isoThreshold():
-        """ Not available for SliceTextures. This 
+        """ Not available for SliceTextures. This
         property is implemented to be able to produce a warning when
         it is used.
         """
@@ -446,10 +446,10 @@ class SliceTextureProxy(Wobject, Colormapable):
             print('Warning: SliceTexture instances have no isoThreshold.')
         return locals()
     
-    @Property 
+    @Property
     def interpolate():
-        """ Get/Set whether to interpolate the image when zooming in 
-        (using linear interpolation). 
+        """ Get/Set whether to interpolate the image when zooming in
+        (using linear interpolation).
         """
         def fget(self):
             return self.children[0].interpolate
@@ -458,7 +458,7 @@ class SliceTextureProxy(Wobject, Colormapable):
                 s.interpolate = value
         return locals()
     
-    @Property 
+    @Property
     def index():
         """ The index of the slice in the volume to display.
         """
@@ -469,7 +469,7 @@ class SliceTextureProxy(Wobject, Colormapable):
                 s.index = value
         return locals()
     
-    @Property 
+    @Property
     def axis():
         """ The axis of the slice in the volume to display.
         """
@@ -480,7 +480,7 @@ class SliceTextureProxy(Wobject, Colormapable):
                 s.axis = value
         return locals()
     
-    @Property 
+    @Property
     def edgeColor():
         """ The color of the edge of the slice (can be None).
         """
@@ -491,7 +491,7 @@ class SliceTextureProxy(Wobject, Colormapable):
                 s.edgeColor = value
         return locals()
     
-    @Property 
+    @Property
     def edgeColor2():
         """ The color of the edge of the slice when interacting.
         """

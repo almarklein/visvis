@@ -9,7 +9,7 @@ import visvis as vv
 def grid(*args, **kwargs):
     """ grid(*args, axesAdjust=True, axes=None)
     
-    Create a wireframe parametric surface. 
+    Create a wireframe parametric surface.
     
     Usage
     -----
@@ -32,14 +32,14 @@ def grid(*args, **kwargs):
     -----------------
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
-        the camera type to 3D. If daspectAuto has not been set yet, 
+        the camera type to 3D. If daspectAuto has not been set yet,
         it is set to False.
     axes : Axes instance
         Display the bars in the given axes, or the current axes if not given.
     
     Notes
     -----
-      * This function should not be confused with the axis grid, see the 
+      * This function should not be confused with the axis grid, see the
         Axis.showGrid property.
       * This function is know in Matlab as mesh(), but to avoid confusion
         with the vv.Mesh class, it is called grid() in visvis.
@@ -57,4 +57,4 @@ def grid(*args, **kwargs):
 if __name__ == '__main__':
     vv.figure()
     m = vv.grid(vv.peaks())
-    m.colormap = vv.CM_HOT    
+    m.colormap = vv.CM_HOT

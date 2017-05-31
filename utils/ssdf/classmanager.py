@@ -6,7 +6,7 @@
 
 """ ssdf.classmaneger.py
 
-Implements the code to register classes at ssdf for automatic 
+Implements the code to register classes at ssdf for automatic
 conversion (kinda like pickling).
 
 """
@@ -17,15 +17,15 @@ from . import __version__
 class _ClassManager:
     """ _ClassManager
     
-    This static class enables registering classes, which 
+    This static class enables registering classes, which
     can then be stored to ssdf and loaded from ssdf.
     
-    On module loading, the sys module is given a reference to the 
-    ClassManager called '_ssdf_class_manager'. Other classes can 
-    thereby register themselves without knowing how to import 
+    On module loading, the sys module is given a reference to the
+    ClassManager called '_ssdf_class_manager'. Other classes can
+    thereby register themselves without knowing how to import
     ssdf (provided that ssdf is already imported).
     
-    """ 
+    """
     
     # Global dict with registered classes
     _registered_classes = {}
@@ -34,7 +34,7 @@ class _ClassManager:
     def _register_at_sys(manager):
         """ _register_at_sys()
         
-        Register the manager at the sys module if there is not 
+        Register the manager at the sys module if there is not
         already one of a higher version.
         
         """
@@ -66,11 +66,11 @@ class _ClassManager:
     
     
     @classmethod
-    def is_incompatible_class(manager, cls):    
+    def is_incompatible_class(manager, cls):
         """ is_incompatible_class(cls)
         
-        Returns a string giving the reason why the given class 
-        if not SSDF-compatible. If the class is compatible, this 
+        Returns a string giving the reason why the given class
+        if not SSDF-compatible. If the class is compatible, this
         function returns None.
         
         """
@@ -86,8 +86,8 @@ class _ClassManager:
     def register_class(manager, *args):
         """ register_class(class1, class2, class3, ...)
         
-        Register one or more classes. Registered classes can be saved and 
-        restored from ssdf. 
+        Register one or more classes. Registered classes can be saved and
+        restored from ssdf.
         
         A class needs to implement two methods to qualify for registration:
         * A method __to_ssdf__() that returns an ssdf.Struct
@@ -98,7 +98,7 @@ class _ClassManager:
         for cls in args:
             incomp = manager.is_incompatible_class(cls)
             if incomp:
-                raise ValueError('Cannot register class %s: %s.' % 
+                raise ValueError('Cannot register class %s: %s.' %
                                                     (cls.__name__, incomp) )
             else:
                 manager._registered_classes[cls.__name__] = cls

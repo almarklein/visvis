@@ -31,7 +31,7 @@ class GinputHelper(object):
             self.pp = pp
             self.N = N
             
-            # Register with axes            
+            # Register with axes
             self.axes.eventMouseDown.Bind(self.OnMouseDown)
             self.axes.eventDoubleClick.Bind(self.OnDoubleClick)
             self.axes.eventKeyDown.Bind(self.OnKeyDown)
@@ -84,7 +84,7 @@ ginputHelper = GinputHelper()
 def ginput(N=0, axes=None, ms='+', **kwargs):
     """ ginput(N=0, axes=None, ms='+', **kwargs)
     
-    Graphical input: select N number of points with the mouse. 
+    Graphical input: select N number of points with the mouse.
     Returns a 2D pointset.
     
     Parameters
@@ -114,7 +114,7 @@ def ginput(N=0, axes=None, ms='+', **kwargs):
         return
     
     # Init pointset, helper, and line object
-    line = vv.plot(Pointset(2), axes=axes, ms=ms, **kwargs)    
+    line = vv.plot(Pointset(2), axes=axes, ms=ms, **kwargs)
     pp = line._points
     ginputHelper.Start(axes, pp, N)
     

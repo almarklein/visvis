@@ -35,11 +35,11 @@ import time
 #     '''
 #     data = np.genfromtxt(filename, dtype=[('type', np.character, 1),
 #                                           ('points', np.float32, 3)])
-# 
+#
 #     # Get vertices and faces
 #     vertices = data['points'][data['type'] == 'v']
 #     faces = (data['points'][data['type'] == 'f']-1).astype(np.uint32)
-# 
+#
 #     # Build normals
 #     T = vertices[faces]
 #     N = np.cross(T[::,1 ]-T[::,0], T[::,2]-T[::,0])
@@ -51,11 +51,11 @@ import time
 #     normals[faces[:,2]] += N
 #     L = np.sqrt(normals[:,0]**2+normals[:,1]**2+normals[:,2]**2)
 #     normals /= L[:, np.newaxis]
-# 
+#
 #     # Scale vertices such that object is contained in [-1:+1,-1:+1,-1:+1]
 #     vmin, vmax =  vertices.min(), vertices.max()
 #     vertices = 2*(vertices-vmin)/(vmax-vmin) - 1
-# 
+#
 #     return vertices, normals, faces
 
 
@@ -79,7 +79,7 @@ class WavefrontReader(object):
         # The faces, indices to vertex/normal/texcords arrays.
         self._faces = []
         
-        # Dictionary to keep track of processed face data, so we can 
+        # Dictionary to keep track of processed face data, so we can
         # convert the original v/vn/vn to the final vertices/normals/texcords.
         self._facemap = {}
     
@@ -140,7 +140,7 @@ class WavefrontReader(object):
         elif line.startswith('mtllib '):
             print('Notice reading .OBJ: material properties are ignored.')
         elif line.startswith('g ') or line.startswith('s '):
-            pass # Ignore groups and smoothing groups 
+            pass # Ignore groups and smoothing groups
         elif line.startswith('o '):
             pass # Ignore object names
         elif line.startswith('usemtl '):
@@ -227,7 +227,7 @@ class WavefrontReader(object):
     
     
     def finish(self):
-        """ Converts gathere lists to numpy arrays and creates 
+        """ Converts gathere lists to numpy arrays and creates
         BaseMesh instance.
         """
         if True:
@@ -367,7 +367,7 @@ class WavefrontWriter(object):
                 self.writeTuple(mesh._vertices[i], 'v')
         if self._hasNormals:
             for i in range(N):
-                self.writeTuple(mesh._normals[i], 'vn')   
+                self.writeTuple(mesh._normals[i], 'vn')
         if self._hasValues:
             for i in range(N):
                 self.writeTuple(mesh._values[i], 'vt')

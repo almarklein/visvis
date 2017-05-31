@@ -46,11 +46,11 @@ def subplot(*args):
     nr : int
         The subfigure number on the grid specified by ncols and nrows.
         Should be at least one. subplot(221) is the top left. subplot(222)
-        is the top right. 
+        is the top right.
     
     Notes
     -----
-    It is checked whether (the center of) an axes is present at the 
+    It is checked whether (the center of) an axes is present at the
     specified grid location. If so, that axes is returned. Otherwise
     a new axes is created at that location.
     
@@ -83,7 +83,7 @@ def subplot(*args):
     
     # check if an axes is there
     for a in f._children:
-        if isinstance(a, AxesContainer):           
+        if isinstance(a, AxesContainer):
             n = laysin( cols, rows, getcenter(f, a) )
             if n == nr:
                 # make current and return
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     # Get axes on 2x2 grid
     a1 = vv.subplot(221)
     a2 = vv.subplot(221)
-    a3 = vv.subplot(224)    
+    a3 = vv.subplot(224)
     # Get axes on 3x3 grid
     a4 = vv.subplot(331) # (center is inside 221)
     a5 = vv.subplot(333)

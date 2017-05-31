@@ -42,7 +42,7 @@ class CallableObject(object):
             # Method, store object and method name
             self._ob = weakref.ref(c.__self__)
             self._func = c.__func__.__name__
-        elif hasattr(c, 'im_self'): 
+        elif hasattr(c, 'im_self'):
             # Method in older Python
             self._ob = weakref.ref(c.im_self)
             self._func = c.im_func.__name__
@@ -52,7 +52,7 @@ class CallableObject(object):
             self._ob = None
     
     def isdead(self):
-        """ Get whether the weak ref is dead. 
+        """ Get whether the weak ref is dead.
         """
         if self._ob:
             # Method
@@ -94,11 +94,11 @@ class CallableObject(object):
 
 
 class BaseEvent:
-    """ The BaseEvent is the simplest type of event. 
+    """ The BaseEvent is the simplest type of event.
     
-    The purpose of the event class is to provide a way to bind/unbind 
+    The purpose of the event class is to provide a way to bind/unbind
     to events and to fire them. At the same time, it is the place where
-    the properties of the event are stored (such mouse location, key 
+    the properties of the event are stored (such mouse location, key
     being pressed, ...).
     
     In Qt speak, an event is a combination of an event and a signal.
@@ -109,16 +109,16 @@ class BaseEvent:
     the event is propagated to the parent object (event paradigm).
     
     To register or unregister a callback, use the Bind and Unbind methods
-    When fired, all handlers that are bind to this event are called, 
-    until the event is set as handled. The handlers are called with the 
-    event object as an argument. The event.owner provides a reference of 
+    When fired, all handlers that are bind to this event are called,
+    until the event is set as handled. The handlers are called with the
+    event object as an argument. The event.owner provides a reference of
     what wobject/wibject fired the event.
     
     """
     
     _PROPAGATE = False
     
-    def __init__(self, owner):   
+    def __init__(self, owner):
         self._owner = weakref.ref(owner)
         self._handlers = []
         
@@ -132,14 +132,14 @@ class BaseEvent:
     
     @property
     def owner(self):
-        """ The object that this event belongs to. 
+        """ The object that this event belongs to.
         """
         return self._owner()
 
 
     @property
     def type(self):
-        """ The type (__class__) of this event. 
+        """ The type (__class__) of this event.
         """
         return self.__class__
     
@@ -166,8 +166,8 @@ class BaseEvent:
     
     def Ignore(self):
         """ Ignore()
-        Clears the accept flag parameter of the event object. Clearing the 
-        accept parameter indicates that the event receiver does not want 
+        Clears the accept flag parameter of the event object. Clearing the
+        accept parameter indicates that the event receiver does not want
         the event. If none of the handlers for this event do not want it,
         the event might be propagated to the parent object.
         """
@@ -176,7 +176,7 @@ class BaseEvent:
     def SetHandled(self, isHandled=True):
         """ SetHandled(isHandled=True)
         Mark the event as handled, preventing any subsequent handlers
-        from being called. Use this in a custom handler to override the 
+        from being called. Use this in a custom handler to override the
         existing  handler. The same behavior is obtained when the handler
         returns True.
         """
@@ -186,10 +186,10 @@ class BaseEvent:
     def Bind(self, func):
         """ Bind(func)
         
-        Add an eventhandler to this event.             
+        Add an eventhandler to this event.
         
         The callback/handler (func) must be a callable. It is called
-        with one argument: the event instance, which contains the mouse 
+        with one argument: the event instance, which contains the mouse
         location for the mouse event and the keycode for the key event.
         
         """
@@ -216,7 +216,7 @@ class BaseEvent:
     def Unbind(self, func=None):
         """ Unbind(func=None)
         
-        Unsubscribe a handler, If func is None, remove all handlers.  
+        Unsubscribe a handler, If func is None, remove all handlers.
         
         """
         if func is None:
@@ -225,7 +225,7 @@ class BaseEvent:
             cref = CallableObject(func)
             for c in [c for c in self._handlers]:
                 # remove if callable matches func or object is destroyed
-                if c.compare(cref) or c.isdead():  
+                if c.compare(cref) or c.isdead():
                     self._handlers.remove( c )
         
         self._UpdateOwner()
@@ -239,7 +239,7 @@ class BaseEvent:
         
         If no handlers are present or if the event is explicitly ignored,
         the event is propagated to the owners parent. This only apples
-        to events for which this is approprioate and only if eventArgs 
+        to events for which this is approprioate and only if eventArgs
         are given.
         
         """
@@ -251,15 +251,15 @@ class BaseEvent:
         
         # remove dead weakrefs
         for c in [c for c in self._handlers]:
-            if c.isdead():         
+            if c.isdead():
                 self._handlers.remove( c )
                 self._UpdateOwner()
         
-        # get list of callable functions 
+        # get list of callable functions
         L = self._handlers
         
         # Init handled and accepted
-        # In the event, the event is accepted if one of the handlers 
+        # In the event, the event is accepted if one of the handlers
         # accepted (i.e. did not ignore) it
         accepted = False
         handled = False
@@ -313,12 +313,12 @@ class BaseEvent:
         sys.last_value = value
         sys.last_traceback = tb
         # Show traceback
-        tblist = traceback.extract_tb(tb)                
+        tblist = traceback.extract_tb(tb)
         list = traceback.format_list(tblist[2:]) # remove "Fire"
         list.extend( traceback.format_exception_only(type, value) )
         # print
         print("ERROR calling '%s':" % s)
-        tmp = ""                
+        tmp = ""
         for i in list:
             tmp += i
         print(tmp)
@@ -339,12 +339,12 @@ class BaseEvent:
         """
         return self._modifiers
     
-    # Event classes should overload this        
+    # Event classes should overload this
     def Set(self, modifiers=()):
-        """ Set(modifiers) 
+        """ Set(modifiers)
         
         Set the event properties before firing it. In the base event
-        the only property is the modifiers state, a tuple of the 
+        the only property is the modifiers state, a tuple of the
         modifier keys currently pressed.
         
         """
@@ -369,7 +369,7 @@ class MouseEvent(BaseEvent):
     def Set(self, absx, absy, but, modifiers=()):
         """ Set(absx, absy, but, modifiers=())
         
-        Set the event properties before firing it. 
+        Set the event properties before firing it.
         
         """
         BaseEvent.Set(self, modifiers)
@@ -415,7 +415,7 @@ class MouseEvent(BaseEvent):
             if axes or hasattr(owner, '_cameras'):
                 # Also give 2D coordinates
                 if axes:
-                    cam = axes._cameras['TwoDCamera']                    
+                    cam = axes._cameras['TwoDCamera']
                 else:
                     cam = owner._cameras['TwoDCamera']
                 if owner.parent: # or screen to world cannot be calculated
@@ -425,48 +425,48 @@ class MouseEvent(BaseEvent):
     @property
     def absx(self):
         """ The absolute x position in screen coordinates when the event
-        happened. 
+        happened.
         """
         return self._absx
     
     @property
     def absy(self):
         """ The absolute y position in screen coordinates when the event
-        happened. 
+        happened.
         """
         return self._absy
     
     @property
     def x(self):
         """ The x position in screen coordinates relative to the owning object
-        when the event happened. (For Wobjects, relative to the Axes.) 
+        when the event happened. (For Wobjects, relative to the Axes.)
         """
         return self._x
     
     @property
     def y(self):
         """ The y position in screen coordinates relative to the owning object
-        when the event happened. (For Wobjects, relative to the Axes.) 
+        when the event happened. (For Wobjects, relative to the Axes.)
         """
         return self._y
     
     @property
     def x2d(self):
-        """ The x position in 2D world coordinates when the event happened. 
+        """ The x position in 2D world coordinates when the event happened.
         This is only valid when the used camera is 2D.
         """
         return self._x2d
     
     @property
     def y2d(self):
-        """ The y position in 2D world coordinates when the event happened. 
+        """ The y position in 2D world coordinates when the event happened.
         This is only valid when the used camera is 2D.
         """
         return self._y2d
     
     @property
     def button(self):
-        """ The The mouse button that was pressed, 0=none, 1=left, 2=right. 
+        """ The The mouse button that was pressed, 0=none, 1=left, 2=right.
         """
         return self._but
 
@@ -486,7 +486,7 @@ class KeyEvent(BaseEvent):
     def Set(self, key, text='', modifiers=()):
         """ Set(key, text='')
         
-        Set the event properties before firing it. 
+        Set the event properties before firing it.
         
         """
         BaseEvent.Set(self, modifiers)
@@ -495,13 +495,13 @@ class KeyEvent(BaseEvent):
     
     @property
     def key(self):
-        """ The integer keycode of the key. 
+        """ The integer keycode of the key.
         """
         return self._key
     
     @property
     def text(self):
-        """ The text that the key represents (if available). 
+        """ The text that the key represents (if available).
         """
         return self._text
 
@@ -514,8 +514,8 @@ class EventMouseDown(MouseEvent):
     """ EventMouseDown(owner)
     
     Fired when the mouse is pressed down on this object, or on any of its
-    children and not being handled. 
-    (Also fired the first click of a double click.) 
+    children and not being handled.
+    (Also fired the first click of a double click.)
     
     """
     _PROPAGATE = True
@@ -529,7 +529,7 @@ class EventMouseUp(MouseEvent):
     
     Fired when the mouse is released after having been clicked down
     on this object (even if the mouse is now not over the object). (Also
-    fired on the first click of a double click.) 
+    fired on the first click of a double click.)
     
     """
     _PROPAGATE = False
@@ -542,7 +542,7 @@ class EventDoubleClick(MouseEvent):
     """ EventDoubleClick(owner)
     
     Fired when the mouse is double-clicked on this object, or on any of its
-    children and not being handled. 
+    children and not being handled.
     
     """
     _PROPAGATE = True
@@ -550,7 +550,7 @@ class EventDoubleClick(MouseEvent):
 class EventEnter(MouseEvent):
     """ EventEnter(owner)
     
-    Fired when the mouse enters this object or any of its children. 
+    Fired when the mouse enters this object or any of its children.
     
     """
     _PROPAGATE = False
@@ -558,7 +558,7 @@ class EventEnter(MouseEvent):
 class EventLeave(MouseEvent):
     """ EventLeave(owner)
     
-    Fired when the mouse was previously over the object or any of its 
+    Fired when the mouse was previously over the object or any of its
     children, and is now not.
     
     """
@@ -577,7 +577,7 @@ class EventScroll(MouseEvent):
     """ EventScroll(owner)
     
     Fired when the scroll wheel is used while over the object, or on any of its
-    children and not being handled. The value of the button property is 
+    children and not being handled. The value of the button property is
     undefined for this event. The amount of scrolling is available as the
     horizontalSteps and verticalSteps properties.
     
@@ -614,15 +614,15 @@ class EventScroll(MouseEvent):
 class EventKeyDown(KeyEvent):
     """ EventKeyDown(owner)
     
-    Fired when a key is pressed down while the figure is active. 
+    Fired when a key is pressed down while the figure is active.
     
     """
     _PROPAGATE = True
 
 class EventKeyUp(KeyEvent):
-    """ EventKeyUp(owner) 
+    """ EventKeyUp(owner)
     
-    Fired when a key is released while the figure is active. 
+    Fired when a key is released while the figure is active.
     
     """
     _PROPAGATE = True
@@ -632,9 +632,9 @@ class EventKeyUp(KeyEvent):
 class EventPosition(BaseEvent):
     """ EventPosition(owner)
     
-    Fired when the position (or size) of this wibject changes. 
+    Fired when the position (or size) of this wibject changes.
     
-    """ 
+    """
     _PROPAGATE = False
     
 
@@ -648,11 +648,11 @@ def processVisvisEvents():
     
     Process all visvis events. Checks the status of all timers
     and fires the ones that need to be fired. This method
-    needs to be called every now and then. 
+    needs to be called every now and then.
     
     All backends implement a timer that periodically calls this function.
     
-    To keep a figure responsive while running, periodically call 
+    To keep a figure responsive while running, periodically call
     Figure.DrawNow() or vv.processEvents().
     
     """
@@ -660,20 +660,20 @@ def processVisvisEvents():
 
 
 class Timer(BaseEvent):
-    """ Timer(owner, interval=1000, oneshot=True) 
+    """ Timer(owner, interval=1000, oneshot=True)
     
-    Timer class. You can bind callbacks to the timer. The timer is 
-    fired when it runs out of time. You can do one-shot runs and 
+    Timer class. You can bind callbacks to the timer. The timer is
+    fired when it runs out of time. You can do one-shot runs and
     continuous runs.
     
     Setting timer.nolag to True will prevent the timer from falling
-    behind. If the previous Fire() was a bit too late the next Fire 
-    will take place sooner. This will make that at an interval of 
-    1000, 3600 events will have been fired in one hour. 
+    behind. If the previous Fire() was a bit too late the next Fire
+    will take place sooner. This will make that at an interval of
+    1000, 3600 events will have been fired in one hour.
     
     """
     
-    _timers = []    
+    _timers = []
     
     def __init__(self, owner, interval=1000, oneshot=True):
         # register
@@ -683,7 +683,7 @@ class Timer(BaseEvent):
         self._owner = weakref.ref(owner)
         self._handlers = []
         
-        # store Timer specific properties        
+        # store Timer specific properties
         self.interval = interval
         self.oneshot = oneshot
         self.nolag = False
@@ -694,7 +694,7 @@ class Timer(BaseEvent):
     def Start(self, interval=None, oneshot=None):
         """ Start(interval=None, oneshot=None)
         
-        Start the timer. If interval end oneshot are not given, 
+        Start the timer. If interval end oneshot are not given,
         their current values are used.
         
         """
@@ -712,7 +712,7 @@ class Timer(BaseEvent):
     def Stop(self):
         """ Stop()
         
-        Stop the timer from running. 
+        Stop the timer from running.
         
         """
         self._running = False
@@ -731,7 +731,7 @@ class Timer(BaseEvent):
     
     @property
     def isRunning(self):
-        """ Get whether the timer is running. 
+        """ Get whether the timer is running.
         """
         return self._running
     
@@ -742,7 +742,7 @@ class Timer(BaseEvent):
         fired. If so, it fires them.
         """
         
-        # test calLaters first        
+        # test calLaters first
         for calltime in [key for key in _callLater_callables.keys()]:
             if calltime < time.time():
                 callable, args, kwargs = _callLater_callables.pop(calltime)
@@ -753,7 +753,7 @@ class Timer(BaseEvent):
             timer = timerRef()
             
             # check if timer exists, otherwise remove.
-            if timer is None:                
+            if timer is None:
                 timersToRemove.append(timerRef)
                 continue
             
@@ -786,8 +786,8 @@ class Timer(BaseEvent):
 class App:
     """ App()
     
-    The App class wraps a GUI backend  with a simple interface that is 
-    the same for all backends. It can be used to start the GUI toolkit's 
+    The App class wraps a GUI backend  with a simple interface that is
+    the same for all backends. It can be used to start the GUI toolkit's
     main-loop, or process all pending events.
     
     To obtain an instance of this class, the user should call vv.use().
@@ -837,12 +837,12 @@ class App:
     def ProcessEvents(self):
         """ ProcessEvents()
         
-        Process all pending GUI events. This should be done regularly 
-        to keep the visualization interactive and to keep the visvis 
-        event system running. 
+        Process all pending GUI events. This should be done regularly
+        to keep the visualization interactive and to keep the visvis
+        event system running.
         
         When using IPython or IEP with the right settings, GUI events
-        will be processed automatically. However, in a running script, 
+        will be processed automatically. However, in a running script,
         this is not the case; be then regularly calling this method,
         the figures will stay responsive.
         
@@ -853,13 +853,13 @@ class App:
     def Run(self):
         """ Run()
         
-        Enter the native GUI event loop. 
+        Enter the native GUI event loop.
         
         """
         self._Run()
     
     
-    # Implement these methods. Be using this redirection scheme, we keep 
+    # Implement these methods. Be using this redirection scheme, we keep
     # the documentation intact.
     def _GetNativeApp(self):
         raise NotImplemented()

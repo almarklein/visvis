@@ -19,7 +19,7 @@ for i in range(5):
     a = vv.subplot(3,2,i+2)
     t = vv.volshow(vol)
     vv.title('Renderstyle ' + RS[i])
-    t.colormap = vv.CM_HOT 
+    t.colormap = vv.CM_HOT
     t.renderStyle = RS[i]
     t.isoThreshold = 200  # Only used in iso render style
     tt.append(t)

@@ -9,12 +9,12 @@ import visvis as vv
 def volshow(*args, **kwargs):
     """ volshow(vol, clim=None, cm=CM_GRAY, axesAdjust=True, axes=None)
     
-    Display a 3D image (a volume). 
+    Display a 3D image (a volume).
     
-    This is a convenience function that calls either volshow3() or 
-    volshow2(). If the current system supports it (OpenGL version >= 2.0), 
-    displays a 3D  rendering (volshow3). Otherwise shows three slices 
-    that can be moved interactively (volshow2). 
+    This is a convenience function that calls either volshow3() or
+    volshow2(). If the current system supports it (OpenGL version >= 2.0),
+    displays a 3D  rendering (volshow3). Otherwise shows three slices
+    that can be moved interactively (volshow2).
     
     Parameters
     ----------

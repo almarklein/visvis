@@ -14,7 +14,7 @@ import visvis as vv
 #
 from visvis.core.baseTexture import TextureObject
 from visvis.core.base import Wobject
-from visvis.core.misc import Property, PropWithDraw, basestring, unichr 
+from visvis.core.misc import Property, PropWithDraw, basestring, unichr
 from visvis.core.misc import getColor
 #
 from visvis.core.cameras import depthToZ
@@ -23,23 +23,23 @@ from visvis.core.baseWibjects import Box
 
 escapes = {
     # upper case greek
-    'Alpha':0x0391, 'Beta':0x0392, 'Gamma':0x0393, 'Delta':0x0394, 
-    'Epsilon':0x0395, 'Zeta':0x0396, 'Eta':0x0397, 'Theta':0x0398, 
-    'Iota':0x0399, 'Kappa':0x039A, 'Lambda':0x039B, 'Mu':0x039C, 
-    'Nu':0x039D, 'Xi':0x039E, 'Omicron':0x039F, 
-    'Pi':0x03A0, 'Rho':0x03A1,             'Sigma':0x03A3, 'Tau':0x03A4, 
+    'Alpha':0x0391, 'Beta':0x0392, 'Gamma':0x0393, 'Delta':0x0394,
+    'Epsilon':0x0395, 'Zeta':0x0396, 'Eta':0x0397, 'Theta':0x0398,
+    'Iota':0x0399, 'Kappa':0x039A, 'Lambda':0x039B, 'Mu':0x039C,
+    'Nu':0x039D, 'Xi':0x039E, 'Omicron':0x039F,
+    'Pi':0x03A0, 'Rho':0x03A1,             'Sigma':0x03A3, 'Tau':0x03A4,
     'Upsilon':0x03A5, 'Phi':0x03A6, 'Chi':0x03A7, 'Psi':0x03A8, 'Omega':0x03A9,
     # lower case greek
-    'alpha':0x03B1, 'beta':0x03B2, 'gamma':0x03B3, 'delta':0x03B4, 
-    'epsilon':0x03B5, 'zeta':0x03B6, 'eta':0x03B7, 'theta':0x03B8, 
-    'iota':0x03B9, 'kappa':0x03BA, 'lambda':0x03BB, 'mu':0x03BC, 
-    'nu':0x03BD, 'xi':0x03BE, 'omicron':0x03BF, 
-    'pi':0x03C0, 'rho':0x03C1, 'varsigma':0x03C2, 'sigma':0x03C3, 
+    'alpha':0x03B1, 'beta':0x03B2, 'gamma':0x03B3, 'delta':0x03B4,
+    'epsilon':0x03B5, 'zeta':0x03B6, 'eta':0x03B7, 'theta':0x03B8,
+    'iota':0x03B9, 'kappa':0x03BA, 'lambda':0x03BB, 'mu':0x03BC,
+    'nu':0x03BD, 'xi':0x03BE, 'omicron':0x03BF,
+    'pi':0x03C0, 'rho':0x03C1, 'varsigma':0x03C2, 'sigma':0x03C3,
     'tau':0x03C4, 'upsilon':0x03C5,
     'phi':0x03C6, 'chi':0x03C7, 'psi':0x03C8, 'omega':0x03C9,
     # some math
-    'Re':0x211c, 'Im':0x2111, 'null':0x2300, 'infty':0x221e, 
-    'int':0x222b, 'iint':0x222c, 'iiint':0x222d, 
+    'Re':0x211c, 'Im':0x2111, 'null':0x2300, 'infty':0x221e,
+    'int':0x222b, 'iint':0x222c, 'iiint':0x222d,
     'forall':0x2200,
     'leq':0x2264, 'geq':0x2265, 'approx':0x2248, 'approxeq':0x2243, 'ne':0x2260,
     'in':0x2208,
@@ -47,7 +47,7 @@ escapes = {
     'Leftarrow':0x21D0,'Uparrow':0x21D1,'Rightarrow':0x21D2,'Downarrow':0x21D3,
     'leftceil':0x2308,'rightceil':0x2309,'leftfloor':0x230A,'rightfloor':0x230B,
     'times':0x00d7, 'cdot':0x2219, 'pm':0x00b1,
-    'oplus':0x2295, 'ominus':0x2296, 'otimes':0x2297, 'oslash':0x2298,     
+    'oplus':0x2295, 'ominus':0x2296, 'otimes':0x2297, 'oslash':0x2298,
     }
 
 # sort the keys, such that longer names are replaced first
@@ -64,7 +64,7 @@ class AtlasTexture(TextureObject):
         TextureObject.__init__(self, 2)
     
     def _UploadTexture(self, data, *args):
-        """ Overload to make it an alpha map. 
+        """ Overload to make it an alpha map.
         """
         
         # Add lumincance channel
@@ -86,7 +86,7 @@ class AtlasTexture(TextureObject):
 
     
     def _UpdateTexture(self, data, *args):
-        """ Overload to make it an alpha map. 
+        """ Overload to make it an alpha map.
         """
         # Add lumincance channel
         data2 = np.zeros((data.shape[0],data.shape[1],2), dtype=np.uint8)
@@ -103,7 +103,7 @@ class FontManager(object):
     There is one fontmanager per context (i.e. Figure).
     """
     
-    # To create a font manager, subclass this class and implement the 
+    # To create a font manager, subclass this class and implement the
     # Compile, Position and Draw methods that each have a textObject
     # (Text or Label instance) as the first argument.
     #
@@ -123,7 +123,7 @@ class FontManager(object):
     
     def ConvertEscapedText(self, tt):
         tt = tt.replace(r'\\', unichr(0))
-        # Catch valid escape codes that were supposed to be greek letters 
+        # Catch valid escape codes that were supposed to be greek letters
         # (a b f n r t v)
         tt = tt.replace('\alpha', unichr(escapes['alpha']))
         tt = tt.replace('\beta', unichr(escapes['beta']))
@@ -168,7 +168,7 @@ class FontManager(object):
 
     
 def correctVertices( textObject, vertices, charHeigh):
-    """ Provides a default algorithm that can be used 
+    """ Provides a default algorithm that can be used
     in the FontManager.Position() method to correct the vertices
     for alignment and angle.
     """
@@ -236,14 +236,14 @@ def correctVertices( textObject, vertices, charHeigh):
 def simpleTextureDraw(vertices, texcords, texture, color):
     """ Simply draw characters, given vertices, texcords, a texture
     and a color.
-    """ 
+    """
     # Make arrays
     if isinstance(vertices, vv.Pointset):
         vertices = vertices.data
     if isinstance(texcords, vv.Pointset):
         texcords = texcords.data
     
-    # Enable texture 
+    # Enable texture
     texture.Enable()
     
     # Allow overlapping quads to overwrite the empty part of another.
@@ -261,7 +261,7 @@ def simpleTextureDraw(vertices, texcords, texture, color):
         gl.glDrawArrays(gl.GL_QUADS, 0, len(vertices))
         gl.glFlush()
     
-    # disable texture and clean up     
+    # disable texture and clean up
     texture.Disable()
     gl.glDepthFunc(gl.GL_LESS)
     gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
@@ -277,9 +277,9 @@ class BaseText(object):
     the vv.settings.defaultFontName is used.
     """
     
-    # The idea is that the FontManager produces the _compiledData 
-    # for this object in its Compile method. In its Position method it 
-    # will create _finalData 
+    # The idea is that the FontManager produces the _compiledData
+    # for this object in its Compile method. In its Position method it
+    # will create _finalData
     
     def __init__(self, text='', fontName=None, fontSize=9, color='k'):
         
@@ -309,7 +309,7 @@ class BaseText(object):
     
     def _GetFontManager(self):
         """ Convienence function to obtain a reference to the font manager.
-        The font manager is stored at the figure; there is one font 
+        The font manager is stored at the figure; there is one font
         manager per OpenGl contex.
         """
         fig = self.GetFigure()
@@ -320,14 +320,14 @@ class BaseText(object):
     
     def Invalidate(self):
         """ Invalidate this object, such that the text is recompiled
-        the next time it is drawn. 
+        the next time it is drawn.
         """
         
         # Data for drawing
         self._compiledData = None    # The preliminary (relative) vertex coordinates etc
         self._finalData = None      # The final (absolute) vertex coordinates etc
         
-        # Buffered values to store the limits of the vertices 
+        # Buffered values to store the limits of the vertices
         self._deltax = 0, 0
         self._deltay = 0, 0
     
@@ -343,7 +343,7 @@ class BaseText(object):
         vertices = args[0]
         if vertices is not None and len(vertices):
             self._deltax = vertices[:,0].min(), vertices[:,0].max()
-            self._deltay = vertices[:,1].min(), vertices[:,1].max() 
+            self._deltay = vertices[:,1].min(), vertices[:,1].max()
     
     def _GetFinalData(self):
         return self._finalData
@@ -361,7 +361,7 @@ class BaseText(object):
     
     def UpdatePosition(self, *args):
         """ Updates the position now, Compiles the text if necessary.
-        """ 
+        """
         fm = self._GetFontManager()
         if fm:
             fm.Position(self) # Calls Compile() if necessary
@@ -377,7 +377,7 @@ class BaseText(object):
     
     @Property # Smart draw
     def text():
-        """Get/Set the text to display. 
+        """Get/Set the text to display.
         """
         def fget(self):
             return self._text
@@ -469,7 +469,7 @@ class BaseText(object):
         def fset(self, value):
             if isinstance(value, int):
                 pass
-            elif isinstance(value, basestring):                
+            elif isinstance(value, basestring):
                 value = value.lower()
                 tmp = {'left':-1,'center':0,'centre':0,'right':1 }
                 if not value in tmp:
@@ -497,7 +497,7 @@ class BaseText(object):
         def fset(self, value):
             if isinstance(value, int):
                 pass
-            elif isinstance(value, basestring):                
+            elif isinstance(value, basestring):
                 value = value.lower()
                 tmp={'up':-1,'top':-1,'center':0,'centre':0,'down':1,'bottom':1}
                 if not value in tmp:
@@ -520,7 +520,7 @@ class BaseText(object):
 class Text(Wobject, BaseText):
     """ Text(parent, text='', x=0, y=0, z=0, fontName=None, fontSize=9, color='k')
     
-    A wobject representing a string of characters. The text has 
+    A wobject representing a string of characters. The text has
     a certain position in the scene. The fontname can be
     'mono', 'sans' or 'serif'. If not given, the vv.settings.defaultFontName
     is used.
@@ -572,7 +572,7 @@ class Text(Wobject, BaseText):
     
     def OnDraw(self):
         # get screen position and store
-        tmp = glu.gluProject(self._x, self._y, self._z)        
+        tmp = glu.gluProject(self._x, self._y, self._z)
         self._screenx, self._screeny, self._screenz = tuple(tmp)
 #         # make integer (to prevent glitchy behaviour), but not z!
 #         self._screenx = int(self._screenx+0.5)
@@ -587,11 +587,11 @@ class Text(Wobject, BaseText):
 
 
 
-class Label(Box, BaseText):    
+class Label(Box, BaseText):
     """ Label(parent, text='', fontName=None, fontSize=9, color='k')
     
-    A wibject (inherits from box) with text inside. 
-    The fontname can be 'mono', 'sans' or 'serif'. If not given, the 
+    A wibject (inherits from box) with text inside.
+    The fontname can be 'mono', 'sans' or 'serif'. If not given, the
     vv.settings.defaultFontName is used.
     
     """
@@ -600,7 +600,7 @@ class Label(Box, BaseText):
         Box.__init__(self, parent)
         BaseText.__init__(self, text, fontName, fontSize, color)
         
-        # no edge        
+        # no edge
         self.edgeWidth = 0
         
         # init position (this is to set the size)

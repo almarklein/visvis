@@ -17,7 +17,7 @@ def axis(command, axes=None):
     command : string
         The setting command to apply. See below.
     axes : Axes instance
-        The axes to apply the setting to. Uses the current axes by default. 
+        The axes to apply the setting to. Uses the current axes by default.
     
     Possible string commands
     ------------------------
@@ -26,8 +26,8 @@ def axis(command, axes=None):
       * equal: make a circle be displayed circular (Axes.daspectAuto = False)
       * auto: change the range for each dimension indepdently (Axes.daspectAuto = True)
       * tight: show all data (Axes.SetLimits())
-      * ij: flip the y-axis (make second element of Axes.daspect negative) 
-      * xy: (make all elements of Axes.daspect positive) 
+      * ij: flip the y-axis (make second element of Axes.daspect negative)
+      * xy: (make all elements of Axes.daspect positive)
     If you want to set an Axes' limits, use Axes.SetLimits(xlim, ylim, zlim).
     
     """
@@ -37,7 +37,7 @@ def axis(command, axes=None):
         axes = vv.gca()
     
     if command == 'off':
-        axes.axis.visible = 0 
+        axes.axis.visible = 0
     elif command == 'on':
         axes.axis.visible = 1
     elif command == 'equal':

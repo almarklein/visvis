@@ -34,16 +34,16 @@ else:
 # hangin in "mid-air". Or while dragging the whole window, the frame
 # is drawn, but in it is either rubish (qt) or gray bg (wx). When the
 # frame is not visible, it is still there (you can still resize etc.)
-# This is a known bug of the X Server: 
+# This is a known bug of the X Server:
 # https://wiki.ubuntu.com/RedirectedDirectRendering
-# A solution while the bug is not fixed is to set the visual effects off 
+# A solution while the bug is not fixed is to set the visual effects off
 # in System > Preferences > Appearance.
 # Also note tha wx seems the less affected backend (there is a small fix
 # by redrawing on a Activate event which helps a lot)
 
 
 
-KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT, 
+KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
             QtCore.Qt.Key_Alt: constants.KEY_ALT,
             QtCore.Qt.Key_Control: constants.KEY_CONTROL,
             QtCore.Qt.Key_Left: constants.KEY_LEFT,
@@ -101,7 +101,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         except Exception:
             pass
         
-        # enable mouse tracking so mousemove events are always fired.        
+        # enable mouse tracking so mousemove events are always fired.
         self.setMouseTracking(True)
         
         # enable getting keyboard focus
@@ -138,7 +138,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     
     def mouseMoveEvent(self, event):
         if self.figure:
-            # fire event   
+            # fire event
             x, y = event.x(), event.y()
             self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers(event))
     
@@ -146,7 +146,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         # Get number of steps
        
         if qtlib == "pyqt5":
-            numDegrees = event.angleDelta() / 8.0            
+            numDegrees = event.angleDelta() / 8.0
         else:
             numDegrees = event.delta() / 8.0
                                     
@@ -160,11 +160,11 @@ class GLWidget(QtOpenGL.QGLWidget):
             else:
                 horizontal, vertical = numSteps, 0
                 
-        # fire event   
+        # fire event
         x, y = event.x(), event.y()
         self.figure._GenerateMouseEvent('scroll', x, y, horizontal, vertical, modifiers(event))
     
-    def keyPressEvent(self, event):      
+    def keyPressEvent(self, event):
         key = self._ProcessKey(event)
         text = str(event.text())
         self.figure._GenerateKeyEvent('keydown', key, text, modifiers(event))
@@ -188,7 +188,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             return key
     
     def enterEvent(self, event):
-        if self.figure:            
+        if self.figure:
             ev = self.figure.eventEnter
             ev.Set(0,0,0)
             ev.Fire()
@@ -201,7 +201,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     
 #     def resizeEvent(self, event):
 #         """ QT event when the widget is resized.
-#         """        
+#         """
 #         self.figure._OnResize()
     
     def closeEvent(self, event):
@@ -265,7 +265,7 @@ class Figure(BaseFigure):
         """ Create the Figure's widget if necessary, and return the
         widget. """
         if self._widget is None:
-            # Make sure there is a native app and the timer is started 
+            # Make sure there is a native app and the timer is started
             # (also when embedded)
             app.Create()
             
@@ -282,7 +282,7 @@ class Figure(BaseFigure):
     
     
     def _SetCurrent(self):
-        """ Make this scene the current OpenGL context. 
+        """ Make this scene the current OpenGL context.
         """
         if self._widget and not self._destroyed:
             self._widget.makeCurrent()
@@ -307,7 +307,7 @@ class Figure(BaseFigure):
             self._widget.setGeometry(x, y, w, h)
     
     def _GetPosition(self):
-        """ Get the position of the widget. """        
+        """ Get the position of the widget. """
         if self._widget and not self._destroyed:
             tmp = self._widget.geometry()
             return tmp.left(), tmp.top(), tmp.width(), tmp.height()
@@ -342,7 +342,7 @@ def newFigure():
     fig._widget.resize(size[0],size[1])
     
     # Let OpenGl initialize and return
-    fig.DrawNow() 
+    fig.DrawNow()
     return fig
 
 

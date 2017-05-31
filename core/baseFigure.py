@@ -22,13 +22,13 @@ import visvis
 #
 from visvis.core import base
 from visvis.core.base import DRAW_NORMAL, DRAW_FAST, DRAW_SHAPE, DRAW_SCREEN  # noqa
-from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+from visvis.core.misc import Property, PropWithDraw, DrawAfter
 from visvis.core.misc import getOpenGlInfo
 from visvis.core import events
 #
 from visvis.core.cameras import ortho
 from visvis.text import BaseText
-from visvis.core.line import MarkerManager 
+from visvis.core.line import MarkerManager
 from visvis.core.axes import _BaseFigure, AxesContainer, Axes, Legend
 from visvis.core.axes import _Screenshot
 
@@ -41,15 +41,15 @@ class ObjectPickerHelper(object):
     """ ObjectPickerHelper()
     
     A simple class to help picking of the objects.
-    An instance of this is attached to each figure. 
+    An instance of this is attached to each figure.
     
-    Picking in visvis is done using the approach proposed in chapter 14 of 
+    Picking in visvis is done using the approach proposed in chapter 14 of
     the 6th edition of the Red Book: rendering to the backbuffer using a
     particular color per object.
     
-    Another possible approach is gluPickMatrix. Although the backbuffer 
-    approach might be a bit slower, it is easier than the pickmatrix approach 
-    and allows more control over what objects you want to be able to pick. 
+    Another possible approach is gluPickMatrix. Although the backbuffer
+    approach might be a bit slower, it is easier than the pickmatrix approach
+    and allows more control over what objects you want to be able to pick.
     
     """
     
@@ -59,7 +59,7 @@ class ObjectPickerHelper(object):
         self.screen = None  # the screenshot
     
     def GetId(self):
-        """ Get an id.  """        
+        """ Get an id.  """
         self.curid += 1
         return self.curid
     
@@ -76,12 +76,12 @@ class ObjectPickerHelper(object):
         if idr>fr:
             # this will probably never happen
             raise Exception("Your id exceededs what you can express in color!")
-        # return        
+        # return
         return float(idr)/(fr-1), float(idg)/(fg-1), float(idb)/(fb-1)
     
-    def GetIdFromColor(self,r,g,b):        
-        # get factors        
-        fr, fg, fb = 2**self.bits_r, 2**self.bits_g, 2**self.bits_b        
+    def GetIdFromColor(self,r,g,b):
+        # get factors
+        fr, fg, fb = 2**self.bits_r, 2**self.bits_g, 2**self.bits_b
         idr, idg, idb = int(r*fr), int(g*fg), int(b*fb)
         #idr, idg, idb = int(r), int(g), int(b)
         id =  (idr*fg + idg)*fb + idb
@@ -127,28 +127,28 @@ class ObjectPickerHelper(object):
     
     def _walkTreeAssign(self, children):
         """ The walker to assign ids to all objects.
-        This walker walks in the same order as the walker that 
-        searches for the objec given an id. This way we do not 
+        This walker walks in the same order as the walker that
+        searches for the objec given an id. This way we do not
         have to test each object, but only go down the branches
-        where it is in. """        
-        for child in children:            
+        where it is in. """
+        for child in children:
             id = self.GetId()
-            child._id = id            
+            child._id = id
             # proceed to children
             if hasattr(child,'_wobjects'):
                 self._walkTreeAssign(child._wobjects)
             self._walkTreeAssign(child._children)
     
     def _walkTree(self, id, children, items):
-        """ The walker. """        
+        """ The walker. """
         for i in range(len(children)):
             # define child and next child
             child = children[i]
             child2 = None
-            if i+1 < len(children):                
+            if i+1 < len(children):
                 child2 = children[i+1]
             # compare id's
-            if id == child._id:                
+            if id == child._id:
                 # found it!
                 items.append(child)
                 break
@@ -160,7 +160,7 @@ class ObjectPickerHelper(object):
                         self._walkTree(id, child._wobjects, items)
                     self._walkTree(id, child._children, items)
                 elif id < child2._id:
-                    # the child is a subchild!                    
+                    # the child is a subchild!
                     items.append(child)
                     if hasattr(child,'_wobjects'):
                         self._walkTree(id, child._wobjects, items)
@@ -173,9 +173,9 @@ class ObjectPickerHelper(object):
 class BaseFigure(_BaseFigure):
     """ BaseFigure()
     
-    Abstract class representing the root of all wibjects. 
+    Abstract class representing the root of all wibjects.
     
-    A Figure is a wrapper around the OpenGL widget in which it is drawn; 
+    A Figure is a wrapper around the OpenGL widget in which it is drawn;
     this way different backends are possible. Each backend inherits this
     class and implements the required methods and makes sure all GUI
     events are translated to visvis events.
@@ -206,7 +206,7 @@ class BaseFigure(_BaseFigure):
         
         # create a timer to handle the drawing better
         self._drawTimer = events.Timer(self, 10, oneshot=True)
-        self._drawTimer.Bind(self._DrawTimerTimeOutHandler)        
+        self._drawTimer.Bind(self._DrawTimerTimeOutHandler)
         self._drawtime = time.time() # to calculate fps
         self._drawWell = -1
         
@@ -214,7 +214,7 @@ class BaseFigure(_BaseFigure):
         self.bgcolor = 0.8,0.8,0.8  # bgcolor is a property
         
         # Location of the mouse (in pixel coordinates).
-        # It is the implementing class' responsibility to 
+        # It is the implementing class' responsibility to
         # continously updated this.
         self._mousepos = (0,0)
         
@@ -222,11 +222,11 @@ class BaseFigure(_BaseFigure):
         self._title = ''
         
         # Each figure directly corresponds to an openGL context.
-        # Therefore figure instances function as a place for 
+        # Therefore figure instances function as a place for
         # keeping objects that should exist per context...
         
-        # For keeping track of mouse and picking.        
-        self._pickerHelper = ObjectPickerHelper()        
+        # For keeping track of mouse and picking.
+        self._pickerHelper = ObjectPickerHelper()
         self._underMouse = []
         
         # To store the fonts used in this figure.
@@ -252,13 +252,13 @@ class BaseFigure(_BaseFigure):
     
     @property
     def eventClose(self):
-        """ Fired when the figure is closed. 
+        """ Fired when the figure is closed.
         """
         return self._eventClose
     
     @property
     def eventAfterDraw(self):
-        """ Fired after each drawing pass. 
+        """ Fired after each drawing pass.
         """
         return self._eventAfterDraw
     
@@ -266,12 +266,12 @@ class BaseFigure(_BaseFigure):
     def _Register(self):
         """ _Register()
         
-        Register the figure with the list of figures. 
+        Register the figure with the list of figures.
         
-        """ 
+        """
         
         # get keys
-        nrs = list(BaseFigure._figures.keys())        
+        nrs = list(BaseFigure._figures.keys())
         nrs.sort()
         nr = 0 # the number...
         # check if a spot was prepared for us (override if so)
@@ -282,18 +282,18 @@ class BaseFigure(_BaseFigure):
         # should we try finding our own number?
         if not nr:
             # empty?
-            if not nrs:            
-                nrs.append(0) 
+            if not nrs:
+                nrs.append(0)
             # check if there is a spot free
-            for i in range(1,len(nrs)+1):            
+            for i in range(1,len(nrs)+1):
                 if not i==nrs[i-1]:
                     nr = i
-                    break            
+                    break
             else:
                 # no, append to the end
                 nr = nrs[-1]+1
         # set
-        BaseFigure._figures[nr] = self        
+        BaseFigure._figures[nr] = self
         # make current
         BaseFigure._currentNr = nr
 
@@ -326,8 +326,8 @@ class BaseFigure(_BaseFigure):
         """ _ProcessGuiEvents()
         
         Process all events in the event queue.
-        This is usefull when calling Draw() while an algorithm is 
-        running. The figure is then still responsive. 
+        This is usefull when calling Draw() while an algorithm is
+        running. The figure is then still responsive.
         
         """
         raise NotImplemented()
@@ -346,7 +346,7 @@ class BaseFigure(_BaseFigure):
         """ _SetPosition(x, y, w, h)
         
         Set the position of the widget. The x and y represent the
-        screen coordinates when the figure is a toplevel widget. 
+        screen coordinates when the figure is a toplevel widget.
         
         For embedded applications they represent the position within
         the parent widget.
@@ -357,17 +357,17 @@ class BaseFigure(_BaseFigure):
     def _GetPosition(self):
         """ _GetPosition()
         
-        Get the position of the widget. The result must be a 
+        Get the position of the widget. The result must be a
         four-element tuple (x,y,w,h).
         
-        """        
+        """
         raise NotImplemented()
     
     
     def _Close(self):
         """ _Close()
         
-        Close the widget, also calls Destroy(). 
+        Close the widget, also calls Destroy().
         
         """
         raise NotImplemented()
@@ -376,7 +376,7 @@ class BaseFigure(_BaseFigure):
     
     @Property
     def parent():
-        """ The parent of a figure always returns None and cannot be set. 
+        """ The parent of a figure always returns None and cannot be set.
         """
         def fget(self):
             return None
@@ -389,7 +389,7 @@ class BaseFigure(_BaseFigure):
     
     @property
     def nr(self):
-        """ Get the number (id) of this figure. 
+        """ Get the number (id) of this figure.
         """
         for key in BaseFigure._figures:
             if BaseFigure._figures[key] is self:
@@ -397,7 +397,7 @@ class BaseFigure(_BaseFigure):
     
     @PropWithDraw
     def title():
-        """ Get/Set the title of the figure. If an empty string or None, 
+        """ Get/Set the title of the figure. If an empty string or None,
         will display "Figure X", with X the figure nr.
         """
         def fget(self):
@@ -416,7 +416,7 @@ class BaseFigure(_BaseFigure):
     def MakeCurrent(self):
         """ MakeCurrent()
         
-        Make this the current figure. 
+        Make this the current figure.
         Equivalent to "vv.figure(fig.nr)".
         
         """
@@ -425,18 +425,18 @@ class BaseFigure(_BaseFigure):
     
     @PropWithDraw
     def currentAxes():
-        """ Get/Set the currently active axes of this figure. 
-        Returns None if no axes are present. 
+        """ Get/Set the currently active axes of this figure.
+        Returns None if no axes are present.
         """
         def fget(self):
             
-            # init 
+            # init
             curNew = None
             curOld = self._currentAxes
             if curOld:
-                curOld = curOld() # because is weak ref            
+                curOld = curOld() # because is weak ref
             
-            # check 
+            # check
             for child in self._children:
                 if not isinstance(child, AxesContainer):
                     continue
@@ -447,7 +447,7 @@ class BaseFigure(_BaseFigure):
                     curNew = child
                 if child is curOld:
                     curNew = child
-                    break                
+                    break
             
             # update and return
             if curNew:
@@ -459,7 +459,7 @@ class BaseFigure(_BaseFigure):
         def fset(self, value):
             if value is None:
                 self._currentAxes = None
-            elif isinstance(value, Axes):                
+            elif isinstance(value, Axes):
                 self._currentAxes = value.GetWeakref()
             else:
                 raise ValueError('currentAxes must be an Axes instance (or None).')
@@ -477,12 +477,12 @@ class BaseFigure(_BaseFigure):
     
     @property
     def mousepos(self):
-        """ Get the position of the mouse in figure coordinates. 
+        """ Get the position of the mouse in figure coordinates.
         """
         return self._mousepos
     
     # ===== Notes about positioning figures.  =====
-    # Moving a figure by dragging it with the mouse or programatically 
+    # Moving a figure by dragging it with the mouse or programatically
     # using the undelying widget directly does not fire a position event.
     # On resizing it does, because all backends call _OnResize() when this
     # happens. Setting the position using the position property simply
@@ -494,9 +494,9 @@ class BaseFigure(_BaseFigure):
     @Property # Moving a figure always invokes an update from the window manager
     def position():
         """ The position for the figure works a bit different than for
-        other wibjects: it only works with absolute values and it 
-        represents the position on screen or the position in the 
-        parent widget in an application. 
+        other wibjects: it only works with absolute values and it
+        represents the position on screen or the position in the
+        parent widget in an application.
         """
         def fget(self):
             # Update the position by asking the backend
@@ -518,11 +518,11 @@ class BaseFigure(_BaseFigure):
                 if v < 2:
                     raise ValueError(   "Figure heigh and weight " +
                                         "must be given in absolute pixels.")
-            # allow setting x and y only            
+            # allow setting x and y only
             if len(value) == 2:
                 value = value[0], value[1], self._position.w, self._position.h
-            # make pos 
-            self._position = base.Position( value[0], value[1], 
+            # make pos
+            self._position = base.Position( value[0], value[1],
                                             value[2], value[3], self)
             self._position._Changed()
         
@@ -533,7 +533,7 @@ class BaseFigure(_BaseFigure):
         """ _OnPositionChange(event=None)
         
         When the position was programatically changed, we should
-        change the position of the window. 
+        change the position of the window.
         But ONLY if it was really changed (or we get into infinite loops).
         
         """
@@ -553,7 +553,7 @@ class BaseFigure(_BaseFigure):
         This should initiate the event_position event, but not by firing
         the event_position of this object, otherwise it is not propagated.
         
-        """        
+        """
         # Allow position tree to update
         self.position._Changed()
         # Draw, but not too soon.
@@ -571,7 +571,7 @@ class BaseFigure(_BaseFigure):
         def fset(self, value):
             # Set value
             self._relativeFontSize = float(value)
-            # Update all text objects            
+            # Update all text objects
             for ob in self.FindObjects(BaseText):
                 ob.Invalidate()
             # Update all legend objects
@@ -598,9 +598,9 @@ class BaseFigure(_BaseFigure):
         """ Clear()
         
         Clear the figure, removing all wibjects inside it and clearing all
-        callbacks. 
+        callbacks.
         
-        """        
+        """
         # remove children
         while self._children:
             child = self._children.pop()
@@ -638,7 +638,7 @@ class BaseFigure(_BaseFigure):
         # Detach reference to backend widget. We need to keep the widget
         # alive because we are not allowed to destroy it during its
         # callback.
-        # So we place a reference somewhere, meaning that the widget (and 
+        # So we place a reference somewhere, meaning that the widget (and
         # thus the Figure instance can be cleaned up after a second figure
         # has been destroyed. In other words, there will never be more than
         # one destroyed alive Figure instance (if the user cleans up its
@@ -665,7 +665,7 @@ class BaseFigure(_BaseFigure):
     def Draw(self, fast=False, timeout=10):
         """ Draw(fast=False, timeout=10)
         
-        Draw the figure within 10 ms (if the events are handled). 
+        Draw the figure within 10 ms (if the events are handled).
         Multiple calls in a short amount of time will result in only
         one redraw.
         
@@ -703,7 +703,7 @@ class BaseFigure(_BaseFigure):
         """ DrawNow(fast=False)
         
         Draw the figure right now and let the GUI toolkit process its events.
-        Call this from time to time if you want to update your figure while 
+        Call this from time to time if you want to update your figure while
         running some algorithm, and let the figure stay responsive.
         
         """
@@ -719,10 +719,10 @@ class BaseFigure(_BaseFigure):
         handler. Users should not call this method, but use
         Draw() or DrawNow().
         
-        """ 
-        # This is the actual draw entry point. But we will 
+        """
+        # This is the actual draw entry point. But we will
         # call _Draw() to draw first the beatiful pictures and then
-        # again to only draw the shapes for picking. 
+        # again to only draw the shapes for picking.
         
         # are we alive?
         if self._destroyed:
@@ -775,7 +775,7 @@ class BaseFigure(_BaseFigure):
             # write the output to the screen
             self._SwapBuffers()
             
-            # Notify        
+            # Notify
             self.eventAfterDraw.Fire()
         
         finally:
@@ -789,7 +789,7 @@ class BaseFigure(_BaseFigure):
         
         """
         
-        # make sure the part to draw to is ok               
+        # make sure the part to draw to is ok
         w,h = self.position.size
         
         # clear screen
@@ -798,7 +798,7 @@ class BaseFigure(_BaseFigure):
         pickerHelper = None
         
         if mode==DRAW_SHAPE:
-            # clear 
+            # clear
             clr = (0,0,0)
             gl.glClearColor(0.0 ,0.0 ,0.0, 0.0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -816,28 +816,28 @@ class BaseFigure(_BaseFigure):
         else:
             # clear
             clr = self.bgcolor
-            gl.glClearColor(clr[0], clr[1], clr[2], 0.0)    
+            gl.glClearColor(clr[0], clr[1], clr[2], 0.0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
             
-            # Set lighting model properties. 
+            # Set lighting model properties.
             # - We do not use the global ambient term
             # - We do not use local viewer mode
             # - We want to allow people to see also backfaces correctly
-            # - We want to be texture-proof for specular highlights        
+            # - We want to be texture-proof for specular highlights
             # Note: Individual lights are set in the camera class.
             glVersion = getOpenGlInfo()[0]
-            gl.glLightModelfv(gl.GL_LIGHT_MODEL_AMBIENT, (0,0,0,1))        
+            gl.glLightModelfv(gl.GL_LIGHT_MODEL_AMBIENT, (0,0,0,1))
             gl.glLightModelf(gl.GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0)
             gl.glLightModelf(gl.GL_LIGHT_MODEL_TWO_SIDE, 1.0)
             if glVersion >= '1.2':
-                gl.glLightModelf(gl.GL_LIGHT_MODEL_COLOR_CONTROL, 
+                gl.glLightModelf(gl.GL_LIGHT_MODEL_COLOR_CONTROL,
                     gl.GL_SEPARATE_SPECULAR_COLOR)
             
             # enable blending, so lines and points can be antialiased
             gl.glEnable(gl.GL_BLEND)
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
             #gl.glEnable(gl.GL_MULTISAMPLE)
-            # smooth lines            
+            # smooth lines
             gl.glEnable(gl.GL_LINE_SMOOTH)
             if mode==DRAW_FAST:
                 gl.glHint(gl.GL_POINT_SMOOTH_HINT, gl.GL_FASTEST)
@@ -852,7 +852,7 @@ class BaseFigure(_BaseFigure):
             return
         
         # Draw axes. Each axes specifies the viewport for itself and draws
-        # all wobjects in it. Then it prepares for the wibjects, which are 
+        # all wobjects in it. Then it prepares for the wibjects, which are
         # drawn (via _DrawTree) in the same viewport.
         for child in self._children:
             if isinstance(child, (Axes, AxesContainer) ):
@@ -873,7 +873,7 @@ class BaseFigure(_BaseFigure):
         
         # set camera
         # Flip up down because we want y=0 to be on top.
-        gl.glMatrixMode(gl.GL_PROJECTION)        
+        gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         ortho(0, w, h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -883,7 +883,7 @@ class BaseFigure(_BaseFigure):
     def _GenerateKeyEvent(self, eventName, *eventArgs):
         """ _GenerateKeyEvent(eventName, *eventArgs)
         
-        For the backend to generate key events. 
+        For the backend to generate key events.
         
         """
         if not self._enableUserInteraction:
@@ -901,11 +901,11 @@ class BaseFigure(_BaseFigure):
         if eventName.count('down'):
             eventToAlwaysFire = self.eventKeyDown
             if items1:
-                events.append(items1[-1].eventKeyDown) 
+                events.append(items1[-1].eventKeyDown)
         elif eventName.count('up'):
             eventToAlwaysFire = self.eventKeyUp
             if items1:
-                events.append(items1[-1].eventKeyUp) 
+                events.append(items1[-1].eventKeyUp)
         
         # Fire events. We use an approach to ensure that the key event
         # is always fired for the Figure, but only once, not if that event
@@ -921,7 +921,7 @@ class BaseFigure(_BaseFigure):
     def _GenerateMouseEvent(self, eventName, *eventArgs):
         """ _GenerateMouseEvent(eventName, *eventArgs)
         
-        For the backend to generate mouse events. 
+        For the backend to generate mouse events.
         
         """
         if not self._enableUserInteraction:
@@ -939,7 +939,7 @@ class BaseFigure(_BaseFigure):
             # Set current mouse pos, so that it's up to date
             self._mousepos = eventArgs[0], eventArgs[1]
             
-            # also get new version of items under the mouse           
+            # also get new version of items under the mouse
             items2 = self._pickerHelper.GetItemsUnderMouse(self)
             
             # init event list
@@ -959,20 +959,20 @@ class BaseFigure(_BaseFigure):
             events.extend([item.eventMotion for item in items])
             
             # Always generate motion event from figure
-            events.append(self.eventMotion) 
+            events.append(self.eventMotion)
             
             # Update items under the mouse
-            self._underMouse = [item.GetWeakref() for item in items2]        
+            self._underMouse = [item.GetWeakref() for item in items2]
             
             # Note: how to handle motionEvents
-            # It feels nicer (and is more Qt-ish) to fire the events only 
-            # from the objects that have their mouse pressed down. However, 
-            # someone may want to be notified of motion regardless of the 
+            # It feels nicer (and is more Qt-ish) to fire the events only
+            # from the objects that have their mouse pressed down. However,
+            # someone may want to be notified of motion regardless of the
             # state of the mouse. Qt has setMouseTracking(True).
             # But then there's a problem. This version of eventMotion we *do*
             # want to propate to parent objects if not handled. But then
             # an object may get an event twice if the mouse is pressed down.
-            # Surely these things can be overcome, but I think its easier 
+            # Surely these things can be overcome, but I think its easier
             # for everyone if we stick to the old approach: the eventMotion
             # is fired for all objects that have handlers registered to it.
         
@@ -986,7 +986,7 @@ class BaseFigure(_BaseFigure):
             #    events.append( items[-1].eventMouseDrop)
         
         elif items1 and eventName.count("down"):
-            events.append(items1[-1].eventMouseDown)        
+            events.append(items1[-1].eventMouseDown)
         
         elif items1 and eventName.count("double"):
             # Note: we cannot detect double clicking by timing the down-events,

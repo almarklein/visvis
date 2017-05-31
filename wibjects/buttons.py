@@ -19,7 +19,7 @@ class PushButton(Label):
     """ PushButton(parent, text='', fontname=None)
     
     A button to click on. It is a label with an edgewidth of 1, in which
-    text is horizontally aligned. Plus the hittest is put on by default. 
+    text is horizontally aligned. Plus the hittest is put on by default.
     
     """
     
@@ -53,7 +53,7 @@ class PushButton(Label):
     def _GetBgcolorToDraw(self):
         """ _GetBgcolorToDraw()
         
-        Can be overloaded to indicate mouse over in buttons. 
+        Can be overloaded to indicate mouse over in buttons.
         
         """
         clr = list(self._bgcolor)
@@ -63,7 +63,7 @@ class PushButton(Label):
     
     @property
     def eventPress(self):
-        """ Fired when the mouse released over the button after a mouseDown. 
+        """ Fired when the mouse released over the button after a mouseDown.
         """
         return self._eventPress
     
@@ -117,7 +117,7 @@ class ToggleButton(PushButton):
         if self._state:
             self.edgeWidth = 2
         else:
-            self.edgeWidth = 1        
+            self.edgeWidth = 1
         #self.Draw() Setting edgeWidth will invoke redraw
         self._eventStateChanged.Fire()
 
@@ -129,7 +129,7 @@ class RadioButton(ToggleButton):
     sibling RadioButton instances to False, and its own state to True.
     
     When this happens, all instances will fire eventStateChanged (after
-    the states are set). So it's only necessary to bind to one of them 
+    the states are set). So it's only necessary to bind to one of them
     to detect the selection of  another item.
     
     """

@@ -14,7 +14,7 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
     """ solidRing(translation=None, scaling=None, direction=None, rotation=None,
                 thickness=0.25, N=16, M=16, axesAdjust=True, axes=None)
     
-    Creates a solid ring with quad faces oriented at the origin. 
+    Creates a solid ring with quad faces oriented at the origin.
     Returns an OrientableMesh instance.
     
     Parameters
@@ -34,13 +34,13 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
         The tickness of the ring, represented as a fraction of the radius.
     N : int
         The number of subdivisions around its axis. If smaller
-        than 8, flat shading is used instead of smooth shading. 
+        than 8, flat shading is used instead of smooth shading.
     M : int
         The number of subdivisions along its axis. If smaller
-        than 8, flat shading is used instead of smooth shading. 
+        than 8, flat shading is used instead of smooth shading.
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
-        the camera type to 3D. If daspectAuto has not been set yet, 
+        the camera type to 3D. If daspectAuto has not been set yet,
         it is set to False.
     axes : Axes instance
         Display the bars in the given axes, or the current axes if not given.
@@ -72,17 +72,17 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
     # Cone
     for n in range(N+1):
         v = float(n)/N
-        a = pi2 * v        
+        a = pi2 * v
         # Obtain outer and center position of "tube"
         po = Point(sin(a), cos(a), 0)
         pc = po * (1.0-0.5*thickness)
         # Create two vectors that span the the circle orthogonal to the tube
         p1 = (pc-po)
         p2 = Point(0, 0, 0.5*thickness)
-        # Sample around tube        
+        # Sample around tube
         for m in range(M+1):
             u = float(m) / (M)
-            b = pi2 * (u+rotOffset) 
+            b = pi2 * (u+rotOffset)
             dp = cos(b) * p1 + sin(b) * p2
             vertices.append(pc+dp)
             normals.append(dp.normalize())
@@ -101,13 +101,13 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
     
     ## Visualize
     
-    # Create axes 
+    # Create axes
     if axes is None:
         axes = vv.gca()
     
     # Create mesh
     m = vv.OrientableMesh(axes, vertices, indices, normals, values=texcords,
-            verticesPerFace=4)    
+            verticesPerFace=4)
     #
     if translation is not None:
         m.translation = translation

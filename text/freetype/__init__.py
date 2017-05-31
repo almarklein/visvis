@@ -40,7 +40,7 @@ from visvis.text.freetype.ft_structs import (FT_Face, FT_Glyph, FT_Matrix, FT_Ve
 
 def _looks_lib(fname):
     """ Returns True if the given filename looks like a dynamic library.
-    Based on extension, but cross-platform and more flexible. 
+    Based on extension, but cross-platform and more flexible.
     """
     fname = fname.lower()
     if sys.platform.startswith('win'):
@@ -89,7 +89,7 @@ class FreeTypeWrapper(object):
         # Try if ctypes knows where to find the freetype library
         fname = ctypes.util.find_library('freetype')
         
-        # Try harder 
+        # Try harder
         if not fname:
             if sys.platform.startswith('win'):
                 NBITS = 8 * struct.calcsize("P")

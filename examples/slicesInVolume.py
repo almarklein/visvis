@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-""" This example illustrates how you can visualize 
-a volume using 2D slices. 
+""" This example illustrates how you can visualize
+a volume using 2D slices.
 
-We explicitly use volshow2() here. Note that volshow() calls 
-volshow3() by default, but volshow2() when the system does 
+We explicitly use volshow2() here. Note that volshow() calls
+volshow3() by default, but volshow2() when the system does
 not support 3D rendering (OpenGL version <2.0).
 
 """

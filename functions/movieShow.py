@@ -9,7 +9,7 @@ import visvis as vv
 def movieShow(images, clim=None, duration=0.1, axesAdjust=True, axes=None):
     """ movieShow(images, duration=0.1)
     
-    Show the images in the given list as a movie. 
+    Show the images in the given list as a movie.
     
     Parameters
     ----------
@@ -23,7 +23,7 @@ def movieShow(images, clim=None, duration=0.1, axesAdjust=True, axes=None):
         your system.
     axesAdjust : bool
         If axesAdjust==True, this function will call axes.SetLimits(), set
-        the camera type to 2D, and make axes.daspect[1] negative (i.e. flip 
+        the camera type to 2D, and make axes.daspect[1] negative (i.e. flip
         the y-axis). If daspectAuto has not been set yet, it is set to False.
     axes : Axes instance
         Display the image in this axes, or the current axes if not given.

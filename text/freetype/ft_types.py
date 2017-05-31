@@ -47,7 +47,7 @@ FT_PtrDist : This is equivalent to the ANSI C 'ptrdiff_t' type, i.e., the
              largest signed integer type used to express the distance between
              two pointers.
 
-FT_String : A simple typedef for the char type, usually used for strings. 
+FT_String : A simple typedef for the char type, usually used for strings.
 
 FT_Tag  : A typedef for 32-bit tags (as used in the SFNT format).
 
@@ -118,7 +118,7 @@ FT_PtrDist = c_longlong # This is equivalent to the ANSI C 'ptrdiff_t' type,
                         # i.e., the largest signed integer type used to express
                         # the distance between two pointers.
 
-FT_String  = c_char   # A simple typedef for the char type, usually used for strings. 
+FT_String  = c_char   # A simple typedef for the char type, usually used for strings.
 
 FT_String_p= c_char_p
 

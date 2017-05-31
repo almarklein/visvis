@@ -41,7 +41,7 @@ except Exception:
 
 # The scale factor for textures. The texture glyphs are made TEX_SCALE times
 # bigger than the screen resolution. This means that we prevent very blurry
-# pieces for small text. The text becomes a bit too crisp I think, but 
+# pieces for small text. The text becomes a bit too crisp I think, but
 # I suspect that when we apply the full screen aliasing, the text will look
 # great!
 TEX_SCALE = 2.5
@@ -55,12 +55,12 @@ FRAGMENT_SHADER_ = """
     uniform vec2 shape; // And its shape (as in OpenGl)
     
     void main()
-    {    
+    {
         // Get centre location
         vec2 pos = gl_TexCoord[0].xy;
         
         // Init value
-        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0); 
+        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0);
         
         // Init kernel and number of steps
         vec4 kernel = vec4 (0.2, 0.2, 0.1 , 0.1);
@@ -75,7 +75,7 @@ FRAGMENT_SHADER_ = """
         for (int y=-sze; y<sze+1; y++)
         {
             for (int x=-sze; x<sze+1; x++)
-            {   
+            {
                 float k = kernel[int(abs(float(x)))] * kernel[int(abs(float(y)))];
                 vec2 dpos = vec2(float(x)*dx, float(y)*dy);
                 color1 += texture2D(texture, pos+dpos) * k;
@@ -91,7 +91,7 @@ FRAGMENT_SHADER = """
     uniform vec2 shape; // And its shape (as in OpenGl)
     
     void main()
-    {    
+    {
         // Get centre location
         vec2 pos = gl_TexCoord[0].xy;
         
@@ -105,7 +105,7 @@ FRAGMENT_SHADER = """
         float dx = 1.0/shape.x;
         float dy = 1.0/shape.y;
         
-        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0); 
+        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0);
         
         color1 += texture2D(texture, pos+vec2(-dx,-dy) ) * k1 * k1;
         color1 += texture2D(texture, pos+vec2(-dx,0.0) ) * k1 * k0;
@@ -283,7 +283,7 @@ class FreeTypeAtlas(AtlasTexture):
 
         node = self.nodes[index]
         x,y = node[0], node[1]
-        width_left = width        
+        width_left = width
         
         if x+width > self.width:
             return -1
@@ -413,7 +413,7 @@ class FreeTypeFontManager(FontManager):
         weight = 200 if bold else 80
         slant = 100 if italic else 0
         try:
-            args = ['fc-match', '-f', '%{file}', 
+            args = ['fc-match', '-f', '%{file}',
                         '%s:weight=%i:slant=%i' % (fontname, weight, slant)]
             fname, err = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()
             #py3k only: fname = subprocess.check_output(args)
@@ -460,9 +460,9 @@ class FreeTypeFontManager(FontManager):
         prev = None
         
         # Calculate font size
-        # note: I can also imagine doing it the other way around; i.e. textSize 
-        # becomes as FreeType sees it, and we scale the fonts in the 
-        # prerendered text renderer. We'd have to change all the 
+        # note: I can also imagine doing it the other way around; i.e. textSize
+        # becomes as FreeType sees it, and we scale the fonts in the
+        # prerendered text renderer. We'd have to change all the
         # uses fontSize though. So this is simply easier.
         fontSize = textObject.fontSize * 1.4 * TEX_SCALE
         fig = textObject.GetFigure()
@@ -471,7 +471,7 @@ class FreeTypeFontManager(FontManager):
         
         # Store tex_scale, integer fontsize and residu
         textObject._tex_scale = TEX_SCALE
-        textObject._actualFontSize = int(round(fontSize)) 
+        textObject._actualFontSize = int(round(fontSize))
         
         fonts = [(self.GetFont(textObject.fontName, textObject._actualFontSize), 0, False, False)]
         font, voffset, bold, italic = fonts[-1]
@@ -545,7 +545,7 @@ class FreeTypeFontManager(FontManager):
         # Update dynamic texture
         self.atlas.upload()
         
-        # Store data. 
+        # Store data.
         textObject._SetCompiledData(vertices, texcoords)
     
     
@@ -586,7 +586,7 @@ class FreeTypeFontManager(FontManager):
         
         # Un-translate
         if x or y or z:
-            gl.glPopMatrix() 
+            gl.glPopMatrix()
     
 
 class TextureFont:
@@ -683,7 +683,7 @@ class TextureFont:
             margin = 1 # Extra space to prevent overlap from other glyphs
             padmarg = padding + margin
             
-            x,y,w,h = self.atlas.get_region(width/self.depth+2*padmarg, 
+            x,y,w,h = self.atlas.get_region(width/self.depth+2*padmarg,
                                                         rows+2*padmarg)
             if x < 0:
                 print('Missed !')
@@ -699,8 +699,8 @@ class TextureFont:
             data = (Z*255).astype(np.ubyte)
             if True: # Add an extra pixel, otherwise there's no room for the aa
                 # Note that we can do this because we asked for a larger region anyway
-                data2 = np.zeros((  data.shape[0]+2*padding, 
-                                    data.shape[1]+2*padding, 
+                data2 = np.zeros((  data.shape[0]+2*padding,
+                                    data.shape[1]+2*padding,
                                     data.shape[2]), np.ubyte)
                 data2[padding:-padding,padding:-padding,:] = data
                 data = data2

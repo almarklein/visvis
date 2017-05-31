@@ -6,17 +6,17 @@
 
 """ Module shaders_m
 
-Contains the source for various shaders for the Mesh wobject, 
+Contains the source for various shaders for the Mesh wobject,
 divided in different parts.
 
 The names consists of different parts, seperated by underscores:
   * SH: just to indicate its a shader
   * 2F, 3F, MF, 2V, 3V, MV: the kind of program, 2D/3D texture or mesh,
-    vertex or fragment shader. May be left out for some generic parts (such 
+    vertex or fragment shader. May be left out for some generic parts (such
     as color)
   * part name: can be BASE, STYLE, or anything else really.
-  * part name type: Optional. Some parts have alternatives, 
-    such as the STYLE part for 3D rendering techniques. Or the SHADING 
+  * part name type: Optional. Some parts have alternatives,
+    such as the STYLE part for 3D rendering techniques. Or the SHADING
     part for meshes
 
 """
@@ -25,7 +25,7 @@ from visvis.core.shaders import ShaderCodePart
 
 ## Mesh base vertex
 
-SH_MV_BASE = ShaderCodePart('base', 'mesh-vertex-default', 
+SH_MV_BASE = ShaderCodePart('base', 'mesh-vertex-default',
 """
     // Uniforms
     //--uniforms--
@@ -36,7 +36,7 @@ SH_MV_BASE = ShaderCodePart('base', 'mesh-vertex-default',
     //--varyings--
     
     void main()
-    {	
+    {
         // Get position
         vec4 vertex = vec4(gl_Vertex);
         
@@ -55,16 +55,16 @@ SH_MV_BASE = ShaderCodePart('base', 'mesh-vertex-default',
         // Set the vertex color
         vColor = gl_Color;
         
-        // Below comes code if light is calculated in vertex shader 
+        // Below comes code if light is calculated in vertex shader
         // (Gouraud and flat shading)
-        //--light-- 
+        //--light--
     }
 """)
 
 
 ## Mesh base fragment
 
-SH_MF_BASE = ShaderCodePart('base', 'mesh-fragment-default', 
+SH_MF_BASE = ShaderCodePart('base', 'mesh-fragment-default',
 """
     // Uniforms
     // --uniforms--
@@ -75,7 +75,7 @@ SH_MF_BASE = ShaderCodePart('base', 'mesh-fragment-default',
     // --varyings--
     
     void main (void)
-    {   
+    {
         // Define colors
         vec4 albeido = vec4(1.0, 1.0, 1.0, 1.0);
         vec4 final_color;
@@ -97,7 +97,7 @@ SH_MF_BASE = ShaderCodePart('base', 'mesh-fragment-default',
 
 ## LIGHT / SHADING
 
-_SH_LIGHT = """ 
+_SH_LIGHT = """
     >>// Define colors
     // Define colors (tag exists only in fragment shader)
     vec4 ambient_color, diffuse_color, specular_color;
@@ -120,11 +120,11 @@ _SH_LIGHT = """
     
     int nlights = 1;
     for (int i=0; i<nlights; i++)
-    {   
+    {
         // Get light position
         vec4 lightPos = gl_LightSource[i].position;
         
-        // Is this thing on? 
+        // Is this thing on?
         float lightEnabled = float( length(lightPos) > 0.0 );
         
         // Get light direction (make sure to prevent zero devision)
@@ -156,13 +156,13 @@ _SH_LIGHT = """
 
 ## Mesh shading plain
 
-SH_MV_SHADING_PLAIN = ShaderCodePart('shading', 'plain', 
+SH_MV_SHADING_PLAIN = ShaderCodePart('shading', 'plain',
 """
     >>--light--
     // No lighting calculations
 """)
-SH_MF_SHADING_PLAIN = ShaderCodePart('shading', 'plain', 
-""" 
+SH_MF_SHADING_PLAIN = ShaderCodePart('shading', 'plain',
+"""
     >>--light--
     // No lighting calculations
     >>--final-color--
@@ -205,7 +205,7 @@ SH_MF_SHADING_SMOOTH = ShaderCodePart('shading', 'smooth',
 
 ## Mesh shading toon (aka cel-shading)
 # Toon shading is a type of shading that produces a cartoonish look.
-# The number of colors is reduced (thats what done here) and 
+# The number of colors is reduced (thats what done here) and
 # a dark edge is drawn around the objects (done in OnDraw() method
 # of the Mesh class.
 # The colours are reduced in a way that does not use if-statements.
@@ -258,13 +258,13 @@ SH_NLIGHTS_8 = ShaderCodePart('nlights', '8', _NLIGHTS % (8,8))
 # Make one light extra lightweight
 # (I know at least one occurance where it meant the difference between
 # success and failure for the iso volume renderer).
-SH_NLIGHTS_1 = ShaderCodePart('nlights', '1',  
+SH_NLIGHTS_1 = ShaderCodePart('nlights', '1',
 """
     >>for (int i=0; i<nlights; i++)
     int i = 0;
 """)
 
-SH_NLIGHTS_0 = ShaderCodePart('nlights', '0', 
+SH_NLIGHTS_0 = ShaderCodePart('nlights', '0',
 """
     >>int nlights = 1;
     int nlights = 0;
@@ -300,7 +300,7 @@ SH_MF_ALBEIDO_LUT1 = ShaderCodePart('albeido', '1D LUT',
 SH_MF_ALBEIDO_LUT2 = ShaderCodePart('albeido', '2D LUT',
 """
     >>--uniforms--
-    uniform sampler2D texture; 
+    uniform sampler2D texture;
     // --uniforms--
     
     >>--albeido--
@@ -313,7 +313,7 @@ SH_MF_ALBEIDO_RGB = ShaderCodePart('albeido', 'RGB', # No transparency possible 
     albeido = vec4(vColor.rgb, 1.0);
 """)
 SH_MF_ALBEIDO_RGBA = ShaderCodePart('albeido', 'RGBA',
-"""    
+"""
     >>--albeido--
     albeido = vColor.rgba;
 """)

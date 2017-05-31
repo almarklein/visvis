@@ -23,19 +23,19 @@ from visvis.core.misc import getOpenGlCapable, PropWithDraw, Range
 
 # Dict that maps numpy datatypes to openGL data types
 dtypes = {  'uint8':gl.GL_UNSIGNED_BYTE,    'int8':gl.GL_BYTE,
-            'uint16':gl.GL_UNSIGNED_SHORT,  'int16':gl.GL_SHORT, 
-            'uint32':gl.GL_UNSIGNED_INT,    'int32':gl.GL_INT, 
+            'uint16':gl.GL_UNSIGNED_SHORT,  'int16':gl.GL_SHORT,
+            'uint32':gl.GL_UNSIGNED_INT,    'int32':gl.GL_INT,
             'float32':gl.GL_FLOAT }
 
 
 def makePowerOfTwo(data, ndim):
     """ makePowerOfTwo(data, ndim)
     
-    If necessary, pad the data with zeros, to make the shape 
+    If necessary, pad the data with zeros, to make the shape
     a power of two. If it already is shaped ok, the original data
     is returned.
     
-    Use this function for systems with OpenGl < 2.0. 
+    Use this function for systems with OpenGl < 2.0.
     
     """
     def nearestN(n1):
@@ -47,7 +47,7 @@ def makePowerOfTwo(data, ndim):
     # get old and new shape
     s1 = [n for n in data.shape]
     s2 = [nearestN(n) for n in data.shape]
-    s2[ndim:] = s1[ndim:] # for color images    
+    s2[ndim:] = s1[ndim:] # for color images
     
     # if not required return original
     if s1 == s2:
@@ -72,7 +72,7 @@ def downSample(data, ndim):
     """ downSample(data, ndim)
     
     Downsample the data. Peforming a simple form of smoothing to prevent
-    aliasing. 
+    aliasing.
     
     """
     
@@ -127,7 +127,7 @@ class TextureObject(object):
     Exposed methods:
       * Enable() call be for using
       * Disable() call after using
-      * SetData() update the data    
+      * SetData() update the data
       * DestroyGl() remove only the texture from OpenGl memory.
       * Destroy() remove textures and reference to data.
         
@@ -135,10 +135,10 @@ class TextureObject(object):
     
     """
     
-    # One could argue to use polymorphism to implement 3 classes: one for 
+    # One could argue to use polymorphism to implement 3 classes: one for
     # each dimension. Yes you could, but the way to handle the data and
     # communicate with OpenGl is so similar I chose not to. I use the
-    # texType to determine which function to call. 
+    # texType to determine which function to call.
     
     def __init__(self, ndim):
         
@@ -146,7 +146,7 @@ class TextureObject(object):
         if ndim not in [1,2,3]:
             raise ValueError('Texture ndim should be 1, 2 or 3.')
         
-        # Store the number of dimensions. This attribute is used to make the 
+        # Store the number of dimensions. This attribute is used to make the
         # choices for which OpenGl functions to use etc.
         self._ndim = ndim
         
@@ -154,7 +154,7 @@ class TextureObject(object):
         tmp = {1:gl.GL_TEXTURE_1D, 2:gl.GL_TEXTURE_2D, 3:gl.GL_TEXTURE_3D}
         self._texType = tmp[ndim]
         
-        # Texture ID. This is an integer by which OpenGl identifies the 
+        # Texture ID. This is an integer by which OpenGl identifies the
         # texture.
         self._texId = 0
         
@@ -162,14 +162,14 @@ class TextureObject(object):
         self._texUnit = -1
         self._useTexUnit = False # set to True if OpenGl version high enough
         
-        # A reference (not a weak one) to the original data as given with 
-        # SetData. We need this in order to re-upload the texture if it is 
+        # A reference (not a weak one) to the original data as given with
+        # SetData. We need this in order to re-upload the texture if it is
         # moved to another OpenGl context (other figure).
         # Note that the self._shape does not have to be self._dataRef.shape.
         self._dataRef = None
         
         # The shape of the data as uploaded to OpenGl. Is None if no
-        # data was uploaded. Note that the self._shape does not have to 
+        # data was uploaded. Note that the self._shape does not have to
         # be self._dataRef.shape; the data might be downsampled.
         self._shape = None
         
@@ -193,7 +193,7 @@ class TextureObject(object):
         
         If texUnit is -1, will not bind the texture.
         
-        """ 
+        """
         
         # Did we fail uploading texture last time?
         troubleLastTime = (self._uploadFlag==0)
@@ -207,7 +207,7 @@ class TextureObject(object):
         # Store texture-Unit-id, and activate. Do before calling _setDataNow!
         if texUnit >= 0:
             self._texUnit = texUnit
-            self._useTexUnit = getOpenGlCapable('1.3')        
+            self._useTexUnit = getOpenGlCapable('1.3')
             if self._useTexUnit:
                 gl.glActiveTexture( gl.GL_TEXTURE0 + texUnit )   # Opengl v1.3
         
@@ -218,7 +218,7 @@ class TextureObject(object):
         # check if ok now
         if not gl.glIsTexture(self._texId):
             if not troubleLastTime:
-                print("Warning enabling texture, the texture is not valid. " + 
+                print("Warning enabling texture, the texture is not valid. " +
                         "(Hiding message for future draws.)")
             return
         
@@ -243,7 +243,7 @@ class TextureObject(object):
         
         # Select active texture if we can
         if self._texUnit >= 0 and self._useTexUnit:
-            gl.glActiveTexture( gl.GL_TEXTURE0 + self._texUnit )            
+            gl.glActiveTexture( gl.GL_TEXTURE0 + self._texUnit )
             self._texUnit = -1
         
         # Disable
@@ -273,13 +273,13 @@ class TextureObject(object):
             raise # reraise from here
         
         # ok, store data and raise flag
-        self._dataRef = data        
+        self._dataRef = data
         self._uploadFlag = abs(self._uploadFlag)
     
     
     def _SetDataNow(self):
-        """ Make sure the data in self._dataRef is uploaded to 
-        OpenGl memory. If possible, update the data rather than 
+        """ Make sure the data in self._dataRef is uploaded to
+        OpenGl memory. If possible, update the data rather than
         create a new texture object.
         """
         
@@ -291,7 +291,7 @@ class TextureObject(object):
         # If we tried without padding, we can still try with padding.
         # Note: In theory, getOpenGlCapable('2.0') should be enough to
         # determine if padding is required. However, bloody ATI drivers
-        # sometimes need 2**n textures even if OpenGl > 2.0. (I've 
+        # sometimes need 2**n textures even if OpenGl > 2.0. (I've
         # encountered this with someones PC and verified that the current
         # solution solves this.)
         if needPadding:
@@ -299,7 +299,7 @@ class TextureObject(object):
         else:
             self._uploadFlag = 2 # Try with padding next time
         
-        # Get data. 
+        # Get data.
         if self._dataRef is None:
             return
         data = self._dataRef
@@ -331,22 +331,22 @@ class TextureObject(object):
         # Determine format
         internalformat, format = self._GetFormat(data.shape)
         
-        # Can we update or should we upload?        
+        # Can we update or should we upload?
         
-        if (    gl.glIsTexture(self._texId) and 
+        if (    gl.glIsTexture(self._texId) and
                 self._shape and (data.shape == self._shape) ):
             # We can update.
             
             # Bind to texture
             gl.glBindTexture(self._texType, self._texId)
             
-            # update            
+            # update
             self._UpdateTexture(data, internalformat, format, gltype)
         
         else:
             # We should upload.
             
-            # Remove any old data. 
+            # Remove any old data.
             self.DestroyGl()
             
             # Create texture object
@@ -372,11 +372,11 @@ class TextureObject(object):
                     count += 1
             
             # give warning or error
-            if count and not ok:                
+            if count and not ok:
                 raise MemoryError(  "Could not upload texture to OpenGL, " +
                                     "even after 8 times downsampling.")
             elif count:
-                print(  "Warning: data was downscaled " + str(count) + 
+                print(  "Warning: data was downscaled " + str(count) +
                         " times to fit it in OpenGL memory." )
             
             # upload!
@@ -393,7 +393,7 @@ class TextureObject(object):
     
     
     def _UpdateTexture(self, data, internalformat, format, gltype):
-        """ Update an existing texture object. It should have been 
+        """ Update an existing texture object. It should have been
         checked whether this is possible (same shape).
         """
         
@@ -439,7 +439,7 @@ class TextureObject(object):
     
     
     def _UploadTexture(self, data, internalformat, format, gltype):
-        """ Upload a texture to the current texture object. 
+        """ Upload a texture to the current texture object.
         It should have been verified that the texture will fit.
         """
         
@@ -480,7 +480,7 @@ class TextureObject(object):
         elif self._ndim == 2:
         
             if len(shape)==2:
-                iformat, format = gl.GL_LUMINANCE8, gl.GL_LUMINANCE                
+                iformat, format = gl.GL_LUMINANCE8, gl.GL_LUMINANCE
             elif len(shape)==3 and shape[2]==1:
                 iformat, format = gl.GL_LUMINANCE8, gl.GL_LUMINANCE
             elif len(shape)==3 and shape[2]==3:
@@ -527,10 +527,10 @@ class TextureObject(object):
     def Destroy(self):
         """ Destroy()
         
-        Really destroy data. 
+        Really destroy data.
         
-        """  
-        # remove OpenGl bits      
+        """
+        # remove OpenGl bits
         self.DestroyGl()
         # remove internal reference
         self._dataRef = None
@@ -555,19 +555,19 @@ class Colormap(TextureObject):
     def __init__(self):
         TextureObject.__init__(self, 1)
         
-        # CT: (0,0,0,0.0), (1,0,0,0.002), (0,0.5,1,0.6), (0,1,0,1)                
+        # CT: (0,0,0,0.0), (1,0,0,0.002), (0,0.5,1,0.6), (0,1,0,1)
         self._current = [(0,0,0), (1,1,1)]
         self.SetMap(self._current)
     
     
     def _UploadTexture(self, data, *args):
-        """ Overloaded version to upload the texture. 
+        """ Overloaded version to upload the texture.
         """
         
         # let the original class do the work
         TextureObject._UploadTexture(self, data, *args)
         
-        # set interpolation and extrapolation parameters            
+        # set interpolation and extrapolation parameters
         tmp = gl.GL_NEAREST # gl.GL_NEAREST | gl.GL_LINEAR
         gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MIN_FILTER, tmp)
         gl.glTexParameteri(gl.GL_TEXTURE_1D, gl.GL_TEXTURE_MAG_FILTER, tmp)
@@ -651,7 +651,7 @@ class Colormap(TextureObject):
                 # Insert values
                 count = -1
                 for el in values:
-                    count += 1                    
+                    count += 1
                     if not hasattr(el,'__len__') or len(el) != 2:
                         raise ValueError('Colormap dict entries must have 2 elements.')
                     xp[count] = el[0]
@@ -690,13 +690,13 @@ class Colormap(TextureObject):
                 raise ValueError("Invalid argument to set colormap.")
         
         # Apply interpolation (if required)
-        if data is not None:   
+        if data is not None:
             if data.shape[0] == 256 and data.dtype == np.float32:
                 data2 = data
             else:
-                # interpolate first            
+                # interpolate first
                 x = np.linspace(0.0, 1.0, 256)
-                xp = np.linspace(0.0, 1.0, data.shape[0])            
+                xp = np.linspace(0.0, 1.0, data.shape[0])
                 data2 = np.zeros((256,4),np.float32)
                 for i in range(4):
                     data2[:,i] = np.interp(x, xp, data[:,i])
@@ -710,10 +710,10 @@ class Colormapable(object):
     
     Instances of this class have a colormap propery and a clim property.
     
-    Inheriting classes can implement the following methods to overload 
+    Inheriting classes can implement the following methods to overload
     the default behavior:
-      * _GetColormap, _SetColormap(cmap) 
-      * _GetClim, _SetClim(clim) 
+      * _GetColormap, _SetColormap(cmap)
+      * _GetClim, _SetClim(clim)
       * _EnableColormap(texUnit=0), _DisableColormap
     
     """
@@ -727,11 +727,11 @@ class Colormapable(object):
         """ Get/get the colormap. This can be:
           * A tuple/list of element which each have 3 or 4 values (RGB/RGBA)
           * A Nx3 or Nx4 numpy array
-          * A dict with names R,G,B,A, where each value is a list. Each 
+          * A dict with names R,G,B,A, where each value is a list. Each
             element in the list is a tuple (index, color-value).
         
         Visvis defines a number of standard colormaps named by vv.CM_*. A few
-        examples are CM_GRAY, CM_HOT, CM_JET, CM_SUMMER, CM_CT1. See 
+        examples are CM_GRAY, CM_HOT, CM_JET, CM_SUMMER, CM_CT1. See
         vv.colormaps for a dict with all available default colormaps.
         """
         def fget(self):
@@ -742,7 +742,7 @@ class Colormapable(object):
     
     @PropWithDraw
     def clim():
-        """ Get/set the contrast limits. For a gray colormap, clim.min 
+        """ Get/set the contrast limits. For a gray colormap, clim.min
         is black, clim.max is white.
         """
         def fget(self):

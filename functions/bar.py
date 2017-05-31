@@ -9,8 +9,8 @@ import numpy as np
 import OpenGL.GL as gl
 
 
-def bar(data1, data2=None, bottom=None, width=0.75, 
-                                    axesAdjust=True, axes=None, **kwargs):    
+def bar(data1, data2=None, bottom=None, width=0.75,
+                                    axesAdjust=True, axes=None, **kwargs):
     """ bar(*args, width=0.75, axesAdjust=True, axes=None, **kwargs)
     
     Create a bar chart and returns a Bars2D instance that can be
@@ -35,7 +35,7 @@ def bar(data1, data2=None, bottom=None, width=0.75,
         The width of the bar lines (i.e. edges).
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
-        the camera type to 3D. If daspectAuto has not been set yet, 
+        the camera type to 3D. If daspectAuto has not been set yet,
         it is set to False.
     axes : Axes instance
         Display the bars in the given axes, or the current axes if not given.
@@ -167,7 +167,7 @@ class Bars2D(vv.Wobject):
             gl.glColor3f(c[0], c[1], c[2])
             gl.glDrawArrays(gl.GL_QUADS, 0, vertices.shape[0])
             
-            # Draw outer lines            
+            # Draw outer lines
             vertices[:,2] += 0.1
             clr = self._lc
             gl.glColor3f(clr[0], clr[1], clr[2])
@@ -184,17 +184,17 @@ class Bars2D(vv.Wobject):
     
     @vv.misc.PropWithDraw
     def lc():
-        """ Get/Set the line color of the bars. 
+        """ Get/Set the line color of the bars.
         """
         def fget(self):
             return self._lc
         def fset(self, value):
-            self._lc = vv.misc.getColor(value, 'setting line color')            
+            self._lc = vv.misc.getColor(value, 'setting line color')
         return locals()
     
     @vv.misc.PropWithDraw
     def lw():
-        """ Get/Set the line width of the bars. 
+        """ Get/Set the line width of the bars.
         """
         def fget(self):
             return self._lw
@@ -209,7 +209,7 @@ class Bars2D(vv.Wobject):
         of the first bar, or None if there are no bars.
         """
         def fget(self):
-            if self._colors:                
+            if self._colors:
                 return self._colors[0]
             else:
                 return None

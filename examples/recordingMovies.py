@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Example that demonstrates how movies can be recorded 
+""" Example that demonstrates how movies can be recorded
 and exported to gif/swf/avi.
 
 This is not an interactive example, but a script.
@@ -24,7 +24,7 @@ for i in range(Nangles):
     a.camera.azimuth = 360 * float(i) / Nangles
     if a.camera.azimuth>180:
         a.camera.azimuth -= 360
-    a.Draw() # Tell the axes to redraw 
+    a.Draw() # Tell the axes to redraw
     f.DrawNow() # Draw the figure NOW, instead of waiting for GUI event loop
 
 
@@ -43,7 +43,7 @@ buffered image. Changing a property of the axes or any object inside it
 will automatically trigger a redraw, but this is not so for the camera,
 since it's a bit of a low level thing...
 
-More explicit (and better documented) control over the camera may be 
+More explicit (and better documented) control over the camera may be
 implemented later.
 
 

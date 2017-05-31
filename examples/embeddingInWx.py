@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" 
+"""
 This example illustrates embedding a visvis figure in a wx application.
 """
 
@@ -7,7 +7,7 @@ import wx
 import visvis as vv
 
 # Create a visvis app instance, which wraps a wx application object.
-# This needs to be done *before* instantiating the main window. 
+# This needs to be done *before* instantiating the main window.
 app = vv.use('wx')
 
 
@@ -31,10 +31,10 @@ class MainWindow(wx.Frame):
         # Make callback
         but.Bind(wx.EVT_BUTTON, self._Plot)
         
-        # Apply sizers        
+        # Apply sizers
         self.SetSizer(self.sizer)
         self.SetAutoLayout(True)
-        self.Layout()   
+        self.Layout()
         
         # Finish
         self.Show()
@@ -51,7 +51,7 @@ class MainWindow(wx.Frame):
         
         # Plot
         vv.plot([1,2,3,1,6])
-        vv.legend(['this is a line'])        
+        vv.legend(['this is a line'])
         #self.fig.DrawNow()
     
 
@@ -64,6 +64,6 @@ if True:
 
 else:
     # The native way.
-    wxApp = wx.App()    
+    wxApp = wx.App()
     m = MainWindow()
     wxApp.MainLoop()

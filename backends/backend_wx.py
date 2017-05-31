@@ -12,9 +12,9 @@
 
 """
 
-# NOTICE: wx has the same general problem with OpenGl being kinda 
+# NOTICE: wx has the same general problem with OpenGl being kinda
 # unmanaged and frames not being drawn on Gnome. However, wx seems
-# relatively well workable with only applying a Refresh command 
+# relatively well workable with only applying a Refresh command
 # on each Activate command of the main window.
 
 import os
@@ -27,7 +27,7 @@ import wx
 from wx.glcanvas import GLCanvas, GLContext
 
 
-KEYMAP = {  wx.WXK_SHIFT: constants.KEY_SHIFT, 
+KEYMAP = {  wx.WXK_SHIFT: constants.KEY_SHIFT,
             wx.WXK_ALT: constants.KEY_ALT,
             wx.WXK_CONTROL: constants.KEY_CONTROL,
             wx.WXK_LEFT: constants.KEY_LEFT,
@@ -67,12 +67,12 @@ class GLWidget(GLCanvas):
     This is the original version with automatic glContext switching
     """
     
-    def __init__(self, figure, parent, *args, **kwargs):     
+    def __init__(self, figure, parent, *args, **kwargs):
         # make sure the window is double buffered (Thanks David!)
-        kwargs.update({'attribList' : [wx.glcanvas.WX_GL_RGBA, 
+        kwargs.update({'attribList' : [wx.glcanvas.WX_GL_RGBA,
             wx.glcanvas.WX_GL_DOUBLEBUFFER]})
         # call GLCanvas' init method
-        GLCanvas.__init__(self, parent, *args, **kwargs)        
+        GLCanvas.__init__(self, parent, *args, **kwargs)
         self._glContext = GLContext(self )
         self._glContext.SetCurrent(self)
         self.figure = figure
@@ -90,10 +90,10 @@ class GLWidget(GLCanvas):
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnDoubleClick)
         self.Bind(wx.EVT_RIGHT_DCLICK, self.OnDoubleClick)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
-        #        
-        self.Bind(wx.EVT_MOTION, self.OnMotion)        
+        #
+        self.Bind(wx.EVT_MOTION, self.OnMotion)
         self.Bind(wx.EVT_ENTER_WINDOW, self.OnEnter)
-        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)    
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.Bind(wx.EVT_KEY_UP, self.OnKeyUp)
         self.Bind(wx.EVT_SIZE, self.OnResize)
@@ -114,7 +114,7 @@ class GLWidget(GLCanvas):
     
     
     def GetContext(self):
-        return self._glContext    
+        return self._glContext
 
     def OnLeftDown(self, event):
         x,y = event.GetPosition()
@@ -135,18 +135,18 @@ class GLWidget(GLCanvas):
         self.figure._GenerateMouseEvent('down', x, y, 2, modifiers(event))
 
     def OnRightUp(self, event):
-        x,y = event.GetPosition()  
+        x,y = event.GetPosition()
         try:
             self.ReleaseMouse()
         except Exception:
-            pass        
+            pass
         self.figure._GenerateMouseEvent('up', x, y, 2, modifiers(event))
     
     def OnDoubleClick(self, event):
         but = 0
         x,y = event.GetPosition()
         if event.LeftDClick():
-            but = 1            
+            but = 1
         elif event.RightDClick():
             but = 2
         self.figure._GenerateMouseEvent('double', x, y, but, modifiers(event))
@@ -171,7 +171,7 @@ class GLWidget(GLCanvas):
         key, text = self._ProcessKey(event)
         self.figure._GenerateKeyEvent('keydown', key, text, modifiers(event))
     
-    def OnKeyUp(self, event):        
+    def OnKeyUp(self, event):
         key, text = self._ProcessKey(event)
         self.figure._GenerateKeyEvent('keyup', key, text, modifiers(event))
     
@@ -185,7 +185,7 @@ class GLWidget(GLCanvas):
         if key in KEYMAP:
             return KEYMAP[key], ''
         else:
-            # other key, try producing text            
+            # other key, try producing text
             if (65 <= key <= 90) and not event.ShiftDown():
                 key += 32
             try:
@@ -193,13 +193,13 @@ class GLWidget(GLCanvas):
             except ValueError:
                 return key, ''
     
-    def OnEnter(self, event):    
+    def OnEnter(self, event):
         if self.figure:
             ev = self.figure.eventEnter
             ev.Set(0,0,0)
             ev.Fire()
     
-    def OnLeave(self, event):    
+    def OnLeave(self, event):
         if self.figure:
             ev = self.figure.eventLeave
             ev.Set(0,0,0)
@@ -210,9 +210,9 @@ class GLWidget(GLCanvas):
             self.figure._OnResize()
             event.Skip()
     
-    def OnClose(self, event):        
+    def OnClose(self, event):
         if self.figure:
-            self.figure.Destroy()             
+            self.figure.Destroy()
             parent = self.GetParent()
             self.Destroy() # Hide and delete window
             # Prevent frame from sticking when there is no wx event loop
@@ -227,9 +227,9 @@ class GLWidget(GLCanvas):
 
     def OnPaint(self, event):
         # I read that you should always create a PaintDC when implementing
-        # an OnPaint event handler.        
+        # an OnPaint event handler.
         a = wx.PaintDC(self)  # noqa
-        if self.GetContext(): 
+        if self.GetContext():
             self.figure.OnDraw()
         event.Skip()
     
@@ -263,15 +263,15 @@ class GLWidgetPhoenix(GLWidget):
 
     def OnPaint(self, event):
         # I read that you should always create a PaintDC when implementing
-        # an OnPaint event handler.        
-        # a = wx.PaintDC(self) 
+        # an OnPaint event handler.
+        # a = wx.PaintDC(self)
         
         # Must set glContext for Phoenix, but only if  shown on screen
-        if self.GetContext() and self.IsShownOnScreen(): 
+        if self.GetContext() and self.IsShownOnScreen():
             
             self.SetCurrent(self._glContext)
             self.figure.OnDraw()
-        event.Skip()    
+        event.Skip()
 
 
 class Figure(BaseFigure):
@@ -297,7 +297,7 @@ class Figure(BaseFigure):
         """ Create the Figure's widget if necessary, and return the
         widget. """
         if self._widget is None:
-            # Make sure there is a native app and the timer is started 
+            # Make sure there is a native app and the timer is started
             # (also when embedded)
             app.Create()
             
@@ -308,7 +308,7 @@ class Figure(BaseFigure):
                 updatePosition = True
                 del(kwargs['create_widget'])
                 
-            # Based on switch set in App the correct widget class is called   
+            # Based on switch set in App the correct widget class is called
             if app._phoenix:
                 self._widget = GLWidgetPhoenix(self, parent, *args, **kwargs)
             else:
@@ -321,13 +321,13 @@ class Figure(BaseFigure):
     
     def _SetCurrent(self):
         """ make this scene the current context """
-        if not self._destroyed and self._widget is not None:            
+        if not self._destroyed and self._widget is not None:
             try:
                 self._widget.SetCurrent()
             except Exception:
-                # can happen when trying to call this method after            
+                # can happen when trying to call this method after
                 # the window was destroyed.
-                pass 
+                pass
     
     
     def _SwapBuffers(self):
@@ -345,8 +345,8 @@ class Figure(BaseFigure):
     
     def _SetPosition(self, x, y, w, h):
         """ Set the position of the widget. """
-        # select widget to resize. If it 
-        if self._widget and not self._destroyed:            
+        # select widget to resize. If it
+        if self._widget and not self._destroyed:
             widget = self._widget
             if isinstance(widget.GetParent(), FigureFrame):
                 widget = widget.GetParent()
@@ -357,13 +357,13 @@ class Figure(BaseFigure):
     
     def _GetPosition(self):
         """ Get the position of the widget. """
-        # select widget to resize. If it 
+        # select widget to resize. If it
         if self._widget and not self._destroyed:
             widget = self._widget
             if isinstance(widget.GetParent(), FigureFrame):
                 widget = widget.GetParent()
             # get and return
-            #tmp = widget.GetRect()        
+            #tmp = widget.GetRect()
             #return tmp.left, tmp.top, tmp.width, tmp.height
             size = widget.GetClientSize()
             pos = widget.GetPosition()
@@ -389,7 +389,7 @@ class Figure(BaseFigure):
                 widget.GetParent().Close()
             except wx.PyAssertionError:
                 # Prevent "wxEVT_MOUSE_CAPTURE_LOST not being processed" error.
-                pass 
+                pass
 
 
 class FigureFrame(wx.Frame):
@@ -424,11 +424,11 @@ def newFigure():
     try:
         iconFile = os.path.join(getResourceDir(), 'visvis_icon_wx.png')
         frame.SetIcon(wx.Icon(iconFile, wx.BITMAP_TYPE_PNG))
-    except Exception:        
+    except Exception:
         pass
     
     # Show AFTER canvas is added
-    frame.Show() 
+    frame.Show()
     
     # Apply a draw, so that OpenGl can initialize before we will really
     # do some drawing. Otherwis textures end up showing in black.
@@ -467,10 +467,10 @@ class App(events.App):
             self._ProcessEvents = self._ProcessEventsPhoenix
         else:
             self._phoenix = False
-            self._ProcessEvents = self._ProcessEventsOriginal  
+            self._ProcessEvents = self._ProcessEventsOriginal
     
     def _GetNativeApp(self):
-        # Get native app in save way. Taken from guisupport.py, 
+        # Get native app in save way. Taken from guisupport.py,
         # but use wx.App() class because PySimpleApp is deprecated
         app = wx.GetApp()
         if app is None:
@@ -494,13 +494,13 @@ class App(events.App):
         old = wx.EventLoop.GetActive()
         # Create new eventloop and process
         eventLoop = wx.EventLoop()
-        wx.EventLoop.SetActive(eventLoop)                        
+        wx.EventLoop.SetActive(eventLoop)
         while eventLoop.Pending():
             eventLoop.Dispatch()
         # Process idle
         app.ProcessIdle() # otherwise frames do not close
         # Set back the original
-        wx.EventLoop.SetActive(old)  
+        wx.EventLoop.SetActive(old)
     
     def _ProcessEventsPhoenix(self):
         # this version uses the new Phoenix API
@@ -511,13 +511,13 @@ class App(events.App):
         old = wx.EventLoopBase.GetActive()
         # Create new eventloop and process
         eventLoop = app.GetTraits().CreateEventLoop()
-        wx.EventLoopActivator(eventLoop)                        
+        wx.EventLoopActivator(eventLoop)
         while eventLoop.Pending():
             eventLoop.Dispatch()
         # Process idle
         eventLoop.ProcessIdle() # otherwise frames do not close
         # Set back the original
-        wx.EventLoopActivator(old)  
+        wx.EventLoopActivator(old)
     
     def _Run(self):
         app = self._GetNativeApp()

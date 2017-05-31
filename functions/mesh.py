@@ -34,7 +34,7 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
     colormap : a Colormap
         If values is 1D, the vertex colors are set from this colormap.
     clim : 2 element array
-        If values is 1D, sets the values to be mapped to the limits of the 
+        If values is 1D, sets the values to be mapped to the limits of the
         colormap.  If None, the min and max of values are used.
     texture : a Texture
         If values is Nx2, the vertex colors are set from this texture.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" 
+"""
 This example illustrates the use of the Aarray class.
 Particularly how the class is aware of slicing and adapts
 the origin and sampling accordingly. Visvis uses the sampling

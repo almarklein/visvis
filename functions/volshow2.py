@@ -7,9 +7,9 @@
 import visvis as vv
 import numpy as np
 
-def volshow2(vol, clim=None, renderStyle=None, cm=None, 
+def volshow2(vol, clim=None, renderStyle=None, cm=None,
             axesAdjust=True, axes=None):
-    """ volshow2(vol, clim=None, renderStyle=None, cm=CM_GRAY, 
+    """ volshow2(vol, clim=None, renderStyle=None, cm=CM_GRAY,
             axesAdjust=True, axes=None)
     
     Display a 3D image (a volume) using three slice textures that can be

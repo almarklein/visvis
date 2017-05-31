@@ -1,4 +1,4 @@
-# This file is part of VISVIS. 
+# This file is part of VISVIS.
 # Copyright (C) 2012 Almar Klein
 
 import visvis as vv
@@ -31,11 +31,11 @@ def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
     Parameters
     ----------
     filename : string
-        The name of the file to store the screenshot to. If filename is None, 
+        The name of the file to store the screenshot to. If filename is None,
         the interpolated image is returned as a numpy array.
     ob : Axes, AxesContainer, or Figure
         The object to take the screenshot of. The AxesContainer can be
-        obtained using vv.gca().parent. It can be usefull to take a 
+        obtained using vv.gca().parent. It can be usefull to take a
         screeshot of an axes including thickmarks and labels.
     sf : integer
         The scale factor. The image is increased in size with this factor,
@@ -52,17 +52,17 @@ def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
     
     Notes
     -----
-    Uses vv.getframe(ob) to obtain the image in the figure or axes. 
-    That image is interpolated with the given scale factor (sf) using 
-    bicubic interpolation. Then  vv.imwrite(filename, ..) is used to 
+    Uses vv.getframe(ob) to obtain the image in the figure or axes.
+    That image is interpolated with the given scale factor (sf) using
+    bicubic interpolation. Then  vv.imwrite(filename, ..) is used to
     store the resulting image to a file.
     
     Rationale
     ---------
-    We'd prefer storing screenshots of plots as vector (eps) images, but 
-    the nature of OpenGl prevents this. By applying high quality 
-    interpolation (using a cardinal spline), the resolution can be increased, 
-    thereby significantly improving the visibility/smoothness for lines 
+    We'd prefer storing screenshots of plots as vector (eps) images, but
+    the nature of OpenGl prevents this. By applying high quality
+    interpolation (using a cardinal spline), the resolution can be increased,
+    thereby significantly improving the visibility/smoothness for lines
     and fonts. Use this to produce publication quality snapshots of your
     plots.
     
@@ -92,9 +92,9 @@ def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
     if bg and fig:
         bgOld = bgob.bgcolor
         bgob.bgcolor = bg
-        fig.DrawNow()  
+        fig.DrawNow()
     
-    # Obtain image      
+    # Obtain image
     im1 = vv.getframe(ob)
     shape1 = im1.shape
     
@@ -112,9 +112,9 @@ def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
     im2[:,0,:] = im2[:,1,:]
     im2[:,-1,:] = im2[:,-2,:]
     
-    # Create empty new image. It is sized by the scaleFactor, 
-    # but the last row is not. 
-    shape3 = (shape1[0]-1)*s+1, (shape1[1]-1)*s+1, 3    
+    # Create empty new image. It is sized by the scaleFactor,
+    # but the last row is not.
+    shape3 = (shape1[0]-1)*s+1, (shape1[1]-1)*s+1, 3
     im3 = np.zeros(shape3, dtype=np.float32)
     
     # Fill in values!
@@ -151,7 +151,7 @@ def screenshot(filename, ob=None, sf=2, bg=None, format=None, tension=-0.25):
                     # Get contribution and add to temp image
                     imTmp += w * im2[slicey, slicex, :]
             
-            # Store contributions            
+            # Store contributions
             D = [-1 for tmp in range(s)]; D.append(None)
             slicey = slice(dy,D[dy],s)
             slicex = slice(dx,D[dx],s)

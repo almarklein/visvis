@@ -27,7 +27,7 @@ from visvis.utils.pypoints import Pointset, Point
 #
 from visvis.core import base
 from visvis.core.misc import Range, getColor, basestring
-from visvis.core.misc import Property, PropWithDraw, DrawAfter 
+from visvis.core.misc import Property, PropWithDraw, DrawAfter
 #
 from visvis.text import Text
 from visvis.core.line import lineStyles, PolarLine
@@ -36,8 +36,8 @@ from visvis.core.cameras import depthToZ, TwoDCamera, FlyCamera
 
 # A note about tick labels. We format these such that the width of the ticks
 # never becomes larger than 10 characters (including sign bit).
-# With a fontsize of 9, this needs little less than 70 pixels. The 
-# correction applied when visualizing axis (and ticks) is 60, because 
+# With a fontsize of 9, this needs little less than 70 pixels. The
+# correction applied when visualizing axis (and ticks) is 60, because
 # the default offset is 10 pixels for the axes.
 # See the docstring of GetTickTexts() for more info.
 
@@ -154,7 +154,7 @@ class AxisLabel(AxisText):
 def GetTickTexts(ticks):
     """ GetTickTexts(ticks)
     
-    Get tick labels of maximally 9 characters (plus sign char). 
+    Get tick labels of maximally 9 characters (plus sign char).
     
     All ticks will be formatted in the same manner, and with the same number
     of decimals. In exponential notation, the exponent is written with as
@@ -163,7 +163,7 @@ def GetTickTexts(ticks):
     The algorithm is to first test for each tick the number of characters
     before the dot, the number of decimals, and the number of chars for
     the exponent. Then the ticks are formatted only without exponent if
-    the first two chars (plus one for the dot) are less than 9.    
+    the first two chars (plus one for the dot) are less than 9.
     
     Examples are:
     xx.yyyyyy
@@ -219,7 +219,7 @@ def GetTickTexts(ticks):
             if tick == -0: tick = 0
             ticks2.append( f % tick )
     
-    elif maxChars1 < 9:        
+    elif maxChars1 < 9:
         # Do the best we can
         
         chars2 = 9 - (maxChars1+1)
@@ -249,8 +249,8 @@ def GetTickTexts(ticks):
 def GetTickText_deprecated(tick):
     """ GetTickText(tick)
     
-    Obtain text from a tick. Convert to exponential notation 
-    if necessary. 
+    Obtain text from a tick. Convert to exponential notation
+    if necessary.
     
     """
     
@@ -331,7 +331,7 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
         for tickValue in givenTicks:
             if tickValue >= lim.min and tickValue <= lim.max:
                 tickText = givenTicks[tickValue]
-                tickValues.append(tickValue)                
+                tickValues.append(tickValue)
                 if isinstance(tickText, basestring):
                     tickTexts.append(tickText)
                 else:
@@ -345,8 +345,8 @@ def GetTicks(p0, p1, lim, minTickDist=40, givenTicks=None):
         
         for i in range(len(givenTicks)):
             
-            # Get tick 
-            t = givenTicks[i]            
+            # Get tick
+            t = givenTicks[i]
             if isinstance(t, basestring):
                 tickValue = i
                 tickText = t
@@ -420,8 +420,8 @@ class BaseAxis(base.Wobject):
     #
     #  / \      _
     #   |       /|
-    #   | z    /        x   
-    #   |     /  y    -----> 
+    #   | z    /        x
+    #   |     /  y    ----->
     #
     
     
@@ -430,7 +430,7 @@ class BaseAxis(base.Wobject):
         
         # Make the axis the first wobject in the list. This somehow seems
         # right and makes the Axes.axis property faster.
-        if hasattr(parent, '_wobjects') and self in parent._wobjects:            
+        if hasattr(parent, '_wobjects') and self in parent._wobjects:
             parent._wobjects.remove(self)
             parent._wobjects.insert(0, self)
         
@@ -600,11 +600,11 @@ class BaseAxis(base.Wobject):
     
     @PropWithDraw
     def xTicks():
-        """ Get/Set the ticks for the x dimension. 
+        """ Get/Set the ticks for the x dimension.
         
         The value can be:
-          * None: the ticks are determined automatically. 
-          * A tuple/list/numpy_array with float or string values: Floats 
+          * None: the ticks are determined automatically.
+          * A tuple/list/numpy_array with float or string values: Floats
             specify at which location tickmarks should be drawn. Strings are
             drawn at integer positions corresponding to the index in the
             given list.
@@ -643,11 +643,11 @@ class BaseAxis(base.Wobject):
     
     @PropWithDraw
     def yTicks():
-        """ Get/Set the ticks for the y dimension. 
+        """ Get/Set the ticks for the y dimension.
         
         The value can be:
-          * None: the ticks are determined automatically. 
-          * A tuple/list/numpy_array with float or string values: Floats 
+          * None: the ticks are determined automatically.
+          * A tuple/list/numpy_array with float or string values: Floats
             specify at which location tickmarks should be drawn. Strings are
             drawn at integer positions corresponding to the index in the
             given list.
@@ -686,11 +686,11 @@ class BaseAxis(base.Wobject):
     
     @PropWithDraw
     def zTicks():
-        """ Get/Set the ticks for the z dimension. 
+        """ Get/Set the ticks for the z dimension.
         
         The value can be:
-          * None: the ticks are determined automatically. 
-          * A tuple/list/numpy_array with float or string values: Floats 
+          * None: the ticks are determined automatically.
+          * A tuple/list/numpy_array with float or string values: Floats
             specify at which location tickmarks should be drawn. Strings are
             drawn at integer positions corresponding to the index in the
             given list.
@@ -729,7 +729,7 @@ class BaseAxis(base.Wobject):
     
     @PropWithDraw
     def xLabel():
-        """ Get/Set the label for the x dimension. 
+        """ Get/Set the label for the x dimension.
         """
         def fget(self):
             return self._xlabel
@@ -739,7 +739,7 @@ class BaseAxis(base.Wobject):
     
     @PropWithDraw
     def yLabel():
-        """ Get/Set the label for the y dimension. 
+        """ Get/Set the label for the y dimension.
         """
         def fget(self):
             return self._ylabel
@@ -749,7 +749,7 @@ class BaseAxis(base.Wobject):
     
     @PropWithDraw
     def zLabel():
-        """ Get/Set the label for the z dimension. 
+        """ Get/Set the label for the z dimension.
         """
         def fget(self):
             return self._zlabel
@@ -845,7 +845,7 @@ class BaseAxis(base.Wobject):
     ## Help methods
     
     def _DestroyChildren(self):
-        """ Method to clean up the children (text objects). 
+        """ Method to clean up the children (text objects).
         """
         if self._children:
             for child in self.children:
@@ -906,7 +906,7 @@ class BaseAxis(base.Wobject):
 
 
     def _NextCornerIndex(self, i, d, vector_s):
-        """ Calculate the next corner index. 
+        """ Calculate the next corner index.
         """
         
         if d<2 and vector_s.x >= 0:
@@ -946,10 +946,10 @@ class CartesianAxis2D(BaseAxis):
     
     @PropWithDraw
     def xTicksAngle():
-        """ Get/Set the angle of the tick marks for te x-dimension. 
+        """ Get/Set the angle of the tick marks for te x-dimension.
         This can be used when the tick labels are long, to prevent
-        them from overlapping. Note that if this value is non-zero, 
-        the horizontal alignment is changed to left (instead of center). 
+        them from overlapping. Note that if this value is non-zero,
+        the horizontal alignment is changed to left (instead of center).
         """
         def fget(self):
             return self._xTicksAngle
@@ -1037,7 +1037,7 @@ class CartesianAxis2D(BaseAxis):
                     i0 = i
                     bestVal = val
 
-            # Get indices of the two next corners on which 
+            # Get indices of the two next corners on which
             # ridges we may draw grid lines
             i1 = self._NextCornerIndex(i0, d, vector_s)
             # i2 = self._NextCornerIndex(i1, d, vector_s)
@@ -1125,7 +1125,7 @@ class CartesianAxis2D(BaseAxis):
                 fig = axes.GetFigure()
                 if fig:
                     tmp1 = fig.position.width
-                    tmp2 = glu.gluProject(t.x, t.y, t.z)[0] 
+                    tmp2 = glu.gluProject(t.x, t.y, t.z)[0]
                     tmp2 += t.GetVertexLimits()[0][1] # Max of x
                     # Apply
                     if tmp1 < tmp2:
@@ -1211,7 +1211,7 @@ class CartesianAxis3D(BaseAxis):
         Also returns the lengths of the smallest vectors, for the
         calculation of the minimum tick distance.
         
-        """ 
+        """
         
         # Get the vectors
         vectors_c = []
@@ -1290,7 +1290,7 @@ class CartesianAxis3D(BaseAxis):
             corners4_c = [corners8_c[i] for i in tmp]
             corners4_s = [corners8_s[i] for i in tmp]
             
-            # Get directional vectors (i.e. ridges) corresponding to 
+            # Get directional vectors (i.e. ridges) corresponding to
             # (emanating from) the four corners. Also returns the length
             # of the shortest ridges (in screen coords)
             _vectors = self._GetRidgeVector(d, corners8_c, corners8_s)

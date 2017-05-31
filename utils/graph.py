@@ -1,7 +1,7 @@
 """ Module graph
 
-Defines functionality to manage, draw and store graphs. A graph is 
-represented using an adjacency list; the root of this module is the 
+Defines functionality to manage, draw and store graphs. A graph is
+represented using an adjacency list; the root of this module is the
 Graph class, which represents a list of Node objects, which are in turn
 connected by Edge instances.
 
@@ -52,10 +52,10 @@ from visvis import ssdf
 
 class Node(Point):
     """ Node(x,y,z,...)
-    A Node object represents a point in 2D or 3D space, i.e. a vertex. 
+    A Node object represents a point in 2D or 3D space, i.e. a vertex.
     It has a list of references to edge objects. Via these
     edges, the neighbouring node objects can be obtained.
-    This class inherits the Point object. 
+    This class inherits the Point object.
     Use Graph.AppendNode() to create nodes.
     """
     
@@ -70,7 +70,7 @@ class Node(Point):
     def GetEdge(self, otherNode):
         """ GetEdge(self, otherNode)
         Gives the edge from this node to the given node. If there
-        is no edge between these nodes, None is returned. 
+        is no edge between these nodes, None is returned.
         """
         for c in self._edges:
             if otherNode is c.GetOtherEnd(self):
@@ -95,14 +95,14 @@ class Node(Point):
     def GetProps(self, index):
         """ GetProps(index)
         Get a list of the property at the given index asociated with the
-        edges to the neighboring nodes, matching with what is returned 
+        edges to the neighboring nodes, matching with what is returned
         by GetNeighbours.
         """
         return [c.props[index] for c in self._edges]
     
     
     def __str__(self):
-        """ Make string representation. 
+        """ Make string representation.
         """
         s = Point.__str__(self)
         s.replace('point', 'node')
@@ -111,7 +111,7 @@ class Edge:
     """ Edge(node1, node2, *props)
     The base edge class. An edge consists of the references
     of the two nodes it connects and a list of properties asociated with
-    the edge. 
+    the edge.
     Use Graph.CreateEdge to create edges.
     """
     
@@ -119,7 +119,7 @@ class Edge:
         if not isinstance(p1, Node) or not isinstance(p2, Node):
             raise ValueError("First two arguments of an edge should be nodes.")
         
-        # The two end points        
+        # The two end points
         self.end1 = p1
         self.end2 = p2
         # Store properties
@@ -153,7 +153,7 @@ class Edge:
     
     def Connect(self):
         """ Connect(self)
-        Connect the edge, registering it with both end nodes. 
+        Connect the edge, registering it with both end nodes.
         """
         # make sure not to have the same edge twice
         self.Disconnect()
@@ -165,8 +165,8 @@ class Edge:
     
     def Disconnect(self):
         """ Disconnect(self)
-        Disconnect the edge, unregistering it with the end nodes. 
-        """        
+        Disconnect the edge, unregistering it with the end nodes.
+        """
         while self in self.end1._edges:
             self.end1._edges.remove(self)
         while self in self.end2._edges:
@@ -186,18 +186,18 @@ class Graph(list):
     Notes
     -----
     This class cannot inherit from Pointset, because we need to store
-    the Node instances to keep track of which nodes are connected by 
+    the Node instances to keep track of which nodes are connected by
     which.
     
-    Inherits from list, newly implemented methods can be recocnized 
-    because they start with a capital letter. The use of these methods 
+    Inherits from list, newly implemented methods can be recocnized
+    because they start with a capital letter. The use of these methods
     is preferred over the lower case versions.
     
     """
     
     def __init__(self):
         
-        # for drawing        
+        # for drawing
         self._lines = []
         self._activeLines = []
     
@@ -238,7 +238,7 @@ class Graph(list):
         # Init struct
         struct = ssdf.new()
         
-        # Create array of nodes        
+        # Create array of nodes
         pp = Pointset(ndim)
         for node in self:
             pp.append(node)
@@ -247,7 +247,7 @@ class Graph(list):
         # Create the edges
         tmp = np.zeros((len(cc), 2), dtype=np.uint32)
         for i in range(len(cc)):
-            c = cc[i]            
+            c = cc[i]
             tmp[i,0] = c._i1
             tmp[i,1] = c._i2
         struct.edges = tmp
@@ -275,7 +275,7 @@ class Graph(list):
     
     def Unpack(self, struct):
         """ Unpack(struct)
-        Load the contents from an ssdf struct.        
+        Load the contents from an ssdf struct.
         This removes the old nodes and edges.
         """
         
@@ -308,14 +308,14 @@ class Graph(list):
     
     def Clear(self):
         """ Clear()
-        Clear all nodes and edges. 
+        Clear all nodes and edges.
         """
         self[:]=[]
     
     
     def ClearEdges(self):
         """ ClearEdges()
-        Clear the edges only. 
+        Clear the edges only.
         """
         for node in self:
             node._edges[:] = []
@@ -323,7 +323,7 @@ class Graph(list):
     
     def Copy(self):
         """ Copy()
-        Create a full copy of the object (using pack/unpack). 
+        Create a full copy of the object (using pack/unpack).
         """
         tmp = self.Pack()
         new = Graph()
@@ -342,12 +342,12 @@ class Graph(list):
     
     def GetEdges(self):
         """ GetEdges()
-        Get a list of all edges in the graph. 
+        Get a list of all edges in the graph.
         This is obtained by collecting the edges from all nodes.
         This also sets the _i1 and _i2 properties of all edge
         objects: the index of the two nodes it connects. Note that
         these values become invalid when a node is popped or inserted.
-        """ 
+        """
         # Init set (so that each edge is present only once)
         cc = set()
         
@@ -375,9 +375,9 @@ class Graph(list):
     
     #def CollectGroups(self, asGraphs=False):
     def CollectGroups(self):
-        """ CollectGroups() 
+        """ CollectGroups()
         
-        Collect all groups of the graph. 
+        Collect all groups of the graph.
         
         """
         
@@ -390,7 +390,7 @@ class Graph(list):
         # Collect group
         while nodes2search:
             # Initialize a new group with one node
-            group1 = set() # initial 
+            group1 = set() # initial
             group2 = set() # final
             group1.add(nodes2search.pop())
             
@@ -417,7 +417,7 @@ class Graph(list):
     def AppendNode(self, *p):
         """ AppendNode(p)
         Append a node (if a point is given, it is converted to a node).
-        Overload this to append nodes of a specific class. Returns the 
+        Overload this to append nodes of a specific class. Returns the
         appended instance.
         """
         if len(p) == 1:
@@ -426,7 +426,7 @@ class Graph(list):
         if isinstance(p, Node):
             pass
         elif isinstance(p, Point):
-            p = Node(p)     
+            p = Node(p)
         else:
             #raise ValueError("Only Node objects should be appended.")
             # Try to accept it as a point
@@ -440,15 +440,15 @@ class Graph(list):
         """ _CheckNodes(p1,p2)
         Check the given nodes. If they are indices the corresponding
         node objects are returned. If they are node objects, it's
-        checked whether they are in the list. 
+        checked whether they are in the list.
         """
         # Convert indices to nodes, or check if it's a valid node
         if isinstance(p1, int):
             p1 = self[p1]
         else:
             if p1 not in self:
-                raise ValueError("First given node not in list!")            
-        if isinstance(p2, int):            
+                raise ValueError("First given node not in list!")
+        if isinstance(p2, int):
             p2 = self[p2]
         else:
             if p2 not in self:
@@ -460,7 +460,7 @@ class Graph(list):
     def CreateEdge(self, p1, p2, *props):
         """ CreateEdge(self, p1, p2, *props)
         Creates an edge instance between the two given nodes.
-        The edge replaces any existing edge. 
+        The edge replaces any existing edge.
         """
         
         # Check nodes
@@ -472,7 +472,7 @@ class Graph(list):
         
         # Disconnect old one if necesary. Connect new one
         if cold is not None:
-            cold.Disconnect()        
+            cold.Disconnect()
         cnew.Connect()
         
         # return edge
@@ -481,7 +481,7 @@ class Graph(list):
     
     def Remove(self, node):
         """ Remove(node)
-        Remove the node (which can also be given using its index, 
+        Remove the node (which can also be given using its index,
         disconnecting all its edges.
         """
         if isinstance(node, int):
@@ -493,8 +493,8 @@ class Graph(list):
     
     def Draw(self, mc='g', lc='y', mw=7, lw=0.6, alpha=0.5, axes=None):
         """ Draw(mc='g', lc='y', mw=7, lw=0.6, alpha=0.5, axes=None)
-        Draw nodes and edges. 
-        """ 
+        Draw nodes and edges.
+        """
         
         # We can only draw if we have any nodes
         if not len(self):
@@ -510,19 +510,19 @@ class Graph(list):
             for p in self:
                 pp.append(p)
             # Draw nodes, reuse if possible!
-            l_node = self._lines[0]            
+            l_node = self._lines[0]
             if l_node and len(l_node._points) == len(pp):
                 l_node.SetPoints(pp)
             elif l_node:
                 l_node.Destroy()
                 l_node = None
-            if l_node is None:                
-                l_node = vv.plot(pp, ls='', ms='o', mc=mc, mw=mw, 
+            if l_node is None:
+                l_node = vv.plot(pp, ls='', ms='o', mc=mc, mw=mw,
                     axesAdjust=0, axes=axes, alpha=alpha)
                 self._lines[0] = l_node
         
         # For simplicity, always redraw edges
-        if self._lines[1] is not None: 
+        if self._lines[1] is not None:
             self._lines[1].Destroy()
         
         # Build edge list
@@ -530,9 +530,9 @@ class Graph(list):
             cc = self.GetEdges()
             # Draw edges
             pp = Pointset(self[0].ndim)
-            for c in cc:            
+            for c in cc:
                 pp.append(c.end1); pp.append(c.end2)
-            tmp = vv.plot(pp, ms='', ls='+', lc=lc, lw=lw, 
+            tmp = vv.plot(pp, ms='', ls='+', lc=lc, lw=lw,
                 axesAdjust=0, axes=axes, alpha=alpha)
             self._lines[1] = tmp
     
@@ -541,7 +541,7 @@ class Graph(list):
 
 
 def edgeHash(x):
-    """ edgeHash(edge) 
+    """ edgeHash(edge)
     Produces a hash for an edge that can be used in sorting.
     requires the edges to be "marked with node indices". Will use
     the first property (if available).
@@ -605,7 +605,7 @@ def deserializeProps(bb):
             i += 5
         elif bb[i] == b'\x09'[0]:
             n = np.frombuffer( bb[i+1:i+5], dtype=np.int32 )
-            ndim = bb[i+5]  
+            ndim = bb[i+5]
             if not isinstance(ndim, int): ndim = ord(ndim)
             nbytes = n*ndim*4
             tmp = np.frombuffer( bb[i+6:i+6+nbytes], dtype=np.float32 )
@@ -623,18 +623,18 @@ def deserializeProps(bb):
 class MatchingScore:
     """ MatchingScore(TP, FN, FP)
     
-    Class to store a matching score using three indicaters 
+    Class to store a matching score using three indicaters
     represented by the matched (true-positive), missed (false-negative),
     and wrong (false-positive) amounts.
     
-    The value (.val) is calculated as TP/(TP+FP+FN). Which is the 
+    The value (.val) is calculated as TP/(TP+FP+FN). Which is the
     intersection devided by the union of the two graphs. Let D=FP+FN be
     the "edit distance" between the two graphs. Then a sensible score
     measure that would scale between 0 and 1 would be 1-D/(D+TP). It can
     be shown that this is the same as TP/(TP+D).
     
     Supports equating and smaller/larger than operators (and thus sorting).
-    Also supports combining matching scores by simply adding them, and 
+    Also supports combining matching scores by simply adding them, and
     un-combining by subtracting them.
     """
     
@@ -712,7 +712,7 @@ def compareGraphs(graph1, graph2, maxDist):
     instance.
     
     Matching and not-matching edges are counted to obtain a matching
-    score. nodes should be closer than maxDist to be considered 'at the 
+    score. nodes should be closer than maxDist to be considered 'at the
     same location'.
     """
     
@@ -725,10 +725,10 @@ def compareGraphs(graph1, graph2, maxDist):
     # Create pointsets of the nodes
     pp1 = Pointset(3)
     for node in graph1:
-        pp1.append(node)    
+        pp1.append(node)
     pp2 = Pointset(3)
     for node in graph2:
-        pp2.append(node)    
+        pp2.append(node)
     
     # Match the nodes of graph1 to graph2
     for node in graph1:
@@ -759,8 +759,8 @@ def compareGraphs(graph1, graph2, maxDist):
     # Init amounts
     nmatch1, nmatch2, nmiss, nwrong = 0,0,0,0
     
-    # Count matches and wrongs    
-    for c in graph1.GetEdges():        
+    # Count matches and wrongs
+    for c in graph1.GetEdges():
         end1 = c.end1.match
         end2 = c.end2.match
         if end1 and end2:
@@ -774,7 +774,7 @@ def compareGraphs(graph1, graph2, maxDist):
     # todo: use dontCare 'beleid' or not?
     
     # Count matches and misses
-    for c in graph2.GetEdges():        
+    for c in graph2.GetEdges():
         end1 = c.end1.match
         end2 = c.end2.match
         if end1 and end2:

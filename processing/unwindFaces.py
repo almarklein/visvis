@@ -10,9 +10,9 @@ def unwindFaces(mesh):
     """ unwindFaces(mesh)
     
     Unwinds the faces to make new versions of the vertices, normals,
-    values, which are usually larger. The new arrays 
+    values, which are usually larger. The new arrays
     represent the same surface, but is described without a faces
-    array. 
+    array.
     
     """
     

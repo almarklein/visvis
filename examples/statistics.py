@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """ This example a coupe of ways to visualize statistic data.
 
-As an example I took the monthly temperature in the region where I live 
+As an example I took the monthly temperature in the region where I live
 (Twente, The Netherlands) over the period 1983-2010.
 
 This data was extracted from publicly available data obtained from the
@@ -89,8 +89,8 @@ for a in [a1, a2, a3, a4]:
         a.axis.zLabel = 'Temperature [C^o]'
         a.axis.showGridZ = True
     else:
-        a.axis.yLabel = 'Temperature [C^o]'  
-        a.axis.showGridY = True  
+        a.axis.yLabel = 'Temperature [C^o]'
+        a.axis.showGridY = True
         a.axis.xTicksAngle = -30
 
 app = vv.use()

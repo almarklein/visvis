@@ -18,7 +18,7 @@ from . import ClassManager
 
 # Try importing numpy
 try:
-    import numpy as np    
+    import numpy as np
 except ImportError:
     np = None
 
@@ -51,7 +51,7 @@ if True:
     _INT_TYPES = set(integer_types)
 if np:
     _FLOAT_TYPES.update([np.float32, np.float64])
-    _INT_TYPES.update([   np.int8,  np.int16,  np.int32,  np.int64, 
+    _INT_TYPES.update([   np.int8,  np.int16,  np.int32,  np.int64,
                         np.uint8, np.uint16, np.uint32, np.uint64 ])
 _FLOAT_TYPES = tuple(_FLOAT_TYPES)
 _INT_TYPES = tuple(_INT_TYPES)
@@ -99,7 +99,7 @@ def _not_equal(ob1, ob2):
             return '<type does not match>'
         if len(ob1) != len(ob2):
             return '<lengths do not match>'
-        # Test all elements        
+        # Test all elements
         for i in range(len(ob1)):
             not_equal = _not_equal(ob1[i], ob2[i])
             if not_equal:
@@ -109,8 +109,8 @@ def _not_equal(ob1, ob2):
         if not isinstance(ob2, VirtualArray):
             return '<type does not match>'
         # Test properties
-        if not (    ob1.shape==ob2.shape and 
-                    ob1.dtype==ob2.dtype and 
+        if not (    ob1.shape==ob2.shape and
+                    ob1.dtype==ob2.dtype and
                     ob1.data==ob2.data ):
             return '<array does not match>'
     
@@ -118,8 +118,8 @@ def _not_equal(ob1, ob2):
         if not isinstance(ob2, np.ndarray):
             return '<type does not match>'
         # Test properties
-        if not (    ob1.shape==ob2.shape and 
-                    ob1.dtype==ob2.dtype and 
+        if not (    ob1.shape==ob2.shape and
+                    ob1.dtype==ob2.dtype and
                     (ob1==ob2).sum()==ob1.size ):
             return '<array does not match>'
     
@@ -132,7 +132,7 @@ def _not_equal(ob1, ob2):
 def _isvalidname(name):
     """ _isvalidname(name)
     
-    Returns attribute name, or None, if not valid 
+    Returns attribute name, or None, if not valid
     
     """
     
@@ -157,7 +157,7 @@ def _shapeString(ob):
     
     Returns a string that represents the shape of the given array.
     
-    """ 
+    """
     ss = str()
     for n in ob.shape:
         ss += '%ix' % n
@@ -166,9 +166,9 @@ def _shapeString(ob):
 
 
 class Struct(object):
-    """ Struct(dictionary=None) 
+    """ Struct(dictionary=None)
     
-    Object to holds named data (syntactic sugar for a dictionary). 
+    Object to holds named data (syntactic sugar for a dictionary).
     
     Attributes can be any of the seven SSDF supported types:
     struct/dict, tuple/list, numpy array, (Unicode) string, int, float, None.
@@ -183,7 +183,7 @@ class Struct(object):
     * len() - returns the number of elements in the struct
     * del statement can be used to remove elements
     * two structs can be added, yielding a new struct with combined elements
-    * testing for equality with other structs 
+    * testing for equality with other structs
     
     Notes
     -----
@@ -191,11 +191,11 @@ class Struct(object):
         keys are ignoired).
       * On saving, names starting with two underscores are ignored.
       * This class does not inherit from dict to keep its namespace clean,
-        avoid nameclashes, and to enable autocompletion of its items in 
+        avoid nameclashes, and to enable autocompletion of its items in
         most IDE's.
       * To get the underlying dict, simply use s.__dict__.
     
-    """    
+    """
     
     # Indentifier
     __is_ssdf_struct__ = True
@@ -224,14 +224,14 @@ class Struct(object):
                     for element in val:
                         L.append( _getValue(element) )
                     return L
-                elif isinstance(val, dict):                
+                elif isinstance(val, dict):
                     return Struct(val)
                 else:
                     pass # leave it
             
             # Copy all keys in the dict that are not methods
-            for key in a_dict:    
-                if not _isvalidname(key):                    
+            for key in a_dict:
+                if not _isvalidname(key):
                     print("Ignoring invalid key-name '%s'." % key)
                     continue
                 val = a_dict[key]
@@ -354,9 +354,9 @@ class SSDFReader:
         for block in blocks:
             # Select leaf in tree
             while block._indent <= tree[-1]._indent:
-                tree.pop() 
+                tree.pop()
             # Append (to object and to simple tree structure)
-            tree[-1]._children.append(block)        
+            tree[-1]._children.append(block)
             tree.append(block)
 
     def serialize_struct(self, object, f=None):
@@ -375,13 +375,13 @@ class SSDFWriter:
         all its children.
         
         If sort is True, packs blocks such that the data
-        structures consisting of less blocks appear first. 
+        structures consisting of less blocks appear first.
         
         """
         
         # Get list of strings for each child
         listOfLists = []
-        for child in block._children:            
+        for child in block._children:
             childList = self.flatten_tree(child, sort)
             listOfLists.append( childList )
         
@@ -405,7 +405,7 @@ class SSDFWriter:
 class Block:
     """ Block
     
-    A block represents a data element. This is where the conversion from 
+    A block represents a data element. This is where the conversion from
     Python objects to text/bytes and vice versa occurs.
     
     A block is a line in a text file or a piece of data in a binary file.
@@ -420,7 +420,7 @@ class Block:
         self._blocknr = blocknr # for producing usefull read error messages
         
         self._name = name
-        self._type = type # used by binary only (and text-dict)    
+        self._type = type # used by binary only (and text-dict)
         self._data = data # the raw data, bytes or string
         
         self._children = [] # used only by dicts and lists
@@ -434,7 +434,7 @@ class Block:
         
         # Set object's data
         if value is None:
-            self._from_none()        
+            self._from_none()
         elif ClassManager.is_registered_class(value.__class__):
             s = value.__to_ssdf__()
             s[_CLASS_NAME] = value.__class__.__name__
@@ -456,16 +456,16 @@ class Block:
         elif isinstance(value, (list, tuple)):
             self._from_list(value)
         else:
-            # We do not know            
+            # We do not know
             self._from_none()
             tmp = repr(value)
             if len(tmp) > 64:
                 tmp = tmp[:64] + '...'
             if name is not None:
-                print("SSDF: %s is unknown object: %s %s" % 
+                print("SSDF: %s is unknown object: %s %s" %
                                     (name, tmp, repr(type(value)) ))
             else:
-                print("SSDF: unknown object: %s %s" % 
+                print("SSDF: unknown object: %s %s" %
                                     (tmp, repr(type(value)) ))
         
         # Done

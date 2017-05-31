@@ -13,10 +13,10 @@ def draw(figure=None, fast=False):
     If fast is True, some wobjects can draw itself faster at reduced
     quality.
     
-    This function is now more or less deprecated; visvis is designed to 
+    This function is now more or less deprecated; visvis is designed to
     invoke a draw whenever necessary.
     
-    """ 
+    """
     
     # Get figure
     if figure is None:

@@ -15,13 +15,13 @@ which are both able to produce a single line of text
 oriented at a certain angle.
 
 Visvis used the FreeType library to render text, enabling good-looking text
-(with proper kerning and anti-aliasing) at any size. If FreeType is not 
-available, visvis falls back on system that uses pre-rendered fonts. 
+(with proper kerning and anti-aliasing) at any size. If FreeType is not
+available, visvis falls back on system that uses pre-rendered fonts.
 FreeType is available:
 
   * On Linux: by default
   * On Windows: needs to be installed (there is an installer on the visvis website)
-  * On Mac: probably needs to be installed (also fc-match if you want to 
+  * On Mac: probably needs to be installed (also fc-match if you want to
     make use of other fonts then the default.
 
 
@@ -58,7 +58,7 @@ People familiar with Latex know what they do:
   * times       cdot        pm
   * oplus       ominus      otimes      oslash
 
-Letters from the greek alfabet can be inserted in the same 
+Letters from the greek alfabet can be inserted in the same
 way (By starting the name with an uppercase letter, the
 corresponding upper case greek letter is inserted):
   * alpha       beta        gamma       delta
@@ -69,7 +69,7 @@ corresponding upper case greek letter is inserted):
   * upsilon     phi         chi         psi
   * omega
 
-Note: In case one needs a character that is not in this list, 
+Note: In case one needs a character that is not in this list,
 one can always look up its unicode value and use that instead.
 
 """

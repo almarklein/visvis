@@ -15,7 +15,7 @@ Preparations:
 Test installation:
   * clear the build and dist dir (if they exist)
   * python setup.py register -r http://testpypi.python.org/pypi
-  * python setup.py sdist upload -r http://testpypi.python.org/pypi 
+  * python setup.py sdist upload -r http://testpypi.python.org/pypi
   * pip install -i http://testpypi.python.org/pypi
 
 Define the version:
@@ -63,7 +63,7 @@ setup(
     author_email = 'almar.klein@gmail.com',
     license = '(new) BSD',
     
-    url = 'https://github.com/almarklein/visvis',   
+    url = 'https://github.com/almarklein/visvis',
     keywords = "visualization OpenGl medical imaging 3D plotting numpy",
     description = description,
     long_description = __doc__,
@@ -73,15 +73,15 @@ setup(
     #install_requires = ['numpy', 'pyOpenGl', 'imageio'], # have imageio be auto-installed by pip?
     install_requires = ['numpy', 'pyOpenGl'],
     
-    packages = ['visvis', 
-                'visvis.functions', 
-                'visvis.backends', 
-                'visvis.processing', 
-                'visvis.vvmovie', 
+    packages = ['visvis',
+                'visvis.functions',
+                'visvis.backends',
+                'visvis.processing',
+                'visvis.vvmovie',
                 'visvis.vvio',
-                'visvis.core', 
-                'visvis.wibjects', 
-                'visvis.wobjects', 
+                'visvis.core',
+                'visvis.wibjects',
+                'visvis.wobjects',
                 'visvis.text', 'visvis.text.freetype',
                 'visvis.utils', 'visvis.utils.ssdf', 'visvis.utils.iso',
                ],

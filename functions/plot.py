@@ -10,10 +10,10 @@ import numpy as np
 import visvis as vv
 
 
-def plot(data1, data2=None, data3=None, 
-            lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
+def plot(data1, data2=None, data3=None,
+            lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k',
             alpha=1, axesAdjust=True, axes=None, **kwargs):
-    """ plot(*args, lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k', 
+    """ plot(*args, lw=1, lc='b', ls="-", mw=7, mc='b', ms='', mew=1, mec='k',
             alpha=1, axesAdjust=True, axes=None):
     
     Plot 1, 2 or 3 dimensional data and return the Line object.
@@ -27,22 +27,22 @@ def plot(data1, data2=None, data3=None,
     
     Keyword arguments
     -----------------
-    (The longer names for the line properties can also be used)    
+    (The longer names for the line properties can also be used)
     lw : scalar
         lineWidth. The width of the line. If zero, no line is drawn.
     mw : scalar
         markerWidth. The width of the marker. If zero, no marker is drawn.
     mew : scalar
-        markerEdgeWidth. The width of the edge of the marker.    
+        markerEdgeWidth. The width of the edge of the marker.
     lc : 3-element tuple or char
         lineColor. The color of the line. A tuple should represent the RGB
         values between 0 and 1. If a char is given it must be
-        one of 'rgbmcywk', for reg, green, blue, magenta, cyan, yellow, 
+        one of 'rgbmcywk', for reg, green, blue, magenta, cyan, yellow,
         white, black, respectively.
     mc : 3-element tuple or char
         markerColor. The color of the marker. See lineColor.
     mec : 3-element tuple or char
-        markerEdgeColor. The color of the edge of the marker.    
+        markerEdgeColor. The color of the edge of the marker.
     ls : string
         lineStyle. The style of the line. (See below)
     ms : string
@@ -128,7 +128,7 @@ def plot(data1, data2=None, data3=None,
         # check dimensions
         L = data1.size
         if L != data2.size or L != data3.size:
-            raise Exception("Array dimensions do not match! %i vs %i vs %i" % 
+            raise Exception("Array dimensions do not match! %i vs %i vs %i" %
                     (data1.size, data2.size, data3.size))
         
         # build points
@@ -151,13 +151,13 @@ def plot(data1, data2=None, data3=None,
     
     ## create the line
     if axes is None:
-        axes = vv.gca()    
+        axes = vv.gca()
     l = vv.Line(axes, pp)
     l.lw = kwargs['lineWidth']
     l.lc = kwargs['lineColor']
     l.ls = kwargs['lineStyle']
-    l.mw = kwargs['markerWidth'] 
-    l.mc = kwargs['markerColor'] 
+    l.mw = kwargs['markerWidth']
+    l.mc = kwargs['markerColor']
     l.ms = kwargs['markerStyle']
     l.mew = kwargs['markerEdgeWidth']
     l.mec = kwargs['markerEdgeColor']

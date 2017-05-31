@@ -94,7 +94,7 @@ class Drawer:
     
     
     def OnUp(self, event):
-        """ Called when the mouse is released (when first pressed down 
+        """ Called when the mouse is released (when first pressed down
         in the axes).
         """
         

@@ -32,14 +32,14 @@ def solidCone(translation=None, scaling=None, direction=None, rotation=None,
         direction vector.
     N : int
         The number of subdivisions around its axis. If smaller
-        than 8, flat shading is used instead of smooth shading. 
+        than 8, flat shading is used instead of smooth shading.
         With N=4, a pyramid is obtained.
     M : int
         The number of subdivisions along its axis. If smaller
-        than 8, flat shading is used instead of smooth shading. 
+        than 8, flat shading is used instead of smooth shading.
     axesAdjust : bool
         If True, this function will call axes.SetLimits(), and set
-        the camera type to 3D. If daspectAuto has not been set yet, 
+        the camera type to 3D. If daspectAuto has not been set yet,
         it is set to False.
     axes : Axes instance
         Display the bars in the given axes, or the current axes if not given.
@@ -105,7 +105,7 @@ def solidCone(translation=None, scaling=None, direction=None, rotation=None,
     
     ## Visualization
     
-    # Create axes 
+    # Create axes
     if axes is None:
         axes = vv.gca()
     

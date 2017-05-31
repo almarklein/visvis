@@ -37,7 +37,7 @@ a2 = vv.subplot(122)
 a2.bgcolor = 'k'
 a2.axis.axisColor = 'w'
 
-# Display a texture 
+# Display a texture
 vol = vv.aVolume(2) # returns a test volume as a numpy array
 texture3d = vv.volshow(vol)
 

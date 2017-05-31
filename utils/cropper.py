@@ -136,7 +136,7 @@ class RangeWobject2D(vv.Wobject):
             
             # Get position change
             dx = event.x2d - self._refpos[0]
-            dy = event.y2d - self._refpos[1]       
+            dy = event.y2d - self._refpos[1]
             
             # Correct for sampling and make integer
             dx = round( dx / self._data.sampling[1] )
@@ -148,7 +148,7 @@ class RangeWobject2D(vv.Wobject):
                 snaps = [8,16,32,64,128,256,512,1024,2048,4096,8192,16384]
             snapFactor = 8.0
             
-            # Change ranges 
+            # Change ranges
             
             if 1 in self._refBars:
                 # Snap
@@ -172,7 +172,7 @@ class RangeWobject2D(vv.Wobject):
                     for snap in snaps:
                         if abs(snap-ref) < (snap/snapFactor):
                             dy -= snap-ref
-                            break                
+                            break
                 # Aplly, but do not go beyond other limit
                 tmp = self._refRangey.min + dy
                 if tmp >= self._rangey.max:
@@ -187,7 +187,7 @@ class RangeWobject2D(vv.Wobject):
                     for snap in snaps:
                         if abs(snap-ref) < (snap/snapFactor):
                             dx += snap-ref
-                            break                
+                            break
                 # Aplly, but do not go beyond other limit
                 tmp = self._refRangex.max + dx
                 if tmp <= self._rangex.min:
@@ -202,7 +202,7 @@ class RangeWobject2D(vv.Wobject):
                     for snap in snaps:
                         if abs(snap-ref) < (snap/snapFactor):
                             dy += snap-ref
-                            break                
+                            break
                 # Aplly, but do not go beyond other limit
                 tmp = self._refRangey.max + dy
                 if tmp <= self._rangey.min:
@@ -260,9 +260,9 @@ class RangeWobject2D(vv.Wobject):
         _OnMotion().
         """
         # Direction diagram:
-        #     4   
+        #     4
         #  1     3
-        #     2   
+        #     2
         
         # Get ranges
         rangex, rangey = self._GetRangesInWorldCords()
@@ -291,7 +291,7 @@ class RangeWobject2D(vv.Wobject):
     def _GetCords(self):
         """ _GetCords()
         Get a pointset of the coordinates of the wobject. This is used
-        for drawing the quads and lines using a vertex array. 
+        for drawing the quads and lines using a vertex array.
         """
         
         # Can we reuse buffered coordinates?
@@ -308,8 +308,8 @@ class RangeWobject2D(vv.Wobject):
         # Calculate world-distance of a screendistance of self._barwidth
         # and then do drawing here (not in OnDrawScreen), otherwise I won't
         # be able to detect picking!!
-        onePixelx = rangex.range / ( screen2[0] - screen1[0] ) 
-        onePixely = rangey.range / ( screen2[1] - screen1[1] ) 
+        onePixelx = rangex.range / ( screen2[0] - screen1[0] )
+        onePixely = rangey.range / ( screen2[1] - screen1[1] )
         
         # Get coords
         tmp = self._barWidth
@@ -365,14 +365,14 @@ class RangeWobject2D(vv.Wobject):
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(pp.data)
         
-        # Draw outline   
+        # Draw outline
         clr = self._clr1
-        gl.glColor( clr[0], clr[1], clr[2])     
+        gl.glColor( clr[0], clr[1], clr[2])
         gl.glLineWidth(1)
         ind = np.array([0,1,2,3,0],dtype=np.uint8)
         gl.glDrawElements(gl.GL_LINE_STRIP, len(ind), gl.GL_UNSIGNED_BYTE, ind)
         
-        # Enable transparancy 
+        # Enable transparancy
         # (note that this does not work on all OpenGl versions)
         alpha = 1.0
         if vv.misc.getOpenGlCapable('1.4'):
@@ -441,8 +441,8 @@ class Cropper3D:
     def __init__(self, vol, a_transversal, a_coronal, a_sagittal, a_text):
         
         # Create text objects
-        self._labelx = vv.Label(a_text)        
-        self._labely = vv.Label(a_text)        
+        self._labelx = vv.Label(a_text)
+        self._labely = vv.Label(a_text)
         self._labelz = vv.Label(a_text)
         self._labelx.position = 10,10
         self._labely.position = 10,30
@@ -480,7 +480,7 @@ class Cropper3D:
         self._range_sagittal = RangeWobject2D(a_sagittal, mipx)
         
         # Get list of all range wobjects
-        self._rangeWobjects = [self._range_transversal, 
+        self._rangeWobjects = [self._range_transversal,
             self._range_coronal, self._range_sagittal]
         
         # Bind events
@@ -541,7 +541,7 @@ class Cropper3D:
             ly.text =  tmp % ('y', ry.range, ry.min, ry.max, ry.range*sam[1])
             lz.text =  tmp % ('z', rz.range, rz.min, rz.max, rz.range*sam[0])
         else:
-            tmp = '%s: %i pixels (%i to %i)'            
+            tmp = '%s: %i pixels (%i to %i)'
             lx.text =  tmp % ('x', rx.range, rx.min, rx.max)
             ly.text =  tmp % ('y', ry.range, ry.min, ry.max)
             lz.text =  tmp % ('z', rz.range, rz.min, rz.max)
@@ -555,21 +555,21 @@ class Cropper3D:
 def crop3d(vol, fig=None):
     """ crop3d(vol, fig=None)
     Manually crop a volume. In the given figure (or a new figure if None),
-    three axes are created that display the transversal, sagittal and 
+    three axes are created that display the transversal, sagittal and
     coronal MIPs (maximum intensity projection) of the volume. The user
     can then use the mouse to select a 3D range to crop the data to.
     """
     vv.use()
     
-    # Create figure?    
-    if fig is None:        
-        fig = vv.figure()    
+    # Create figure?
+    if fig is None:
+        fig = vv.figure()
         figCleanup = True
     else:
         fig.Clear()
         figCleanup = False
     
-    # Create three axes and a wibject to attach text labels to    
+    # Create three axes and a wibject to attach text labels to
     a1 = vv.subplot(221)
     a2 = vv.subplot(222)
     a3 = vv.subplot(223)
@@ -591,7 +591,7 @@ def crop3d(vol, fig=None):
     # Clean up figure (close if we opened it)
     fig.Clear()
     fig.DrawNow()
-    if figCleanup:    
+    if figCleanup:
         fig.Destroy()
     
     # Obtain ranges

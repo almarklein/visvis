@@ -22,7 +22,7 @@ class BarDescription:
 def aVolume(N=5, size=64):
     """ aVolume(N=5, size=64)
     
-    Creates a volume (3D image) with random bars. 
+    Creates a volume (3D image) with random bars.
     The returned numpy array has values between 0 and 1.
     Intended for quick illustration and test purposes.
     
@@ -51,11 +51,11 @@ def aVolume(N=5, size=64):
         vol[ b.k1:-b.k2, b.i-b.w1:b.i+b.w1, b.j-b.w2:b.j+b.w2 ] += b.value
 
     # Clip and return
-    vol[vol>1.0]=1.0    
+    vol[vol>1.0]=1.0
     return vol
 
 
 if __name__ == '__main__':
     vol = vv.aVolume()
     t = vv.volshow(vol)
-    t.renderStyle = 'mip' # maximum intensity projection (is the default) 
+    t.renderStyle = 'mip' # maximum intensity projection (is the default)

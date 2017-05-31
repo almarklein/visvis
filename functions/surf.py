@@ -11,7 +11,7 @@ import visvis as vv
 def surf(*args, **kwargs):
     """ surf(..., axesAdjust=True, axes=None)
     
-    Shaded surface plot. 
+    Shaded surface plot.
     
     Usage
     -----
@@ -52,7 +52,7 @@ def surf(*args, **kwargs):
         z = np.asanyarray(args[0])
         checkZ(z)
         y = np.arange(z.shape[0])
-        x = np.arange(z.shape[1])        
+        x = np.arange(z.shape[1])
         c = None
     elif len(args) == 2:
         z, c = map(np.asanyarray, args)
@@ -98,7 +98,7 @@ def surf(*args, **kwargs):
     # Create texcoords
     if c is None or c.shape == z.shape:
         # No texture -> colormap on the z value
-        # Grayscale texture -> color mapping        
+        # Grayscale texture -> color mapping
         texcoords = (c if c is not None else z).ravel()
     
     elif c.ndim == 3:

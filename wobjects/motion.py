@@ -26,7 +26,7 @@ class MotionMixin(object):
     (float) value. Some motion wobject implementations may only support
     integer values though, in which case they should round the motionIndex.
     
-    Inheriting classes should implement _GetMotionCount() and 
+    Inheriting classes should implement _GetMotionCount() and
     _SetMotionIndex(index, ii, ww), where ii are four indices, and ww
     are four weights. Together they specify a spline.
     """
@@ -37,7 +37,7 @@ class MotionMixin(object):
         self._motionIndex = 0.0
         self._motionIndexDelta = 1.0
         self._motionIsCyclic = True
-        self._motionSplineType = 'linear' 
+        self._motionSplineType = 'linear'
         
         # Timer for playing
         self._motionTimer = Timer(self)
@@ -69,9 +69,9 @@ class MotionMixin(object):
     @vv.misc.PropWithDraw
     def motionIndex():
         """ Get/set the motion index; the temporal position in the
-        motion. With N the motionCount, if the motion is cyclic, the 
+        motion. With N the motionCount, if the motion is cyclic, the
         valid range is [0, N>, otherwise [0,N-1]. If the given index
-        is not in the valid range, its modulo is taken (cyclic) or 
+        is not in the valid range, its modulo is taken (cyclic) or
         the index is clipped (not cyclic).
         """
         # This property is where the "reset" basically takes place
@@ -191,7 +191,7 @@ class MotionMixin(object):
         'nearest', 'linear', 'cardinal', 'B-spline', or a float between
         -1 and 1 specifying the tension of the cardinal spline. Note that
         the B-spline is an approximating spline. Default 'linear'. Note that
-        an implementation may not support interpolation of the temporal 
+        an implementation may not support interpolation of the temporal
         instances.
         """
         def fget(self):
@@ -220,9 +220,9 @@ class MotionMixin(object):
         """
         # Accept tension parameter as spline type
         tension = 0.0
-        if isinstance(spline_type, (float, int)):    
+        if isinstance(spline_type, (float, int)):
             tension = float(spline_type)
-            spline_type = 'cardinal'       
+            spline_type = 'cardinal'
         
         # Get id
         spline_type = spline_type.lower()
@@ -256,7 +256,7 @@ class MotionSyncer(MotionMixin):
     Simple class to sync the motion of multiple motion objects.
     
     To sync multiple motion objects, give them to the initializer of this
-    class, or register them via the append() method. Then use motionPlay() 
+    class, or register them via the append() method. Then use motionPlay()
     on this class.
     
     """
@@ -286,7 +286,7 @@ class MotionSyncer(MotionMixin):
         """ remove(wobject)
         
         Remove (i.e. unregister) a motion wobject to be synced. This
-        method does nothing if the given wobject was not in the list 
+        method does nothing if the given wobject was not in the list
         of wobjects to be synced.
         
         """
@@ -297,10 +297,10 @@ class MotionSyncer(MotionMixin):
     def _GetMotionCount(self):
         """ _GetMotionCount()
         
-        Get the smallest number of temporal instances for the 
+        Get the smallest number of temporal instances for the
         registered MotionWobjects.
         
-        """                      
+        """
         
         # Get count for each child
         counts = [child._GetMotionCount() for child in self._motionObjects]
@@ -369,7 +369,7 @@ class MotionDataContainer(Wobject, MotionMixin):
     """
     
     def __init__(self, parent, interval=100):
-        Wobject.__init__(self,parent)    
+        Wobject.__init__(self,parent)
         MotionMixin.__init__(self)
         self.motionSplineType = 'nearest'
         self.MotionPlay(interval)
@@ -377,7 +377,7 @@ class MotionDataContainer(Wobject, MotionMixin):
     
     @property
     def timer(self):
-        """ Get the timer object used to make the objects visible. 
+        """ Get the timer object used to make the objects visible.
         For backward compatibility.
         """
         return self._motionTimer
@@ -413,5 +413,5 @@ class MotionDataContainer(Wobject, MotionMixin):
         if self.children:
             self.children[index].visible = True
         
-        # show it!        
+        # show it!
         self.Draw()

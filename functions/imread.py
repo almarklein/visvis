@@ -17,9 +17,9 @@ except ImportError:
 
 
 def imread(filename):
-    """ imread(filename) 
+    """ imread(filename)
     
-    Read image from file or http, requires imageio. 
+    Read image from file or http, requires imageio.
     
     """
     

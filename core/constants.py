@@ -153,7 +153,7 @@ colormaps['summer'] = [(0,0.5,0.4), (1,1,0.4)]
 colormaps['autumn'] = [(1,0,0), (1,1,0)]
 colormaps['winter'] = [(0,0,1), (0,1,0.5)]
 
-colormaps['jet'] = [(0,0,0.5), (0,0,1), (0,0.5,1), (0,1,1), (0.5,1,0.5), 
+colormaps['jet'] = [(0,0,0.5), (0,0,1), (0,0.5,1), (0,1,1), (0.5,1,0.5),
                     (1,1,0), (1,0.5,0), (1,0,0), (0.5,0,0)]
 colormaps['hsv'] = [(1,0,0), (1,1,0), (0,1,0), (0,1,1),(0,0,1), (1,0,1), (1,0,0)]
 
@@ -164,7 +164,7 @@ colormaps['viridis'] = np.frombuffer(base64.decodestring(_viridis), np.float32).
 
 # Medical colormaps
 c1, c2 = 1200 / 4096.0, 1550 / 4096.0
-colormaps['ct1'] = {    'r': [(0, 0), (c2, 1.0), (1.0, 0.0)], 
+colormaps['ct1'] = {    'r': [(0, 0), (c2, 1.0), (1.0, 0.0)],
                         'g': [(0, 0), (c1, 0.0), (c2, 1.0)],
                         'b': [(0, 0), (c1, 0.0), (c2, 1.0), (1.0, 0.0) ]}
 # Colormap design by Maaike Koenrades, best viewed with clim (0, 2500)
