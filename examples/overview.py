@@ -7,7 +7,7 @@ fig.position.w = 700
 
 # Create first axes
 a1 = vv.subplot(121)
-
+foo = bar
 # Display an image
 im = vv.imread('astronaut.png') # returns a numpy array
 texture2d = vv.imshow(im)
