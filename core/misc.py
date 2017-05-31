@@ -18,9 +18,12 @@ visvis modules.
 import os
 import sys
 import zipfile
+
 import numpy as np
-from visvis import ssdf
 import OpenGL.GL as gl
+
+from visvis.utils import ssdf
+from visvis.utils.pypoints import getExceptionInstance  # noqa
 
 
 V2 = sys.version_info[0] == 2
