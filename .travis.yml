@@ -26,9 +26,17 @@ matrix:
           env: TEST_UNIT=1
 
 before_install:
-    - SRC_DIR=$(pwd)
     - REDIRECT_TO=/dev/stdout  # change to /dev/null to silence Travis
-    # file size checks run on minimal build for time
+    # Install miniconda
+    - if [ "${TEST_UNIT}" == "1" ]; then
+        wget -q http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+        chmod +x miniconda.sh;
+        ./miniconda.sh -b -p ~/anaconda &> ${REDIRECT_TO};
+        export PATH=~/anaconda/bin:$PATH;
+        conda update --yes --quiet conda &> ${REDIRECT_TO};
+      fi;
+    - SRC_DIR=$(pwd)
+    # file size checks
     - if [ "${TEST_STYLE}" == "1" ]; then
         if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
           GIT_TARGET_EXTRA="+refs/heads/${TRAVIS_BRANCH}";
@@ -40,23 +48,31 @@ before_install:
         cd ~;
         mkdir target-size-clone && cd target-size-clone;
         git init &> ${REDIRECT_TO} && git remote add -t ${TRAVIS_BRANCH} origin git://github.com/${TRAVIS_REPO_SLUG}.git &>${REDIRECT_TO};
-        git fetch origin ${GIT_TARGET_EXTRA} &> ${REDIRECT_TO} && git checkout -qf FETCH_HEAD &> ${REDIRECT_TO};
-        git tag travis-merge-target &> ${REDIRECT_TO};
-        git gc --aggressive &> ${REDIRECT_TO};
-        TARGET_SIZE=`du -s . | sed -e "s/\t.*//"`;
-        git pull origin ${GIT_SOURCE_EXTRA} &> ${REDIRECT_TO};
-        git gc --aggressive &> ${REDIRECT_TO};
-        MERGE_SIZE=`du -s . | sed -e "s/\t.*//"`;
-        if [ "${MERGE_SIZE}" != "${TARGET_SIZE}" ]; then
-          SIZE_DIFF=`expr \( ${MERGE_SIZE} - ${TARGET_SIZE} \)`;
+        git fetch origin ${GIT_TARGET_EXTRA} &> ${REDIRECT_TO} && git checkout -qf FETCH_HEAD &> ${REDIRECT_TO} && cd ..;
+        TARGET_SIZE=`du -s target-size-clone | sed -e "s/\t.*//"`;
+        mkdir source-size-clone && cd source-size-clone;
+        git init &> ${REDIRECT_TO} && git remote add -t ${TRAVIS_BRANCH} origin git://github.com/${TRAVIS_REPO_SLUG}.git &> ${REDIRECT_TO};
+        git fetch origin ${GIT_SOURCE_EXTRA} &> ${REDIRECT_TO} && git checkout -qf FETCH_HEAD &> ${REDIRECT_TO} && cd ..;
+        SOURCE_SIZE=`du -s source-size-clone | sed -e "s/\t.*//"`;
+        if [ "${SOURCE_SIZE}" != "${TARGET_SIZE}" ]; then
+          SIZE_DIFF=`expr ${SOURCE_SIZE} - ${TARGET_SIZE}`;
         else
           SIZE_DIFF=0;
         fi;
       fi;
+    - cd ${SRC_DIR}
 
 # Install dependencies
 install:
-    - cd ${SRC_DIR}
+    # Install Python with numpy
+    - if [ "${TEST_UNIT}" == "1" ]; then
+        conda create -n testenv --yes --quiet pip python=$TRAVIS_PYTHON_VERSION > ${REDIRECT_TO};
+        source activate testenv > ${REDIRECT_TO};
+        conda install --yes --quiet numpy > ${REDIRECT_TO};
+        conda install --yes --quiet pillow -c conda-forge > ${REDIRECT_TO};
+        pip install imageio;
+        pip install pyopengl;
+      fi;
     - if [ "${TEST_UNIT}" == "1" ]; then
         pip install pytest;
       fi;
