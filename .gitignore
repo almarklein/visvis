@@ -1,11 +1,13 @@
+_feedstock/
+.cache/
 *.pyc
 *.pyo
 *.orig
 .idea
 .ipynb_checkpoints
 .coverage*
-build
-dist
+build/
+dist/
 MANIFEST
 htmlcov
 
