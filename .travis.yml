@@ -85,7 +85,7 @@ script:
         pytest .;
       fi;
     - if [ "${TEST_DOCS}" == "1" ]; then
-        sphynx -h;
+        echo "no docs yet";
       fi;
     - if [ "${TEST_STYLE}" == "1" ]; then
         flake8 .;
