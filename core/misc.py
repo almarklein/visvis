@@ -418,7 +418,7 @@ def getColor(value, descr='getColor'):
     if not value:
         value = None
     elif isinstance(value, basestring):
-        if value not in 'rgbycmkw':
+        if value not in colorDict:
             tmp = "string color must be one of 'rgbycmkw' !"
         else:
             value = colorDict[value]
