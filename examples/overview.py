@@ -5,7 +5,6 @@ import visvis as vv
 fig = vv.figure()
 fig.position.w = 700
 
-
 # Create first axes
 a1 = vv.subplot(121)
 
