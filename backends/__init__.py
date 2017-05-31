@@ -48,14 +48,21 @@ The backend is chosen/selected as follows:
 # - _loadBackend imports the backend and sets newFigure and app
 # - use is the user friendly function that calls _loadBackend
 
-import os, sys
+import os
+import sys
 import imp
 import visvis
 from visvis.core.misc import isFrozen, getExceptionInstance
 
 # The order in which to try loading a backend (foo is a dummy backend)
 backendOrder = ['pyqt5', 'pyside', 'pyqt4', 'wx', 'gtk', 'fltk'] 
-backendMap = {'pyqt5':'PyQt5', 'pyside':'PySide', 'pyqt4':'PyQt4', 'wx':'wx', 'gtk':'gtk', 'fltk':'fltk',}
+backendMap = {'pyqt5':'PyQt5',
+              'pyside':'PySide',
+              'pyqt4':'PyQt4',
+              'wx':'wx',
+              'gtk':'gtk',
+              'fltk':'fltk',
+              }
 
 # Define aliases for backend names (for backward compatibility)
 backendAliases = {'qt4': 'pyqt4', 'qt5':'pyqt5'}
@@ -136,7 +143,6 @@ def _loadBackend(name):
     modFileName = os.path.join(os.path.dirname(__file__), modName+'.py')
     
     # Test whether to use the pyc version
-    load_module = imp.load_source    
     if not os.path.isfile(modFileName):
         modFileName += "c" # Probably a frozen app
     
@@ -224,4 +230,3 @@ def use(backendName=None):
     
     # Return instance
     return currentBackend.app
-

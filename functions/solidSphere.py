@@ -47,9 +47,9 @@ def getSphere(ndiv=3, radius=1.0):
             ac = Point(0,0,0)
             bc = Point(0,0,0)
             for i in range(3):
-                ab[i]=(a[i]+b[i])/2.0;
-                ac[i]=(a[i]+c[i])/2.0;
-                bc[i]=(b[i]+c[i])/2.0;
+                ab[i]=(a[i]+b[i])/2.0
+                ac[i]=(a[i]+c[i])/2.0
+                bc[i]=(b[i]+c[i])/2.0
             ab = ab.normalize(); ac = ac.normalize(); bc = bc.normalize()
             drawtri(a, ab, ac, div-1)
             drawtri(b, bc, ab, div-1)
@@ -112,9 +112,9 @@ def getSphereWithFaces(ndiv=3, radius=1.0):
             ac = Point(0,0,0)
             bc = Point(0,0,0)
             for i in range(3):
-                ab[i]=(a[i]+b[i])/2.0;
-                ac[i]=(a[i]+c[i])/2.0;
-                bc[i]=(b[i]+c[i])/2.0;
+                ab[i]=(a[i]+b[i])/2.0
+                ac[i]=(a[i]+c[i])/2.0
+                bc[i]=(b[i]+c[i])/2.0
             ab = ab.normalize(); ac = ac.normalize(); bc = bc.normalize()
             # Add new points
             i_offset = len(vertices)

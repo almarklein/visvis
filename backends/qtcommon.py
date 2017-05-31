@@ -209,7 +209,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.figure.Destroy()
         event.accept()
 
-    def focusInEvent (self, event):
+    def focusInEvent(self, event):
         if self.figure:
             BaseFigure._currentNr = self.figure.nr
     

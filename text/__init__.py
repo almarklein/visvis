@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 # Copyright (C) 2012, Almar Klein
 #
 # Visvis is distributed under the terms of the (new) BSD License.
@@ -84,11 +85,11 @@ from visvis.text.text_prerendered import PrerenderedFontManager
 # For Windows users there is a simple installer on the Visvis website.
 # For Mac I'm not sure yet.
 try:
-  from visvis.text.text_freetype import FreeTypeFontManager
+    from visvis.text.text_freetype import FreeTypeFontManager
 except RuntimeError:
-  FreeTypeFontManager = None
+    FreeTypeFontManager = None
 
 if FreeTypeFontManager is not None:
-  FontManager = FreeTypeFontManager
+    FontManager = FreeTypeFontManager
 else:
-  FontManager = PrerenderedFontManager
+    FontManager = PrerenderedFontManager

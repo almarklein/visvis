@@ -55,10 +55,10 @@ def meshWrite(fname, mesh, name='', bin=True):
     # Use file extension to read file
     if fname.lower().endswith('.stl'):
         import visvis.vvio
-        writeFunc = vv.vvio.stl.StlWriter.write
+        writeFunc = visvis.vvio.stl.StlWriter.write
     elif fname.lower().endswith('.obj'):
         import visvis.vvio
-        writeFunc = vv.vvio.wavefront.WavefrontWriter.write
+        writeFunc = visvis.vvio.wavefront.WavefrontWriter.write
     elif fname.lower().endswith('.ssdf') or fname.lower().endswith('.bsdf'):
         writeFunc = ssdfWrite
     else:

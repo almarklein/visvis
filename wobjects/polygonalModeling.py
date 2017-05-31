@@ -956,7 +956,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         gl.glVertexPointerf(self._vertices)
         
         # Prepare colormap indices, texture cords or colors (if available)
-        useTexCords = False
+        # useTexCords = False
         SH_ALBEIDO = shaders.SH_MF_ALBEIDO_UNIT
         if self._values is not None:
             values = values2 = self._values
@@ -965,14 +965,14 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             if values.shape[1] == 1:
                 # Colormap: use values2
                 values = values2 
-                useTexCords = True
+                # useTexCords = True
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointer(1, gl.GL_FLOAT, 0, values)
                 shader.SetUniform('colormap', self._colormap)
                 SH_ALBEIDO = shaders.SH_MF_ALBEIDO_LUT1
             elif values.shape[1] == 2 and self._texture is not None:
                 # texcords, use original values
-                useTexCords = True
+                # useTexCords = True
                 gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
                 gl.glTexCoordPointerf(values)
                 shader.SetUniform('texture', self._texture)
@@ -1086,7 +1086,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
         
         # Check number of lights in axes
         nlights = 1
-        for i in range(1, 7): #len(axes.lights)):
+        for i in range(1, 7): # len(axes.lights)):
             if axes.lights[i].isOn:
                 nlights = i+1
         
@@ -1119,4 +1119,3 @@ class OrientableMesh(Mesh, OrientationForWobjects_mixClass):
     def __init__(self, *args, **kwargs):
         Mesh.__init__(self, *args, **kwargs)
         OrientationForWobjects_mixClass.__init__(self)
-

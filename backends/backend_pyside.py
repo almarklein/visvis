@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 # Copyright (C) 2012, Almar Klein
 #
 # Visvis is distributed under the terms of the (new) BSD License.

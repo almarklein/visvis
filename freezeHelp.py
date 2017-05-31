@@ -8,11 +8,14 @@
 
 Helps freezing apps made using visvis.
 
-
 """
 
+import os
+import sys
+import shutil
+
 import visvis as vv
-import os, shutil, sys
+
 
 backendAliases = {'qt4': 'pyqt4'}
 

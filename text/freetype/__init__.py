@@ -24,16 +24,16 @@ PY3 = sys.version_info[0] == 3
 if PY3:
     string_types = str,
 else:
-    string_types = basestring,
+    string_types = basestring,  # noqa
 
 # Imports from the low level freetype wrapper
 # These names I collected by parsing this module for words starting with "FT_".
-from visvis.text.freetype.ft_enums import (FT_LOAD_RENDER, FT_LOAD_FORCE_AUTOHINT,
-                                FT_KERNING_DEFAULT, FT_KERNING_UNFITTED)
+from visvis.text.freetype.ft_enums import (FT_LOAD_RENDER, FT_LOAD_FORCE_AUTOHINT,  # noqa
+                                           FT_KERNING_DEFAULT, FT_KERNING_UNFITTED)  # noqa
 from visvis.text.freetype.ft_types import FT_Int
 from visvis.text.freetype.ft_errors import FT_Exception
-from visvis.text.freetype.ft_structs import (  FT_Face, FT_Glyph, FT_Matrix, FT_Vector, 
-                                    FT_Library, FT_GlyphSlot, FT_Size_Metrics)
+from visvis.text.freetype.ft_structs import (FT_Face, FT_Glyph, FT_Matrix, FT_Vector,  # noqa
+                                             FT_Library, FT_GlyphSlot, FT_Size_Metrics)  # noqa
 
 
 ## The actual library wrapper
@@ -203,15 +203,15 @@ class GlyphSlot( object ):
         '''
         self._FT_GlyphSlot = slot
 
-    def get_glyph( self ):
-        '''
-        A function used to extract a glyph image from a slot. Note that the
-        created FT_Glyph object must be released with FT_Done_Glyph.
-        '''
-        aglyph = FT_Glyph()
-        error = FT_Get_Glyph( self._FT_GlyphSlot, byref(aglyph) )
-        if error: raise FT_Exception( error )
-        return Glyph( aglyph )
+    # def get_glyph( self ):
+    #     '''
+    #     A function used to extract a glyph image from a slot. Note that the
+    #     created FT_Glyph object must be released with FT_Done_Glyph.
+    #     '''
+    #     aglyph = FT_Glyph()
+    #     error = FT_Get_Glyph( self._FT_GlyphSlot, byref(aglyph) )
+    #     if error: raise FT_Exception( error )
+    #     return Glyph( aglyph )
 
     def _get_bitmap( self ):
         return Bitmap( self._FT_GlyphSlot.contents.bitmap )
@@ -236,13 +236,13 @@ class GlyphSlot( object ):
                  uses either the 'horiAdvance' or the 'vertAdvance' value of
                  'metrics' field.''')
 
-    def _get_outline( self ):
-        return Outline( self._FT_GlyphSlot.contents.outline )
-    outline = property( _get_outline,
-        doc = '''The outline descriptor for the current glyph image if its
-                 format is FT_GLYPH_FORMAT_OUTLINE. Once a glyph is loaded,
-                 'outline' can be transformed, distorted, embolded,
-                 etc. However, it must not be freed.''')
+    # def _get_outline( self ):
+    #     return Outline( self._FT_GlyphSlot.contents.outline )
+    # outline = property( _get_outline,
+    #     doc = '''The outline descriptor for the current glyph image if its
+    #              format is FT_GLYPH_FORMAT_OUTLINE. Once a glyph is loaded,
+    #              'outline' can be transformed, distorted, embolded,
+    #              etc. However, it must not be freed.''')
 
     format = property( lambda self: self._FT_GlyphSlot.contents.format,
        doc = '''This field indicates the format of the image contained in the
@@ -594,6 +594,7 @@ class Face( object ):
 
     def _get_glyph( self ):
         return GlyphSlot( self._FT_Face.contents.glyph )
+    
     glyph = property( _get_glyph,
       doc = '''The face's associated glyph slot(s).''')
 

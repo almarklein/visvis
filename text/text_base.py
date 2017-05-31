@@ -15,7 +15,7 @@ import visvis as vv
 from visvis.core.baseTexture import TextureObject
 from visvis.core.base import Wobject
 from visvis.core.misc import Property, PropWithDraw, basestring, unichr 
-from visvis.core.misc import getResourceDir, getColor
+from visvis.core.misc import getColor
 #
 from visvis.core.cameras import depthToZ
 from visvis.core.baseWibjects import Box

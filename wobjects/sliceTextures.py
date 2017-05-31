@@ -194,7 +194,7 @@ class SliceTexture(BaseTexture):
         if self._interact_down or self._interact_over:
             clr = self._edgeColor2
         if clr:
-           self._DrawQuads(clr)
+            self._DrawQuads(clr)
         
         # Get screen vector?
         if self._screenVec is None:
@@ -419,8 +419,8 @@ class SliceTextureProxy(Wobject, Colormapable):
     def _GetClim(self):
         return self.children[0].clim
     def _SetClim(self, value):
-       for s in self.children:
-                s._SetClim(value)
+        for s in self.children:
+            s._SetClim(value)
     
     @Property 
     def renderStyle():

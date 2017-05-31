@@ -8,9 +8,6 @@ def ensureString(s):
         return s
     else:
         return s.decode('ascii')
-        
-import OpenGL.GL as gl
-
 
 # get info
 version, vendor, renderer, ext = vv.getOpenGlInfo()
@@ -26,5 +23,4 @@ print('extensions: ' + str(len(ext.split())) + ' different extensions')
 try:
     input('\nPress enter to continue...') # Python 3
 except NameError:
-    raw_input('\nPress enter to continue...') # Python 2
-    
+    raw_input('\nPress enter to continue...') # noqa - Python 2

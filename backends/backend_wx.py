@@ -228,7 +228,7 @@ class GLWidget(GLCanvas):
     def OnPaint(self, event):
         # I read that you should always create a PaintDC when implementing
         # an OnPaint event handler.        
-        a = wx.PaintDC(self) 
+        a = wx.PaintDC(self)  # noqa
         if self.GetContext(): 
             self.figure.OnDraw()
         event.Skip()

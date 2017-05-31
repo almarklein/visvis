@@ -97,8 +97,8 @@ class Sprite:
 
         # get allowed point size
         sizeRange = gl.glGetFloatv(gl.GL_ALIASED_POINT_SIZE_RANGE)
-        gl.glPointParameterf( gl.GL_POINT_SIZE_MIN, sizeRange[0] );
-        gl.glPointParameterf( gl.GL_POINT_SIZE_MAX, sizeRange[1] );
+        gl.glPointParameterf( gl.GL_POINT_SIZE_MIN, sizeRange[0] )
+        gl.glPointParameterf( gl.GL_POINT_SIZE_MAX, sizeRange[1] )
         
         # enable sprites and set params
         gl.glEnable(gl.GL_POINT_SPRITE)
@@ -952,5 +952,3 @@ def handleInvalidValues(values):
     except OverflowError:
         pass # Cannot do this with integer types
     return values
-
-

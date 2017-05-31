@@ -32,9 +32,9 @@ if PY3:
     ascii_type = str # Simple string
     from functools import reduce
 else:
-    string_types = basestring,
-    integer_types = (int, long)
-    text_type = unicode
+    string_types = basestring,  # noqa
+    integer_types = (int, long)  # noqa
+    text_type = unicode  # noqa
     binary_type = str
     ascii_type = str # Simple string
     reduce = reduce

@@ -97,7 +97,7 @@ class WavefrontReader(object):
         
         """
         
-        t0 = time.time()
+        t0 = time.time()  # noqa
         
         # Open file
         f = open(fname, 'rb')
@@ -197,7 +197,8 @@ class WavefrontReader(object):
                     self._texcords.append( self._vt[texcord_index] )
                 else:
                     if self._texcords:
-                        print('Warning reading OBJ: ignoring texture coordinates because it is not specified for all faces.')
+                        print('Warning reading OBJ: ignoring texture coordinates because '
+                              'it is not specified for all faces.')
                     self._texcords = None
             if self._normals is not None:
                 if len(indices) > 2 and indices[2]:
@@ -205,7 +206,8 @@ class WavefrontReader(object):
                     self._normals.append( self._vn[normal_index] )
                 else:
                     if self._normals:
-                        print('Warning reading OBJ: ignoring normals because it is not specified for all faces.')
+                        print('Warning reading OBJ: ignoring normals because it is not '
+                              'specified for all faces.')
                     self._normals = None
         
         # Check face

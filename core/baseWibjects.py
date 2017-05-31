@@ -142,8 +142,8 @@ class DraggableBox(Box):
         dots.append(9,3); dots.append(9,6); dots.append(9,9)
         #
         dots.append(w-3, h-3); dots.append(w-3, h-6); dots.append(w-3, h-9)
-        dots.append(w-6, h-3); dots.append(w-6, h-6);
-        dots.append(w-9, h-3);
+        dots.append(w-6, h-3); dots.append(w-6, h-6)
+        dots.append(w-9, h-3)
         self._dots = dots
     
     def _DragOnEnter(self, event):
@@ -198,4 +198,3 @@ class DraggableBox(Box):
                 gl.glVertexPointerf(self._dots.data)
                 gl.glDrawArrays(gl.GL_POINTS, 0, len(self._dots))
                 gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-

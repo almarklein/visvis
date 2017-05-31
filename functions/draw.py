@@ -33,5 +33,5 @@ if __name__ == '__main__':
     for i in range(20):
         l.SetYdata([1+i/10.0, 2,3,1,4])
         vv.draw(fig) # Note: not even necessary
-        vv.processEvents();
+        vv.processEvents()
         time.sleep(0.1)

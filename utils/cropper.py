@@ -3,10 +3,10 @@
 Provides functionality to crop data.
 """
 
-import os, time, sys
+import time
 import numpy as np
 import visvis as vv
-from visvis.utils.pypoints import Point, Pointset, Aarray
+from visvis.utils.pypoints import Pointset, Aarray
 
 import OpenGL.GL as gl
 import OpenGL.GLU as glu
@@ -227,12 +227,8 @@ class RangeWobject2D(vv.Wobject):
             
             # Redraw
             self.Draw()
-#             a = self.GetAxes()
-#             os.a = a
-#             print(a)
-            
-    
-    
+
+
     ## Helper methods
     
     def _GetRangesInWorldCords(self):
@@ -563,7 +559,7 @@ def crop3d(vol, fig=None):
     coronal MIPs (maximum intensity projection) of the volume. The user
     can then use the mouse to select a 3D range to crop the data to.
     """
-    app = vv.use()
+    vv.use()
     
     # Create figure?    
     if fig is None:        
@@ -612,10 +608,8 @@ def crop3d(vol, fig=None):
     
 if __name__ == '__main__':
     # testing
-    import os
     
     vol1 = vv.aVolume(size=128)
     vol2 = crop3d(vol1)
     print('shape1:', vol1.shape)
     print('shape2:', vol2.shape)
-    

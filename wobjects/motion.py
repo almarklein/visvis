@@ -415,6 +415,3 @@ class MotionDataContainer(Wobject, MotionMixin):
         
         # show it!        
         self.Draw()
-
-
-

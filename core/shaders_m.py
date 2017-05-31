@@ -146,9 +146,11 @@ _SH_LIGHT = """
         float mask2 = lightEnabled * float(lambertTerm>0.0);
         
         // Calculate colors
-        ambient_color +=  mask1 * gl_LightSource[i].ambient  * gl_FrontMaterial.ambient;
-        diffuse_color +=  mask2 * gl_LightSource[i].diffuse  * gl_FrontMaterial.diffuse * lambertTerm;	
-        specular_color += mask2 * gl_LightSource[i].specular * gl_FrontMaterial.specular * specularTerm;
+        ambient_color += (mask1 * gl_LightSource[i].ambient * gl_FrontMaterial.ambient);
+        diffuse_color += (mask2 * gl_LightSource[i].diffuse *
+                          gl_FrontMaterial.diffuse * lambertTerm);
+        specular_color += (mask2 * gl_LightSource[i].specular *
+                           gl_FrontMaterial.specular * specularTerm);
     }
 """
 

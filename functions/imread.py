@@ -5,7 +5,6 @@
 # The full license can be found in 'license.txt'.
 
 import visvis as vv
-import numpy as np
 import os
 
 # Try importing imageio

@@ -40,7 +40,7 @@ def getframe(ob):
         x,y = ob.position.absTopLeft
         w,h = ob.position.size
         y = fig.position.h - (y+h)
-        x+=1; y+=1; w-=1; h-=1;  # first pixel is the bounding box
+        x+=1; y+=1; w-=1; h-=1  # first pixel is the bounding box
     else:
         raise ValueError("The given object is not a figure nor an axes.")
     
@@ -58,7 +58,6 @@ def getframe(ob):
 
 
 if __name__ == '__main__':
-    import time
     
     # Prepare
     f = vv.figure()

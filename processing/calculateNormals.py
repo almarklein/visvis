@@ -21,7 +21,7 @@ def calculateNormals(mesh):
     Handles triangular and quad faces.
     
     """
-    t0 = time.time()
+    t0 = time.time()  # noqa
     
     # Get vertices as np array
     vertices = mesh._vertices
@@ -34,8 +34,7 @@ def calculateNormals(mesh):
     
     # Get faces array
     faces = mesh._GetFaces()
-    Nfaces, vpf = faces.shape
-    Nfaces = faces.size / vpf
+    _, vpf = faces.shape
     
     # Apply    
     
@@ -160,4 +159,3 @@ def calculateNormals_old(mesh):
     
     # Store normals
     mesh._normals = normals
-    

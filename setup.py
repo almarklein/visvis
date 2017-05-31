@@ -70,7 +70,7 @@ setup(
     
     platforms = 'any',
     provides = ['visvis'],
-    #install_requires = ['numpy', 'pyOpenGl', 'imageio'], # Maybe "require" imageio later? so it is auto-installed by pip?
+    #install_requires = ['numpy', 'pyOpenGl', 'imageio'], # have imageio be auto-installed by pip?
     install_requires = ['numpy', 'pyOpenGl'],
     
     packages = ['visvis', 

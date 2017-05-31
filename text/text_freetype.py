@@ -28,15 +28,14 @@ import subprocess
 
 from visvis.core.shaders import Shader, ShaderCodePart
 
-from visvis.text.text_base import AtlasTexture, FontManager, Text, Label
+from visvis.text.text_base import AtlasTexture, FontManager
 from visvis.text.text_base import correctVertices, simpleTextureDraw
 
-from visvis.text.freetype import ( Face, Vector, Matrix, FT_KERNING_UNFITTED,
-                        FT_LOAD_RENDER, FT_LOAD_FORCE_AUTOHINT )
-
+from visvis.text.freetype import (Face, Vector, Matrix, FT_KERNING_UNFITTED,
+                                  FT_LOAD_RENDER, FT_LOAD_FORCE_AUTOHINT )
 
 try:
-    n2_16 = long(0x10000)
+    n2_16 = long(0x10000)  # noqa
 except Exception:
     n2_16 = 0x10000
 
@@ -229,8 +228,7 @@ class FreeTypeAtlas(AtlasTexture):
             y = self.fit(i, width, height)
             if y >= 0:
                 node = self.nodes[i]
-                if (y+height < best_height or
-                    (y+height == best_height and node[2] < best_width)):
+                if (y+height < best_height or (y+height == best_height and node[2] < best_width)):
                     best_height = y+height
                     best_index = i
                     best_width = node[2]
@@ -373,7 +371,7 @@ class FreeTypeFontManager(FontManager):
             # Try getting it in a smarter way (platform dependent)
             if not fname:
                 if sys.platform.startswith('win'):
-                   fname = self.get_font_file_with_windows(fontname, bold, italic)
+                    fname = self.get_font_file_with_windows(fontname, bold, italic)
                 else:
                     fname = self.get_font_file_with_fcmatch(fontname, bold, italic)
             
@@ -523,7 +521,7 @@ class FreeTypeFontManager(FontManager):
             u1 = glyph.texcoords[2]
             v1 = glyph.texcoords[3]
 
-            index     = i*4
+            # index     = i*4
             _vertices  = [[x0,y0,1],[x0,y1,1],[x1,y1,1], [x1,y0,1]]
             _texcoords = [[u0,v0],[u0,v1],[u1,v1], [u1,v0]]
 
@@ -541,7 +539,7 @@ class FreeTypeFontManager(FontManager):
         vertices += (0, font.ascender/TEX_SCALE, 0)
         
         # Store width
-        if False: #glyph is not None: # Not used
+        if False:  # glyph is not None: # Not used
             textObject.width = pen[0]-glyph.advance[0]/64.0+glyph.size[0] if tt else 0
         
         # Update dynamic texture
@@ -568,7 +566,7 @@ class FreeTypeFontManager(FontManager):
     
     def Draw(self, textObject, x=0, y=0, z=0):
         # Check if we need to recompile in case TEX_SCALE was changed
-        if hasattr(textObject, '_tex_scale') and  textObject._tex_scale != TEX_SCALE:
+        if hasattr(textObject, '_tex_scale') and textObject._tex_scale != TEX_SCALE:
             textObject.Invalidate()
         
         FontManager.Draw(self, textObject)

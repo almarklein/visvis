@@ -5,10 +5,10 @@ This example works for the pyqt4 and pyside backends.
 """
 
 try:
-    from PySide import QtGui, QtCore
+    from PySide import QtGui, QtCore  # noqa
     backend = 'pyside'
 except ImportError:
-    from PyQt4 import QtGui, QtCore
+    from PyQt4 import QtGui, QtCore  # noqa
     backend = 'pyqt4'
 
 import visvis as vv

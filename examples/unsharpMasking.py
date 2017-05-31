@@ -6,7 +6,6 @@ unsharp masking.
 """
 
 import visvis as vv
-import numpy as np
 
 # First define our part of the shading code
 # The '>>' Denote what piece of code we want to replace.  

@@ -190,7 +190,7 @@ class BinaryBlock(Block):
         # Determine what type of object we are dealing with using the
         # type id.
         type = self._type
-        if type==_TYPE_INT:   return self._to_int()
+        if type==_TYPE_INT: return self._to_int()
         elif type==_TYPE_FLOAT: return self._to_float()
         elif type==_TYPE_UNICODE: return self._to_unicode()
         elif type==_TYPE_ARRAY: return self._to_array()
@@ -544,4 +544,3 @@ class _CompressedFile(_FileWithExtraMethods):
         
         """
         self._write_new_partition()
-

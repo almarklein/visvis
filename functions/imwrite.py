@@ -4,7 +4,6 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-import numpy as np
 import visvis as vv
 
 # Try importing imageio

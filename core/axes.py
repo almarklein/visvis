@@ -1244,4 +1244,3 @@ class Legend(DraggableBox):
         # clear lines and such
         for ob in [ob for ob in self._wobjects]:
             ob.Destroy()
-

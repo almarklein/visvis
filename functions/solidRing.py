@@ -120,7 +120,7 @@ def solidRing(translation=None, scaling=None, direction=None, rotation=None,
     
     # If necessary, use flat shading
     if N<8 or M<8:
-       m.faceShading = 'flat'
+        m.faceShading = 'flat'
     
     # Adjust axes
     if axesAdjust:

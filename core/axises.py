@@ -453,9 +453,9 @@ class BaseAxis(base.Wobject):
         
         # Corners of a cube in relative coordinates
         self._corners = tmp = Pointset(3)
-        tmp.append(0,0,0);  tmp.append(1,0,0);  tmp.append(0,1,0);
-        tmp.append(0,0,1);  tmp.append(1,1,0);  tmp.append(1,0,1);
-        tmp.append(0,1,1);  tmp.append(1,1,1);
+        tmp.append(0,0,0);  tmp.append(1,0,0);  tmp.append(0,1,0)
+        tmp.append(0,0,1);  tmp.append(1,1,0);  tmp.append(1,0,1)
+        tmp.append(0,1,1);  tmp.append(1,1,1)
         
         # Indices of the base corners for each dimension.
         # The order is very important, don't mess it up...
@@ -1040,12 +1040,12 @@ class CartesianAxis2D(BaseAxis):
             # Get indices of the two next corners on which 
             # ridges we may draw grid lines
             i1 = self._NextCornerIndex(i0, d, vector_s)
-            i2 = self._NextCornerIndex(i1, d, vector_s)
+            # i2 = self._NextCornerIndex(i1, d, vector_s)
             
             # Get first corner and grid vectors
             firstCorner = corners4_c[i0]
             gv1 = corners4_c[i1] - corners4_c[i0]
-            gv2 = corners4_c[i2] - corners4_c[i1]
+            # gv2 = corners4_c[i2] - corners4_c[i1]
             
             # Get tick vector to indicate tick
             gv1s = corners4_s[i1] - corners4_s[i0]
@@ -1342,7 +1342,7 @@ class CartesianAxis3D(BaseAxis):
             # Draw edge lines (optionally to create a full box)
             for i in range(4):
                 if self._showBox or i in [i0, i1, i2]:
-                #if self._showBox or i ==i0: # for a real minimalistic axis
+                    #if self._showBox or i ==i0: # for a real minimalistic axis
                     # Note that we use world coordinates, rather than screen
                     # as the 2D axis does.
                     ppc.append(corners4_c[i])
@@ -1487,8 +1487,7 @@ class CartesianAxis(CartesianAxis2D, CartesianAxis3D):
 
 
 
-def GetPolarTicks(p0, radius, lim, angularRefPos, sense , minTickDist=100, \
-                  ticks=None):
+def GetPolarTicks(p0, radius, lim, angularRefPos, sense , minTickDist=100, ticks=None):
     """ GetPolarTicks(p0, radius, lim, angularRefPos, sense , minTickDist=100,
                        ticks=None)
                         
@@ -1634,8 +1633,7 @@ class PolarAxis2D(BaseAxis):
         drawObjs = axes.FindObjects(PolarLine)
         # Now set the transform for the PolarLine data
         for anObj in drawObjs:
-            anObj.TransformPolar(self._radialRange, \
-            self._angularRefPos, self._sense)
+            anObj.TransformPolar(self._radialRange, self._angularRefPos, self._sense)
     
     
     def _CreateLinesAndLabels(self, axes):
@@ -1803,10 +1801,10 @@ class PolarAxis2D(BaseAxis):
         yc = radiusMax_c * np.sin(theta)
         # ppb is the largest circle that will fit
         # and is used  to draw the  polar background poly
-        for x, y in  np.column_stack((xb, yb)):
+        for x, y in np.column_stack((xb, yb)):
             self.ppb.append(x, y, -10.0)
 
-        for x, y in  np.column_stack((xc, yc)):
+        for x, y in np.column_stack((xc, yc)):
             self.ppr.append(x, y, -1.0)
 
         # polar ticks
@@ -1818,8 +1816,8 @@ class PolarAxis2D(BaseAxis):
         minTickDist *= pix2c
         tickValues = ticksPerDim[0]  # can be None
 
-        tmp = GetPolarTicks(center_c, radiusMax_c, self._angularRange, \
-                            self._angularRefPos, self._sense, \
+        tmp = GetPolarTicks(center_c, radiusMax_c, self._angularRange,
+                            self._angularRefPos, self._sense,
                             minTickDist, tickValues)
         ticks, ticksPos, ticksText = tmp
         textRadius = (2.2 * txtSize) + radiusMax_c
@@ -1841,8 +1839,7 @@ class PolarAxis2D(BaseAxis):
 
             # Text is in word coordinates so need to create them based on ticks
             theta = self._angularRefPos + (self._sense * tick * np.pi / 180.0)
-            p2 = Point((textRadius * np.cos(theta))[0], \
-                       (textRadius * np.sin(theta))[0], 0)
+            p2 = Point((textRadius * np.cos(theta))[0], (textRadius * np.sin(theta))[0], 0)
             # Put a textlabel at tick
             textDict = self._textDicts[0]
             if tick in textDict and textDict[tick] in self._children:
@@ -1881,7 +1878,7 @@ class PolarAxis2D(BaseAxis):
         xc = radiusMax_c * np.cos(theta)
         yc = radiusMax_c * np.sin(theta)
 
-        for x, y in  np.column_stack((xc, yc)):
+        for x, y in np.column_stack((xc, yc)):
             ppc.append(0.0, 0.0, 0.0)
             ppc.append(x, y, 0.0)
 
@@ -1893,13 +1890,12 @@ class PolarAxis2D(BaseAxis):
         tickValues = ticksPerDim[1]  # can be None
 
         ticks, ticksPos, ticksText, quadIndex = [], [], [], []
-        for index, theta in  enumerate(self._angularRefPos + \
-            self._sense * np.array([0, np.pi / 2, np.pi, np.pi * 3 / 2])):
+        for index, theta in enumerate(self._angularRefPos +
+                    self._sense * np.array([0, np.pi / 2, np.pi, np.pi * 3 / 2])):
             xc = radiusMax_c * np.cos(theta)
             yc = radiusMax_c * np.sin(theta)
             p2 = Point(xc, yc, 0)
-            tmp = GetTicks(center_c, p2, Range(0, radiusMax_c), \
-                           minTickDist, tickValues)
+            tmp = GetTicks(center_c, p2, Range(0, radiusMax_c), minTickDist, tickValues)
             if index == 0:
                 ticks = ticks + tmp[0]
                 ticksPos = ticksPos + tmp[1]
@@ -1921,8 +1917,7 @@ class PolarAxis2D(BaseAxis):
             p1 = pos
             if (p1.norm() != 0):
                 tv = (4 * pix2c[0]) * p1 / p1.norm()
-                tvTxt = ((4 * pix2c[0]) + \
-                         txtSize[0].view(float)) * p1 / p1.norm()
+                tvTxt = ((4 * pix2c[0]) + txtSize[0].view(float)) * p1 / p1.norm()
             else:
                 tv = Point(0, 0, 0)
                 tvTxt = Point(-txtSize[0], 0, 0)
@@ -1970,7 +1965,7 @@ class PolarAxis2D(BaseAxis):
                 yc = tick * np.sin(theta)
                 xlast = xc[:-1][0]
                 ylast = yc[:-1][0]
-                for x, y in  np.column_stack((xc, yc)):
+                for x, y in np.column_stack((xc, yc)):
                     ppg.append(Point(xlast, ylast, 0.0))
                     ppg.append(Point(x, y, 0.0))
                     xlast = x
@@ -2086,11 +2081,9 @@ class PolarAxis2D(BaseAxis):
 
             if self.shiftIsDown:
                 minRadius = self.ref_lowerRadius - dy
-                self.SetLimits(rangeR=Range(minRadius, \
-                               minRadius + Rrange))
+                self.SetLimits(rangeR=Range(minRadius, minRadius + Rrange))
             else:
-                self.angularRefPos = self.ref_angularRefPos - \
-                                 (50 * dx / Rrange)
+                self.angularRefPos = self.ref_angularRefPos - (50 * dx / Rrange)
         
         elif self.ref_but == 2:
             # zoom
@@ -2107,8 +2100,7 @@ class PolarAxis2D(BaseAxis):
             
             # apply (use only y-factor ).
             Rrange = Rrange * math.exp(-factor_y)
-            self.SetLimits(rangeR=Range(self._radialRange.min, \
-                           self._radialRange.min + Rrange))
+            self.SetLimits(rangeR=Range(self._radialRange.min, self._radialRange.min + Rrange))
             self.ref_mloc = mloc
         self.Draw()
         return True
@@ -2148,7 +2140,7 @@ class PolarAxis2D(BaseAxis):
             raise ValueError("radial limits should be Range \
                                or two-element iterables.")
         
-        if rangeTheta != None:
+        if rangeTheta is not None:
             self._angularRange = rangeTheta
             
         

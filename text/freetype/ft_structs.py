@@ -58,7 +58,13 @@ FT_Stroker: Opaque handler to a path stroker object.
 
 FT_BitmapGlyph: A structure used for bitmap glyph images.
 '''
-from visvis.text.freetype.ft_types import *
+
+from ctypes import POINTER, Structure, c_void_p, c_char, c_ubyte, c_short, c_int, c_uint, c_long
+from visvis.text.freetype.ft_types import (FT_Pointer, FT_String_p, FT_Fixed,
+                                           FT_Pos, FT_Glyph_Format, FT_Generic_Finalizer,
+                                           FT_Encoding, FT_F2Dot14,
+                                           FT_Byte, FT_Short, FT_UShort, FT_Int, FT_UInt,
+                                           FT_Long, FT_ULong)
 
 
 # -----------------------------------------------------------------------------

@@ -2,16 +2,13 @@
 import OpenGL.GL as gl
 
 import os
-import numpy as np
 
-import visvis
 from visvis import ssdf
 from visvis.utils.pypoints import Pointset
 #
 from visvis.core.misc import basestring , getResourceDir
-from visvis.core.baseWibjects import Box
 
-from visvis.text.text_base import AtlasTexture, FontManager, Text, Label
+from visvis.text.text_base import AtlasTexture, FontManager
 from visvis.text.text_base import correctVertices, simpleTextureDraw
 
 
@@ -232,7 +229,7 @@ class Glyph(object):
             raise ValueError('To create a glyph, supply an int or character.')
         
         # do we have that char?
-        if ac not in info.charcodes:#ac < 32 or ac > 255:
+        if ac not in info.charcodes:  # ac < 32 or ac > 255:
             print("Warning: Cannot draw character %i! " % ord(char))
             ac = 32 # make space
         
@@ -284,7 +281,7 @@ class Glyph(object):
             self.skewFactor *= smaller
             self.sizex = self.sizex * smaller
             self.sizey = self.sizey * smaller
-            self.width = self.width * smaller#- self.sizex * (1.0-smaller)
+            self.width = self.width * smaller  # - self.sizex * (1.0-smaller)
 
 
 class MiniStyle:
@@ -317,4 +314,3 @@ class MiniStyle:
     def __repr__(self):
         tmp = self.script, self.bold, self.italic
         return '<MiniStyle script:%i, bold:%i, italic:%i>' % tmp
-

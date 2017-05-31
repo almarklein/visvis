@@ -26,7 +26,6 @@ The classes are written with compatibility of Python3 in mind.
 import visvis as vv
 import numpy as np
 import struct
-import time
 
 
 class StlReader(object):

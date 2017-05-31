@@ -205,7 +205,6 @@ def polarplot(data1, data2=None, inRadians=False,
 
 if __name__ == '__main__':
     # Make data
-    import numpy as np
     angs = 0.1 + np.linspace(-90, 90, 181)  # 0.1+ get rid of singularity
     angsRads = np.pi * angs / 180.0
     mag = 10 * np.log10(np.abs(np.sin(10 * angsRads) / angsRads)) + angsRads

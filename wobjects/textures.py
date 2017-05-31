@@ -22,9 +22,8 @@ name of any of the available fragment shaders.
 import OpenGL.GL as gl
 
 import numpy as np
-import math
 
-from visvis.utils.pypoints import Pointset, is_Aarray
+from visvis.utils.pypoints import Pointset
 #
 from visvis import Range, Wobject, Colormapable
 from visvis.core.misc import PropWithDraw, DrawAfter
@@ -272,7 +271,7 @@ class BaseTexture(Wobject, Colormapable):
                 # Two dimensional
                 self._trafo_scale.sx = data.sampling[1]
                 self._trafo_scale.sy = data.sampling[0]
-        if  hasattr(data,'origin'):
+        if hasattr(data,'origin'):
             if self._ndim == 3:
                 # Three dimensional
                 self._trafo_trans.dx = data.origin[2]
@@ -363,7 +362,7 @@ class BaseTexture(Wobject, Colormapable):
     def _GetClim(self):
         return self._texture1._clim
     def _SetClim(self, value):
-       self._texture1._clim = value
+        self._texture1._clim = value
     
     
     @DrawAfter
@@ -496,7 +495,6 @@ class Texture2D(BaseTexture):
         # Calculate kernel values
         a = 3.0 # Number of side lobes of sync to take into account.
         k = [0,0,0,0]
-        sin, pi = np.sin, np.pi
         for t in range(4):
             k[t] = 2*B * sinc(2*B*t)*sinc(2*B*t/a)
         
@@ -617,7 +615,7 @@ class Texture2D(BaseTexture):
             if not isinstance(value, (int,float)):
                 raise ValueError("Texture2D.aa: value should be 0,1,2,3.")
             elif value < 0 or value > 3:
-                 raise ValueError("Texture2D.aa: value should be 0,1,2,3.")
+                raise ValueError("Texture2D.aa: value should be 0,1,2,3.")
             else:
                 # Store
                 self._aa = int(value)
@@ -802,7 +800,7 @@ class Texture3D(BaseTexture):
         
         # Check number of lights in axes
         nlights = 1
-        for i in range(1, 7): #len(axes.lights)):
+        for i in range(1, 7): # len(axes.lights)):
             if axes.lights[i].isOn:
                 nlights = i+1
         
@@ -1018,12 +1016,12 @@ class Texture3D(BaseTexture):
         def fset(self, style):     
             style = style.lower()
             shader = self.shader.fragment
-             # Set color (done automatically!)
-#             sh_color = shaders.SH_COLOR_SCALAR
-#             if 'color' in style or 'rgb' in style:
-#                 sh_color = shaders.SH_COLOR_RGB
-#             elif 'nocmap' in style:
-#                 sh_color = shaders.SH_COLOR_SCALAR_NOCMAP
+            # Set color (done automatically!)
+            # sh_color = shaders.SH_COLOR_SCALAR
+            # if 'color' in style or 'rgb' in style:
+            #     sh_color = shaders.SH_COLOR_RGB
+            # elif 'nocmap' in style:
+            #     sh_color = shaders.SH_COLOR_SCALAR_NOCMAP
             styleStrict = style.replace('rgb','').replace('color','')
             # Set render style
             if 'mip' == styleStrict:
@@ -1047,7 +1045,7 @@ class Texture3D(BaseTexture):
                 raise ValueError("Unknown render style in Texture3d.renderstyle.")
             # Store style and set color
             self._renderStyle = style
-#             self._fragmentShader.ReplacePart('color', sh_color)
+            # self._fragmentShader.ReplacePart('color', sh_color)
         return locals()
     
     
@@ -1243,4 +1241,3 @@ class MultiTexture3D(Texture3D):
         self._texture2.Destroy()
         if hasattr(self, '_colormap'):
             self._colormap.Destroy()
-

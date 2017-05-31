@@ -60,12 +60,12 @@ mean_temps_per_month = [mean(tt) for tt in temps_per_month]
 vv.figure(1); vv.clf()
 
 # Show means in a normal bar chart
-a1 = vv.subplot(221); 
+a1 = vv.subplot(221)
 b2 = vv.bar(mean_temps_per_month)
 b2.color = 'r'
 
 # Show means in a 3D bar chart
-a2 = vv.subplot(222); 
+a2 = vv.subplot(222)
 b3 = vv.bar3(mean_temps_per_month)
 b3.color = 'g'
 a2.daspect = 1,1,0.3

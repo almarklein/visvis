@@ -178,6 +178,6 @@ del c1, c2, base64, np
 # Inject colormaps in this namespace as constants
 L = locals()
 for key in colormaps:
-  key2 = 'CM_' + key.upper()
-  L[key2] = colormaps[key]
+    key2 = 'CM_' + key.upper()
+    L[key2] = colormaps[key]
 del L, key, key2

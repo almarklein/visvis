@@ -7,16 +7,8 @@ world objects and labels.
 
 import visvis as vv
 
-# The next import is just to create a Unicode char in a way that works on Python2 and Python3
-from visvis.core.misc import unichr 
-
 # Define a piece of Unicode text in a py2.x py3.x compatible manner
-# On Py3.x you should do: hello = 'Привет пустошь'
-# On Py3.x you should do: hello = u'Привет пустошь'
-hello = 'Привет пустошь'
-if hasattr(hello, 'decode'):
-    hello = hello.decode('utf-8')
-
+hello = u'Привет пустошь'
 
 # Create figure and figure
 fig = vv.figure()

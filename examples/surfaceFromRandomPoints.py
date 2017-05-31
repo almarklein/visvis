@@ -13,7 +13,6 @@ Keith Smith, 4 March 2011
 """
 
 import numpy as np
-import scipy as sp
 from scipy.spatial import Delaunay
 import visvis as vv
 
@@ -79,7 +78,8 @@ def plot3D( vuvi,
         xi =  np.arctan2(radials / maxRadial, 1)
         #force z axis data to sphere
         vxyz[:,2] = maxRadial * np.cos(xi)
-        vxyz = np.append(vxyz, [[0.7, 0.7, -0.7],[-0.7, 0.7, -0.7],[0.7, -0.7, -0.7],[-0.7, -0.7, -0.7]], axis=0)
+        vxyz = np.append(vxyz, [[0.7, 0.7, -0.7],[-0.7, 0.7, -0.7],
+                                [0.7, -0.7, -0.7],[-0.7, -0.7, -0.7]], axis=0)
        
     
     
@@ -189,4 +189,3 @@ if __name__ == '__main__':
     # Run main loop
     app = vv.use()
     app.Run()
-

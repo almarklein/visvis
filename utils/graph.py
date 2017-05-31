@@ -303,7 +303,7 @@ class Graph(list):
             # Get which nodes belong to it and create edge object
             i1 = int(struct.edges[i,0])
             i2 = int(struct.edges[i,1])
-            c = self.CreateEdge(i1, i2, *props)
+            self.CreateEdge(i1, i2, *props)
     
     
     def Clear(self):
@@ -850,6 +850,3 @@ if __name__ == '__main__':
     
     # Get some info
     print(g.GetEdges())
-    
-    
-    

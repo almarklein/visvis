@@ -234,4 +234,3 @@ class Bars2D(vv.Wobject):
 
 if __name__ == '__main__':
     b = vv.bar([1,2,1,5])
-    

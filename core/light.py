@@ -272,4 +272,3 @@ class Light(object):
             # null-position means that the ligth is off
             gl.glLightfv(thisLight, gl.GL_POSITION, (0.0, 0.0, 0.0, 0.0))
             gl.glDisable(thisLight)
-

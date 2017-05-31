@@ -603,9 +603,9 @@ class TwoDCamera(BaseCamera):
         
         if not self._ref_but:
             return
-        if not self._ref_axes is event.owner:
+        if self._ref_axes is not event.owner:
             return
-        if not self.axes.camera is self:
+        if self.axes.camera is not self:
             return False
         
         # get loc (as the event comes from the figure, not the axes)
@@ -711,7 +711,8 @@ class TwoDCamera(BaseCamera):
                 light._Apply()
 
 
-# todo: FOV: properly setting which axis has ticks, the tick spacing, and which axes to show when showBox is False.
+# todo: FOV: properly setting which axis has ticks, the tick spacing,
+# and which axes to show when showBox is False.
 
 class ThreeDCamera(BaseCamera):
     """ ThreeDCamera()
@@ -982,9 +983,9 @@ class ThreeDCamera(BaseCamera):
         
         if not self._ref_but:
             return
-        if not self._ref_axes is event.owner:
+        if self._ref_axes is not event.owner:
             return
-        if not self.axes.camera is self:
+        if self.axes.camera is not self:
             return False
         
         # get loc (as the event comes from the figure, not the axes)
@@ -1404,7 +1405,7 @@ class FlyCamera(BaseCamera):
     
     def OnKeyDown(self, event):
         
-        if not self.axes.camera is self:
+        if self.axes.camera is not self:
             return 
         elif not self._timer.isRunning:
             # Make sure the timer runs
@@ -1438,7 +1439,7 @@ class FlyCamera(BaseCamera):
     
     def OnKeyUp(self, event):
         
-        if not self.axes.camera is self:
+        if self.axes.camera is not self:
             return 
         
         # Get action (or None)
@@ -1490,7 +1491,7 @@ class FlyCamera(BaseCamera):
     
     def OnMotion(self, event):
        
-        if not self.axes.camera is self:
+        if self.axes.camera is not self:
             return 
         elif not self._timer.isRunning:
             # Make sure the timer runs
@@ -1498,7 +1499,7 @@ class FlyCamera(BaseCamera):
         
         if not self._ref_but:
             return
-        if not self._ref_axes is event.owner:
+        if self._ref_axes is not event.owner:
             return
         
         
@@ -1587,7 +1588,7 @@ class FlyCamera(BaseCamera):
     def OnTimer(self, event):
         
         # Stop running?
-        if not self.axes.camera is self:
+        if self.axes.camera is not self:
             self._timer.Stop()
             return
         
@@ -1794,4 +1795,3 @@ class FlyCamera(BaseCamera):
         for light in self.axes._lights:
             if not light.isCamLight:
                 light._Apply()
-

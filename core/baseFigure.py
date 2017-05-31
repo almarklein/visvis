@@ -21,7 +21,7 @@ import numpy as np
 import visvis
 #
 from visvis.core import base
-from visvis.core.base import DRAW_NORMAL, DRAW_FAST, DRAW_SHAPE, DRAW_SCREEN
+from visvis.core.base import DRAW_NORMAL, DRAW_FAST, DRAW_SHAPE, DRAW_SCREEN  # noqa
 from visvis.core.misc import Property, PropWithDraw, DrawAfter 
 from visvis.core.misc import getOpenGlInfo
 from visvis.core import events
@@ -933,7 +933,6 @@ class BaseFigure(_BaseFigure):
         items1 = [item() for item in self._underMouse if item()]
         # init list of events to fire
         events = []
-        eventToAlwaysFire = None
         
         if eventName.count("motion") or eventName.count("move"):
             

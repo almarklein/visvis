@@ -7,7 +7,8 @@
 """ The GTK backend.
 """
 
-import os, sys
+import os
+import sys
 
 import visvis
 from visvis import BaseFigure, events, constants
@@ -116,22 +117,24 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
     
     def _on_motion_notify_event(self, widget, event):
         if event.is_hint:
-            x, y, state = event.window.get_pointer()
+            x, y, state = event.window.get_pointer()  # noqa
         else:
-            x, y, state = event.x, event.y, event.state
+            x, y, state = event.x, event.y, event.state  # noqa
         if self.figure:
             self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers(event))
     
     def _on_button_event(self, widget, event):
         if event.type in MOUSEMAP:
             button = {1:1, 3:2}.get(event.button, 0)
-            self.figure._GenerateMouseEvent(MOUSEMAP[event.type], event.x, event.y, button, modifiers(event))
+            self.figure._GenerateMouseEvent(MOUSEMAP[event.type], event.x, event.y,
+                                            button, modifiers(event))
     
     def _on_scroll_event(self, widget, event):
         horizontal = {gtk.gdk.SCROLL_LEFT: 1.0, gtk.gdk.SCROLL_RIGHT: -1.0}.get(event.direction, 0)
         vertical = {gtk.gdk.SCROLL_UP: 1.0, gtk.gdk.SCROLL_DOWN: -1.0}.get(event.direction, 0)
         if horizontal or vertical:
-            self.figure._GenerateMouseEvent('scroll', event.x, event.y, horizontal, vertical, modifiers(event))
+            self.figure._GenerateMouseEvent('scroll', event.x, event.y,
+                                            horizontal, vertical, modifiers(event))
     
     def _on_key_press_event(self, widget, event):
         self.figure._GenerateKeyEvent('keydown', KEYMAP.get(event.keyval, event.keyval),
@@ -180,7 +183,7 @@ class GlCanvas(gtk.gtkgl.DrawingArea):
     
     def swap_buffers(self):
         gldrawable = self.get_gl_drawable()
-        glcontext = self.get_gl_context()
+        glcontext = self.get_gl_context()  # noqa
 
         if gldrawable.is_double_buffered():
             gldrawable.swap_buffers()

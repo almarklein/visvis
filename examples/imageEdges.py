@@ -6,7 +6,6 @@ Also see the unsharpMasking example.
 """
 
 import visvis as vv
-import numpy as np
 
 # First define our part of the shading code
 # The '>>' Denote what piece of code we want to replace. We replace the
@@ -37,7 +36,7 @@ t = vv.imshow(im)
 # Insert our part in the fragment shader program
 t.shader.fragment.AddPart(SH_2F_EDGE)
 if False: # Use this line to switch back:
-    t.shader.fragment.RemovePart(SH_2F_EDGEL)
+    t.shader.fragment.RemovePart(SH_2F_EDGE)
 
 # In case there are bugs in the code, it might be helpfull to see the code
 # t.shader.fragment.ShowCode() # Shows the whole code

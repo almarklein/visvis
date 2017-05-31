@@ -123,7 +123,6 @@ def lineToMesh(pp, radius, vertex_num, values=None):
     # And a list for the values
     if values is None:
         vvalues = None
-        nvalues = 0
     elif isinstance(values, list):
         if len(values) != len(pp):
             raise ValueError('There must be as many values as points.')
@@ -151,7 +150,7 @@ def lineToMesh(pp, radius, vertex_num, values=None):
     
     # Calculate the 3D circle coordinates of the first circle/cylinder
     a,b = getSpanVectors(normals[0], a, b)
-    circm = getCircle(angle_cos, angle_sin, a, b);
+    circm = getCircle(angle_cos, angle_sin, a, b)
     
     # If not a closed line, add half sphere made with 5 cylinders at line start     
     if not lclosed:
@@ -218,7 +217,7 @@ def lineToMesh(pp, radius, vertex_num, values=None):
         
         # Calculate the 3D circle coordinates
         a,b = getSpanVectors(normal12, a, b)
-        circm = getCircle(angle_cos, angle_sin, a, b);
+        circm = getCircle(angle_cos, angle_sin, a, b)
         
         # Translate the circle, and store
         circmp = float(radius[i+1])*circm + point12

@@ -416,9 +416,9 @@ class BasePoints(object):
         
         # calculate
         data1, data2 = p1.data, p2.data
-        data = np.zeros( (p2.data.shape[0],) )
+        data = np.zeros( (data2.shape[0],) )
         for i in range(p1.ndim):
-            tmp = p1.data[:,i] * p2.data[:,i]
+            tmp = data1[:,i] * data2[:,i]
             data += tmp
         return data
     
@@ -1243,7 +1243,7 @@ class Pointset(BasePoints):
     
     def __next__(self):
         self._index +=1
-        if self._index >= len(self):  raise StopIteration
+        if self._index >= len(self): raise StopIteration
         return self[self._index]
     
     def next(self): # Python 2.x
@@ -1498,7 +1498,7 @@ class Aarray(np.ndarray):
     
     def _get_sampling(self):
         l1, l2 = len(self._sampling), len(self.shape)
-        if  l1 < l2:
+        if l1 < l2:
             tmp = list(self._sampling)
             tmp.extend( [1 for i in range(l2-l1)] )
             return tuple( tmp )
@@ -1524,7 +1524,7 @@ class Aarray(np.ndarray):
     
     def _get_origin(self):
         l1, l2 = len(self._origin), len(self.shape)
-        if  l1 < l2:
+        if l1 < l2:
             tmp = list(self._origin)
             tmp.extend( [0 for i in range(l2-l1)] )
             return tuple( tmp )

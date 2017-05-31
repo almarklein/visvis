@@ -7,7 +7,8 @@
 import numpy as np
 import visvis as vv
 
-import zlib, base64
+import zlib
+import base64
 
 # todo: parameterize; allow custum Gaussian blobs at specified positions.
 

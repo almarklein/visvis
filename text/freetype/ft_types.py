@@ -74,7 +74,10 @@ FT_F2Dot14 : A signed 2.14 fixed float type used for unit vectors.
 FT_F26Dot6 : A signed 26.6 fixed float type used for vectorial pixel
              coordinates.
 '''
-from ctypes import *
+from ctypes import (CFUNCTYPE, c_void_p, c_size_t,
+                    c_ubyte, c_char, c_char_p,
+                    c_short, c_ushort, c_int, c_uint, c_int32, c_uint32,
+                    c_long, c_ulong, c_longlong)
 
 
 FT_Byte    = c_ubyte  # A simple typedef for the unsigned char type.

@@ -54,4 +54,3 @@ cone.colormap = vv.CM_JET
 vv.title('All mesh objects that can be created out of the box')
 app = vv.use()
 app.Run()
-

@@ -175,5 +175,3 @@ for font in ['mono', 'sans', 'serif']:
 
 ssdf.save(path+'fonts.ssdf', base)
 ssdf.save(path+'../visvisResources/fonts.ssdf', base)
-
-

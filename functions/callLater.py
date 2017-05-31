@@ -30,7 +30,8 @@ def callLater(delay, callable, *args, **kwargs):
 
 if __name__ == '__main__':
     # Code to call a method after 2.0 seconds
-    def foo(): print('haha!')
+    def foo():
+        print('haha!')
     vv.callLater(2.0, foo)
     # For this to work, a visvis application must be Create'd.
     app = vv.use()

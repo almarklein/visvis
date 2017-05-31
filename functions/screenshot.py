@@ -174,4 +174,3 @@ if __name__ == '__main__':
     vv.plot([1,2,3,1,4,2,3], ms='.')
     # Take screenshot, twice enlarged, on a white background
     vv.screenshot('screenshot.jpg', vv.gcf(), sf=2, bg='w')
-    

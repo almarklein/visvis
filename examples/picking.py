@@ -9,7 +9,6 @@ as it's still inside the red rectangle. This is because the red
 rectangle is a child of the yellow rectangle. 
 """
 
-import numpy as np
 import visvis as vv
 app = vv.use()
 

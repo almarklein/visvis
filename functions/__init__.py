@@ -77,4 +77,3 @@ def _insertFunctions():
 
 # do it and clean up
 _functionNames = _insertFunctions()
-del os

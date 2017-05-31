@@ -13,12 +13,10 @@ Defines the classes that manage shading:
 
 """
 
-import os
-
 import OpenGL.GL as gl
 import OpenGL.GL.ARB.shader_objects as gla
 
-from visvis.core.misc import getResourceDir, getOpenGlCapable, getExceptionInstance, basestring
+from visvis.core.misc import getOpenGlCapable, getExceptionInstance, basestring
 import visvis as vv
 
 
@@ -111,7 +109,7 @@ class Shader(object):
         self._textureId = 0
         
         # Update source code?
-        dummy = self.hasCode
+        self.hasCode
         
         # Enable program (compiles if necessary)
         ok = self.program.Enable()
@@ -700,7 +698,7 @@ class ShaderCode(object):
     def _needRecompile(self):
         """ Gets whether this code was changed since this method was last used.
         """
-        dummy = self._isDirty # Sets _needRecompileFlag if it is really dirty
+        self._isDirty # Sets _needRecompileFlag if it is really dirty
         dirty = self._needRecompileFlag
         self._needRecompileFlag = False
         return dirty
@@ -922,7 +920,6 @@ class ShaderCode(object):
             # If totalCode is empty, simply set code
             if not totalLines:
                 for line in part.code.splitlines():
-                    indent = len(line) - len(line.lstrip())
                     totalLines.append( (line, part.name) )
                 totalCode = dedentCode(totalLines)
                 continue
@@ -958,7 +955,6 @@ class ShaderCode(object):
                     # Insert new lines
                     for line in reversed(code.splitlines()):
                         line = originalIndent*' ' + line
-                        indent = len(line) - len(line.lstrip())
                         totalLines.insert( nr1, (line, part.name) )
                 
                 # Set total code
@@ -1084,7 +1080,7 @@ class ShaderCodePart(object):
         # Collect code
         code = self.code
         for section_raw in sections_raw:
-            code2, dummy, code = code.partition(section_raw)
+            code2, _, code = code.partition(section_raw)
             codes.append(code2)
         codes.append(code)
         codes.pop(0)
@@ -1100,9 +1096,9 @@ class ShaderCodePart(object):
 
 
 # Import all shaders. Can only do the import after the ShaderCodePart is deffed
-from visvis.core.shaders_2 import *
-from visvis.core.shaders_3 import *
-from visvis.core.shaders_m import *
+from visvis.core.shaders_2 import *  # noqa
+from visvis.core.shaders_3 import *  # noqa
+from visvis.core.shaders_m import *  # noqa
 
 
 if __name__ == '__main__':
@@ -1136,4 +1132,3 @@ if __name__ == '__main__':
     s.AddPart(S1)
     s.AddPart(S2)
     print(s.GetCode())
-

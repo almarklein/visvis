@@ -172,7 +172,7 @@ class TextBlock(Block):
             return self._to_array()
         elif data.startswith('dict:'):  
             return self._to_dict()
-        elif data.startswith('list:') or  data[0] == '[':
+        elif data.startswith('list:') or data[0] == '[':
             return self._to_list()
         elif data.startswith('Null') or data.startswith('None'):
             return self._to_none()

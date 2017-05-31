@@ -51,4 +51,3 @@ if __name__=='__main__':
     print('Selected backend is %s.' % app.GetBackendName())
     app.Create() # Create the backend's application
     app.Run() # Enter the backend's mainloop (not in interactive mode)
-    

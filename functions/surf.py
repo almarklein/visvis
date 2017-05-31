@@ -155,4 +155,3 @@ if __name__ == "__main__":
     im /= 4
     # Surf
     m = vv.surf(im[:,:,0], im)
-

@@ -367,7 +367,7 @@ class TextureObject(object):
             while not ok and count<8:
                 ok = self._TestUpload(data, internalformat,format,gltype)
                 if not ok:
-                #if count<2 and data.shape[0]<1000: # for testing
+                    #if count<2 and data.shape[0]<1000: # for testing
                     data = downSample(data, self._ndim)
                     count += 1
             

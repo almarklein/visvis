@@ -87,7 +87,7 @@ class GLWidget(fltk.Fl_Gl_Window):
                 self.figure._GenerateMouseEvent('up', x, y, but, modifiers())
         
         elif event in [fltk.FL_MOVE, fltk.FL_DRAG]:
-            w,h = self.w(), self.h()
+            w, h = self.w(), self.h()  # noqa - not used?
             self.OnMotion(None)
         elif event == fltk.FL_MOUSEWHEEL:
             self.OnMouseWheel(None)

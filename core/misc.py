@@ -15,19 +15,18 @@ visvis modules.
 
 """
 
-import sys, os
+import os
+import sys
 import zipfile
 import numpy as np
 from visvis import ssdf
 import OpenGL.GL as gl
 
-from visvis.utils.pypoints import getExceptionInstance
-
 
 V2 = sys.version_info[0] == 2
 if V2:
-    unichr = unichr
-    basestring = basestring
+    unichr = unichr  # noqa
+    basestring = basestring  # noqa
 else:
     basestring = str
     unichr = chr
@@ -464,7 +463,7 @@ def getResourceDir():
 
 
 # From pyzolib/paths.py
-import os, sys
+import os, sys  # noqa
 def appdata_dir(appname=None, roaming=False, macAsLinux=False):
     """ appdata_dir(appname=None, roaming=False,  macAsLinux=False)
     Get the path to the application directory, where applications are allowed
@@ -691,4 +690,3 @@ settings = Settings()
 
 # Set __file__ absolute when loading
 __file__ = os.path.abspath(__file__)
-
