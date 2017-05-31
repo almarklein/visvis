@@ -5,3 +5,8 @@ def test_visvis_import():
     
     assert vv
     assert vv.vvio
+    assert vv.imread
+    assert vv.imshow
+    assert vv.plot
+    assert vv.Slider
+    assert vv.Axes
