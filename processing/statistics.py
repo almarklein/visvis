@@ -192,10 +192,7 @@ class StatData:
             nbins = self.best_number_of_bins()
         
         # Get histogram
-        if np.__version__ < '1.3':
-            values, edges = np.histogram(self._data, nbins, drange, normed, weights, new=True)
-        else:
-            values, edges = np.histogram(self._data, nbins, drange, normed, weights)
+        values, edges = np.histogram(self._data, nbins, drange, normed, weights)
         
         # The bins are the left bin edges, let's get the centers
         centers = np.empty(values.size, np.float32)
