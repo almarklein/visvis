@@ -7,17 +7,17 @@ for visualization of 1D to 4D data in an object oriented way.
 Essentially, visvis is an object oriented layer of Python on top of
 OpenGl, thereby combining the power of OpenGl with the usability of
 Python. A Matlab/Matplotlib-like interface in the form of a set of functions allows
-easy creation of objects (e.g. plot(), imshow(), volshow(), surf()).
+easy creation of objects (e.g. `plot()`, `imshow()`, `volshow()`, `surf()`).
 
-### Dependencies and installation
+## Installation
 
 Visvis is cross-platform and runs on Python 2.x and Python 3.x. It
-depends on numpy, pyopengl, and any of the supported GUI backends.
+depends on numpy, pyopengl, and needs a GUI backend (either PyQt4, PyQt4, PySide, Wx, GTK, FLTK).
 
 Installation is best done via conda (``conda install vispy``) or pip (``pip install visvis``).
 
 
-### How visvis works
+## How visvis works
 
 With visvis a range of different data can be visualized by simply adding
 [world objects](https://github.com/almarklein/visvis/wiki/cls_Wobject) to
@@ -40,13 +40,12 @@ in time.
 ## Example
 [![](https://raw.githubusercontent.com/wiki/almarklein/visvis/images/overviewScreen.png)](https://github.com/almarklein/visvis/wiki/example_overview)
 
-Click on the figure to see the **code** and how the user can interact with the figure.
+Click on the figure to see the [code](https://github.com/almarklein/visvis/wiki/example_overview) and how one can interact with the figure.
 
 
-### Docs
+## Documentation
 
 The docs are on the [wiki](https://github.com/almarklein/visvis/wiki).
-
 Online documentation is available for all
 [classes](https://github.com/almarklein/visvis/wiki/classes) and
 [functions](https://github.com/almarklein/visvis/wiki/functions). Any
@@ -55,3 +54,8 @@ group](http://groups.google.com/group/visvis).
 
 At EuroScipy 2012, I gave a talk about Visvis. The long version of the
 presentation can be seen [here](https://docs.google.com/presentation/pub?id=17J5IVIoh2zQk49ycYh__CYpi33aWi0oSljI_MnYByeg&start=false&loop=false&delayms=3000).
+
+
+## License
+
+Visvis makes use of the liberal BSD license. See license.txt for details.
