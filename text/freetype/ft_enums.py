@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# flake8: noqa
 # -*- coding: utf-8 -*-
+# flake8: noqa
 # -----------------------------------------------------------------------------
 #
 #  FreeType high-level python API - Copyright 2011 Nicolas P. Rougier
@@ -1466,7 +1466,7 @@ globals().update(TT_NAME_IDS)
 # FT_FSTYPE_PREVIEW_AND_PRINT_EMBEDDING
 # If this bit is set, the font may be embedded and temporarily loaded on the
 # remote system. Documents containing Preview & Print fonts must be opened
-# ‘read-only’; no edits can be applied to the document.
+# 'read-only'; no edits can be applied to the document.
 #
 # FT_FSTYPE_EDITABLE_EMBEDDING
 # If this bit is set, the font may be embedded but must only be installed
