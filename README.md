@@ -56,6 +56,11 @@ At EuroScipy 2012, I gave a talk about Visvis. The long version of the
 presentation can be seen [here](https://docs.google.com/presentation/pub?id=17J5IVIoh2zQk49ycYh__CYpi33aWi0oSljI_MnYByeg&start=false&loop=false&delayms=3000).
 
 
+## Status
+
+Visvis has been relatively stable for several years. I am still maintaining it, but do not plan on making any major changes. Visvis will not make use of modern OpenGL, and will not work in the browser. It's API might be a bit idosyncratic (e.g. methods are UpperCamelCase) because I started working on Visvis before I knew about PEP8.
+
+
 ## License
 
 Visvis makes use of the liberal BSD license. See license.txt for details.
