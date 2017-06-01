@@ -608,10 +608,10 @@ class ShaderCode(object):
     The code of a ShaderCodePart consists of multiple sections, where
     each section starts with a specification of what is removed. For
     this we use two greater than characters '>>':
-    {{{
+    ```py
     >>someValue = 3;
     someValue = 4;
-    }}}
+    ```
     
     All code following the replacement-lines is inserted in the base
     code. Note that both the replace-code as the replacing code may
@@ -621,20 +621,20 @@ class ShaderCode(object):
     matter. The replace-code (the code behind '>>') needs to be an exact
     match, but in the source there may be other code in front and after
     the code; this works:
-    {{{
+    ```py
     // == Base code ==
     a = b+3;
     // insert more code here
     c = a-b;
     d = a+b;
-    }}}
-    {{{
+    ```
+    ```py
     // == Code to insert ==
     >>more code
     float tmp = a;
     a = b;
     b = tmp;
-    }}}
+    ```
     
     
     Standard sections
@@ -642,11 +642,11 @@ class ShaderCode(object):
     For clarity we define a few standard sections: '--uniforms--',
     '--varying--', '--functions--'. When defining a function/uniform/varying,
     don't forget to include the functions/uniforms/varyings of any next parts:
-    {{{
+    ```py
         >>--uniforms--
         uniform vec3 some_vector
         // --uniforms-- // enables the next parts to set uniforms
-    }}}
+    ```
     
     """
     
