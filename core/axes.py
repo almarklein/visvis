@@ -967,7 +967,7 @@ class Axes(base.Wibject):
             
             # Maybe this would be better (set initial alpha to 0). But things
             # work without it and I'm too afraid to break things.
-            gl.glBlendFuncSeparate(gl.GL_ONE, gl.GL_ZERO, gl.GL_ZERO, gl.GL_ZERO)
+            # gl.glBlendFuncSeparate(gl.GL_ONE, gl.GL_ZERO, gl.GL_ZERO, gl.GL_ZERO)
             
             # Define colors, use gradient?
             bgcolor1 = bgcolor2 = bgcolor3 = bgcolor4 = bgcolor
