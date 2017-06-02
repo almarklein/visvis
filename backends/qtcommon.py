@@ -237,6 +237,14 @@ class GLWidget(QtOpenGL.QGLWidget):
         # a while to draw, the content of the OpenGL widget is simply
         # fully transparent, showing through any "underlying" widgets.
         # By calling swapBuffers on "show" this is prevented.
+        
+        # Swapping buffers in PyQt5 will print a warning if the window is not exposed
+        # "QOpenGLContext::swapBuffers() called with non-exposed window, behavior is undefined"
+        if hasattr(self, 'windowHandle'):
+            qwindow = self.windowHandle()
+            if hasattr(qwindow, 'isExposed'):
+                if not qwindow.isExposed():
+                    return
         self.swapBuffers()
 
 
