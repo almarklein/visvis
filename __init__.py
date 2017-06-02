@@ -25,8 +25,8 @@ with IPython or IEP) and can be embedded in applications.
 Requirements:
   * Numpy
   * PyOpengl
-  * A backend GUI toolkit (PySide, PyQt4, wxPython, GTK, fltk)
-  * (optionally, to enable reading and writing of images) imageio or PIL
+  * A backend GUI toolkit (PySide, PyQt4, PyQt5, wxPython, GTK, fltk)
+  * (optionally, to enable reading and writing of images) imageio
 
 usage:
 import visvis as vv
