@@ -965,6 +965,10 @@ class Axes(base.Wibject):
             # Overwrite all
             gl.glDisable(gl.GL_DEPTH_TEST)
             
+            # Maybe this would be better (set initial alpha to 0). But things
+            # work without it and I'm too afraid to break things.
+            gl.glBlendFuncSeparate(gl.GL_ONE, gl.GL_ZERO, gl.GL_ZERO, gl.GL_ZERO)
+            
             # Define colors, use gradient?
             bgcolor1 = bgcolor2 = bgcolor3 = bgcolor4 = bgcolor
             if mode != DRAW_SHAPE and self.bgcolors:
@@ -989,7 +993,8 @@ class Axes(base.Wibject):
             
             # Reset
             gl.glEnable(gl.GL_DEPTH_TEST)
-        
+            # gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+            
         # Draw items in world coordinates
         if True:
             

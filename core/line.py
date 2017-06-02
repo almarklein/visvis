@@ -343,7 +343,7 @@ class Line(Wobject):
     OpenGL points if alpha is 1 or if no markeredge is drawn.
     
     Otherwise point sprites are used, which can be slower
-    on some cards (like ATI, Nvidia performs quite ok with with
+    on some (older) cards (like ATI, Nvidia performs quite ok with with
     sprites).
     
     Some video cards simply do not support sprites (seen on ATI).
@@ -664,16 +664,19 @@ class Line(Wobject):
         # init vertex array
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         gl.glVertexPointerf(self._points.data)
-
+        
+        # linepieces drawn on top of other should draw just fine. See issue #95
+        gl.glDepthFunc(gl.GL_LEQUAL)
+        
         # init blending. Only use constant blendfactor when alpha<1
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         if self._alpha1<1:
+            #if len(self._points) < 1000:
             if getOpenGlCapable('1.4','transparant points and lines'):
-                gl.glBlendFunc(gl.GL_CONSTANT_ALPHA,
-                    gl.GL_ONE_MINUS_CONSTANT_ALPHA)
+                gl.glBlendFunc(gl.GL_CONSTANT_ALPHA, gl.GL_ONE_MINUS_CONSTANT_ALPHA)
                 gl.glBlendColor(0.0,0.0,0.0, self._alpha1)
             gl.glDisable(gl.GL_DEPTH_TEST)
-
+        
         # get color
         clr = getColor( self.lc )
 
@@ -697,6 +700,7 @@ class Line(Wobject):
         gl.glEnable(gl.GL_DEPTH_TEST)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glDepthFunc(gl.GL_LESS)
 
 
     def _DrawPoints(self):
