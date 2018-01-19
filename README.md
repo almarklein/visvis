@@ -14,7 +14,7 @@ easy creation of objects (e.g. `plot()`, `imshow()`, `volshow()`, `surf()`).
 Visvis is cross-platform and runs on Python 2.x and Python 3.x. It
 depends on numpy, pyopengl, and needs a GUI backend (either PyQt4, PyQt5, PySide, Wx, GTK, FLTK).
 
-Installation is best done via conda (``conda install vispy``) or pip (``pip install visvis``).
+Installation is best done via conda (``conda install visvis``) or pip (``pip install visvis``).
 
 
 ## How visvis works
@@ -59,6 +59,8 @@ presentation can be seen [here](https://docs.google.com/presentation/pub?id=17J5
 ## Status
 
 Visvis has been relatively stable for several years. I am still maintaining it, but do not plan on making any major changes. Visvis will not make use of modern OpenGL, and will not work in the browser. It's API might be a bit idosyncratic (e.g. methods are UpperCamelCase) because I started working on Visvis before I knew about PEP8.
+
+See [Vispy](https://github.com/vispy/vispy/) for a similar (but more modern) visualization library.
 
 
 ## License
