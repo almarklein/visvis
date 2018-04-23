@@ -600,7 +600,9 @@ def crop3d(vol, fig=None):
     rz = cropper3d._range_coronal._rangey
     
     # Perform crop
-    vol2 = vol[rz.min:rz.max, ry.min:ry.max, rx.min:rx.max]
+    vol2 = vol[int(rz.min):int(rz.max),
+               int(ry.min):int(ry.max),
+               int(rx.min):int(rx.max)]
     
     # Done
     return vol2
