@@ -230,7 +230,9 @@ class BasePoints(object):
         """
         
         # calculate factor array
-        f = 1.0/self.norm()
+        f = self.norm()
+        where = f > 0
+        f[where] = 1.0 / f[where]
         f.shape = f.size,1
         f = f.repeat(self.ndim,1)
         

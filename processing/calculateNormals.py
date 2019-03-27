@@ -64,18 +64,14 @@ def calculateNormals(mesh):
         _vectorsToNormals(v1-v3, v4-v3, faces, normals)
         _vectorsToNormals(v2-v1, v1-v4, faces, normals)
     
-    # Normalize the normals
+    # Normalize the normals - but avoid NaN
     lengths = normals[:,0]**2 + normals[:,1]**2 + normals[:,2]**2
     lengths = lengths**0.5
-    normals[:,0] /= lengths
-    normals[:,1] /= lengths
-    normals[:,2] /= lengths
-    
-    # Correct NANs
-    I, = np.where(lengths==0)
-    normals[I,0] = 0
-    normals[I,1] = 0
-    normals[I,2] = 1
+    where, = np.where(lengths > 0)
+    lengths_where = lengths[where]
+    normals[where, 0] /= lengths_where
+    normals[where, 1] /= lengths_where
+    normals[where, 2] /= lengths_where
     
 #     print('%i nans' % np.isnan(normals).sum())
 #     print('calculated normals in %1.2 s' % (time.time()-t0))
