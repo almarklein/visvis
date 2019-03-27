@@ -16,12 +16,17 @@ from visvis.core.misc import getResourceDir
 
 # Load Qt libs
 qtlib = visvis.backends.qtlib
+qtlib_is_v2 = False
 if qtlib == 'pyside':
     from PySide import QtCore, QtGui, QtOpenGL
+elif qtlib == 'pyside2':
+    from PySide2 import QtCore, QtWidgets, QtGui, QtOpenGL
+    qtlib_is_v2 = True
 elif qtlib == 'pyqt4':
     from PyQt4 import QtCore, QtGui, QtOpenGL
 elif qtlib == 'pyqt5':
     from PyQt5 import QtCore, QtWidgets, QtGui, QtOpenGL
+    qtlib_is_v2 = True
 else:
     raise ImportError('Cannot import Qt: invalid qtlib specified "%s".' %qtlib)
 
@@ -145,14 +150,14 @@ class GLWidget(QtOpenGL.QGLWidget):
     def wheelEvent(self, event):
         # Get number of steps
        
-        if qtlib == "pyqt5":
+        if qtlib_is_v2:
             numDegrees = event.angleDelta() / 8.0
         else:
             numDegrees = event.delta() / 8.0
                                     
         numSteps = numDegrees / 15.0
         
-        if qtlib == "pyqt5":
+        if qtlib_is_v2:
             horizontal, vertical = numSteps.x(), numSteps.y()
         else:
             if event.orientation() == QtCore.Qt.Vertical:
@@ -371,13 +376,13 @@ class App(events.App):
     def _GetNativeApp(self):
         # Get native app in save way. Taken from guisupport.py
         app = None
-        if qtlib == "pyqt5":
+        if qtlib_is_v2:
             app = QtWidgets.QApplication.instance()
         else:
             app = QtGui.QApplication.instance()
 
         if app is None:
-            if qtlib == "pyqt5":
+            if qtlib_is_v2:
                 app = QtWidgets.QApplication([''])
             else:
                 app = QtGui.QApplication([''])
@@ -385,7 +390,7 @@ class App(events.App):
         # Store so it won't be deleted, but not on a visvis object,
         # or an application may produce error when closed
 
-        if qtlib == "pyqt5":
+        if qtlib_is_v2:
             QtWidgets._qApp = app
         else:
             QtGui._qApp = app

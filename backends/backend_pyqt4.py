@@ -6,7 +6,7 @@
 # The full license can be found in 'license.txt'.
 
 # This file is a placeholder. The backend system of visvis assumes one
-# backend per module. Since the PyQt4 and PySide backends share almost
+# backend per module. Since the PyQt and PySide backends share almost
 # all code, its nonsense to duplicate it. Instead we use these small
 # placeholder modules that import qtcommon.
 
