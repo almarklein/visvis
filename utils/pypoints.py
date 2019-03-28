@@ -182,7 +182,7 @@ class BasePoints(object):
     def data(self):
         """ Get the internal numpy array.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def copy(self):
         """ copy()
@@ -190,13 +190,13 @@ class BasePoints(object):
         Make a copy of the point or pointset.
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def __setitem__(self):
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def __getitem__(self):
-        raise NotImplemented()
+        raise NotImplementedError()
     
     
     ## Math stuff on a single vector
@@ -1466,7 +1466,7 @@ class Aarray(np.ndarray):
         for i in range(len(index2)):
             ind = index2[i]
             if isinstance(ind, slice):
-                    #print(ind.start, ind.step)
+                # print(ind.start, ind.step)
                 if ind.start is None:
                     origin.append( _origin[i] )
                 else:

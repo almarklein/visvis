@@ -319,8 +319,9 @@ class BaseCamera(object):
         """
         if s is None:
             s = {}
-        if kw:  # Updating with an empty dict is okay, but this way we can take
-                # arguments that don't have an update method (like ssdf objects).
+        if kw:
+            # Updating with an empty dict is okay, but this way we can take
+            # arguments that don't have an update method (like ssdf objects).
             s.update(kw)
         for key in self.__class__._viewparams:
             try:

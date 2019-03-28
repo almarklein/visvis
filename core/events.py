@@ -862,10 +862,10 @@ class App:
     # Implement these methods. Be using this redirection scheme, we keep
     # the documentation intact.
     def _GetNativeApp(self):
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def _ProcessEvents(self):
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def _Run(self):
-        raise NotImplemented()
+        raise NotImplementedError()

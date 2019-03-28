@@ -138,7 +138,7 @@ class MotionMixin(object):
         just return a very large number above thousand. Should be overloaded.
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     
     def _SetMotionIndex(self, index, ii, ww):
@@ -147,7 +147,7 @@ class MotionMixin(object):
         Called when the motion index is set. Should be overloaded.
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     
     def MotionPlay(self, interval=100, delta=1):

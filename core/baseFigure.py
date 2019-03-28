@@ -311,7 +311,7 @@ class BaseFigure(_BaseFigure):
         drawing and before doing anything with OpenGl really.
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def _SwapBuffers(self):
         """ _SwapBuffers()
@@ -320,7 +320,7 @@ class BaseFigure(_BaseFigure):
         what we rendered appears on the screen.
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def _ProcessGuiEvents(self):
         """ _ProcessGuiEvents()
@@ -330,7 +330,7 @@ class BaseFigure(_BaseFigure):
         running. The figure is then still responsive.
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
         
     def _SetTitle(self, title):
         """ _SetTitle(title)
@@ -340,7 +340,7 @@ class BaseFigure(_BaseFigure):
         a widget in an application.
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def _SetPosition(self, x, y, w, h):
         """ _SetPosition(x, y, w, h)
@@ -352,7 +352,7 @@ class BaseFigure(_BaseFigure):
         the parent widget.
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def _GetPosition(self):
         """ _GetPosition()
@@ -361,7 +361,7 @@ class BaseFigure(_BaseFigure):
         four-element tuple (x,y,w,h).
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     
     def _Close(self):
@@ -370,7 +370,7 @@ class BaseFigure(_BaseFigure):
         Close the widget, also calls Destroy().
         
         """
-        raise NotImplemented()
+        raise NotImplementedError()
     
     ## Properties
     

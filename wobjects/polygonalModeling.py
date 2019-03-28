@@ -729,32 +729,31 @@ class Mesh(Wobject, BaseMesh, Colormapable):
     
     
     def _SetShading(self, shading, shader):
-            
-            # Select shader part
-            M = [(shaders.SH_MV_SHADING_PLAIN,   shaders.SH_MF_SHADING_PLAIN),
-                 (shaders.SH_MV_SHADING_GOURAUD, shaders.SH_MF_SHADING_GOURAUD),
-                 (shaders.SH_MV_SHADING_SMOOTH,  shaders.SH_MF_SHADING_SMOOTH),
-                 (shaders.SH_MV_SHADING_TOON, shaders.SH_MF_SHADING_TOON),
-                ]
-            #
-            if shading == 'plain':
-                vShading, fShading = M[0]
-            elif shading in ['flat', 'gouraud']:
-                vShading, fShading = M[1]
-            elif shading == 'smooth':
-                vShading, fShading = M[2]
-            elif shading == 'toon':
-                vShading, fShading = M[3]
-            else:
-                return
-            
-            # Change shaders accordingly. Does not cause recompile if new
-            # part replaces itself.
-            if shader.vertex.HasPart('shading'):
-                shader.vertex.ReplacePart(vShading)
-            if shader.fragment.HasPart('shading'):
-                shader.fragment.ReplacePart(fShading)
-    
+        
+        # Select shader part
+        M = [(shaders.SH_MV_SHADING_PLAIN,   shaders.SH_MF_SHADING_PLAIN),
+                (shaders.SH_MV_SHADING_GOURAUD, shaders.SH_MF_SHADING_GOURAUD),
+                (shaders.SH_MV_SHADING_SMOOTH,  shaders.SH_MF_SHADING_SMOOTH),
+                (shaders.SH_MV_SHADING_TOON, shaders.SH_MF_SHADING_TOON),
+            ]
+        #
+        if shading == 'plain':
+            vShading, fShading = M[0]
+        elif shading in ['flat', 'gouraud']:
+            vShading, fShading = M[1]
+        elif shading == 'smooth':
+            vShading, fShading = M[2]
+        elif shading == 'toon':
+            vShading, fShading = M[3]
+        else:
+            return
+        
+        # Change shaders accordingly. Does not cause recompile if new
+        # part replaces itself.
+        if shader.vertex.HasPart('shading'):
+            shader.vertex.ReplacePart(vShading)
+        if shader.fragment.HasPart('shading'):
+            shader.fragment.ReplacePart(fShading)
     
     @PropWithDraw
     def cullFaces():

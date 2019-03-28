@@ -930,7 +930,7 @@ class BaseAxis(base.Wobject):
           * pps: lines in screen pixels
           * ppg: dotted lines in real coords
         """
-        raise NotImplemented('This is the abstract base class.')
+        raise NotImplementedError('This is the abstract base class.')
 
 
 class CartesianAxis2D(BaseAxis):

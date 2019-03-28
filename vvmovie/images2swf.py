@@ -424,7 +424,7 @@ class Tag:
 
     def ProcessTag(self):
         """ Implement this to create the tag. """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def GetTag(self):
         """ Calls processTag and attaches the header. """
