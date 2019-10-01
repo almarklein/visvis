@@ -22,6 +22,7 @@ There are three things to take into account when making a new function:
 """
 
 import os
+import sys
 import zipfile
 
 from visvis.core.misc import splitPathInZip
@@ -30,14 +31,15 @@ from visvis.core.misc import splitPathInZip
 def _insertFunctions():
     """ insert the function is this module's namespace.
     """
-    
+
     # see which files we have
-    path = __file__
-    path = os.path.dirname( os.path.abspath(path) )
-    
-    # determine if we're in a zipfile
-    zipfilename, path = splitPathInZip(path)
-    
+    if hasattr(sys, '_MEIPASS'):  # PyInstaller
+        zipfilename, path = sys.executable, ""
+    else:
+        path = __file__
+        path = os.path.dirname( os.path.abspath(path) )
+        zipfilename, path = splitPathInZip(path)
+
     if zipfilename:
         # get list of files from zipfile
         z = zipfile.ZipFile(zipfilename)
@@ -46,7 +48,7 @@ def _insertFunctions():
     else:
         # get list of files from file system
         files = os.listdir(path)
-    
+
     # extract all functions
     names = []
     for file in files:
@@ -71,7 +73,7 @@ def _insertFunctions():
             g = globals()
             g[funname] = mod.__dict__[funname]
             names.append(funname)
-    
+
     return names
 
 

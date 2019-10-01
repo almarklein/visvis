@@ -42,6 +42,7 @@ def splitPathInZip(path):
     within the zipfile. If the given path is a native file or direcory,
     returns ('', path). Raises an error if no valid zipfile can be found.
     """
+    ori_path = path
     if os.path.exists(path):
         return '', path
     # Split path in parts
@@ -49,13 +50,13 @@ def splitPathInZip(path):
     while True:
         path, sub = os.path.split(path)
         if not sub:
-            raise RuntimeError('Not a real path nor in a zipfile.')
+            raise RuntimeError('Not a real path nor in a zipfile: "%s"' % ori_path)
         zipPath.insert(0, sub)
         if os.path.isfile(path):
             if zipfile.is_zipfile(path):
                 return path, os.path.join(*zipPath)
             else:
-                raise RuntimeError('Not a zipfile: "%s"' % path)
+                raise RuntimeError('Not a zipfile: "%s"' % ori_path)
     
 
 

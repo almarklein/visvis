@@ -27,17 +27,26 @@ def copyResources(destPath):
     (The folder containing the frozen executable).
     
     """
-    # create folder (if required)
+    # Create folder (if required)
     destPath = os.path.join(destPath, 'visvisResources')
     if not os.path.isdir(destPath):
         os.makedirs(destPath)
-    # copy files
-    path = vv.misc.getResourceDir()
-    for file in os.listdir(path):
-        if file.startswith('.') or file.startswith('_'):
+    # Copy files
+    for filename, _ in collectResourcePaths():
+        fname = os.path.basename(filename)
+        shutil.copy(filename, os.path.join(destPath, fname))
+
+
+def collectResourcePaths():
+    paths = []  # list of (abs_source, rel_dest)
+    # Collect files
+    src_dir = vv.misc.getResourceDir()
+    dist_dir = "visvisResources"
+    for fname in os.listdir(src_dir):
+        if fname.startswith('.') or fname.startswith('_'):
             continue
-        shutil.copy(os.path.join(path,file), os.path.join(destPath,file))
-    # copy FreeType library to resource dir
+        paths.append((os.path.join(src_dir, fname), dist_dir))
+    # Collect FreeType library to resource dir
     try:
         ft_filename = vv.text.freetype.FT.filename
     except Exception:
@@ -51,9 +60,10 @@ def copyResources(destPath):
                 break
     if ft_filename and os.path.isfile(ft_filename):
         fname = os.path.split(ft_filename)[1]
-        shutil.copy(ft_filename, os.path.join(destPath,fname))
+        paths.append((ft_filename, dist_dir))
     else:
-        print('Warning: could not copy freetype library.')
+        print('Warning: could not find freetype library.')
+    return paths
 
 
 def getIncludes(backendName):
