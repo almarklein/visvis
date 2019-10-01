@@ -783,6 +783,7 @@ class Axes(base.Wibject):
         # Size of figure ...
         fig = self.GetFigure()
         w,h = fig.position.size
+        pixelRatio = fig._devicePixelRatio
         
         # Find actual position in pixels, do not allow negative values
         pos = self.position.InPixels()
@@ -792,16 +793,16 @@ class Axes(base.Wibject):
         
         # Set viewport (note that OpenGL has origin in lower-left, visvis
         # in upper-left)
-        gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)
+        fig._dpi_aware_viewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)
         
         self._OnDrawContent(DRAW_SHAPE, clr, pos, pickerHelper)
         
         # Prepare for wibject children (draw in full viewport)
-        gl.glViewport(0,0,w,h)
+        fig._dpi_aware_viewport(0, 0, w, h)
         gl.glDisable(gl.GL_DEPTH_TEST)
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
-        ortho( 0, w, h, 0)
+        ortho( 0, w * pixelRatio, h * pixelRatio, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
@@ -826,6 +827,7 @@ class Axes(base.Wibject):
             # Get size of figure ...
             fig = self.GetFigure()
             w,h = fig.position.size
+            pixelRatio = fig._devicePixelRatio
             
             # Correction of size for labels is normally done in OnDrawShape,
             # but this is not called if user interaction is disabled ...
@@ -840,7 +842,7 @@ class Axes(base.Wibject):
             
             # Set viewport (note that OpenGL has origin in lower-left, visvis
             # in upper-left)
-            gl.glViewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)
+            fig._dpi_aware_viewport(pos.absLeft, h-pos.absBottom, pos.w, pos.h)
             
             # Select screenshot
             sshot = self._screenshot
@@ -905,7 +907,7 @@ class Axes(base.Wibject):
         
         # # Set viewport to the full figure and disable depth test
         if True:
-            gl.glViewport(0,0,w,h)
+            fig._dpi_aware_viewport(0, 0, w, h)
             gl.glDisable(gl.GL_DEPTH_TEST)
         
         
@@ -920,7 +922,7 @@ class Axes(base.Wibject):
             # Set view
             gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glLoadIdentity()
-            ortho( 0, w, 0, h)  # Note that 0 and h are swapped
+            ortho( 0, w * pixelRatio, 0, h * pixelRatio)  # Note that 0 and h are swapped
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
             
@@ -936,7 +938,7 @@ class Axes(base.Wibject):
             # Set view
             gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glLoadIdentity()
-            ortho( 0, w, h, 0)
+            ortho( 0, w * pixelRatio, h * pixelRatio, 0)
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
             
@@ -1020,11 +1022,17 @@ class Axes(base.Wibject):
         # Draw items in screen coordinates
         if mode != DRAW_SHAPE:
             
+            pixelRatio = self.GetFigure()._devicePixelRatio
+            
             # Set camera to screen coordinates.
             gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glLoadIdentity()
             h = pos.h_fig
-            ortho( pos.absLeft, pos.absRight, h-pos.absBottom, h-pos.absTop)
+            ortho(pos.absLeft * pixelRatio,
+                  pos.absRight * pixelRatio,
+                  (h - pos.absBottom) * pixelRatio,
+                  (h - pos.absTop) * pixelRatio,
+            )
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
             

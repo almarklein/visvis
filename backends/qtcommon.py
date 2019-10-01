@@ -106,6 +106,12 @@ class GLWidget(QtOpenGL.QGLWidget):
         except Exception:
             pass
         
+        # Set pixel ratio for highdpi displays
+        try:
+            self.figure._devicePixelRatio = self.devicePixelRatioo()
+        except Exception:
+            self.figure._devicePixelRatio = 1.0
+            
         # enable mouse tracking so mousemove events are always fired.
         self.setMouseTracking(True)
         

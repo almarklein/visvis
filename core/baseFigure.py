@@ -201,6 +201,10 @@ class BaseFigure(_BaseFigure):
         # register
         self._Register()
         
+        # Make sure we have _devicePixelRatio
+        if not hasattr(self, "_devicePixelRatio"):
+            self._devicePixelRatio = 1.0
+        
         # to prevent recursion
         self._resizing = False
         
@@ -296,7 +300,12 @@ class BaseFigure(_BaseFigure):
         BaseFigure._figures[nr] = self
         # make current
         BaseFigure._currentNr = nr
-
+    
+    
+    def _dpi_aware_viewport(self, x, y, w, h):
+        pr = self._devicePixelRatio
+        gl.glViewport(int(x * pr), int(y * pr), int(w * pr), int(h * pr))
+    
     
     ## Methods to overload
     # To create a subclass for a specific backend:
@@ -373,6 +382,18 @@ class BaseFigure(_BaseFigure):
         raise NotImplementedError()
     
     ## Properties
+    
+    @PropWithDraw
+    def devicePixelRatio():
+        """ The scale factor for high-DPI displays. This value is usually
+        1 (for normal display) or 2 (for retina displays). When using a Qt-based
+        backend, this value will usually be set correctly.
+        """
+        def fget(self):
+            return self._devicePixelRatio
+        def fset(self, value):
+            self._devicePixelRatio = float(value)
+        return locals()
     
     @Property
     def parent():
@@ -869,13 +890,13 @@ class BaseFigure(_BaseFigure):
     def _PrepateForFlatDrawing(self, w, h):
         # Set viewport
         gl.glDisable(gl.GL_DEPTH_TEST)
-        gl.glViewport(0, 0, w, h)
+        self._dpi_aware_viewport(0, 0, w, h)
         
         # set camera
         # Flip up down because we want y=0 to be on top.
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
-        ortho(0, w, h, 0)
+        ortho(0, w * self._devicePixelRatio, h * self._devicePixelRatio, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
     
