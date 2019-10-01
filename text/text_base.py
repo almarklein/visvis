@@ -68,14 +68,14 @@ class AtlasTexture(TextureObject):
         """
         
         # Add lumincance channel
-        data2 = np.zeros((data.shape[0],data.shape[1],2), dtype=np.uint8)
-        data2[:,:,0] = 255
-        data2[:,:,1] = data
+        # data2 = np.zeros((data.shape[0],data.shape[1],2), dtype=np.uint8)
+        # data2[:,:,0] = 255
+        # data2[:,:,1] = data
         
         shape = data.shape
         gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, 2, shape[1],shape[0], 0,
-        #    gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data)
-            gl.GL_LUMINANCE_ALPHA, gl.GL_UNSIGNED_BYTE, data2)
+            gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data)  # See issue #110
+            # gl.GL_LUMINANCE_ALPHA, gl.GL_UNSIGNED_BYTE, data2)
         
         tmp1, tmp2 = gl.GL_LINEAR, gl.GL_LINEAR
         #tmp1, tmp2 = gl.GL_NEAREST, gl.GL_NEAREST
@@ -89,13 +89,14 @@ class AtlasTexture(TextureObject):
         """ Overload to make it an alpha map.
         """
         # Add lumincance channel
-        data2 = np.zeros((data.shape[0],data.shape[1],2), dtype=np.uint8)
-        data2[:,:,0] = 255
-        data2[:,:,1] = data
+        # data2 = np.zeros((data.shape[0],data.shape[1],2), dtype=np.uint8)
+        # data2[:,:,0] = 255
+        # data2[:,:,1] = data
         
         shape = data.shape
         gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0,0, shape[1],shape[0],
-            gl.GL_LUMINANCE_ALPHA, gl.GL_UNSIGNED_BYTE, data2)
+            gl.GL_ALPHA, gl.GL_UNSIGNED_BYTE, data)
+            # gl.GL_LUMINANCE_ALPHA, gl.GL_UNSIGNED_BYTE, data2)
 
 
 class FontManager(object):
