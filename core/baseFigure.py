@@ -102,8 +102,10 @@ class ObjectPickerHelper(object):
         
         # get shape and position of mouse
         shape = self.screen.shape
-        x,y = figure.mousepos
-        
+        x, y = figure.mousepos
+        x = int(x * figure._devicePixelRatio)
+        y = int(y * figure._devicePixelRatio)
+         
         # get id of the object under the mouse
         if x < 0 or x >= shape[1] or y < 0 or y >= shape[0]:
             id = 0

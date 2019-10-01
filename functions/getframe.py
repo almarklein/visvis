@@ -20,6 +20,7 @@ def getframe(ob):
     
     # Get figure
     fig = ob.GetFigure()
+    pr = fig._devicePixelRatio
     if not fig:
         raise ValueError('Object is not present in any alive figures.')
     
@@ -44,12 +45,15 @@ def getframe(ob):
     else:
         raise ValueError("The given object is not a figure nor an axes.")
     
+    # Convert to physical pixels
+    x, y, w, h = int(x * pr), int(y * pr), int(w * pr), int(h * pr)
+    
     # read
     # use floats to prevent strides etc. uint8 caused crash on qt backend.
     im = gl.glReadPixels(x, y, w, h, gl.GL_RGB, gl.GL_FLOAT)
     
     # reshape, flip, and store
-    im.shape = h,w,3
+    im.shape = h, w, 3
     im = np.flipud(im)
     
     # done
