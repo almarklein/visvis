@@ -37,26 +37,26 @@ axes.SetLimits(rangeZ=(-2,3))
 # Define timer func
 sun.zSpeed = 0.2
 def onTimer(event):
-    
+
     # Move moon
     moonRot.angle += 20
     if moonRot.angle > 360:
         moonRot.angle = 0
-    
+
     # Move earth
     earthRot.angle += 5
     if earthRot.angle > 360:
         earthRot.angle = 0
-    
+
     # Move sun
     sun.zSpeed -= 0.01
     sunTrans.dz += sun.zSpeed
-    
+
     # Detect bounce
     if sunTrans.dz < 0:
         sun.zSpeed *= -1
         sunTrans.dz = 0
-    
+
     # Update!
     axes.Draw()
 

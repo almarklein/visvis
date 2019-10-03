@@ -308,7 +308,17 @@ class BaseFigure(_BaseFigure):
         pr = self._devicePixelRatio
         gl.glViewport(int(x * pr), int(y * pr), int(w * pr), int(h * pr))
     
+    def _normal_ortho(self, *args):
+        # For when drawing in screen coords
+        ortho(*args)
     
+    def _dpi_aware_ortho(self, *args):
+        # For when drawing in screen coords
+        pr = self._devicePixelRatio
+        #gl.glScale(pr, pr, 1.0)
+        args = [a * pr for a in args]
+        ortho(*args)
+        
     ## Methods to overload
     # To create a subclass for a specific backend:
     # - Overload the methods below.
@@ -890,6 +900,7 @@ class BaseFigure(_BaseFigure):
 
     
     def _PrepateForFlatDrawing(self, w, h):
+        
         # Set viewport
         gl.glDisable(gl.GL_DEPTH_TEST)
         self._dpi_aware_viewport(0, 0, w, h)
@@ -898,7 +909,7 @@ class BaseFigure(_BaseFigure):
         # Flip up down because we want y=0 to be on top.
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
-        ortho(0, w * self._devicePixelRatio, h * self._devicePixelRatio, 0)
+        self._normal_ortho(0, w, h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
     

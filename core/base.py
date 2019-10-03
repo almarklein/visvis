@@ -607,7 +607,7 @@ class Wibject(BaseObject):
         # get posision in screen coordinates
         pos = self.position
         # apply
-        gl.glTranslatef(pos.left, pos.top,0.0)
+        gl.glTranslatef(pos.left, pos.top, 0.0)
 
     
     def OnDrawShape(self, clr):

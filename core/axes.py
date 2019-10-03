@@ -783,7 +783,6 @@ class Axes(base.Wibject):
         # Size of figure ...
         fig = self.GetFigure()
         w,h = fig.position.size
-        pixelRatio = fig._devicePixelRatio
         
         # Find actual position in pixels, do not allow negative values
         pos = self.position.InPixels()
@@ -802,7 +801,7 @@ class Axes(base.Wibject):
         gl.glDisable(gl.GL_DEPTH_TEST)
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
-        ortho( 0, w * pixelRatio, h * pixelRatio, 0)
+        fig._normal_ortho(0, w, h, 0)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         
@@ -827,7 +826,6 @@ class Axes(base.Wibject):
             # Get size of figure ...
             fig = self.GetFigure()
             w,h = fig.position.size
-            pixelRatio = fig._devicePixelRatio
             
             # Correction of size for labels is normally done in OnDrawShape,
             # but this is not called if user interaction is disabled ...
@@ -922,7 +920,7 @@ class Axes(base.Wibject):
             # Set view
             gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glLoadIdentity()
-            ortho( 0, w * pixelRatio, 0, h * pixelRatio)  # Note that 0 and h are swapped
+            fig._dpi_aware_ortho( 0, w, 0, h)  # Note that 0 and h are swapped
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
             
@@ -938,9 +936,10 @@ class Axes(base.Wibject):
             # Set view
             gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glLoadIdentity()
-            ortho( 0, w * pixelRatio, h * pixelRatio, 0)
+            fig._normal_ortho(0, w, h, 0)
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
+            
             
             # Transform
             self.parent._Transform() # Container
