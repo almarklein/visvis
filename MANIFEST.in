@@ -1,6 +1,9 @@
-include examples/*.py
-include visvisResources/*
-include vvio/*.py
-include processing/*.py
-include vvmovie/*.py
+graft examples
+graft processing
+graft tests
+graft utils
+graft visvisResources
+graft vvio
+graft vvmovie
+
 include license.txt
