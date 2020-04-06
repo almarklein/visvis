@@ -19,11 +19,13 @@ qtlib = visvis.backends.qtlib
 qtlib_is_v2 = False
 if qtlib == 'pyside':
     from PySide import QtCore, QtGui, QtOpenGL
+    QtWidgets = QtGui
 elif qtlib == 'pyside2':
     from PySide2 import QtCore, QtWidgets, QtGui, QtOpenGL
     qtlib_is_v2 = True
 elif qtlib == 'pyqt4':
     from PyQt4 import QtCore, QtGui, QtOpenGL
+    QtWidgets = QtGui
 elif qtlib == 'pyqt5':
     from PyQt5 import QtCore, QtWidgets, QtGui, QtOpenGL
     qtlib_is_v2 = True
@@ -46,6 +48,22 @@ else:
 # Also note tha wx seems the less affected backend (there is a small fix
 # by redrawing on a Activate event which helps a lot)
 
+
+def enable_hidpi():
+    """ Enable high-res displays.
+    """
+    try:
+        # See https://github.com/pyzo/pyzo/pull/700 why we seem to need both
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)  # global dpi aware
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)  # per-monitor dpi aware
+    except Exception:
+        pass  # fail on non-windows
+    try:
+        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    except Exception:
+        pass  # fail on older Qt's
+
+enable_hidpi()
 
 
 KEYMAP = {  QtCore.Qt.Key_Shift: constants.KEY_SHIFT,
@@ -108,7 +126,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         
         # Set pixel ratio for highdpi displays
         try:
-            self.figure._devicePixelRatio = self.devicePixelRatioo()
+            self.figure._devicePixelRatio = float(self.devicePixelRatioF())
         except Exception:
             self.figure._devicePixelRatio = 1.0
             
