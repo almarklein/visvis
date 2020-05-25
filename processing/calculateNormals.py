@@ -151,7 +151,7 @@ def calculateNormals_old(mesh):
         if np.isnan(tmp).sum():
             tmp = defaultNormal
         normals[i,:] = -tmp
-    print('calculated normals in %1.2 s' % (time.time()-t0))
+    print('calculated normals in %1.2f s' % (time.time()-t0))
     
     # Store normals
     mesh._normals = normals

@@ -9,6 +9,7 @@
 
 """
 import os
+import ctypes
 
 import visvis
 from visvis import BaseFigure, events, constants

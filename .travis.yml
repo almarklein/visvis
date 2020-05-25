@@ -76,7 +76,7 @@ install:
         pip install pyopengl;
       fi;
     - if [ "${TEST_UNIT}" == "1" ]; then
-        pip install pytest;
+        pip install imageio pytest;
       fi;
     - if [ "${TEST_INSTALL}" == "1" ]; then
         python setup.py install;
