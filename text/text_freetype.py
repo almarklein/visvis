@@ -49,42 +49,7 @@ TEX_SCALE = 2.5
 # todo: have pyzo ship freeType lib on Windows and use that if possible.
 # todo: When we implement full screen antialiasing, we can remove the shader here
 
-FRAGMENT_SHADER_ = """
-// Uniforms obtained from OpenGL
-    uniform sampler2D texture; // The 3D texture
-    uniform vec2 shape; // And its shape (as in OpenGl)
-    
-    void main()
-    {
-        // Get centre location
-        vec2 pos = gl_TexCoord[0].xy;
-        
-        // Init value
-        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0);
-        
-        // Init kernel and number of steps
-        vec4 kernel = vec4 (0.2, 0.2, 0.1 , 0.1);
-        //vec4 kernel = vec4 (0.3, 0.2, 0.1 , 0.0);
-        int sze = 3;
-        
-        // Init step size in tex coords
-        float dx = 1.0/shape.x;
-        float dy = 1.0/shape.y;
-        
-        // Convolve
-        for (int y=-sze; y<sze+1; y++)
-        {
-            for (int x=-sze; x<sze+1; x++)
-            {
-                float k = kernel[int(abs(float(x)))] * kernel[int(abs(float(y)))];
-                vec2 dpos = vec2(float(x)*dx, float(y)*dy);
-                color1 += texture2D(texture, pos+dpos) * k;
-            }
-        }
-        gl_FragColor = color1 * gl_Color;
-        
-    }
-"""
+
 FRAGMENT_SHADER = """
 // Uniforms obtained from OpenGL
     uniform sampler2D texture; // The 3D texture
@@ -105,23 +70,22 @@ FRAGMENT_SHADER = """
         float dx = 1.0/shape.x;
         float dy = 1.0/shape.y;
         
-        vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0);
+        float alpha = 0.0;
         
-        color1 += texture2D(texture, pos+vec2(-dx,-dy) ) * k1 * k1;
-        color1 += texture2D(texture, pos+vec2(-dx,0.0) ) * k1 * k0;
-        color1 += texture2D(texture, pos+vec2(-dx,+dy) ) * k1 * k1;
+        alpha += texture2D(texture, pos+vec2(-dx,-dy) ).a * k1 * k1;
+        alpha += texture2D(texture, pos+vec2(-dx,0.0) ).a * k1 * k0;
+        alpha += texture2D(texture, pos+vec2(-dx,+dy) ).a * k1 * k1;
         
-        color1 += texture2D(texture, pos+vec2(0.0,-dy) ) * k0 * k1;
-        color1 += texture2D(texture, pos+vec2(0.0,0.0) ) * k0 * k0;
-        color1 += texture2D(texture, pos+vec2(0.0,+dy) ) * k0 * k1;
+        alpha += texture2D(texture, pos+vec2(0.0,-dy) ).a * k0 * k1;
+        alpha += texture2D(texture, pos+vec2(0.0,0.0) ).a * k0 * k0;
+        alpha += texture2D(texture, pos+vec2(0.0,+dy) ).a * k0 * k1;
         
-        color1 += texture2D(texture, pos+vec2(+dx,-dy) ) * k1 * k1;
-        color1 += texture2D(texture, pos+vec2(+dx,0.0) ) * k1 * k0;
-        color1 += texture2D(texture, pos+vec2(+dx,+dy) ) * k1 * k1;
+        alpha += texture2D(texture, pos+vec2(+dx,-dy) ).a * k1 * k1;
+        alpha += texture2D(texture, pos+vec2(+dx,0.0) ).a * k1 * k0;
+        alpha += texture2D(texture, pos+vec2(+dx,+dy) ).a * k1 * k1;
         
         // Set final color
-        gl_FragColor = color1 * gl_Color;
-        
+        gl_FragColor = vec4(gl_Color.rgb, alpha);
     }
 """
 
