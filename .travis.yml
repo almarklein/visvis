@@ -75,7 +75,7 @@ install:
         source activate testenv > ${REDIRECT_TO};
         conda install --yes --quiet numpy > ${REDIRECT_TO};
         conda install --yes --quiet pillow -c conda-forge > ${REDIRECT_TO};
-        pip install imageio==2.7;
+        pip install imageio==2.6;
         pip install pyopengl;
       fi;
     - if [ "${TEST_UNIT}" == "1" ]; then
