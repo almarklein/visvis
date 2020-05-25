@@ -1,5 +1,6 @@
 import os
 
+
 def test_im_read_write():
     import visvis as vv
     im = vv.imread('astronaut.png')
