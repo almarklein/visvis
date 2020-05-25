@@ -1,6 +1,7 @@
 # Travis CI configuration file for Visvis
 # Validate this at http://lint.travis-ci.org/
 
+
 language: python
 
 # use container-based infrastructure
@@ -13,7 +14,7 @@ branches:
 
 matrix:
     include:
-        - python: "3.6"
+        - python: "3.7"
           env: TEST_UNIT=0 TEST_STYLE=1 TEST_DOCS=1
         #
         - python: "2.7"
@@ -21,10 +22,12 @@ matrix:
         - python: "3.4"
           env: TEST_UNIT=1
         - python: "3.5"
-          env: TEST_UNIT=1 TEST_INSTALL=1
+          env: TEST_UNIT=1
         - python: "3.6"
           env: TEST_UNIT=1
-        - python: "3.7"
+        - python: "3.7" TEST_INSTALL=1
+          env: TEST_UNIT=1
+        - python: "3.8"
           env: TEST_UNIT=1
 
 before_install:
@@ -72,11 +75,11 @@ install:
         source activate testenv > ${REDIRECT_TO};
         conda install --yes --quiet numpy > ${REDIRECT_TO};
         conda install --yes --quiet pillow -c conda-forge > ${REDIRECT_TO};
-        pip install imageio;
+        pip install imageio==2.7;
         pip install pyopengl;
       fi;
     - if [ "${TEST_UNIT}" == "1" ]; then
-        pip install imageio pytest;
+        pip install pytest;
       fi;
     - if [ "${TEST_INSTALL}" == "1" ]; then
         python setup.py install;
