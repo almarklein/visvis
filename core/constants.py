@@ -157,10 +157,12 @@ colormaps['jet'] = [(0,0,0.5), (0,0,1), (0,0.5,1), (0,1,1), (0.5,1,0.5),
                     (1,1,0), (1,0.5,0), (1,0,0), (0.5,0,0)]
 colormaps['hsv'] = [(1,0,0), (1,1,0), (0,1,0), (0,1,1),(0,0,1), (1,0,1), (1,0,0)]
 
-import numpy as np
+import sys
 import base64
-colormaps['magma'] = np.frombuffer(base64.decodestring(_magma), np.float32).reshape(256, 3)
-colormaps['viridis'] = np.frombuffer(base64.decodestring(_viridis), np.float32).reshape(256, 3)
+import numpy as np
+base64decode = base64.decodebytes if sys.version_info > (3, ) else base64.decodestring
+colormaps['magma'] = np.frombuffer(base64decode(_magma), np.float32).reshape(256, 3)
+colormaps['viridis'] = np.frombuffer(base64decode(_viridis), np.float32).reshape(256, 3)
 
 # Medical colormaps
 c1, c2 = 1200 / 4096.0, 1550 / 4096.0

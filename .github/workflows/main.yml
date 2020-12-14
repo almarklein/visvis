@@ -1,0 +1,61 @@
+name: CI
+
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - name: Linux py27
+            os: ubuntu-16.04
+            pyversion: '2.7'
+          - name: Linux py36
+            os: ubuntu-16.04
+            pyversion: '3.6'
+          - name: Linux py37
+            os: ubuntu-latest
+            pyversion: '3.7'
+          - name: Linux py38
+            os: ubuntu-latest
+            pyversion: '3.8'
+          - name: Linux py39
+            os: ubuntu-latest
+            pyversion: '3.9'
+          - name: MacOS py38
+            os: macos-latest
+            pyversion: '3.8'
+          - name: Windows py38
+            os: windows-latest
+            pyversion: '3.8'
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.pyversion }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyversion }}
+      - name: Install dependencies
+        run: |
+            python -m pip install -U pip
+            pip install -U numpy pyOpenGl
+            pip install imageio==2.6.1
+            pip install -q -U flake8 pytest pycodestyle
+      - name: Lint (flake8)
+        run: |
+            flake8 .
+      - name: Test with pytest
+        shell: bash
+        run: |
+            python setup.py install
+            rm -rf ./visvis ./build ./egg-info
+            pytest -v .

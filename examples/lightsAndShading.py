@@ -39,7 +39,7 @@ for i in range(len(shading)):
 
 # Set settings for axes
 a = vv.gca()
-a.axis.xTicks = [str(s) for s in shading]
+a.axis.xTicks = [str(x) for x in shading]
 a.axis.xLabel = 'face- and edgeshading'
 a.axis.yTicks = [str(float(j)/ndiffuse) for j in range(ndiffuse)]
 a.axis.yLabel = 'diffuse reflection'

@@ -1,6 +1,6 @@
-# Visvis - the object oriented approach to visualization
+![CI](https://github.com/almarklein/visvis/workflows/CI/badge.svg)
 
-[![Build Status](https://travis-ci.org/almarklein/visvis.svg?branch=master)](https://travis-ci.org/almarklein/visvis)
+# Visvis - the object oriented approach to visualization
 
 [Visvis](http://github.com/almarklein/visvis) is a pure Python library
 for visualization of 1D to 4D data in an object oriented way.
