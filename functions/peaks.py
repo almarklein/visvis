@@ -7,6 +7,7 @@
 import numpy as np
 import visvis as vv
 
+import sys
 import zlib
 import base64
 
@@ -17,27 +18,28 @@ if False:
     from visvis import ssdf
     db = ssdf.load('d:/almar/projects/peaks.ssdf')
     data = db.z.astype(np.float32)
-    
+
     # Dump
     data = data.tostring()
     data = zlib.compress(data)
-    text = base64.encodestring(data)
+    text = base64.encodebytes(data)
     print(text)
 
 def peaks():
     """ peaks()
-    
+
     Returs a 2D map of z-values that represent an example landscape with
     Gaussian blobs.
-    
+
     """
-    
+
     # Decode z data
-    data = base64.decodestring(zData.encode('ascii'))
+    base64decode = base64.decodebytes if sys.version > (3, ) else base64.decodestring
+    data = base64decode(zData.encode('ascii'))
     data = zlib.decompress(data)
     z = np.frombuffer(data, dtype=np.float32 )
     z.shape = 49, 49
-    
+
     # Done!
     return z
 
