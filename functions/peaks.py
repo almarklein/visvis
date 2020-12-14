@@ -34,7 +34,7 @@ def peaks():
     """
 
     # Decode z data
-    base64decode = base64.decodebytes if sys.version > (3, ) else base64.decodestring
+    base64decode = base64.decodebytes if sys.version_info > (3, ) else base64.decodestring
     data = base64decode(zData.encode('ascii'))
     data = zlib.decompress(data)
     z = np.frombuffer(data, dtype=np.float32 )

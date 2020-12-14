@@ -160,7 +160,7 @@ colormaps['hsv'] = [(1,0,0), (1,1,0), (0,1,0), (0,1,1),(0,0,1), (1,0,1), (1,0,0)
 import sys
 import base64
 import numpy as np
-base64decode = base64.decodebytes if sys.version > (3, ) else base64.decodestring
+base64decode = base64.decodebytes if sys.version_info > (3, ) else base64.decodestring
 colormaps['magma'] = np.frombuffer(base64decode(_magma), np.float32).reshape(256, 3)
 colormaps['viridis'] = np.frombuffer(base64decode(_viridis), np.float32).reshape(256, 3)
 
