@@ -29,6 +29,8 @@ matrix:
           env: TEST_UNIT=1
         - python: "3.8"
           env: TEST_UNIT=1
+        - python: "3.9"
+          env: TEST_UNIT=1
 
 before_install:
     - REDIRECT_TO=/dev/stdout  # change to /dev/null to silence Travis
