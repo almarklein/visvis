@@ -48,7 +48,7 @@ jobs:
         run: |
             python -m pip install --upgrade pip
             pip install -U numpy pyOpenGl
-            pip install -q -U flake8 pytestpycodestyle
+            pip install -q -U flake8 pytest pycodestyle
       - name: Lint (flake8)
         run: |
             flake8 .
