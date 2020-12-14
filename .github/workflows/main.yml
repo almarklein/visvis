@@ -47,7 +47,7 @@ jobs:
       - name: Install dependencies
         run: |
             python -m pip install --upgrade pip
-            pip install -U numpy pyOpenGl
+            pip install -U numpy pyOpenGl imageio
             pip install -q -U flake8 pytest pycodestyle
       - name: Lint (flake8)
         run: |
@@ -56,5 +56,5 @@ jobs:
         shell: bash
         run: |
             python setup.py install
-            rm -rf ./dash_slicer ./build ./egg-info
+            rm -rf ./visvis ./build ./egg-info
             pytest -v .
