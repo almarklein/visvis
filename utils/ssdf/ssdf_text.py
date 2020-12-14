@@ -308,7 +308,7 @@ class TextBlock(Block):
         
         # Store list
         if isSmallList:
-            elements = [subBlock._data.strip() for subBlock in subBlocks]
+            elements = [subBlock_._data.strip() for subBlock_ in subBlocks]
             self._data = '[%s]' % (', '.join(elements))
         else:
             self._data = "list:"

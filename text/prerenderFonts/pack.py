@@ -62,7 +62,7 @@ def processFont(fontname):
         if line.startswith('-size'):
             fontsize = int(line[6:])
             break
-    
+
     ## info
 
     entries = {}
@@ -83,7 +83,7 @@ def processFont(fontname):
         tmp = line[i1+1:i2]
         tmp = tmp.split(',')
         if len(tmp)!=2: continue
-        char.origin = [int(i) for i in tmp]
+        char.origin = [int(ii1) for ii1 in tmp]
         # find size
         i = line.find('size=')
         i1 = line.find("\"",i)
@@ -93,7 +93,7 @@ def processFont(fontname):
         tmp = line[i1+1:i2]
         tmp = tmp.split('x')
         if len(tmp)!=2: continue
-        char.size = [int(float(i)+0.5) for i in tmp]
+        char.size = [int(float(ii2)+0.5) for ii2 in tmp]
         # find width
         i = line.find('aw=')
         i1 = line.find("\"",i)
@@ -121,7 +121,7 @@ def processFont(fontname):
         size[code,0] = char.size[0]
         size[code,1] = char.size[1]
         width[code] = char.aw
-    
+
     ## image
     tmp = Image.open(path+'tmp/'+fontname+'-0.png')
     im = np.asarray(tmp)
@@ -138,7 +138,7 @@ def processFont(fontname):
     s.data = im.copy()
     s.fontsize = fontsize
     return s
-    
+
 ## Scan available fonts and pack them
 
 files = os.listdir(path)
@@ -149,7 +149,7 @@ for font in ['mono', 'sans', 'serif']:
         fontname = font+'_'+fonttype
         s = processFont(fontname)
         ss.append(s)
-    
+
     # process to pack together
     sr, sb, si = ss[0], ss[1], ss[2]
     for fonttype in ['b', 'i']:
@@ -169,7 +169,7 @@ for font in ['mono', 'sans', 'serif']:
         sr['origin_'+fonttype] = s.origin
         sr['size_'+fonttype] = s.size
         sr['width_'+fonttype] = s.width
-    
+
     # store
     base[font] = sr
 

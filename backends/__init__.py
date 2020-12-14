@@ -82,7 +82,7 @@ if True:
 # Establish preference based on loaded backends modules
 # In this way, in an interactive interpreter the right backend is picked
 if visvis.settings.preferAlreadyLoadedBackend:
-    for be in [be for be in reversed(backendOrder)]:
+    for be in [be_ for be_ in reversed(backendOrder)]:
         # Determine backend module name
         modName = backendMap[be]
         # If loaded, move up front
