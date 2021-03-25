@@ -1,4 +1,5 @@
 ![CI](https://github.com/almarklein/visvis/workflows/CI/badge.svg)
+[![DOI](https://zenodo.org/badge/41725089.svg)](https://zenodo.org/badge/latestdoi/41725089)
 
 # Visvis - the object oriented approach to visualization
 
