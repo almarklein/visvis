@@ -7,19 +7,23 @@
 import visvis as vv
 
 # Try importing imageio
-imageio = None
+iio = None
 
 try:
     import imageio
+    if hasattr(imageio, "v2"):
+        iio = imageio.v2
+    else:
+        iio = imageio
 except ImportError:
     pass
 
 
 def imwrite(filename, image, format=None):
     """ imwrite(filename, image, format=None)
-    
+
     Write image (numpy array) to file, requires imageio.
-    
+
     Parameters
     ----------
     filename : string
@@ -30,18 +34,18 @@ def imwrite(filename, image, format=None):
     format : string
         The format for the image to be saved in. If not given, the
         format is deduced from the filename.
-    
+
     Notes
     -----
       * For floating point images, 0 is considered black and 1 is white.
       * For integer types, 0 is considered black and 255 is white.
-    
+
     """
-    
-    if imageio is None:
+
+    if iio is None:
         raise RuntimeError("visvis.imwrite requires the imageio package.")
-    
-    imageio.imwrite(filename, image, format)
+
+    iio.imwrite(filename, image, format)
 
 
 if __name__ == '__main__':

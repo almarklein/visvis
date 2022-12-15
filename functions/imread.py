@@ -8,24 +8,28 @@ import visvis as vv
 import os
 
 # Try importing imageio
-imageio = None
+iio = None
 
 try:
     import imageio
+    if hasattr(imageio, "v2"):
+        iio = imageio.v2
+    else:
+        iio = imageio
 except ImportError:
     pass
 
 
 def imread(filename):
     """ imread(filename)
-    
+
     Read image from file or http, requires imageio.
-    
+
     """
-    
-    if imageio is None:
+
+    if iio is None:
         raise RuntimeError("visvis.imread requires the imageio package.")
-    
+
     if not os.path.isfile(filename) and '//' not in filename:
         # try loading from the resource dir
         path = vv.misc.getResourceDir()
@@ -34,8 +38,8 @@ def imread(filename):
             filename = filename2
         else:
             pass  # imageio can read from http and more ...
-    
-    return imageio.imread(filename)
+
+    return iio.imread(filename)
 
 
 if __name__ == '__main__':
