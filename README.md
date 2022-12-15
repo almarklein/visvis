@@ -13,9 +13,16 @@ easy creation of objects (e.g. `plot()`, `imshow()`, `volshow()`, `surf()`).
 ## Installation
 
 Visvis is cross-platform and runs on Python 2.x and Python 3.x. It
-depends on numpy, pyopengl, and needs a GUI backend (either PyQt4, PyQt5, PySide, Wx, GTK, FLTK).
+depends on numpy, pyopengl.
 
-Installation is best done via conda (``conda install visvis``) or pip (``pip install visvis``).
+Installation is best done via pip (``pip install visvis``) or conda (``conda install visvis``).
+
+You also need a GUI backend, either of these will do:
+* GLFW -> recommended, runs on asyncio, install using `pip install glfw`
+* Qt: PySide6, Pyside2, Pyside, PyQt5, or PyQt4
+* Wx
+* GTK
+* FLTK
 
 
 ## How visvis works

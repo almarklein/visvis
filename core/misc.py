@@ -576,11 +576,11 @@ class Settings(object):
             if key in self._s:
                 return self._s[key]
             else:
-                return 'pyside'  # Default value
+                return 'glfw'  # Default value
         def fset(self, key, value):
             # Note that 'qt4' in valid for backward compatibility
             value = value.lower()
-            if value in ['pyside', 'qt4', 'pyqt4', 'wx', 'gtk', 'fltk', 'foo']:
+            if value in ['glfw', 'pyside6', 'pyside2', 'pyqt5', 'wx', 'gtk', 'fltk', 'foo']:
                 self._s[key] = value
             else:
                 raise ValueError('Invalid backend specified.')
