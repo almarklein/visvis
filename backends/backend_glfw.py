@@ -187,6 +187,8 @@ class GLWidget:
         self._pixel_ratio = pixel_ratio
         self._physical_size = psize
         self._logical_size = psize[0] / pixel_ratio, psize[1] / pixel_ratio
+        
+        self.figure._devicePixelRatio = self._pixel_ratio
 
     def _set_logical_size(self, new_logical_size):
         # There is unclarity about the window size in "screen pixels".
@@ -288,7 +290,7 @@ class GLWidget:
             glfw.MOUSE_BUTTON_8: 8,
         }
         button = button_map.get(but, 0)
-
+        
         if action == glfw.PRESS:
             event_type = "down"
             self._pointer_buttons.add(button)
@@ -298,8 +300,9 @@ class GLWidget:
         else:
             return
         
-        x, y = self._pointer_pos[0], self._pointer_pos[1]
-        modifiers = list(self._key_modifiers)
+        x = int(self._pointer_pos[0] + 0.499)
+        y = int(self._pointer_pos[1] + 0.499)
+        modifiers = tuple(self._key_modifiers)
         
         self.figure._GenerateMouseEvent(event_type, x, y, button, modifiers)
         
@@ -343,8 +346,9 @@ class GLWidget:
             self._double_click_state["clicks"] = 3
         elif clicks == 3 and action == glfw.RELEASE:
             self._double_click_state = {"clicks": 0}
-            x, y = self._pointer_pos[0], self._pointer_pos[1]
-            modifiers = list(self._key_modifiers)
+            x = int(self._pointer_pos[0] + 0.499)
+            y = int(self._pointer_pos[1] + 0.499)
+            modifiers = tuple(self._key_modifiers)
             self.figure._GenerateMouseEvent('double', x, y, button, modifiers)
 
     def _on_cursor_pos(self, window, x, y):
@@ -356,17 +360,18 @@ class GLWidget:
         else:
             self._pointer_pos = x / self._pixel_ratio, y / self._pixel_ratio
             
-        x, y = self._pointer_pos[0], self._pointer_pos[1]
-        modifiers = list(self._key_modifiers)
+        x = int(self._pointer_pos[0] + 0.499)
+        y = int(self._pointer_pos[1] + 0.499)
+        modifiers = tuple(self._key_modifiers)
         self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers)
 
     def _on_scroll(self, window, dx, dy):
         if not self.figure:
             return
         # wheel is 1 or -1 in glfw, in jupyter_rfb this is ~100
-        x, y = self._pointer_pos[0], self._pointer_pos[1]
-        modifiers = list(self._key_modifiers)
-        dx, dy =  100.0 * dx, -100.0 * dy,
+        x = int(self._pointer_pos[0] + 0.499)
+        y = int(self._pointer_pos[1] + 0.499)
+        modifiers = tuple(self._key_modifiers)
         self.figure._GenerateMouseEvent('scroll', x, y, dx, dy, modifiers)
 
     def _on_key(self, window, key, scancode, action, mods):
@@ -400,7 +405,7 @@ class GLWidget:
             if "Shift" not in self._key_modifiers:
                 keyname = keyname.lower()
 
-        modifiers = list(self._key_modifiers)
+        modifiers = tuple(self._key_modifiers)
         self.figure._GenerateKeyEvent(event_type, keyname, keyname, modifiers)
 
 
@@ -497,27 +502,9 @@ def newFigure():
     """
     size = visvis.settings.figureSize
     figure = Figure(size[0], size[1], "Figure")
+    size = visvis.settings.figureSize
+    figure._widget.set_logical_size(size[0],size[1])
     return figure
-
-
-class VisvisEventsTimer:
-    """ Timer that can be started and stopped.
-    """
-    def __init__(self):
-        self._running = False
-    def Start(self):
-        if not self._running:
-            self._running = True
-            self._PostOneShot()
-    def Stop(self):
-        self._running = False
-    def _PostOneShot(self):
-        loop = asyncio.get_event_loop()
-        loop.call_later(0.01, self._Fire)
-    def _Fire(self):
-        if self._running:
-            events.processVisvisEvents()
-            self._PostOneShot() # Repost
 
     
 class App(events.App):
@@ -531,9 +518,8 @@ class App(events.App):
     """
     
     def __init__(self):
-        # Init timer
-        self._timer = VisvisEventsTimer()
-    
+        pass
+
     def _GetNativeApp(self):
         return glfw
     
@@ -567,12 +553,15 @@ def update_glfw_canvasses():
 
 async def mainloop():  # noqa E999: this is invalid below a certain version
     loop = asyncio.get_event_loop()
+    processVisvisEvents = events.processVisvisEvents
+    
     while True:
         n = update_glfw_canvasses()
         if glfw.stop_if_no_more_canvases and not n:
             break
         await asyncio.sleep(0.001)
         glfw.poll_events()
+        processVisvisEvents()
     loop.stop()
     glfw.terminate()
 
