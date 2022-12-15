@@ -29,7 +29,7 @@ Generate and upload package (preferably on Windows)
 Announcing:
   * It can be worth waiting a day for eager users to report critical bugs
   * Announce in scipy-user, visvis mailing list, G+
-  
+
 """
 
 import os
@@ -62,17 +62,17 @@ setup(
     author = 'Almar Klein',
     author_email = 'almar.klein@gmail.com',
     license = '(new) BSD',
-    
+
     url = 'https://github.com/almarklein/visvis',
     keywords = "visualization OpenGl medical imaging 3D plotting numpy",
     description = description,
     long_description = __doc__,
-    
+
     platforms = 'any',
     provides = ['visvis'],
     #install_requires = ['numpy', 'pyOpenGl', 'imageio'], # have imageio be auto-installed by pip?
     install_requires = ['numpy', 'pyOpenGl'],
-    
+
     packages = ['visvis',
                 'visvis.functions',
                 'visvis.backends',
@@ -88,7 +88,7 @@ setup(
     package_dir = {'visvis': '.'},
     package_data = {'visvis': [ 'examples/*.py', 'visvisResources/*', 'utils/iso/*.pyx']},
     zip_safe = False,
-    
+
     classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Science/Research',
@@ -105,6 +105,10 @@ setup(
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.10',
+          'Programming Language :: Python :: 3.11',
           ],
     )
 
