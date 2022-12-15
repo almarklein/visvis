@@ -8,10 +8,14 @@ import os
 import visvis as vv
 
 # Try importing imageio
-imageio = None
+iio = None
 
 try:
     import imageio
+    if hasattr(imageio, "v2"):
+        iio = imageio.v2
+    else:
+        iio = imageio
 except ImportError:
     pass
 
@@ -19,18 +23,18 @@ except ImportError:
 def movieRead(filename, *args, **kwargs):
     """ Proxy for imageio.mimread()
     """
-    
-    if imageio is None:
+
+    if iio is None:
         raise RuntimeError("visvis.movieRead requires the imageio package.")
-    
+
     if not os.path.isfile(filename):
         # try loadingpil from the resource dir
         path = vv.misc.getResourceDir()
         filename2 = os.path.join(path, filename)
         if os.path.isfile(filename2):
             filename = filename2
-    
-    return imageio.mimread(filename, *args, **kwargs)
+
+    return iio.mimread(filename, *args, **kwargs)
 
 
 if __name__ == '__main__':

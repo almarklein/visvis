@@ -7,10 +7,14 @@
 import visvis as vv
 
 # Try importing imageio
-imageio = None
+iio = None
 
 try:
     import imageio
+    if hasattr(imageio, "v2"):
+        iio = imageio.v2
+    else:
+        iio = imageio
 except ImportError:
     pass
 
@@ -18,11 +22,11 @@ except ImportError:
 def movieWrite(filename, images, *args, **kwargs):
     """ Proxy for imageio.mimwrite()
     """
-    
-    if imageio is None:
+
+    if iio is None:
         raise RuntimeError("visvis.movieWrite requires the imageio package.")
-    
-    return imageio.mimwrite(filename, images, *args, **kwargs)
+
+    return iio.mimwrite(filename, images, *args, **kwargs)
 
 
 if __name__ == '__main__':

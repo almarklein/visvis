@@ -9,22 +9,26 @@ import os
 
 
 # Try importing imageio
-imageio = None
+iio = None
+
 try:
     import imageio
+    if hasattr(imageio, "v2"):
+        iio = imageio.v2
+    else:
+        iio = imageio
 except ImportError:
     pass
 
-
 def volread(filename):
     """ volread(filename)
-    
+
     Read volume from a file. If filename is 'stent', read a dedicated
     test dataset. For reading any other kind of volume, the imageio
     package is required.
-    
+
     """
-    
+
     # Try loading our base volume(s)
     if filename == 'stent':
         path = vv.misc.getResourceDir()
@@ -33,11 +37,11 @@ def volread(filename):
             filename = filename2
             s = vv.ssdf.load(filename)
             return s.vol.astype('int16') * s.colorscale
-    
+
     # Use imageio (can also load from http, etc)
-    if imageio is None:
+    if iio is None:
         raise RuntimeError("visvis.volread needs the imageio package to read arbitrary files.")
-    return imageio.volread(filename)
+    return iio.volread(filename)
 
 
 if __name__ == '__main__':
