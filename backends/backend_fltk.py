@@ -207,7 +207,7 @@ class Figure(BaseFigure):
             args, kwargs = self._widget_args
             if 'create_widget' in kwargs:
                 updatePosition = True
-                del(kwargs['create_widget'])
+                kwargs.pop('create_widget')
             self._widget = GLWidget(self, *args, **kwargs)
             if updatePosition:
                 self.position._Changed()

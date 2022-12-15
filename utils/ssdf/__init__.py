@@ -315,7 +315,7 @@ def clear(struct):
     
     """
     for key in [key for key in struct]:
-        del(struct.__dict__[key])
+        struct.__dict__.pop(key)
 
 
 def count(object):

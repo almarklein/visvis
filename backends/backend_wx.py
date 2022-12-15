@@ -306,7 +306,7 @@ class Figure(BaseFigure):
             parent, args, kwargs = self._widget_args
             if 'create_widget' in kwargs:
                 updatePosition = True
-                del(kwargs['create_widget'])
+                kwargs.pop('create_widget')
                 
             # Based on switch set in App the correct widget class is called
             if app._phoenix:

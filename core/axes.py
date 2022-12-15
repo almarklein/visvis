@@ -38,7 +38,10 @@ def _Screenshot():
     under the mouse, and by the axes to buffer its content.
     
     """
-    gl.glReadBuffer(gl.GL_BACK)
+    try:
+        gl.glReadBuffer(gl.GL_BACK)
+    except Exception:  # Somehow fails on MacOS/Pyside6
+        pass
     xywh = gl.glGetIntegerv(gl.GL_VIEWPORT)
     x,y,w,h = xywh[0], xywh[1], xywh[2], xywh[3]
     # use floats to prevent strides etc. uint8 caused crash on qt backend.
