@@ -128,12 +128,6 @@ class GLWidget(QGLWidget):
         except Exception:
             pass
         
-        # Set pixel ratio for highdpi displays
-        try:
-            self.figure._devicePixelRatio = float(self.devicePixelRatioF())
-        except Exception:
-            self.figure._devicePixelRatio = 1.0
-            
         # enable mouse tracking so mousemove events are always fired.
         self.setMouseTracking(True)
         
@@ -194,7 +188,7 @@ class GLWidget(QGLWidget):
                 horizontal, vertical = numSteps, 0
                 
         # fire event
-        x, y = event.x(), event.y()
+        x, y = event.position().x(), event.position().y()
         self.figure._GenerateMouseEvent('scroll', x, y, horizontal, vertical, modifiers(event))
     
     def keyPressEvent(self, event):
@@ -252,6 +246,7 @@ class GLWidget(QGLWidget):
     
     def resizeGL(self, w, h):
         # This does not work if we implement resizeEvent
+        self.figure._devicePixelRatio = float(self.devicePixelRatioF())
         self.figure._OnResize()
     
     def paintEvent(self,event):
