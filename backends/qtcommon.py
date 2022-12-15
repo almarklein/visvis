@@ -19,16 +19,24 @@ from visvis.core.misc import getResourceDir
 qtlib = visvis.backends.qtlib
 qtlib_is_v2 = False
 if qtlib == 'pyside':
-    from PySide import QtCore, QtGui, QtOpenGL
+    from PySide import QtCore, QtGui
+    from PySide.QtOpenGL import QGLWidget
     QtWidgets = QtGui
 elif qtlib == 'pyside2':
-    from PySide2 import QtCore, QtWidgets, QtGui, QtOpenGL
+    from PySide2 import QtCore, QtWidgets, QtGui
+    from PySide2.QtOpenGL import QGLWidget
+    qtlib_is_v2 = True
+elif qtlib == 'pyside6':
+    from PySide6 import QtCore, QtWidgets, QtGui
+    from PySide6.QtOpenGLWidgets import QOpenGLWidget as QGLWidget
     qtlib_is_v2 = True
 elif qtlib == 'pyqt4':
-    from PyQt4 import QtCore, QtGui, QtOpenGL
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtOpenGL import QGLWidget
     QtWidgets = QtGui
 elif qtlib == 'pyqt5':
-    from PyQt5 import QtCore, QtWidgets, QtGui, QtOpenGL
+    from PyQt5 import QtCore, QtWidgets, QtGui
+    from PyQt5.QtOpenGL import QGLWidget
     qtlib_is_v2 = True
 else:
     raise ImportError('Cannot import Qt: invalid qtlib specified "%s".' %qtlib)
@@ -100,18 +108,13 @@ def modifiers(event):
     return mod
 
 
-class GLWidget(QtOpenGL.QGLWidget):
-    """ An OpenGL widget inheriting from QtOpenGL.QGLWidget
+class GLWidget(QGLWidget):
+    """ An OpenGL widget inheriting from QGLWidget
     to pass events in the right way to the wrapping Figure class.
     """
     
     def __init__(self, figure, parent, *args):
-        # Create opengl format
-        glFormat = QtOpenGL.QGLFormat()
-        #glFormat.setSampleBuffers(True)
-        #glFormat.setSamples(4)
-        #
-        QtOpenGL.QGLWidget.__init__(self, glFormat, parent, *args)
+        QGLWidget.__init__(self, parent, *args)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose) # keep cleaned up
         self.figure = figure
         # Note that the default QGLFormat has double buffering enabled.
@@ -276,6 +279,12 @@ class GLWidget(QtOpenGL.QGLWidget):
                 if not qwindow.isExposed():
                     return
         self.swapBuffers()
+    
+    if qtlib == "pyside6":
+        def swapBuffers(self):
+            context = self.context()
+            surface = context.surface()
+            context.swapBuffers(surface)
 
 
 class Figure(BaseFigure):
@@ -433,7 +442,10 @@ class App(events.App):
     
     def _ProcessEvents(self):
         app = self._GetNativeApp()
-        app.flush()
+        if hasattr(app, "sendPostedEvents"):
+            app.sendPostedEvents()
+        elif hasattr(app, "flush"):
+            app.flush()
         app.processEvents()
     
     def _Run(self):

@@ -55,10 +55,11 @@ import visvis
 from visvis.core.misc import isFrozen, getExceptionInstance
 
 # The order in which to try loading a backend (foo is a dummy backend)
-backendOrder = ['pyqt5', 'pyside2', 'pyside', 'pyqt4', 'wx', 'gtk', 'fltk']
+backendOrder = ['pyside6', 'pyqt5', 'pyside2', 'pyside', 'pyqt4', 'wx', 'gtk', 'fltk']
 backendMap = {'pyqt5':'PyQt5',
               'pyside':'PySide',
               'pyside2':'PySide2',
+              'pyside6':'PySide6',
               'pyqt4':'PyQt4',
               'wx':'wx',
               'gtk':'gtk',
@@ -226,7 +227,7 @@ def use(backendName=None):
             if _loadBackend(name):
                 break
         else:
-            tmp = "Install PySide2, PyQt5, PySide, PyQt4, wxPython, GTK, or fltk."
+            tmp = "Install PySide6, PySide2, PyQt5, PySide, PyQt4, wxPython, GTK, or fltk."
             raise RuntimeError("None of the backends could be loaded. "+tmp)
     
     # Return instance
