@@ -565,7 +565,7 @@ def update_glfw_canvasses():
     return len(canvases)
 
 
-async def mainloop():
+async def mainloop():  # noqa E999: this is invalid below a certain version
     loop = asyncio.get_event_loop()
     while True:
         n = update_glfw_canvasses()
