@@ -70,6 +70,8 @@ Visvis has been relatively stable for several years. I am still maintaining it, 
 
 See [Vispy](https://github.com/vispy/vispy/) for a similar (but more modern) visualization library.
 
+I am now working on [PyGfx](https://github.com/pygfx/pygfx), which is better in almost every way. A bit lower level though, but people are starting to build higher level API's on top of it ...
+
 
 ## License
 
