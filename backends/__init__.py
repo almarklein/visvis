@@ -50,9 +50,23 @@ The backend is chosen/selected as follows:
 
 import os
 import sys
-import imp
 import visvis
 from visvis.core.misc import isFrozen, getExceptionInstance
+
+
+try:
+    import importlib.util
+    import importlib.machinery
+    def load_source(modname, filename):
+        loader = importlib.machinery.SourceFileLoader(modname, filename)
+        spec = importlib.util.spec_from_file_location(
+            modname, filename, loader=loader)
+        module = importlib.util.module_from_spec(spec)
+        loader.exec_module(module)
+        return module
+except ImportError:
+    from imp import load_source
+
 
 # The order in which to try loading a backend (foo is a dummy backend)
 backendOrder = ['glfw', 'pyside6', 'pyqt5', 'pyside2', 'pyside', 'pyqt4', 'wx', 'gtk', 'fltk']
@@ -161,7 +175,7 @@ def _loadBackend(name):
         if modFileName.endswith('.pyc'):
             module = __import__(modNameFull, fromlist=[modName])
         else:
-            module = imp.load_source(modNameFull, modFileName)
+            module = load_source(modNameFull, modFileName)
         globals()[modName] = module
     except Exception:
         if not isFrozen():
