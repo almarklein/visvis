@@ -1,0 +1,51 @@
+# Notes on how to do a release.
+#
+# * Bump `__version__` and commit.
+# * git tag vx.y
+# * git push origin main vx.y
+# * flit publish
+
+
+# ===== Project info
+
+[project]
+dynamic = ["version"]
+name = "visvis"
+description = "The object oriented approach to visualization"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Almar Klein" }]
+keywords = ["visualization", "opengl", "medical imaging", "3d", "2d"]
+requires-python = ">= 3.6"
+dependencies = ["numpy", "pyOpenGl", "imageio"]
+
+[project.optional-dependencies]
+lint = ["ruff"]
+tests = ["pytest"]
+dev = ["visvis[lint,tests]"]
+
+
+[project.urls]
+Homepage = "https://github.com/almarklein/visvis"
+Documentation = "https://github.com/almarklein/visvis/wiki"
+Repository = "https://github.com/almarklein/visvis"
+
+# ===== Building
+
+# Flit is great solution for simple pure-Python projects.
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+# ===== Tooling
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "N", "B", "RUF"]
+ignore = [
+    # "E501",   # Line too long
+    # "E731",   # Do not assign a `lambda` expression, use a `def`
+    # "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`"
+]
