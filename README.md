@@ -13,14 +13,12 @@ easy creation of objects (e.g. `plot()`, `imshow()`, `volshow()`, `surf()`).
 
 ## Status
 
-Visvis has been relatively stable for several years. I am still maintaining it, but do not plan on making any major changes. Visvis will not make use of modern OpenGL. It's API might be a bit idosyncratic (e.g. methods are UpperCamelCase) because I started working on Visvis before I knew about PEP8.
+Visvis has been relatively stable for several years. I am still maintaining it
+trying to make sure it keeps working, but do not plan on making any major changes. Visvis will not make use of modern OpenGL. It's API might be a bit idosyncratic (e.g. methods are UpperCamelCase) because I started working on Visvis before I knew about PEP8.
 
 See [Vispy](https://github.com/vispy/vispy/) for a similar (but more modern) visualization library.
 
 I am now working on [PyGfx](https://github.com/pygfx/pygfx), which is better in almost every way. A bit lower level though, but people are starting to build higher level API's on top of it ...
-
-Update in 2025: Some examples no longer work on my Mac, so it looks like time
-is starting to catch up on Visvis.
 
 
 ## Installation
