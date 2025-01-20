@@ -1,0 +1,60 @@
+# ===== Project info
+
+[project]
+dynamic = ["version"]
+name = "visvis"
+description = "The object oriented approach to visualization "
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Almar Klein" }]
+keywords = ["visualization", "opengl", "2d", "3d", "medical imaging"]
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Science/Research',
+    'Intended Audience :: Education',
+    'Intended Audience :: Developers',
+    'Topic :: Scientific/Engineering :: Visualization',
+    'License :: OSI Approved :: BSD License',
+    'Operating System :: MacOS :: MacOS X',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: POSIX',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+]
+requires-python = ">= 2.7"
+dependencies = ["numpy", "pyOpenGl"]
+
+[project.urls]
+Homepage = "https://github.com/almarklein/visvis"
+Documentation = "https://github.com/almarklein/visvis/wiki"
+Repository = "https://github.com/almarklein/visvis"
+
+# ===== Building
+
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+# ===== Tooling
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "N", "B", "RUF"]
+ignore = [
+    # "E501",   # Line too long
+    # "E731",   # Do not assign a `lambda` expression, use a `def`
+    # "B019",   # Use of `functools.lru_cache` or `functools.cache` on methods can lead to memory leaks
+    # "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`"
+]
