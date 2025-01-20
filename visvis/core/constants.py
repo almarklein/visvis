@@ -6,7 +6,6 @@
 
 """Module constants"""
 
-
 import sys
 import base64
 import numpy as np
