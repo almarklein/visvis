@@ -4,7 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Package visvis.utils
+"""Package visvis.utils
 
 This package contains a few modules and packages that are stand-alone
 and maybe useful outside visvis. Some utilities are used inside visvis

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Example that demonstrates how movies can be recorded
+"""Example that demonstrates how movies can be recorded
 and exported to gif/swf/avi.
 
 This is not an interactive example, but a script.
@@ -11,7 +11,7 @@ import visvis as vv
 
 # Create something to show, let's show a red teapot!
 mesh = vv.solidTeapot()
-mesh.faceColor = 'r'
+mesh.faceColor = "r"
 
 # Prepare
 Nangles = 36
@@ -22,15 +22,15 @@ rec = vv.record(a)
 # Rotate camera
 for i in range(Nangles):
     a.camera.azimuth = 360 * float(i) / Nangles
-    if a.camera.azimuth>180:
+    if a.camera.azimuth > 180:
         a.camera.azimuth -= 360
-    a.Draw() # Tell the axes to redraw
-    f.DrawNow() # Draw the figure NOW, instead of waiting for GUI event loop
+    a.Draw()  # Tell the axes to redraw
+    f.DrawNow()  # Draw the figure NOW, instead of waiting for GUI event loop
 
 
 # Export
 rec.Stop()
-rec.Export('teapot.gif')
+rec.Export("teapot.gif")
 
 
 """ NOTES

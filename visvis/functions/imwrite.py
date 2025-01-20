@@ -11,6 +11,7 @@ iio = None
 
 try:
     import imageio
+
     if hasattr(imageio, "v2"):
         iio = imageio.v2
     else:
@@ -20,7 +21,7 @@ except ImportError:
 
 
 def imwrite(filename, image, format=None):
-    """ imwrite(filename, image, format=None)
+    """imwrite(filename, image, format=None)
 
     Write image (numpy array) to file, requires imageio.
 
@@ -48,6 +49,6 @@ def imwrite(filename, image, format=None):
     iio.imwrite(filename, image, format)
 
 
-if __name__ == '__main__':
-    im = vv.imread('astronaut.png')
-    vv.imwrite('astronaut_new.jpg', im)
+if __name__ == "__main__":
+    im = vv.imread("astronaut.png")
+    vv.imwrite("astronaut_new.jpg", im)

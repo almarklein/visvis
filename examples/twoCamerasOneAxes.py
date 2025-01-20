@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" This example demonstrates how one can use two of the same cameras
+"""This example demonstrates how one can use two of the same cameras
 on the same axes.
 
 The axes keeps a list of cameras, and only allows one camera of each type.
@@ -11,18 +11,21 @@ is also still available (on index 2).
 
 import visvis as vv
 
+
 class OurCamera1(vv.cameras.TwoDCamera):
-    _NAMES = ('our1', 8)
+    _NAMES = ("our1", 8)
     # a string name to be able to set cameraType
     # an int so it has an index, allowing changing the camera via a shortcut
 
+
 class OurCamera2(vv.cameras.TwoDCamera):
-    _NAMES = ('our2', 9)
+    _NAMES = ("our2", 9)
+
 
 # Draw an image
-im = vv.imread('astronaut.png')
+im = vv.imread("astronaut.png")
 vv.imshow(im)
-vv.title('Press ALT+8 for cam1 and ALT+9 for cam2')
+vv.title("Press ALT+8 for cam1 and ALT+9 for cam2")
 
 # Get axes
 a = vv.gca()
@@ -30,7 +33,7 @@ a = vv.gca()
 # Add cameras and select the first
 a.camera = OurCamera1()
 a.camera = OurCamera2()
-a.cameraType = 'our1' # We can do this because we set the _NAMES attribute
+a.cameraType = "our1"  # We can do this because we set the _NAMES attribute
 
 # Increase zoom
 a.camera.zoom *= 2

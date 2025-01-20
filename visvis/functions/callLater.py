@@ -7,12 +7,13 @@
 import time
 import visvis as vv
 
+
 def callLater(delay, callable, *args, **kwargs):
-    """ callLater(delay, callable, *args, **kwargs)
-    
+    """callLater(delay, callable, *args, **kwargs)
+
     Call a callable after a specified delay (in seconds),
     with the specified arguments and keyword-arguments.
-    
+
     Parameters
     ----------
     delay : scalar
@@ -21,17 +22,19 @@ def callLater(delay, callable, *args, **kwargs):
         before any other visvis events are processed.
     callable : a callable object
         The callback that is called when the delay has passed.
-    
+
     See also vv.Event
-    
+
     """
     calltime = time.time() + delay
-    vv.events._callLater_callables[calltime]= (callable, args, kwargs)
+    vv.events._callLater_callables[calltime] = (callable, args, kwargs)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Code to call a method after 2.0 seconds
     def foo():
-        print('haha!')
+        print("haha!")
+
     vv.callLater(2.0, foo)
     # For this to work, a visvis application must be Create'd.
     app = vv.use()

@@ -4,8 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" The GLFW backend.
-"""
+"""The GLFW backend."""
 
 import os
 import sys
@@ -45,8 +44,8 @@ if hasattr(glfw, "set_window_maximize_callback"):
     set_window_maximize_callback = glfw.set_window_maximize_callback
 if hasattr(glfw, "get_window_content_scale"):
     get_window_content_scale = glfw.get_window_content_scale
-    
-    
+
+
 KEY_MAP = {
     glfw.KEY_DOWN: constants.KEY_DOWN,
     glfw.KEY_UP: constants.KEY_UP,
@@ -75,18 +74,18 @@ KEY_MAP_MOD = {
 
 
 # Make uppercase letters be lowercase
-for i in range(ord('A'), ord('Z')):
-    KEY_MAP[i] = i+32
+for i in range(ord("A"), ord("Z")):
+    KEY_MAP[i] = i + 32
 
 
 class GLWidget:
-    """ Implementation of the GL_window, which passes a number of
+    """Implementation of the GL_window, which passes a number of
     events to the Figure object that wraps it.
     """
-    
+
     def __init__(self, figure, *args, **kwargs):
         self.figure = figure
-        
+
         # Set window hints
         glfw.window_hint(glfw.CLIENT_API, glfw.OPENGL_API)
         glfw.window_hint(glfw.RESIZABLE, True)
@@ -107,7 +106,7 @@ class GLWidget:
         self._last_draw_time = 0
         self._max_fps = 60.0
         self._logical_size = 640, 480
-        
+
         # Register ourselves
         glfw.all_glfw_canvases.add(self)
 
@@ -135,9 +134,9 @@ class GLWidget:
         self._pixel_ratio = -1
         self._screen_size_is_logical = False
         self._request_draw()
-    
+
     # Callbacks to provide a minimal working canvas
-    
+
     def _on_pixelratio_change(self, *args):
         if self._changing_pixel_ratio:
             return
@@ -164,7 +163,7 @@ class GLWidget:
 
     def _on_iconify(self, window, iconified):
         self._is_minimized = bool(iconified)
-    
+
     def _on_focus(self, *args):
         BaseFigure._currentNr = self.figure.nr
         self._on_window_dirty()
@@ -175,7 +174,7 @@ class GLWidget:
         self._request_draw_timer_running = False
         self._need_draw = True  # The event loop looks at this flag
         glfw.post_empty_event()  # Awake the event loop, if it's in wait-mode
-    
+
     def _determine_size(self):
         # Because the value of get_window_size is in physical-pixels
         # on some systems and in logical-pixels on other, we use the
@@ -187,7 +186,7 @@ class GLWidget:
         self._pixel_ratio = pixel_ratio
         self._physical_size = psize
         self._logical_size = psize[0] / pixel_ratio, psize[1] / pixel_ratio
-        
+
         self.figure._devicePixelRatio = self._pixel_ratio
 
     def _set_logical_size(self, new_logical_size):
@@ -225,16 +224,16 @@ class GLWidget:
             self._determine_size()
 
     # API
-    
+
     def set_title(self, title):
         glfw.set_window_title(self._window, title)
-        
+
     def make_current(self):
         glfw.make_context_current(self._window)
-    
+
     def swap_buffers(self):
         glfw.swap_buffers(self._window)
-        
+
     def get_pixel_ratio(self):
         return self._pixel_ratio
 
@@ -248,24 +247,24 @@ class GLWidget:
         if width < 0 or height < 0:
             raise ValueError("Window width and height must not be negative")
         self._set_logical_size((float(width), float(height)))
-    
+
     def set_pos(self, x, y):
         glfw.set_window_pos(self._window, x, y)
-    
+
     def get_pos(self):
-        return glfw.get_window_pos(self._window) 
-    
+        return glfw.get_window_pos(self._window)
+
     def _request_draw(self):
         if not self._request_draw_timer_running:
             self._request_draw_timer_running = True
             call_later(self._get_draw_wait_time(), self._mark_ready_for_draw)
-    
+
     def _get_draw_wait_time(self):
         """Get time (in seconds) to wait until the next draw in order to honour max_fps."""
         now = time.perf_counter()
         target_time = self._last_draw_time + 1.0 / self._max_fps
         return max(0, target_time - now)
-        
+
     def close(self):
         glfw.set_window_should_close(self._window, True)
         self._on_close()
@@ -290,7 +289,7 @@ class GLWidget:
             glfw.MOUSE_BUTTON_8: 8,
         }
         button = button_map.get(but, 0)
-        
+
         if action == glfw.PRESS:
             event_type = "down"
             self._pointer_buttons.add(button)
@@ -299,13 +298,13 @@ class GLWidget:
             self._pointer_buttons.discard(button)
         else:
             return
-        
+
         x = int(self._pointer_pos[0] + 0.499)
         y = int(self._pointer_pos[1] + 0.499)
         modifiers = tuple(self._key_modifiers)
-        
+
         self.figure._GenerateMouseEvent(event_type, x, y, button, modifiers)
-        
+
         # Maybe emit a double-click event
         self._follow_double_click(action, button)
 
@@ -349,7 +348,7 @@ class GLWidget:
             x = int(self._pointer_pos[0] + 0.499)
             y = int(self._pointer_pos[1] + 0.499)
             modifiers = tuple(self._key_modifiers)
-            self.figure._GenerateMouseEvent('double', x, y, button, modifiers)
+            self.figure._GenerateMouseEvent("double", x, y, button, modifiers)
 
     def _on_cursor_pos(self, window, x, y):
         if not self.figure:
@@ -359,11 +358,11 @@ class GLWidget:
             self._pointer_pos = x, y
         else:
             self._pointer_pos = x / self._pixel_ratio, y / self._pixel_ratio
-            
+
         x = int(self._pointer_pos[0] + 0.499)
         y = int(self._pointer_pos[1] + 0.499)
         modifiers = tuple(self._key_modifiers)
-        self.figure._GenerateMouseEvent('motion', x, y, 0, modifiers)
+        self.figure._GenerateMouseEvent("motion", x, y, 0, modifiers)
 
     def _on_scroll(self, window, dx, dy):
         if not self.figure:
@@ -372,7 +371,7 @@ class GLWidget:
         x = int(self._pointer_pos[0] + 0.499)
         y = int(self._pointer_pos[1] + 0.499)
         modifiers = tuple(self._key_modifiers)
-        self.figure._GenerateMouseEvent('scroll', x, y, dx, dy, modifiers)
+        self.figure._GenerateMouseEvent("scroll", x, y, dx, dy, modifiers)
 
     def _on_key(self, window, key, scancode, action, mods):
         if not self.figure:
@@ -410,61 +409,60 @@ class GLWidget:
 
 
 class Figure(BaseFigure):
-    """ This is the glfw implementation of the figure class.
-    
+    """This is the glfw implementation of the figure class.
+
     A Figure represents the OpenGl context and is the root
     of the visualization tree; a Figure Wibject does not have a parent.
-    
+
     A Figure can be created with the function vv.figure() or vv.gcf().
     """
-    
+
     def __init__(self, *args, **kwargs):
-        
         self._widget = None
         self._widget_args = (args, kwargs)
-        if kwargs.get('create_widget', True):
+        if kwargs.get("create_widget", True):
             self.CreateWidget()
-        
+
         # call original init AFTER we created the widget
         BaseFigure.__init__(self)
-    
+
     def CreateWidget(self):
-        """ Create the Figure's widget if necessary, and return the
-        widget. """
+        """Create the Figure's widget if necessary, and return the
+        widget."""
         if self._widget is None:
             # Make sure there is a native app and the timer is started
             # (also when embedded)
             app.Create()
-            
+
             # create widget
             updatePosition = False
             args, kwargs = self._widget_args
-            if 'create_widget' in kwargs:
+            if "create_widget" in kwargs:
                 updatePosition = True
-                kwargs.pop('create_widget')
+                kwargs.pop("create_widget")
             self._widget = GLWidget(self, *args, **kwargs)
             if updatePosition:
                 self.position._Changed()
         return self._widget
-    
+
     def _SetCurrent(self):
-        """ make this scene the current context """
+        """make this scene the current context"""
         if self._widget:
             self._widget.make_current()
-        
+
     def _SwapBuffers(self):
-        """ Swap the memory and screen buffer such that
-        what we rendered appears on the screen """
+        """Swap the memory and screen buffer such that
+        what we rendered appears on the screen"""
         if self._widget:
             self._widget.swap_buffers()
 
     def _SetTitle(self, title):
-        """ Set the title of the figure... """
+        """Set the title of the figure..."""
         if self._widget:
             self._widget.set_title(title)
-    
+
     def _SetPosition(self, x, y, w, h):
-        """ Set the position of the widget. """
+        """Set the position of the widget."""
         if self._widget:
             # select widget to resize. If it
             widget = self._widget
@@ -473,7 +471,7 @@ class Figure(BaseFigure):
             widget.set_logical_size(w, h)
 
     def _GetPosition(self):
-        """ Get the position of the widget. """
+        """Get the position of the widget."""
         if self._widget:
             # select widget to resize. If it
             widget = self._widget
@@ -482,50 +480,49 @@ class Figure(BaseFigure):
             w, h = widget.get_logical_size()
             return x, y, w, h
         return 0, 0, 0, 0
-    
+
     def _RedrawGui(self):
         if self._widget:
             self._widget._request_draw()
-    
+
     def _ProcessGuiEvents(self):
         glfw.poll_events()
-    
+
     def _Close(self, widget=None):
         if widget is None:
             widget = self._widget
         if widget:
             widget.close()
-    
+
 
 def newFigure():
-    """ Create a window with a figure widget.
-    """
+    """Create a window with a figure widget."""
     size = visvis.settings.figureSize
     figure = Figure(size[0], size[1], "Figure")
     size = visvis.settings.figureSize
-    figure._widget.set_logical_size(size[0],size[1])
+    figure._widget.set_logical_size(size[0], size[1])
     return figure
 
-    
+
 class App(events.App):
-    """ App()
-    
+    """App()
+
     Application class to wrap the GUI applications in a class
     with a simple interface that is the same for all backends.
-    
+
     This is the fltk implementation.
-    
+
     """
-    
+
     def __init__(self):
         pass
 
     def _GetNativeApp(self):
         return glfw
-    
+
     def _ProcessEvents(self):
         glfw.poll_events()
-    
+
     def _Run(self):
         loop = asyncio.get_event_loop()
         glfw.stop_if_no_more_canvases = True
@@ -535,8 +532,8 @@ class App(events.App):
 def call_later(delay, callback, *args):
     loop = asyncio.get_event_loop()
     loop.call_later(delay, callback, *args)
-    
-    
+
+
 def update_glfw_canvasses():
     """Call this in your glfw event loop to draw each canvas that needs
     an update. Returns the number of visible canvases.
@@ -554,7 +551,7 @@ def update_glfw_canvasses():
 async def mainloop():  # noqa E999: this is invalid below a certain version
     loop = asyncio.get_event_loop()
     processVisvisEvents = events.processVisvisEvents
-    
+
     while True:
         n = update_glfw_canvasses()
         if glfw.stop_if_no_more_canvases and not n:
@@ -572,12 +569,11 @@ glfw.init()
 
 # Init event loop
 if not hasattr(glfw, "all_glfw_canvases"):
-    
     # Store set of canvases on the glfw module, because the current backand module
     # can be reloaded every time that vv.use() is called.
     glfw.all_glfw_canvases = weakref.WeakSet()
     glfw.stop_if_no_more_canvases = False
-    
+
     # We start the event loop now, so that in an interactive session
     # this simply gets it running. When not in an interactive session,
     # the task wait until the loop gets started (via App.Run()).

@@ -16,7 +16,8 @@ import base64
 if False:
     # Get data (exported from Matlab)
     from visvis import ssdf
-    db = ssdf.load('d:/almar/projects/peaks.ssdf')
+
+    db = ssdf.load("d:/almar/projects/peaks.ssdf")
     data = db.z.astype(np.float32)
 
     # Dump
@@ -25,8 +26,9 @@ if False:
     text = base64.encodebytes(data)
     print(text)
 
+
 def peaks():
-    """ peaks()
+    """peaks()
 
     Returs a 2D map of z-values that represent an example landscape with
     Gaussian blobs.
@@ -34,10 +36,12 @@ def peaks():
     """
 
     # Decode z data
-    base64decode = base64.decodebytes if sys.version_info > (3, ) else base64.decodestring
-    data = base64decode(zData.encode('ascii'))
+    base64decode = (
+        base64.decodebytes if sys.version_info > (3,) else base64.decodestring
+    )
+    data = base64decode(zData.encode("ascii"))
     data = zlib.decompress(data)
-    z = np.frombuffer(data, dtype=np.float32 )
+    z = np.frombuffer(data, dtype=np.float32)
     z.shape = 49, 49
 
     # Done!

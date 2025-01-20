@@ -6,11 +6,12 @@
 
 import visvis as vv
 
+
 def movieShow(images, clim=None, duration=0.1, axesAdjust=True, axes=None):
-    """ movieShow(images, duration=0.1)
-    
+    """movieShow(images, duration=0.1)
+
     Show the images in the given list as a movie.
-    
+
     Parameters
     ----------
     images : list
@@ -27,25 +28,25 @@ def movieShow(images, clim=None, duration=0.1, axesAdjust=True, axes=None):
         the y-axis). If daspectAuto has not been set yet, it is set to False.
     axes : Axes instance
         Display the image in this axes, or the current axes if not given.
-    
+
     """
-    
+
     # Get axes
     if axes is None:
         axes = vv.gca()
-    
+
     # Create container
-    m = vv.MotionDataContainer(axes, duration*1000)
-    
+    m = vv.MotionDataContainer(axes, duration * 1000)
+
     # Create images and put in container
     for im in images:
         t = vv.imshow(im, clim=clim, axesAdjust=axesAdjust, axes=axes)
         t.parent = m
-    
+
     # Return container object
     return m
 
 
-if __name__ == '__main__':
-    ims = vv.movieRead('newtonscradle.gif')
+if __name__ == "__main__":
+    ims = vv.movieRead("newtonscradle.gif")
     vv.movieShow(ims)

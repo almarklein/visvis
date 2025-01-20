@@ -12,6 +12,7 @@ iio = None
 
 try:
     import imageio
+
     if hasattr(imageio, "v2"):
         iio = imageio.v2
     else:
@@ -21,8 +22,7 @@ except ImportError:
 
 
 def movieRead(filename, *args, **kwargs):
-    """ Proxy for imageio.mimread()
-    """
+    """Proxy for imageio.mimread()"""
 
     if iio is None:
         raise RuntimeError("visvis.movieRead requires the imageio package.")
@@ -37,6 +37,6 @@ def movieRead(filename, *args, **kwargs):
     return iio.mimread(filename, *args, **kwargs)
 
 
-if __name__ == '__main__':
-    ims = vv.movieRead('newtonscradle.gif')
+if __name__ == "__main__":
+    ims = vv.movieRead("newtonscradle.gif")
     vv.movieShow(ims)

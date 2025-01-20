@@ -4,7 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Package visvis.processing
+"""Package visvis.processing
 
 Each module in this directory contains a function with the same
 name as the module it's in. These functions are automatically loaded
@@ -35,20 +35,22 @@ from visvis.core.misc import splitPathInZip
 
 
 def _insertFunctions():
-
     # see which files we have
-    if hasattr(sys, '_MEIPASS'):  # PyInstaller
+    if hasattr(sys, "_MEIPASS"):  # PyInstaller
         zipfilename, path = sys.executable, ""
     else:
         path = __file__
-        path = os.path.dirname( os.path.abspath(path) )
+        path = os.path.dirname(os.path.abspath(path))
         zipfilename, path = splitPathInZip(path)
 
     if zipfilename:
         # get list of files from zipfile
         z = zipfile.ZipFile(zipfilename)
-        files = [os.path.split(i)[1] for i in z.namelist()
-                    if i.startswith('visvis') and i.count('processing')]
+        files = [
+            os.path.split(i)[1]
+            for i in z.namelist()
+            if i.startswith("visvis") and i.count("processing")
+        ]
     else:
         # get list of files from file system
         files = os.listdir(path)
@@ -57,19 +59,19 @@ def _insertFunctions():
     names = []
     for file in files:
         # not this file
-        if file.startswith('_'):
+        if file.startswith("_"):
             continue
         # only python files
-        if file.endswith('.pyc'):
+        if file.endswith(".pyc"):
             if file[:-1] in files:
-                continue # only try import once
-        elif not file.endswith('.py'):
+                continue  # only try import once
+        elif not file.endswith(".py"):
             continue
         # build name
         funname = os.path.splitext(file)[0]
         # import module
-        mod = __import__("visvis.processing."+funname, fromlist=[funname])
-        if not hasattr(mod,funname):
+        mod = __import__("visvis.processing." + funname, fromlist=[funname])
+        if not hasattr(mod, funname):
             print("module %s does not have a function with the same name!" % funname)
         else:
             # insert into THIS namespace

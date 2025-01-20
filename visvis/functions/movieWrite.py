@@ -11,6 +11,7 @@ iio = None
 
 try:
     import imageio
+
     if hasattr(imageio, "v2"):
         iio = imageio.v2
     else:
@@ -20,8 +21,7 @@ except ImportError:
 
 
 def movieWrite(filename, images, *args, **kwargs):
-    """ Proxy for imageio.mimwrite()
-    """
+    """Proxy for imageio.mimwrite()"""
 
     if iio is None:
         raise RuntimeError("visvis.movieWrite requires the imageio package.")
@@ -29,6 +29,6 @@ def movieWrite(filename, images, *args, **kwargs):
     return iio.mimwrite(filename, images, *args, **kwargs)
 
 
-if __name__ == '__main__':
-    ims = vv.movieRead('newtonscradle.gif')
-    vv.movieWrite('newtonscradle.swf', ims)
+if __name__ == "__main__":
+    ims = vv.movieRead("newtonscradle.gif")
+    vv.movieWrite("newtonscradle.swf", ims)

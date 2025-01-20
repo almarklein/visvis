@@ -16,64 +16,64 @@ fontGenApp = r'"C:\Program Files (x86)\BMFontGen\bmfontgen.exe"'
 # like even fontsizes better. Additionally, too large size will result in
 # aliasing for smaller fontsizes in visvis.
 
-size = 16 # 18 is good, 20 won't fit,
+size = 16  # 18 is good, 20 won't fit,
 bmsize = 1024
-outdir = 'tmp/'
+outdir = "tmp/"
 
 s = ssdf.new()
 s.serif = ssdf.new()
-s.serif.name = 'FreeSerif'
+s.serif.name = "FreeSerif"
 
-fonts = {   'mono':'FreeMono', 'sans':'FreeSans', 'serif':'FreeSerif'}
-#fonts = {   'mono':'Courier New', 'sans':'Arial', 'serif':'Times new roman'}
+fonts = {"mono": "FreeMono", "sans": "FreeSans", "serif": "FreeSerif"}
+# fonts = {   'mono':'Courier New', 'sans':'Arial', 'serif':'Times new roman'}
 
 for font in fonts:
     fontName = fonts[font]
-    
+
     options = []
-    
+
     # parameters
-    options.append( '-name %s' % fontName )
-    options.append( '-size %i' % size )
-    options.append( '-bmsize %i' % bmsize )
-    
+    options.append("-name %s" % fontName)
+    options.append("-size %i" % size)
+    options.append("-bmsize %i" % bmsize)
+
     # fixed options
-    options.append( '-trh aa' ) # aa looks best on large AND small fontsizes
-    options.append( '-blackbg' )
-    
+    options.append("-trh aa")  # aa looks best on large AND small fontsizes
+    options.append("-blackbg")
+
     # number, alphabet and greek
-    ranges1 = ['-range 0020-003f','-range 0040-00bf','-range 0380-03ff']
+    ranges1 = ["-range 0020-003f", "-range 0040-00bf", "-range 0380-03ff"]
     # latin extended and symbols
-    ranges2 = ['-range 00c0-037f','-range 2000-23ff']
-    
-    for type in 'rib': # regular, italic, bold
+    ranges2 = ["-range 00c0-037f", "-range 2000-23ff"]
+
+    for type in "rib":  # regular, italic, bold
         tekst = []
-        if type == 'r':
+        if type == "r":
             tekst.extend(options)
             tekst.extend(ranges1)
             tekst.extend(ranges2)
-            #tekst.append( '-trh 1bpp-grid' )
-            tekst.append( '-output %s%s_%s' % (outdir,font,type) )
-        elif type == 'i':
+            # tekst.append( '-trh 1bpp-grid' )
+            tekst.append("-output %s%s_%s" % (outdir, font, type))
+        elif type == "i":
             tekst.extend(options)
             tekst.extend(ranges1)
-            tekst.append('-italic')
-            #tekst.append( '-trh aa-grid' )
-            tekst.append( '-output %s%s_%s' % (outdir,font,type) )
-        elif type == 'b':
+            tekst.append("-italic")
+            # tekst.append( '-trh aa-grid' )
+            tekst.append("-output %s%s_%s" % (outdir, font, type))
+        elif type == "b":
             tekst.extend(options)
             tekst.extend(ranges1)
-            tekst.append('-bold')
-            #tekst.append( '-trh aa-grid' )
-            tekst.append( '-output %s%s_%s' % (outdir,font,type) )
-        
+            tekst.append("-bold")
+            # tekst.append( '-trh aa-grid' )
+            tekst.append("-output %s%s_%s" % (outdir, font, type))
+
         # write file
-        fname = outdir+'temp_font.txt'
-        f = open(fname,'w')
-        f.write( '\n'.join(tekst) )
+        fname = outdir + "temp_font.txt"
+        f = open(fname, "w")
+        f.write("\n".join(tekst))
         f.close()
-        
+
         # call fontgen
-        status = os.system(fontGenApp + ' -optfile ' + fname)
+        status = os.system(fontGenApp + " -optfile " + fname)
         if status != 0:
-            input('an error occured, press enter to continue')
+            input("an error occured, press enter to continue")

@@ -11,15 +11,21 @@ import visvis as vv
 # originally based on Bezier patches.
 
 
-def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
-                    axesAdjust=True, axes=None):
-    """ solidTeapot(
+def solidTeapot(
+    translation=None,
+    scaling=None,
+    direction=None,
+    rotation=None,
+    axesAdjust=True,
+    axes=None,
+):
+    """solidTeapot(
             translation=None, scaling=None, direction=None, rotation=None,
             axesAdjust=True, axes=None)
-    
+
     Create a model of a teapot (a teapotahedron) with its bottom at the
     origin. Returns an OrientableMesh instance.
-    
+
     Parameters
     ----------
     Note that translation, scaling, and direction can also be given
@@ -39,16 +45,16 @@ def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
         it is set to False.
     axes : Axes instance
         Display the bars in the given axes, or the current axes if not given.
-    
+
     """
-    
+
     # Load mesh data
-    bm = vv.meshRead('teapot.ssdf')
-    
+    bm = vv.meshRead("teapot.ssdf")
+
     # Use current axes?
     if axes is None:
         axes = vv.gca()
-    
+
     # Create Mesh object
     m = vv.OrientableMesh(axes, bm)
     #
@@ -60,19 +66,19 @@ def solidTeapot(translation=None, scaling=None, direction=None, rotation=None,
         m.direction = direction
     if rotation is not None:
         m.rotation = rotation
-    
+
     # Adjust axes
     if axesAdjust:
         if axes.daspectAuto is None:
             axes.daspectAuto = False
-        axes.cameraType = '3d'
+        axes.cameraType = "3d"
         axes.SetLimits()
-    
+
     # Done
     axes.Draw()
     return m
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     m = vv.solidTeapot(direction=(0.1, 0.2, 1))
-    m.faceShading = 'toon' # Let's try the 'toon' shader for a change!
+    m.faceShading = "toon"  # Let's try the 'toon' shader for a change!

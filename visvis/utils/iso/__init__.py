@@ -19,38 +19,38 @@ to scikit-image, and we now use that here.
 import visvis as vv
 import numpy as np
 from skimage.measure import find_contours
+
 try:
     # Older version of skimage
     from skimage.measure import marching_cubes_lewiner as marching_cubes
 except ImportError:
     from skimage.measure import marching_cubes
-     
 
 
 def isocontour(im, isovalue=None):
-    """ isocontour(im, isovalue=None)
-    
+    """isocontour(im, isovalue=None)
+
     Uses scikit-image to calculate the iso contours for the given 2D
     image. If isovalue is not given or None, a value between the min
     and max of the image is used.
-    
+
     Returns a pointset in which each two subsequent points form a line
     piece. This van be best visualized using "vv.plot(result, ls='+')".
-    
+
     """
-    
+
     # Check image
     if not isinstance(im, np.ndarray) or (im.ndim != 2):
-        raise ValueError('im should be a 2D numpy array.')
-    
+        raise ValueError("im should be a 2D numpy array.")
+
     # Get isovalue
     if isovalue is None:
         isovalue = 0.5 * (im.min() + im.max())
-    isovalue = float(isovalue) # Will raise error if not float-like value given
-    
+    isovalue = float(isovalue)  # Will raise error if not float-like value given
+
     # Get the contours
     data = find_contours(im, isovalue)
-    
+
     # Build the contour as we used to return it. It is less rich, but easier
     # to visualize.
     data2 = []
@@ -60,17 +60,17 @@ def isocontour(im, isovalue=None):
         contour2[0::2] = contour[:-1]
         contour2[1::2] = contour[1:]
         data2.append(np.fliplr(contour2))
-    
+
     # Return as pointset
     return vv.Pointset(np.row_stack(data2))
 
 
 def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
-    """ isosurface(vol, isovalue=None, step=1, useClassic=False, useValues=False)
-    
+    """isosurface(vol, isovalue=None, step=1, useClassic=False, useValues=False)
+
     Uses scikit-image to calculate the isosurface for the given 3D image.
     Returns a vv.BaseMesh object.
-    
+
     Parameters
     ----------
     vol : 3D numpy array
@@ -90,48 +90,45 @@ def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
         If True, the returned BaseMesh object will also have a value for
         each vertex, which is related to the maximum value in a local region
         near the isosurface.
-    
+
     """
-    
+
     # Check image
     if not isinstance(im, np.ndarray) or (im.ndim != 3):
-        raise ValueError('vol should be a 3D numpy array.')
-    
+        raise ValueError("vol should be a 3D numpy array.")
+
     # Get isovalue
     if isovalue is None:
         isovalue = 0.5 * (im.min() + im.max())
-    isovalue = float(isovalue) # Will raise error if not float-like value given
-    
+    isovalue = float(isovalue)  # Will raise error if not float-like value given
+
     # Check steps
     step = int(step)
     if step < 1:
-        raise ValueError('step must be at least one.')
-    
+        raise ValueError("step must be at least one.")
+
     # Deal with Aarray
-    if hasattr(im, 'sampling'):
+    if hasattr(im, "sampling"):
         sampling = im.sampling[0], im.sampling[1], im.sampling[2]
     else:
         sampling = (1, 1, 1)
-    
+
     # Call into skimage algorithm
     if useClassic:
-        xx = marching_cubes(im, isovalue,
-                                    spacing=sampling,
-                                    step_size=step,
-                                    method="lorensen")
+        xx = marching_cubes(
+            im, isovalue, spacing=sampling, step_size=step, method="lorensen"
+        )
     else:
-        xx = marching_cubes(im, isovalue,
-                                spacing=sampling,
-                                step_size=step)
+        xx = marching_cubes(im, isovalue, spacing=sampling, step_size=step)
     vertices, faces, normals, values = xx
-    
+
     # Transform the data to how Visvis likes it
     vertices = np.fliplr(vertices)
-    
+
     # Check
     if not len(vertices):
-        raise RuntimeError('No surface found at the given iso value.')
-    
+        raise RuntimeError("No surface found at the given iso value.")
+
     # Done
     if useValues:
         return vv.BaseMesh(vertices, faces, normals, values)

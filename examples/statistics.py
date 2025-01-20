@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" This example a coupe of ways to visualize statistic data.
+"""This example a coupe of ways to visualize statistic data.
 
 As an example I took the monthly temperature in the region where I live
 (Twente, The Netherlands) over the period 1983-2010.
@@ -8,6 +8,7 @@ This data was extracted from publicly available data obtained from the
 Royal Netherlands Meteorological Institute (KNMI).
 
 """
+
 import visvis as vv
 
 temp_data = """
@@ -48,48 +49,49 @@ temps_per_month = [[] for i in range(12)]
 for line in temp_data.splitlines():
     if ":" not in line:
         continue
-    temps = [float(t) for t in line.split(': ')[1].split(' ')]
+    temps = [float(t) for t in line.split(": ")[1].split(" ")]
     for i in range(12):
         temps_per_month[i].append(temps[i])
 
 # Calculate means
-mean = lambda x: sum(x)/len(x)
+mean = lambda x: sum(x) / len(x)
 mean_temps_per_month = [mean(tt) for tt in temps_per_month]
 
 # Prepare figure
-vv.figure(1); vv.clf()
+vv.figure(1)
+vv.clf()
 
 # Show means in a normal bar chart
 a1 = vv.subplot(221)
 b2 = vv.bar(mean_temps_per_month)
-b2.color = 'r'
+b2.color = "r"
 
 # Show means in a 3D bar chart
 a2 = vv.subplot(222)
 b3 = vv.bar3(mean_temps_per_month)
-b3.color = 'g'
-a2.daspect = 1,1,0.3
+b3.color = "g"
+a2.daspect = 1, 1, 0.3
 
 # Show box plot
 a3 = vv.subplot(223)
 bp = vv.boxplot(temps_per_month)
-bp.lc = 'b'
+bp.lc = "b"
 bp.lw = 2
 
 # Show violin plot
 a4 = vv.subplot(224)
-vp = vv.boxplot(temps_per_month, whiskers='violin')
-vp.lc = 'm'
+vp = vv.boxplot(temps_per_month, whiskers="violin")
+vp.lc = "m"
 vp.lw = 3
 
 # Set legends and ticks for each axes
 for a in [a1, a2, a3, a4]:
-    a.axis.xTicks = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split()
+    a.axis.xTicks = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
     if a is a2:
-        a.axis.zLabel = 'Temperature [C^o]'
+        a.axis.zLabel = "Temperature [C^o]"
         a.axis.showGridZ = True
     else:
-        a.axis.yLabel = 'Temperature [C^o]'
+        a.axis.yLabel = "Temperature [C^o]"
         a.axis.showGridY = True
         a.axis.xTicksAngle = -30
 

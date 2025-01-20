@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Module images2avi
+"""Module images2avi
 
 Uses ffmpeg to read and write AVI files. Requires PIL
 
@@ -45,65 +45,67 @@ def _cleanDir(tempDir):
         try:
             shutil.rmtree(tempDir)
         except Exception:
-            time.sleep(0.2) # Give OS time to free sources
+            time.sleep(0.2)  # Give OS time to free sources
         else:
             break
     else:
         print("Oops, could not fully clean up temporary files.")
 
 
-def writeAvi(filename, images, duration=0.1, encoding='mpeg4',
-                                        inputOptions='', outputOptions='' ):
-    """ writeAvi(filename, duration=0.1, encoding='mpeg4',
+def writeAvi(
+    filename, images, duration=0.1, encoding="mpeg4", inputOptions="", outputOptions=""
+):
+    """writeAvi(filename, duration=0.1, encoding='mpeg4',
                     inputOptions='', outputOptions='')
-    
+
     Export movie to a AVI file, which is encoded with the given
     encoding. Hint for Windows users: the 'msmpeg4v2' codec is
     natively supported on Windows.
-    
+
     Images should be a list consisting of PIL images or numpy arrays.
     The latter should be between 0 and 255 for integer types, and
     between 0 and 1 for float types.
-    
+
     Requires the "ffmpeg" application:
       * Most linux users can install using their package manager
       * There is a windows installer on the visvis website
-    
+
     """
-    
+
     # Get fps
     try:
-        fps = float(1.0/duration)
+        fps = float(1.0 / duration)
     except Exception:
         raise ValueError("Invalid duration parameter for writeAvi.")
-    
+
     # Determine temp dir and create images
-    tempDir = os.path.join( os.path.expanduser('~'), '.tempIms')
-    images2ims.writeIms( os.path.join(tempDir, 'im*.jpg'), images)
-    
+    tempDir = os.path.join(os.path.expanduser("~"), ".tempIms")
+    images2ims.writeIms(os.path.join(tempDir, "im*.jpg"), images)
+
     # Determine formatter
     N = len(images)
-    formatter = '%04d'
+    formatter = "%04d"
     if N < 10:
-        formatter = '%d'
+        formatter = "%d"
     elif N < 100:
-        formatter = '%02d'
+        formatter = "%02d"
     elif N < 1000:
-        formatter = '%03d'
-    
+        formatter = "%03d"
+
     # Compile command to create avi
     command = "ffmpeg -r %i %s " % (int(fps), inputOptions)
     command += "-i im%s.jpg " % (formatter,)
     command += "-g 1 -vcodec %s %s " % (encoding, outputOptions)
     command += "output.avi"
-    
+
     # Run ffmpeg
-    S = subprocess.Popen(command, shell=True, cwd=tempDir,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    
+    S = subprocess.Popen(
+        command, shell=True, cwd=tempDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+
     # Show what ffmpeg has to say
     outPut = S.stdout.read()
-    
+
     if S.wait():
         # An error occured, show
         print(outPut)
@@ -113,42 +115,43 @@ def writeAvi(filename, images, duration=0.1, encoding='mpeg4',
         raise RuntimeError("Could not write avi.")
     else:
         # Copy avi
-        shutil.copy(os.path.join(tempDir, 'output.avi'), filename)
+        shutil.copy(os.path.join(tempDir, "output.avi"), filename)
         # Clean up
         _cleanDir(tempDir)
 
 
 def readAvi(filename, asNumpy=True):
-    """ readAvi(filename, asNumpy=True)
-    
+    """readAvi(filename, asNumpy=True)
+
     Read images from an AVI (or MPG) movie.
-    
+
     Requires the "ffmpeg" application:
       * Most linux users can install using their package manager
       * There is a windows installer on the visvis website
-    
+
     """
-    
+
     # Check whether it exists
     if not os.path.isfile(filename):
-        raise IOError('File not found: '+str(filename))
-    
+        raise IOError("File not found: " + str(filename))
+
     # Determine temp dir, make sure it exists
-    tempDir = os.path.join( os.path.expanduser('~'), '.tempIms')
+    tempDir = os.path.join(os.path.expanduser("~"), ".tempIms")
     if not os.path.isdir(tempDir):
         os.makedirs(tempDir)
-    
+
     # Copy movie there
-    shutil.copy(filename, os.path.join(tempDir, 'input.avi'))
-    
+    shutil.copy(filename, os.path.join(tempDir, "input.avi"))
+
     # Run ffmpeg
     command = "ffmpeg -i input.avi im%d.jpg"
-    S = subprocess.Popen(command, shell=True, cwd=tempDir,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    
+    S = subprocess.Popen(
+        command, shell=True, cwd=tempDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+
     # Show what mencodec has to say
     outPut = S.stdout.read()
-    
+
     if S.wait():
         # An error occured, show
         print(outPut)
@@ -158,9 +161,9 @@ def readAvi(filename, asNumpy=True):
         raise RuntimeError("Could not read avi.")
     else:
         # Read images
-        images = images2ims.readIms(os.path.join(tempDir, 'im*.jpg'), asNumpy)
+        images = images2ims.readIms(os.path.join(tempDir, "im*.jpg"), asNumpy)
         # Clean up
         _cleanDir(tempDir)
-    
+
     # Done
     return images

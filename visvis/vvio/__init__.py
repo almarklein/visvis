@@ -1,3 +1,4 @@
-# flake8: noqa
+# ruff: noqa: F401
+
 import visvis.vvio.stl
 import visvis.vvio.wavefront

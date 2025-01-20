@@ -6,7 +6,7 @@
 # The full license can be found in 'license.txt'.
 
 
-""" Subpackage visvis.text
+"""Subpackage visvis.text
 
 For rendering text in visvis.
 
@@ -73,6 +73,8 @@ Note: In case one needs a character that is not in this list,
 one can always look up its unicode value and use that instead.
 
 """
+
+# ruff: noqa: F401
 
 from visvis.text.text_base import AtlasTexture, FontManager, BaseText
 from visvis.text.text_base import Text, Label

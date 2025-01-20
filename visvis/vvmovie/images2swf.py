@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Module images2swf
+"""Module images2swf
 
 Provides a function (writeSwf) to store a series of PIL images or numpy
 arrays in an SWF movie, that can be played on a wide range of OS's.
@@ -67,7 +67,9 @@ sources and tools:
 
 """
 
-import os, sys, time
+import os
+import sys
+import time
 import zlib
 
 try:
@@ -84,18 +86,19 @@ except ImportError:
 # True if we are running on Python 3.
 # Code taken from six.py by Benjamin Peterson (MIT licensed)
 import types
+
 PY3 = sys.version_info[0] == 3
 if PY3:
-    string_types = str,
-    integer_types = int,
-    class_types = type,
+    string_types = (str,)
+    integer_types = (int,)
+    class_types = (type,)
     text_type = str
     binary_type = bytes
 else:
-    string_types = basestring,
-    integer_types = (int, long)
+    string_types = (basestring,)  #  noqa
+    integer_types = (int, long)  # noqa
     class_types = (type, types.ClassType)
-    text_type = unicode
+    text_type = unicode  # noqa
     binary_type = str
 
 
@@ -103,7 +106,7 @@ else:
 
 
 def checkImages(images):
-    """ checkImages(images)
+    """checkImages(images)
     Check numpy images and correct intensity range etc.
     The same for all movie formats.
     """
@@ -118,11 +121,11 @@ def checkImages(images):
         elif np and isinstance(im, np.ndarray):
             # Check and convert dtype
             if im.dtype == np.uint8:
-                images2.append(im) # Ok
+                images2.append(im)  # Ok
             elif im.dtype in [np.float32, np.float64]:
                 theMax = im.max()
                 if theMax > 128 and theMax < 300:
-                    pass # assume 0:255
+                    pass  # assume 0:255
                 else:
                     im = im.copy()
                     im[im < 0] = 0
@@ -134,14 +137,14 @@ def checkImages(images):
                 images2.append(im)
             # Check size
             if im.ndim == 2:
-                pass # ok
+                pass  # ok
             elif im.ndim == 3:
                 if im.shape[2] not in [3, 4]:
-                    raise ValueError('This array can not represent an image.')
+                    raise ValueError("This array can not represent an image.")
             else:
-                raise ValueError('This array can not represent an image.')
+                raise ValueError("This array can not represent an image.")
         else:
-            raise ValueError('Invalid image type: ' + str(type(im)))
+            raise ValueError("Invalid image type: " + str(type(im)))
 
     # Done
     return images2
@@ -151,7 +154,7 @@ def checkImages(images):
 
 
 class BitArray:
-    """ Dynamic array of bits that automatically resizes
+    """Dynamic array of bits that automatically resizes
     with factors of two.
     Append bits using .Append() or +=
     You can reverse bits using .Reverse()
@@ -167,14 +170,14 @@ class BitArray:
         return self._len  # self.data.shape[0]
 
     def __repr__(self):
-        return self.data[:self._len].tostring().decode('ascii')
+        return self.data[: self._len].tostring().decode("ascii")
 
     def _checkSize(self):
         # check length... grow if necessary
         arraylen = self.data.shape[0]
         if self._len >= arraylen:
-            tmp = np.zeros((arraylen*2,), dtype=np.uint8)
-            tmp[:self._len] = self.data[:self._len]
+            tmp = np.zeros((arraylen * 2,), dtype=np.uint8)
+            tmp[: self._len] = self.data[: self._len]
             self.data = tmp
 
     def __add__(self, value):
@@ -182,7 +185,6 @@ class BitArray:
         return self
 
     def Append(self, bits):
-
         # check input
         if isinstance(bits, BitArray):
             bits = str(bits)
@@ -198,12 +200,12 @@ class BitArray:
             self._checkSize()
 
     def Reverse(self):
-        """ In-place reverse. """
-        tmp = self.data[:self._len].copy()
-        self.data[:self._len] = np.flipud(tmp)
+        """In-place reverse."""
+        tmp = self.data[: self._len].copy()
+        self.data[: self._len] = np.flipud(tmp)
 
     def ToBytes(self):
-        """ Convert to bytes. If necessary,
+        """Convert to bytes. If necessary,
         zeros are padded to the end (right side).
         """
         bits = str(self)
@@ -213,12 +215,12 @@ class BitArray:
         while nbytes * 8 < len(bits):
             nbytes += 1
         # pad
-        bits = bits.ljust(nbytes * 8, '0')
+        bits = bits.ljust(nbytes * 8, "0")
 
         # go from bits to bytes
         bb = binary_type()
         for i in range(nbytes):
-            tmp = int(bits[i * 8: (i + 1) * 8], 2)
+            tmp = int(bits[i * 8 : (i + 1) * 8], 2)
             bb += intToUint8(tmp)
 
         # done
@@ -226,18 +228,20 @@ class BitArray:
 
 
 if PY3:
+
     def intToUint32(i):
-        return int(i).to_bytes(4, 'little')
+        return int(i).to_bytes(4, "little")
 
     def intToUint16(i):
-        return int(i).to_bytes(2, 'little')
+        return int(i).to_bytes(2, "little")
 
     def intToUint8(i):
-        return int(i).to_bytes(1, 'little')
+        return int(i).to_bytes(1, "little")
 else:
+
     def intToUint32(i):
         number = int(i)
-        n1, n2, n3, n4 = 1, 256, 256 * 256, 256 * 256 * 256
+        _n1, n2, n3, n4 = 1, 256, 256 * 256, 256 * 256 * 256
         b4, number = number // n4, number % n4
         b3, number = number // n3, number % n3
         b2, number = number // n2, number % n2
@@ -257,8 +261,8 @@ else:
 
 
 def intToBits(i, n=None):
-    """ convert int to a string of bits (0's and 1's in a string),
-    pad to n elements. Convert back using int(ss,2). """
+    """convert int to a string of bits (0's and 1's in a string),
+    pad to n elements. Convert back using int(ss,2)."""
     ii = i
 
     # make bits
@@ -272,7 +276,7 @@ def intToBits(i, n=None):
     if n is not None:
         if len(bb) > n:
             raise ValueError("intToBits fail: len larger than padlength.")
-        bb = str(bb).rjust(n, '0')
+        bb = str(bb).rjust(n, "0")
 
     # done
     return BitArray(bb)
@@ -280,32 +284,32 @@ def intToBits(i, n=None):
 
 def bitsToInt(bb, n=8):
     # Init
-    value = ''
+    value = ""
 
     # Get value in bits
     for i in range(len(bb)):
-        b = bb[i:i+1]
+        b = bb[i : i + 1]
         tmp = bin(ord(b))[2:]
-        #value += tmp.rjust(8,'0')
-        value = tmp.rjust(8, '0') + value
+        # value += tmp.rjust(8,'0')
+        value = tmp.rjust(8, "0") + value
 
     # Make decimal
-    return(int(value[:n], 2))
+    return int(value[:n], 2)
 
 
 def getTypeAndLen(bb):
-    """ bb should be 6 bytes at least
+    """bb should be 6 bytes at least
     Return (type, length, length_of_full_tag)
     """
     # Init
-    value = ''
+    value = ""
 
     # Get first 16 bits
     for i in range(2):
-        b = bb[i:i + 1]
+        b = bb[i : i + 1]
         tmp = bin(ord(b))[2:]
-        #value += tmp.rjust(8,'0')
-        value = tmp.rjust(8, '0') + value
+        # value += tmp.rjust(8,'0')
+        value = tmp.rjust(8, "0") + value
 
     # Get type and length
     type = int(value[:10], 2)
@@ -313,13 +317,13 @@ def getTypeAndLen(bb):
     L2 = L + 2
 
     # Long tag header?
-    if L == 63: # '111111'
-        value = ''
+    if L == 63:  # '111111'
+        value = ""
         for i in range(2, 6):
-            b = bb[i:i + 1]  # becomes a single-byte bytes() on both PY3 and PY2
+            b = bb[i : i + 1]  # becomes a single-byte bytes() on both PY3 and PY2
             tmp = bin(ord(b))[2:]
-            #value += tmp.rjust(8,'0')
-            value = tmp.rjust(8, '0') + value
+            # value += tmp.rjust(8,'0')
+            value = tmp.rjust(8, "0") + value
         L = int(value, 2)
         L2 = L + 6
 
@@ -328,7 +332,7 @@ def getTypeAndLen(bb):
 
 
 def signedIntToBits(i, n=None):
-    """ convert signed int to a string of bits (0's and 1's in a string),
+    """convert signed int to a string of bits (0's and 1's in a string),
     pad to n elements. Negative numbers are stored in 2's complement bit
     patterns, thus positive numbers always start with a 0.
     """
@@ -347,22 +351,22 @@ def signedIntToBits(i, n=None):
     bb.Reverse()
 
     # justify
-    bb = '0' + str(bb) # always need the sign bit in front
+    bb = "0" + str(bb)  # always need the sign bit in front
     if n is not None:
         if len(bb) > n:
             raise ValueError("signedIntToBits fail: len larger than padlength.")
-        bb = bb.rjust(n, '0')
+        bb = bb.rjust(n, "0")
 
     # was it negative? (then opposite bits)
     if i < 0:
-        bb = bb.replace('0', 'x').replace('1', '0').replace('x', '1')
+        bb = bb.replace("0", "x").replace("1", "0").replace("x", "1")
 
     # done
     return BitArray(bb)
 
 
 def twitsToBits(arr):
-    """ Given a few (signed) numbers, store them
+    """Given a few (signed) numbers, store them
     as compactly as possible in the wat specifief by the swf format.
     The numbers are multiplied by 20, assuming they
     are twits.
@@ -372,7 +376,7 @@ def twitsToBits(arr):
     # first determine length using non justified bit strings
     maxlen = 1
     for i in arr:
-        tmp = len(signedIntToBits(i*20))
+        tmp = len(signedIntToBits(i * 20))
         if tmp > maxlen:
             maxlen = tmp
 
@@ -385,19 +389,19 @@ def twitsToBits(arr):
 
 
 def floatsToBits(arr):
-    """ Given a few (signed) numbers, convert them to bits,
+    """Given a few (signed) numbers, convert them to bits,
     stored as FB (float bit values). We always use 16.16.
     Negative numbers are not (yet) possible, because I don't
     know how the're implemented (ambiguity).
     """
-    bits = intToBits(31, 5) # 32 does not fit in 5 bits!
+    bits = intToBits(31, 5)  # 32 does not fit in 5 bits!
     for i in arr:
         if i < 0:
             raise ValueError("Dit not implement negative floats!")
         i1 = int(i)
         i2 = i - i1
         bits += intToBits(i1, 15)
-        bits += intToBits(i2 * 2 ** 16, 16)
+        bits += intToBits(i2 * 2**16, 16)
     return bits
 
 
@@ -405,7 +409,7 @@ def _readFrom(fp, n):
     bb = binary_type()
     try:
         while len(bb) < n:
-            tmp = fp.read(n-len(bb))
+            tmp = fp.read(n - len(bb))
             bb += tmp
             if not tmp:
                 break
@@ -416,25 +420,25 @@ def _readFrom(fp, n):
 
 ## Base Tag
 
-class Tag:
 
+class Tag:
     def __init__(self):
         self.bytes = binary_type()
         self.tagtype = -1
 
     def ProcessTag(self):
-        """ Implement this to create the tag. """
+        """Implement this to create the tag."""
         raise NotImplementedError()
 
     def GetTag(self):
-        """ Calls processTag and attaches the header. """
+        """Calls processTag and attaches the header."""
         self.ProcessTag()
 
         # tag to binary
         bits = intToBits(self.tagtype, 10)
 
         # complete header uint16 thing
-        bits += '1' * 6  # = 63 = 0x3f
+        bits += "1" * 6  # = 63 = 0x3f
         # make uint16
         bb = intToUint16(int(str(bits), 2))
 
@@ -446,32 +450,31 @@ class Tag:
         return bb
 
     def MakeRectRecord(self, xmin, xmax, ymin, ymax):
-        """ Simply uses makeCompactArray to produce
-        a RECT Record. """
+        """Simply uses makeCompactArray to produce
+        a RECT Record."""
         return twitsToBits([xmin, xmax, ymin, ymax])
 
     def MakeMatrixRecord(self, scale_xy=None, rot_xy=None, trans_xy=None):
-
         # empty matrix?
         if scale_xy is None and rot_xy is None and trans_xy is None:
-            return "0"*8
+            return "0" * 8
 
         # init
         bits = BitArray()
 
         # scale
         if scale_xy:
-            bits += '1'
+            bits += "1"
             bits += floatsToBits([scale_xy[0], scale_xy[1]])
         else:
-            bits += '0'
+            bits += "0"
 
         # rotation
         if rot_xy:
-            bits += '1'
+            bits += "1"
             bits += floatsToBits([rot_xy[0], rot_xy[1]])
         else:
-            bits += '0'
+            bits += "0"
 
         # translation (no flag here)
         if trans_xy:
@@ -485,6 +488,7 @@ class Tag:
 
 ## Control tags
 
+
 class ControlTag(Tag):
     def __init__(self):
         Tag.__init__(self)
@@ -496,7 +500,7 @@ class FileAttributesTag(ControlTag):
         self.tagtype = 69
 
     def ProcessTag(self):
-        self.bytes = '\x00'.encode('ascii') * (1+3)
+        self.bytes = "\x00".encode("ascii") * (1 + 3)
 
 
 class ShowFrameTag(ControlTag):
@@ -509,7 +513,8 @@ class ShowFrameTag(ControlTag):
 
 
 class SetBackgroundTag(ControlTag):
-    """ Set the color in 0-255, or 0-1 (if floats given). """
+    """Set the color in 0-255, or 0-1 (if floats given)."""
+
     def __init__(self, *rgb):
         self.tagtype = 9
         if len(rgb) == 1:
@@ -527,7 +532,7 @@ class SetBackgroundTag(ControlTag):
 
 
 class DoActionTag(Tag):
-    def __init__(self, action='stop'):
+    def __init__(self, action="stop"):
         Tag.__init__(self)
         self.tagtype = 12
         self.actions = [action]
@@ -540,10 +545,10 @@ class DoActionTag(Tag):
 
         for action in self.actions:
             action = action.lower()
-            if action == 'stop':
-                bb += '\x07'.encode('ascii')
-            elif action == 'play':
-                bb += '\x06'.encode('ascii')
+            if action == "stop":
+                bb += "\x07".encode("ascii")
+            elif action == "play":
+                bb += "\x06".encode("ascii")
             else:
                 print("warning, unkown action: %s" % action)
 
@@ -562,10 +567,9 @@ class DefinitionTag(Tag):
 
 
 class BitmapTag(DefinitionTag):
-
     def __init__(self, im):
         DefinitionTag.__init__(self)
-        self.tagtype = 36 # DefineBitsLossless2
+        self.tagtype = 36  # DefineBitsLossless2
 
         # convert image (note that format is ARGB)
         # even a grayscale image is stored in ARGB, nevertheless,
@@ -575,8 +579,7 @@ class BitmapTag(DefinitionTag):
 
         if len(im.shape) == 3:
             if im.shape[2] in [3, 4]:
-                tmp = np.ones((im.shape[0], im.shape[1], 4),
-                              dtype=np.uint8) * 255
+                tmp = np.ones((im.shape[0], im.shape[1], 4), dtype=np.uint8) * 255
                 for i in range(3):
                     tmp[:, :, i + 1] = im[:, :, i]
                 if im.shape[2] == 4:
@@ -585,7 +588,7 @@ class BitmapTag(DefinitionTag):
                 raise ValueError("Invalid shape to be an image.")
 
         elif len(im.shape) == 2:
-            tmp = np.ones((im.shape[0], im.shape[1], 4), dtype=np.uint8)*255
+            tmp = np.ones((im.shape[0], im.shape[1], 4), dtype=np.uint8) * 255
             for i in range(3):
                 tmp[:, :, i + 1] = im[:, :]
         else:
@@ -597,14 +600,13 @@ class BitmapTag(DefinitionTag):
         self.imshape = im.shape
 
     def ProcessTag(self):
-
         # build tag
         bb = binary_type()
-        bb += intToUint16(self.id)   # CharacterID
-        bb += intToUint8(5)     # BitmapFormat
-        bb += intToUint16(self.imshape[1])   # BitmapWidth
-        bb += intToUint16(self.imshape[0])   # BitmapHeight
-        bb += self._data            # ZlibBitmapData
+        bb += intToUint16(self.id)  # CharacterID
+        bb += intToUint8(5)  # BitmapFormat
+        bb += intToUint16(self.imshape[1])  # BitmapWidth
+        bb += intToUint16(self.imshape[0])  # BitmapHeight
+        bb += self._data  # ZlibBitmapData
 
         self.bytes = bb
 
@@ -627,12 +629,12 @@ class PlaceObjectTag(ControlTag):
         # build PlaceObject2
         bb = binary_type()
         if self.move:
-            bb += '\x07'.encode('ascii')
+            bb += "\x07".encode("ascii")
         else:
-            bb += '\x06'.encode('ascii')  # (8 bit flags): 4:matrix, 2:character, 1:move
-        bb += intToUint16(depth) # Depth
-        bb += intToUint16(id) # character id
-        bb += self.MakeMatrixRecord(trans_xy=xy).ToBytes() # MATRIX record
+            bb += "\x06".encode("ascii")  # (8 bit flags): 4:matrix, 2:character, 1:move
+        bb += intToUint16(depth)  # Depth
+        bb += intToUint16(id)  # character id
+        bb += self.MakeMatrixRecord(trans_xy=xy).ToBytes()  # MATRIX record
         self.bytes = bb
 
 
@@ -645,7 +647,7 @@ class ShapeTag(DefinitionTag):
         self.wh = wh
 
     def ProcessTag(self):
-        """ Returns a defineshape tag. with a bitmap fill """
+        """Returns a defineshape tag. with a bitmap fill"""
 
         bb = binary_type()
         bb += intToUint16(self.id)
@@ -657,32 +659,33 @@ class ShapeTag(DefinitionTag):
 
         # first entry: FILLSTYLEARRAY with in it a single fill style
         bb += intToUint8(1)  # FillStyleCount
-        bb += '\x41'.encode('ascii')  # FillStyleType  (0x41 or 0x43, latter is non-smoothed)
+        bb += "\x41".encode(
+            "ascii"
+        )  # FillStyleType  (0x41 or 0x43, latter is non-smoothed)
         bb += intToUint16(self.bitmapId)  # BitmapId
-        #bb += '\x00' # BitmapMatrix (empty matrix with leftover bits filled)
+        # bb += '\x00' # BitmapMatrix (empty matrix with leftover bits filled)
         bb += self.MakeMatrixRecord(scale_xy=(20, 20)).ToBytes()
 
-#         # first entry: FILLSTYLEARRAY with in it a single fill style
-#         bb += intToUint8(1)  # FillStyleCount
-#         bb += '\x00' # solid fill
-#         bb += '\x00\x00\xff' # color
+        #         # first entry: FILLSTYLEARRAY with in it a single fill style
+        #         bb += intToUint8(1)  # FillStyleCount
+        #         bb += '\x00' # solid fill
+        #         bb += '\x00\x00\xff' # color
 
         # second entry: LINESTYLEARRAY with a single line style
         bb += intToUint8(0)  # LineStyleCount
-        #bb += intToUint16(0*20) # Width
-        #bb += '\x00\xff\x00'  # Color
+        # bb += intToUint16(0*20) # Width
+        # bb += '\x00\xff\x00'  # Color
 
         # third and fourth entry: NumFillBits and NumLineBits (4 bits each)
         # I each give them four bits, so 16 styles possible.
-        bb += '\x44'.encode('ascii')
+        bb += "\x44".encode("ascii")
 
         self.bytes = bb
 
         # last entries: SHAPERECORDs ... (individual shape records not aligned)
         # STYLECHANGERECORD
         bits = BitArray()
-        bits += self.MakeStyleChangeRecord(0, 1, moveTo=(self.wh[0],
-                                                         self.wh[1]))
+        bits += self.MakeStyleChangeRecord(0, 1, moveTo=(self.wh[0], self.wh[1]))
         # STRAIGHTEDGERECORD 4x
         bits += self.MakeStraightEdgeRecord(-self.wh[0], 0)
         bits += self.MakeStraightEdgeRecord(0, -self.wh[1])
@@ -695,31 +698,29 @@ class ShapeTag(DefinitionTag):
         self.bytes += bits.ToBytes()
 
         # done
-        #self.bytes = bb
+        # self.bytes = bb
 
-    def MakeStyleChangeRecord(self, lineStyle=None, fillStyle=None,
-                              moveTo=None):
-
+    def MakeStyleChangeRecord(self, lineStyle=None, fillStyle=None, moveTo=None):
         # first 6 flags
         # Note that we use FillStyle1. If we don't flash (at least 8) does not
         # recognize the frames properly when importing to library.
 
         bits = BitArray()
-        bits += '0'  # TypeFlag (not an edge record)
-        bits += '0'  # StateNewStyles (only for DefineShape2 and Defineshape3)
+        bits += "0"  # TypeFlag (not an edge record)
+        bits += "0"  # StateNewStyles (only for DefineShape2 and Defineshape3)
         if lineStyle:
-            bits += '1'  # StateLineStyle
+            bits += "1"  # StateLineStyle
         else:
-            bits += '0'
+            bits += "0"
         if fillStyle:
-            bits += '1'  # StateFillStyle1
+            bits += "1"  # StateFillStyle1
         else:
-            bits += '0'
-        bits += '0'  # StateFillStyle0
+            bits += "0"
+        bits += "0"  # StateFillStyle0
         if moveTo:
-            bits += '1'  # StateMoveTo
+            bits += "1"  # StateMoveTo
         else:
-            bits += '0'
+            bits += "0"
 
         # give information
         # todo: nbits for fillStyle and lineStyle is hard coded.
@@ -732,7 +733,7 @@ class ShapeTag(DefinitionTag):
             bits += intToBits(lineStyle, 4)
 
         return bits
-        #return bitsToBytes(bits)
+        # return bitsToBytes(bits)
 
     def MakeStraightEdgeRecord(self, *dxdy):
         if len(dxdy) == 1:
@@ -744,35 +745,35 @@ class ShapeTag(DefinitionTag):
         nbits = max([len(xbits), len(ybits)])
 
         bits = BitArray()
-        bits += '11'  # TypeFlag and StraightFlag
-        bits += intToBits(nbits-2, 4)
-        bits += '1'  # GeneralLineFlag
+        bits += "11"  # TypeFlag and StraightFlag
+        bits += intToBits(nbits - 2, 4)
+        bits += "1"  # GeneralLineFlag
         bits += signedIntToBits(dxdy[0] * 20, nbits)
         bits += signedIntToBits(dxdy[1] * 20, nbits)
 
         # note: I do not make use of vertical/horizontal only lines...
 
         return bits
-        #return bitsToBytes(bits)
+        # return bitsToBytes(bits)
 
     def MakeEndShapeRecord(self):
         bits = BitArray()
-        bits += "0"     # TypeFlag: no edge
-        bits += "0"*5   # EndOfShape
+        bits += "0"  # TypeFlag: no edge
+        bits += "0" * 5  # EndOfShape
         return bits
-        #return bitsToBytes(bits)
+        # return bitsToBytes(bits)
 
 
 ## Last few functions
 def buildFile(fp, taglist, nframes=1, framesize=(500, 500), fps=10, version=8):
-    """ Give the given file (as bytes) a header. """
+    """Give the given file (as bytes) a header."""
 
     # compose header
     bb = binary_type()
-    bb += 'F'.encode('ascii')  # uncompressed
-    bb += 'WS'.encode('ascii')  # signature bytes
+    bb += "F".encode("ascii")  # uncompressed
+    bb += "WS".encode("ascii")  # signature bytes
     bb += intToUint8(version)  # version
-    bb += '0000'.encode('ascii')  # FileLength (leave open for now)
+    bb += "0000".encode("ascii")  # FileLength (leave open for now)
     bb += Tag().MakeRectRecord(0, framesize[0], 0, framesize[1]).ToBytes()
     bb += intToUint8(0) + intToUint8(fps)  # FrameRate
     bb += intToUint16(nframes)
@@ -783,7 +784,7 @@ def buildFile(fp, taglist, nframes=1, framesize=(500, 500), fps=10, version=8):
         fp.write(tag.GetTag())
 
     # finish with end tag
-    fp.write('\x00\x00'.encode('ascii'))
+    fp.write("\x00\x00".encode("ascii"))
 
     # set size
     sze = fp.tell()
@@ -814,7 +815,7 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
         raise ValueError("Image list is empty!")
     for im in images:
         if PIL and isinstance(im, PIL.Image.Image):
-            if im.mode == 'P':
+            if im.mode == "P":
                 im = im.convert()
             im = np.asarray(im)
             if len(im.shape) == 0:
@@ -825,7 +826,7 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
     taglist = [FileAttributesTag(), SetBackgroundTag(0, 0, 0)]
 
     # Check duration
-    if hasattr(duration, '__len__'):
+    if hasattr(duration, "__len__"):
         if len(duration) == len(images2):
             duration = [d for d in duration]
         else:
@@ -835,14 +836,14 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
 
     # Build delays list
     minDuration = float(min(duration))
-    delays = [round(d/minDuration) for d in duration]
+    delays = [round(d / minDuration) for d in duration]
     delays = [max(1, int(d)) for d in delays]
 
     # Get FPS
-    fps = 1.0/minDuration
+    fps = 1.0 / minDuration
 
     # Produce series of tags for each image
-    t0 = time.time()
+    t0 = time.time()  # noqa
     nframes = 0
     for im in images2:
         bm = BitmapTag(im)
@@ -855,35 +856,38 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
         nframes += 1
 
     if not repeat:
-        taglist.append(DoActionTag('stop'))
+        taglist.append(DoActionTag("stop"))
 
     # Build file
-    t1 = time.time()
-    fp = open(filename, 'wb')
+    t1 = time.time()  # noqa
+    fp = open(filename, "wb")
     try:
         buildFile(fp, taglist, nframes=nframes, framesize=wh, fps=fps)
     except Exception:
         raise
     finally:
         fp.close()
-    t2 =  time.time()
+    t2 = time.time()  # noqa
 
-    #print("Writing SWF took %1.2f and %1.2f seconds" % (t1-t0, t2-t1) )
+    # print("Writing SWF took %1.2f and %1.2f seconds" % (t1-t0, t2-t1) )
 
 
 def _readPixels(bb, i, tagType, L1):
-    """ With pf's seed after the recordheader, reads the pixeldata.
-    """
+    """With pf's seed after the recordheader, reads the pixeldata."""
 
     # Check Numpy
     if np is None:
         raise RuntimeError("Need Numpy to read an SWF file.")
 
     # Get info
-    charId = bb[i:i + 2]; i += 2
-    format = ord(bb[i:i + 1]); i += 1
-    width = bitsToInt(bb[i:i + 2], 16); i += 2
-    height = bitsToInt(bb[i:i + 2], 16); i += 2
+    _charId = bb[i : i + 2]
+    i += 2
+    format = ord(bb[i : i + 1])
+    i += 1
+    width = bitsToInt(bb[i : i + 2], 16)
+    i += 2
+    height = bitsToInt(bb[i : i + 2], 16)
+    i += 2
 
     # If we can, get pixeldata and make nunmpy array
     if format != 5:
@@ -891,7 +895,7 @@ def _readPixels(bb, i, tagType, L1):
     else:
         # Read byte data
         offset = 2 + 1 + 2 + 2  # all the info bits
-        bb2 = bb[i:i+(L1-offset)]
+        bb2 = bb[i : i + (L1 - offset)]
 
         # Decompress and make numpy array
         data = zlib.decompress(bb2)
@@ -929,7 +933,7 @@ def readSwf(filename, asNumpy=True):
 
     # Check whether it exists
     if not os.path.isfile(filename):
-        raise IOError('File not found: '+str(filename))
+        raise IOError("File not found: " + str(filename))
 
     # Check PIL
     if (not asNumpy) and (PIL is None):
@@ -943,29 +947,29 @@ def readSwf(filename, asNumpy=True):
     images = []
 
     # Open file and read all
-    fp = open(filename, 'rb')
+    fp = open(filename, "rb")
     bb = fp.read()
 
     try:
         # Check opening tag
-        tmp = bb[0:3].decode('ascii', 'ignore')
-        if tmp.upper() == 'FWS':
-            pass # ok
-        elif tmp.upper() == 'CWS':
+        tmp = bb[0:3].decode("ascii", "ignore")
+        if tmp.upper() == "FWS":
+            pass  # ok
+        elif tmp.upper() == "CWS":
             # Decompress movie
             bb = bb[:8] + zlib.decompress(bb[8:])
         else:
-            raise IOError('Not a valid SWF file: ' + str(filename))
+            raise IOError("Not a valid SWF file: " + str(filename))
 
         # Set filepointer at first tag (skipping framesize RECT and two uin16's
         i = 8
-        nbits = bitsToInt(bb[i: i + 1], 5)  # skip FrameSize
+        nbits = bitsToInt(bb[i : i + 1], 5)  # skip FrameSize
         nbits = 5 + nbits * 4
         Lrect = nbits / 8.0
         if Lrect % 1:
             Lrect += 1
         Lrect = int(Lrect)
-        i += Lrect+4
+        i += Lrect + 4
 
         # Iterate over the tags
         counter = 0
@@ -973,26 +977,26 @@ def readSwf(filename, asNumpy=True):
             counter += 1
 
             # Get tag header
-            head = bb[i:i+6]
+            head = bb[i : i + 6]
             if not head:
-                break # Done (we missed end tag)
+                break  # Done (we missed end tag)
 
             # Determine type and length
             T, L1, L2 = getTypeAndLen(head)
             if not L2:
-                print('Invalid tag length, could not proceed')
+                print("Invalid tag length, could not proceed")
                 break
-            #print(T, L2)
+            # print(T, L2)
 
             # Read image if we can
             if T in [20, 36]:
-                im = _readPixels(bb, i+6, T, L1)
+                im = _readPixels(bb, i + 6, T, L1)
                 if im is not None:
                     images.append(im)
             elif T in [6, 21, 35, 90]:
-                print('Ignoring JPEG image: cannot read JPEG.')
+                print("Ignoring JPEG image: cannot read JPEG.")
             else:
-                pass # Not an image tag
+                pass  # Not an image tag
 
             # Detect end tag
             if T == 0:

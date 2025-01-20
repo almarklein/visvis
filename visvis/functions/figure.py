@@ -10,7 +10,7 @@ from visvis import BaseFigure
 
 
 def figure(fig=None, clear=False):
-    """ figure(fig=None, clear=False)
+    """figure(fig=None, clear=False)
 
     Set the specified figure to be the current figure, creating it if
     necessary.  fig may be a Figure object, a figure number (a positive
@@ -57,9 +57,9 @@ def figure(fig=None, clear=False):
             BaseFigure._figures[nr] = None
         # create new figure and return
         fig = newFigure()
-        fig.title = '' #_SetTitle("Figure " + str(fig.nr))
+        fig.title = ""  # _SetTitle("Figure " + str(fig.nr))
         return fig
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fig = vv.figure()

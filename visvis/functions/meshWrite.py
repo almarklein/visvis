@@ -7,13 +7,12 @@
 import visvis as vv
 
 
-def ssdfWrite(fname, mesh, name='', bin='unused'):
-    """ Simple function that writes a mesh to the ssdf file format.
-    """
-    
+def ssdfWrite(fname, mesh, name="", bin="unused"):
+    """Simple function that writes a mesh to the ssdf file format."""
+
     # Create structure
     s = vv.ssdf.new()
-    
+
     # Populate structure
     s.name = name
     s.vertices = mesh._vertices
@@ -21,14 +20,14 @@ def ssdfWrite(fname, mesh, name='', bin='unused'):
     s.values = mesh._values
     s.faces = mesh._faces
     s.verticesPerFace = mesh._verticesPerFace
-    
+
     # Write
     vv.ssdf.save(fname, s)
 
 
-def meshWrite(fname, mesh, name='', bin=True):
-    """ meshWrite(fname, mesh, name='', bin=True)
-    
+def meshWrite(fname, mesh, name="", bin=True):
+    """meshWrite(fname, mesh, name='', bin=True)
+
     Parameters
     ----------
     fname : string
@@ -41,7 +40,7 @@ def meshWrite(fname, mesh, name='', bin=True):
     bin : bool
         For the STL format: whether to write binary, which is much
         more compact then ascii.
-    
+
     Notes on formats
     ----------------
       * The STL format (.stl) is rather limited in the definition of the
@@ -49,25 +48,27 @@ def meshWrite(fname, mesh, name='', bin=True):
       * The Wavefront format (.obj) is widely available.
       * The SSDF format (.ssdf or .bsdf) is the most efficient in terms
         of memory and speed, but is not widely available.
-    
+
     """
-    
+
     # Use file extension to read file
-    if fname.lower().endswith('.stl'):
+    if fname.lower().endswith(".stl"):
         import visvis.vvio
+
         writeFunc = visvis.vvio.stl.StlWriter.write
-    elif fname.lower().endswith('.obj'):
+    elif fname.lower().endswith(".obj"):
         import visvis.vvio
+
         writeFunc = visvis.vvio.wavefront.WavefrontWriter.write
-    elif fname.lower().endswith('.ssdf') or fname.lower().endswith('.bsdf'):
+    elif fname.lower().endswith(".ssdf") or fname.lower().endswith(".bsdf"):
         writeFunc = ssdfWrite
     else:
-        raise ValueError('meshWrite cannot determine file type.')
-    
+        raise ValueError("meshWrite cannot determine file type.")
+
     # Read
     return writeFunc(fname, mesh, name, bin)
 
 
-if __name__ == '__main__':
-    bm = vv.meshRead('bunny.ssdf')
-    vv.meshWrite('bunny.obj', bm)
+if __name__ == "__main__":
+    bm = vv.meshRead("bunny.ssdf")
+    vv.meshWrite("bunny.obj", bm)
