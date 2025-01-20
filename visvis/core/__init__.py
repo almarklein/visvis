@@ -23,6 +23,7 @@ the deeper functionality of visvis if they want to.
 
 """
 
+# ruff: noqa: F401
 
 ## The primary core
 

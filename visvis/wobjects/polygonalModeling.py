@@ -402,7 +402,7 @@ class BaseMesh(object):
 
 
 # Import here, because they may require BaseMesh
-import visvis.processing as processing
+import visvis.processing as processing  # noqa: E402
 
 
 class Mesh(Wobject, BaseMesh, Colormapable):

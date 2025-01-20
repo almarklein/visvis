@@ -221,7 +221,7 @@ class MotionMixin(object):
 
         # Get id
         spline_type = spline_type.lower()
-        if spline_type in ["c", "card", "cardinal", "catmull–rom"]:
+        if spline_type in ["c", "card", "cardinal", "catmull-rom"]:
             tau = 0.5 * (1.0 - tension)
             w0 = -tau * (t**3 - 2 * t**2 + t)
             w3 = tau * (t**3 - t**2)

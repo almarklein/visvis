@@ -323,7 +323,7 @@ class GifWriter:
         # Prepare
         ims2 = [ims[0]]
         xy = [(0, 0)]
-        t0 = time.time()
+        t0 = time.time()  # noqa
 
         # Iterate over images
         prev = ims[0]

@@ -12,6 +12,7 @@ liking (not using any from x import *), and to make it much more compact
 by reducing it to what we need in visvis.
 
 """
+# ruff: noqa: E402, F401
 
 import ctypes
 import ctypes.util

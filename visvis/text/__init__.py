@@ -74,6 +74,8 @@ one can always look up its unicode value and use that instead.
 
 """
 
+# ruff: noqa: F401
+
 from visvis.text.text_base import AtlasTexture, FontManager, BaseText
 from visvis.text.text_base import Text, Label
 

@@ -6,6 +6,12 @@
 
 """Module constants"""
 
+
+import sys
+import base64
+import numpy as np
+
+
 # (The keys values are the same as for wx, but this is arbitrary.)
 
 KEY_SHIFT = 17
@@ -172,9 +178,6 @@ colormaps["hsv"] = [
     (1, 0, 0),
 ]
 
-import sys
-import base64
-import numpy as np
 
 base64decode = base64.decodebytes if sys.version_info > (3,) else base64.decodestring
 colormaps["magma"] = np.frombuffer(base64decode(_magma), np.float32).reshape(256, 3)

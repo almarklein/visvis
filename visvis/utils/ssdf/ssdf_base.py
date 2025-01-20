@@ -251,7 +251,7 @@ class Struct(object):
         if not key2:
             raise KeyError("Trying to get invalid name '%s'." % key)
         # Name exists?
-        if not key in self.__dict__:
+        if key not in self.__dict__:
             raise KeyError(str(key))
         # Return
         return self.__dict__[key]

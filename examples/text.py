@@ -23,15 +23,15 @@ t2 = vv.Text(a, "... with FreeType!", 1, 8, 0, "serif", 12)
 t3 = vv.Text(a, "... and Unicode: %s!" % hello, 1, 7)
 t3 = vv.Text(
     a,
-    "\Gamma\rho\epsilon\epsilon\kappa letters and "
-    + " \rightarrow math \otimes symbols",
+    r"\Gamma\rho\epsilon\epsilon\kappa letters and "
+    + r" \rightarrow math \otimes symbols",
     1,
     6,
 )
 
 t2 = vv.Text(
     a,
-    "\b{bold}, \i{italic}, and \b{\i{bolditalic}} \bfon\its"
+    r"\b{bold}, \i{italic}, and \b{\i{bolditalic}} \bfon\its"
     + " and sup^{script} and sub_{script}",
     1,
     5,

@@ -55,6 +55,8 @@ More information about compression and limitations:
 
 """
 
+# ruff: noqa: E402
+
 import os, time, warnings
 
 # Python 3 needs absolute import, which makes that this package

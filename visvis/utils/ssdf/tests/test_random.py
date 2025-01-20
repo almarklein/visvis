@@ -34,8 +34,8 @@ if PY3:
     unichr = chr
     xrange = range
 else:
-    string_types = (basestring,)
-    text_type = unicode
+    string_types = (basestring,)  # noqa
+    text_type = unicode  # noqa
     binary_type = str
     ascii_type = str  # Simple string
 
@@ -163,7 +163,7 @@ class Tester:
 
     def run(self, amount=100000):
         self._stop = False
-        t0 = time.time()
+        t0 = time.time()  # noqa
         maxtests = amount
 
         while len(self._tests) < maxtests and not self._stop:

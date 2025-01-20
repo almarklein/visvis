@@ -116,7 +116,7 @@ def calculateNormals_old(mesh):
     Handles triangular and quad faces.
 
     """
-    t0 = time.time()
+    t0 = time.time()  # noqa
 
     # Get vertices as np array
     vertices = mesh._vertices

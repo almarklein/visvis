@@ -44,6 +44,8 @@ includes the ssdf package in this manner.
 
 """
 
+# ruff: noqa: E402, F401
+
 __version__ = "2.1"
 
 import time

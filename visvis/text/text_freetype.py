@@ -60,36 +60,36 @@ FRAGMENT_SHADER = """
 // Uniforms obtained from OpenGL
     uniform sampler2D texture; // The 3D texture
     uniform vec2 shape; // And its shape (as in OpenGl)
-    
+
     void main()
     {
         // Get centre location
         vec2 pos = gl_TexCoord[0].xy;
-        
+
         // Define kernel. Chose such that k0+2*k1 == 1
         // k0 >> k1 is sharp   k0 ~ k1 is blurry
         // Optimal values depend on TEX_SCALE too!
         float k0 = 0.5;
         float k1 = 0.25;
-        
+
         // Init step size in tex coords
         float dx = 1.0/shape.x;
         float dy = 1.0/shape.y;
-        
+
         float alpha = 0.0;
-        
+
         alpha += texture2D(texture, pos+vec2(-dx,-dy) ).a * k1 * k1;
         alpha += texture2D(texture, pos+vec2(-dx,0.0) ).a * k1 * k0;
         alpha += texture2D(texture, pos+vec2(-dx,+dy) ).a * k1 * k1;
-        
+
         alpha += texture2D(texture, pos+vec2(0.0,-dy) ).a * k0 * k1;
         alpha += texture2D(texture, pos+vec2(0.0,0.0) ).a * k0 * k0;
         alpha += texture2D(texture, pos+vec2(0.0,+dy) ).a * k0 * k1;
-        
+
         alpha += texture2D(texture, pos+vec2(+dx,-dy) ).a * k1 * k1;
         alpha += texture2D(texture, pos+vec2(+dx,0.0) ).a * k1 * k0;
         alpha += texture2D(texture, pos+vec2(+dx,+dy) ).a * k1 * k1;
-        
+
         // Set final color
         gl_FragColor = vec4(gl_Color.rgb, alpha);
     }
@@ -324,7 +324,7 @@ class FreeTypeFontManager(FontManager):
 
     def get_font_file(self, fontname, bold, italic):
         sig = (fontname, bold, italic)
-        if not sig in self._font_names:
+        if sig not in self._font_names:
             # Did we ship this font with visvis?
             if True:
                 fname = self.get_font_file_in_resources(fontname, bold, italic)

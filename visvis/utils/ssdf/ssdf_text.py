@@ -67,7 +67,7 @@ class TextSSDFReader(SSDFReader):
             indent = len(line) - len(line2)
 
             # Split name and value using a regular expression
-            m = re.search("^\w+? *?=", line2)
+            m = re.search(r"^\w+? *?=", line2)
             if m:
                 i = m.end(0)
                 name = line2[: i - 1].strip()

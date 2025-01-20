@@ -13,6 +13,8 @@ inserted in the root visvis namespace.
 
 """
 
+# ruff: noqa: F401
+
 from visvis.core import Wobject, Line, PolarLine, Text
 
 from visvis.wobjects.textures import BaseTexture, Texture2D, Texture3D

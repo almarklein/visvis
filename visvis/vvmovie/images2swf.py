@@ -67,7 +67,9 @@ sources and tools:
 
 """
 
-import os, sys, time
+import os
+import sys
+import time
 import zlib
 
 try:
@@ -93,10 +95,10 @@ if PY3:
     text_type = str
     binary_type = bytes
 else:
-    string_types = (basestring,)
-    integer_types = (int, long)
+    string_types = (basestring,)  #  noqa
+    integer_types = (int, long)  # noqa
     class_types = (type, types.ClassType)
-    text_type = unicode
+    text_type = unicode  # noqa
     binary_type = str
 
 
@@ -239,7 +241,7 @@ else:
 
     def intToUint32(i):
         number = int(i)
-        n1, n2, n3, n4 = 1, 256, 256 * 256, 256 * 256 * 256
+        _n1, n2, n3, n4 = 1, 256, 256 * 256, 256 * 256 * 256
         b4, number = number // n4, number % n4
         b3, number = number // n3, number % n3
         b2, number = number // n2, number % n2
@@ -841,7 +843,7 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
     fps = 1.0 / minDuration
 
     # Produce series of tags for each image
-    t0 = time.time()
+    t0 = time.time()  # noqa
     nframes = 0
     for im in images2:
         bm = BitmapTag(im)
@@ -857,7 +859,7 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
         taglist.append(DoActionTag("stop"))
 
     # Build file
-    t1 = time.time()
+    t1 = time.time()  # noqa
     fp = open(filename, "wb")
     try:
         buildFile(fp, taglist, nframes=nframes, framesize=wh, fps=fps)
@@ -865,7 +867,7 @@ def writeSwf(filename, images, duration=0.1, repeat=True):
         raise
     finally:
         fp.close()
-    t2 = time.time()
+    t2 = time.time()  # noqa
 
     # print("Writing SWF took %1.2f and %1.2f seconds" % (t1-t0, t2-t1) )
 
@@ -878,7 +880,7 @@ def _readPixels(bb, i, tagType, L1):
         raise RuntimeError("Need Numpy to read an SWF file.")
 
     # Get info
-    charId = bb[i : i + 2]
+    _charId = bb[i : i + 2]
     i += 2
     format = ord(bb[i : i + 1])
     i += 1

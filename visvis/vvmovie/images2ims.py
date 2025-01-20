@@ -40,7 +40,7 @@ except ImportError:
 
 try:
     import PIL
-    from PIL import Image
+    import PIL.Image
 except ImportError:
     PIL = None
 
