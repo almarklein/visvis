@@ -144,7 +144,7 @@ class FontManager(object):
         for c in escapesKeys:
             tt = tt.replace('\\'+c, unichr(escapes[c]))
         # get italic and bold modifiers
-        tt = tt.replace('\i', '\x06') # just use some char that is no string
+        tt = tt.replace(r'\i', '\x06') # just use some char that is no string
         tt = tt.replace('\b', '\x07') # Note that '\i' == r'\i', but '\b' != r'\b'
         tt = tt.replace(r'\b', '\x07')
         tt = tt.replace(unichr(0), r'\\')
