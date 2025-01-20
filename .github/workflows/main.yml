@@ -65,8 +65,8 @@ jobs:
           # OS's
           - name: MacOS py313
             os: macos-latest
-            pyversion: '3.11'
-          - name: Windows py311
+            pyversion: '3.13'
+          - name: Windows py313
             os: windows-latest
             pyversion: '3.13'
 
