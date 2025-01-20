@@ -38,10 +38,10 @@ SH_COLOR_SCALARNOCMAP = ShaderCodePart(
     >>--uniforms--
     uniform vec2 scaleBias;
     // --uniforms--
-    
+
     >>--color1-to-val--
     val = color1.r;
-    
+
     >>--color1-to-color2--
     color2.rgb = ( color1.r + scaleBias[1] ) * scaleBias[0];
     color2.a = 1.0;
@@ -56,10 +56,10 @@ SH_COLOR_SCALAR = ShaderCodePart(
     uniform sampler1D colormap;
     uniform vec2 scaleBias;
     // --uniforms--
-    
+
     >>--color1-to-val--
     val = color1.r;
-    
+
     >>--color1-to-color2--
     color2 = texture1D( colormap, (color1.r + scaleBias[1]) * scaleBias[0]);
 """,
@@ -72,10 +72,10 @@ SH_COLOR_RGB = ShaderCodePart(
     >>--uniforms--
     uniform vec2 scaleBias;
     // --uniforms--
-    
+
     >>--color1-to-val--
     val = length(color1.rgb);
-    
+
     >>--color1-to-color2--
     color2 = ( color1 + scaleBias[1] ) * scaleBias[0];
 """,
@@ -95,30 +95,30 @@ SH_2F_BASE = ShaderCodePart(
     uniform vec2 extent; // Extent of the data in world coordinates
     uniform vec4 aakernel; // The smoothing kernel for anti-aliasing
     // --uniforms--
-    
+
     // Varyings obtained from vertex shader
     // --varyings--
-    
+
     void main()
     {
         // Get centre location
         vec2 pos = gl_TexCoord[0].xy;
-        
+
         // Init value
         vec4 color1 = vec4(0.0, 0.0, 0.0, 0.0);
         vec4 color2; // to set color later
-        
+
         // Init kernel and number of steps
         vec4 kernel = aakernel;
         int sze = 0; // Overwritten in aa-steps part
-        
+
         // Init step size in tex coords
         float dx = 1.0/shape.x;
         float dy = 1.0/shape.y;
-        
+
         // Allow more stuff
         // --pre-loop--
-        
+
         // Convolve
         for (int y=-sze; y<sze+1; y++)
         {
@@ -129,14 +129,14 @@ SH_2F_BASE = ShaderCodePart(
                 color1 += texture2D(texture, pos+dpos) * k;
             }
         }
-        
+
         // Allow more stuff
         // --post-loop--
-        
+
         // Determine final color
         // --color1-to-color2--
         gl_FragColor = color2;
-        
+
     }
 
 """,

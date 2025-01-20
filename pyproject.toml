@@ -58,5 +58,4 @@ ignore = [
     "E401",   # Multiple imports on one line
     "E713",   # Test for membership should be `not in`
     "E731",   # Do not assign a `lambda` expression, use a `def`
-    "W293"
 ]

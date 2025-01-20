@@ -32,32 +32,32 @@ SH_MV_BASE = ShaderCodePart(
     """
     // Uniforms
     //--uniforms--
-    
+
     // Varyings
     varying vec3 normal, vVertex;
     varying vec4 vColor;
     //--varyings--
-    
+
     void main()
     {
         // Get position
         vec4 vertex = vec4(gl_Vertex);
-        
+
         // Calculate vertex in eye coordinates
         vVertex = vec3(gl_ModelViewMatrix * vertex);
-        
+
         // Calculate projected position
         gl_Position = gl_ModelViewProjectionMatrix * vertex;
-        
+
         // Calculate nornal
         normal = gl_NormalMatrix * gl_Normal;
-        
+
         // Store texture coordinate (also a default thing).
         gl_TexCoord[0].xyz = gl_MultiTexCoord0.xyz;
-        
+
         // Set the vertex color
         vColor = gl_Color;
-        
+
         // Below comes code if light is calculated in vertex shader
         // (Gouraud and flat shading)
         //--light--
@@ -74,27 +74,27 @@ SH_MF_BASE = ShaderCodePart(
     """
     // Uniforms
     // --uniforms--
-    
+
     // Varyings
     varying vec3 normal, vVertex;
     varying vec4 vColor;
     // --varyings--
-    
+
     void main (void)
     {
         // Define colors
         vec4 albeido = vec4(1.0, 1.0, 1.0, 1.0);
         vec4 final_color;
-        
+
         // Calculate light
         // --light--
-        
+
         // Set albeido (i.e. base color)
         // --albeido--
-        
+
         // Set final_color (including lighting)
         // --final-color--
-        
+
         // Set fragment color using final_color, alpha using the albeido
         gl_FragColor.rgb = final_color.rgb;
         gl_FragColor.a = albeido.a;
@@ -108,50 +108,50 @@ _SH_LIGHT = """
     >>// Define colors
     // Define colors (tag exists only in fragment shader)
     vec4 ambient_color, diffuse_color, specular_color;
-    
+
     >>--light--
-    
+
     // Init colors
     ambient_color = vec4(0.0, 0.0, 0.0, 0.0);
     diffuse_color = vec4(0.0, 0.0, 0.0, 0.0);
     specular_color = vec4(0.0, 0.0, 0.0, 0.0);
-    
+
     // Init vectors
     vec3 N = normalize(normal);
     vec3 V = vec3(0.0, 0.0, 1.0); //view (eye) direction (in eye coords; is easy)
     vec3 L;
-    
+
     // Flip normal so it points towards viewer
     float Nselect = float(dot(N,V) > 0.0);
     N = (2.0*Nselect - 1.0) * N;  // ==  Nselect * N - (1.0-Nselect)*N;
-    
+
     int nlights = 1;
     for (int i=0; i<nlights; i++)
     {
         // Get light position
         vec4 lightPos = gl_LightSource[i].position;
-        
+
         // Is this thing on?
         float lightEnabled = float( length(lightPos) > 0.0 );
-        
+
         // Get light direction (make sure to prevent zero devision)
         // Also take into account if its a directional light
         L = lightPos.xyz - lightPos.w*vVertex;
         L = normalize(L + (1.0-lightEnabled));
-        
+
         // Calculate lighting properties (blinn-phong light model)
         float lambertTerm = clamp( dot(N,L), 0.0, 1.0 );
         vec3 H = normalize(L+V); // Halfway vector
         float specularTerm = pow( max(dot(H,N),0.0), gl_FrontMaterial.shininess);
-        
+
         // Below is Phong reflection (for reference)
         //vec3 R = -reflect(L,N);
         //float specularTerm = pow( max(dot(R, V), 0.0), gl_FrontMaterial.shininess );
-        
+
         // Calculate masks
         float mask1 = lightEnabled;
         float mask2 = lightEnabled * float(lambertTerm>0.0);
-        
+
         // Calculate colors
         ambient_color += (mask1 * gl_LightSource[i].ambient * gl_FrontMaterial.ambient);
         diffuse_color += (mask2 * gl_LightSource[i].diffuse *
@@ -201,10 +201,10 @@ SH_MF_SHADING_GOURAUD = ShaderCodePart(
     >>--varyings--
     varying vec4 ambient_color, diffuse_color, specular_color; // from vertex
     //--varyings--
-    
+
     >>--light--
     // Light calculations done in vertex shader
-    
+
     >>--final-color--
     final_color = albeido * ( ambient_color + diffuse_color) + specular_color;
 """,
@@ -245,7 +245,7 @@ SH_MF_SHADING_TOON = ShaderCodePart(
     _SH_LIGHT
     + """\n
     >>--final-color--
-    
+
     // Discretisize diffuse part
     float nLimits = (5.0) - 1.001; // Number in brachets is number of levels
     vec4 C1, C2, C3;
@@ -254,7 +254,7 @@ SH_MF_SHADING_TOON = ShaderCodePart(
     C2 = vec4(ivec4((diffuse_color  )*nLimits+0.5)) / nLimits;
     C3 = vec4(ivec4((diffuse_color+W)*nLimits+0.5)) / nLimits;
     diffuse_color = 0.3333 * (C1 + C2 + C3);
-    
+
     // Discretisize specular part. Ensure we always have some reflection ...
     nLimits = (2.0) / length(gl_FrontMaterial.specular.rgb) -1.001;
     W = 0.5 * fwidth(length(specular_color.rgb));
@@ -262,7 +262,7 @@ SH_MF_SHADING_TOON = ShaderCodePart(
     C2 = vec4(ivec4((specular_color  )*nLimits+0.5)) / nLimits;
     C3 = vec4(ivec4((specular_color+W)*nLimits+0.5)) / nLimits;
     specular_color = 0.333 * (C1 + C2 + C3);
-    
+
     // Compose final color
     final_color = albeido * ( ambient_color + diffuse_color) + specular_color;
 """,
@@ -333,7 +333,7 @@ SH_MF_ALBEIDO_LUT1 = ShaderCodePart(
     >>--uniforms--
     uniform sampler1D colormap;
     // --uniforms--
-        
+
     >>--albeido--
     albeido = texture1D( colormap, gl_TexCoord[0].x);
     albeido.a *= vColor.a;
@@ -346,7 +346,7 @@ SH_MF_ALBEIDO_LUT2 = ShaderCodePart(
     >>--uniforms--
     uniform sampler2D texture;
     // --uniforms--
-    
+
     >>--albeido--
     albeido = texture2D( texture, gl_TexCoord[0].xy);
     albeido.a *= vColor.a;

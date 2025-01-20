@@ -26,14 +26,14 @@ SH_2F_SHARPEN = vv.shaders.ShaderCodePart(
     >>--uniforms--
     uniform float amount;
     // --uniforms--
-    
+
     >>--pre-loop--
     sze = 3; // Use full kernel (otherwise it wont work if t.aa == 0)
     kernel = vec4(1.0, 0.9, 0.6, 0.3); // approximate Gauss of sigma 2
     float kernel_norm = kernel[0] + (kernel[1] + kernel[2] + kernel[3])*2.0;
     kernel /= kernel_norm;
     // --pre-loop--
-    
+
     >>--post-loop--
     float th = 0.05;
     vec4 normalColor = texture2D(texture, pos);
