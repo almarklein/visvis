@@ -251,12 +251,12 @@ class Glyph(object):
                 info.size_b, info.origin_b, info.width_b)
         
         # Find position in texture, normalized to texture coordinates
-        x1 = infoOrigin[ac,0]
-        x2 = x1 + infoSize[ac,0]
+        x1 = int(infoOrigin[ac,0])
+        x2 = x1 + int(infoSize[ac,0])
         tmp = float(info.data.shape[1])
         self.s1, self.s2 = (x1) / tmp, (x2-1) / tmp
-        y1 = infoOrigin[ac,1]
-        y2 = y1 + infoSize[ac,1]
+        y1 = int(infoOrigin[ac,1])
+        y2 = y1 + int(infoSize[ac,1])
         tmp = float(info.data.shape[0])
         self.t1, self.t2 = (y1) / tmp, (y2-1) / tmp
         
@@ -267,8 +267,8 @@ class Glyph(object):
         
         # calculate width on screen, given the size
         factor = size / float(info.fontsize)
-        self.sizex = infoSize[ac,0] * factor
-        self.sizey = infoSize[ac,1] * factor
+        self.sizex = int(infoSize[ac,0]) * factor
+        self.sizey = int(infoSize[ac,1]) * factor
         self.width = float(infoWidth[ac]) * factor # is spacing?
         
         smaller = 0.6

@@ -18,7 +18,13 @@ to scikit-image, and we now use that here.
 
 import visvis as vv
 import numpy as np
-from skimage.measure import find_contours, marching_cubes_lewiner
+from skimage.measure import find_contours
+try:
+    # Older version of skimage
+    from skimage.measure import marching_cubes_lewiner as marching_cubes
+except ImportError:
+    from skimage.measure import marching_cubes
+     
 
 
 def isocontour(im, isovalue=None):
@@ -108,10 +114,15 @@ def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
         sampling = (1, 1, 1)
     
     # Call into skimage algorithm
-    xx = marching_cubes_lewiner(im, isovalue,
+    if useClassic:
+        xx = marching_cubes(im, isovalue,
+                                    spacing=sampling,
+                                    step_size=step,
+                                    method="lorensen")
+    else:
+        xx = marching_cubes(im, isovalue,
                                 spacing=sampling,
-                                step_size=step,
-                                use_classic=useClassic)
+                                step_size=step)
     vertices, faces, normals, values = xx
     
     # Transform the data to how Visvis likes it

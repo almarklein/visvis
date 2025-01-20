@@ -1002,7 +1002,7 @@ class Mesh(Wobject, BaseMesh, Colormapable):
             gl.glMaterial(what, gl.GL_AMBIENT, gc(self._ambient, refColor))
             gl.glMaterial(what, gl.GL_DIFFUSE, gc(self._diffuse, refColor))
             gl.glMaterial(what, gl.GL_SPECULAR, gc(self._specular, (1,1,1,1)))
-            gl.glMaterial(what, gl.GL_SHININESS, self._shininess)
+            gl.glMaterialf(what, gl.GL_SHININESS, self._shininess)
             gl.glMaterial(what, gl.GL_EMISSION, gc(self._emission, refColor))
         
         

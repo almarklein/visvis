@@ -112,9 +112,9 @@ def surf(*args, **kwargs):
     # Create faces
     w = z.shape[1]
     i = np.arange(z.shape[0]-1)
-    faces = np.row_stack(
+    faces = np.row_stack([
         np.column_stack((j + w*i, j+1 + w*i, j+1 + w*(i+1), j + w*(i+1)))
-        for j in range(w-1))
+        for j in range(w-1)])
     
     
     ## Visualize
