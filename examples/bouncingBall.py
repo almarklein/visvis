@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" This example shows a ball that bounces on a surface and has
+"""This example shows a ball that bounces on a surface and has
 two balls rotating around it. It illustrates the use of timers
 and how object hierarchy can be used to build (and move) complex
 models consisting of multiple simple objects.
@@ -8,12 +8,12 @@ models consisting of multiple simple objects.
 import visvis as vv
 
 # Create floor
-floor = vv.solidBox((0,0,-1.5), (6,6,1))
+floor = vv.solidBox((0, 0, -1.5), (6, 6, 1))
 
 # Create hierachy objects
 sun = vv.solidSphere()
-earth = vv.solidSphere((2,0,0),(0.3,0.3,0.2))
-moon = vv.solidSphere((2,0,0),scaling=(0.2, 0.2, 0.3))
+earth = vv.solidSphere((2, 0, 0), (0.3, 0.3, 0.2))
+moon = vv.solidSphere((2, 0, 0), scaling=(0.2, 0.2, 0.3))
 moon.parent = earth
 earth.parent = sun
 
@@ -21,23 +21,24 @@ earth.parent = sun
 sunTrans = sun.transformations[0]
 earthRot = vv.Transform_Rotate(20)
 moonRot = vv.Transform_Rotate(20)
-earth.transformations.insert(0,earthRot)
-moon.transformations.insert(0,moonRot)
+earth.transformations.insert(0, earthRot)
+moon.transformations.insert(0, moonRot)
 
 # Set appearance
-earth.faceColor = 'b'
-moon.faceColor = 'y'
-sun.faceColor = 'r'
+earth.faceColor = "b"
+moon.faceColor = "y"
+sun.faceColor = "r"
 
 # Set axes settings
 axes = vv.gca()
-axes.SetLimits(rangeZ=(-2,3))
+axes.SetLimits(rangeZ=(-2, 3))
 
 
 # Define timer func
 sun.zSpeed = 0.2
-def onTimer(event):
 
+
+def onTimer(event):
     # Move moon
     moonRot.angle += 20
     if moonRot.angle > 360:

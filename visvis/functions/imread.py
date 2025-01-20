@@ -12,6 +12,7 @@ iio = None
 
 try:
     import imageio
+
     if hasattr(imageio, "v2"):
         iio = imageio.v2
     else:
@@ -21,7 +22,7 @@ except ImportError:
 
 
 def imread(filename):
-    """ imread(filename)
+    """imread(filename)
 
     Read image from file or http, requires imageio.
 
@@ -30,7 +31,7 @@ def imread(filename):
     if iio is None:
         raise RuntimeError("visvis.imread requires the imageio package.")
 
-    if not os.path.isfile(filename) and '//' not in filename:
+    if not os.path.isfile(filename) and "//" not in filename:
         # try loading from the resource dir
         path = vv.misc.getResourceDir()
         filename2 = os.path.join(path, filename)
@@ -42,6 +43,6 @@ def imread(filename):
     return iio.imread(filename)
 
 
-if __name__ == '__main__':
-    im = vv.imread('astronaut.png')
+if __name__ == "__main__":
+    im = vv.imread("astronaut.png")
     t = vv.imshow(im)

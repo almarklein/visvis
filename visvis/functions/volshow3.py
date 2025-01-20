@@ -7,14 +7,14 @@
 import visvis as vv
 import numpy as np
 
-def volshow3(vol, clim=None, renderStyle='mip', cm=None,
-            axesAdjust=True, axes=None):
-    """ volshow3(vol, clim=None, renderStyle='mip', cm=CM_GRAY,
+
+def volshow3(vol, clim=None, renderStyle="mip", cm=None, axesAdjust=True, axes=None):
+    """volshow3(vol, clim=None, renderStyle='mip', cm=CM_GRAY,
                 axesAdjust=True, axes=None)
-    
+
     Display a 3D image (a volume) using volume rendering,
     and returns the Texture3D object.
-    
+
     Parameters
     ----------
     vol : numpy array
@@ -35,44 +35,44 @@ def volshow3(vol, clim=None, renderStyle='mip', cm=None,
         set to False.
     axes : Axes instance
         Display the image in this axes, or the current axes if not given.
-    
+
     """
-    
+
     # get axes
     if axes is None:
         axes = vv.gca()
-    
-     # Check data
+
+    # Check data
     if not isinstance(vol, np.ndarray):
-        raise ValueError('volshow expects an image as a numpy array.')
-    elif vol.size==0:
-        raise ValueError('volshow cannot draw arrays with zero elements.')
+        raise ValueError("volshow expects an image as a numpy array.")
+    elif vol.size == 0:
+        raise ValueError("volshow cannot draw arrays with zero elements.")
     #
-    if vol.ndim==3 or vol.ndim==4 and vol.shape[-1] in [1,3,4]:
+    if vol.ndim == 3 or vol.ndim == 4 and vol.shape[-1] in [1, 3, 4]:
         pass
     else:
-        raise ValueError('volshow expects a 3D image as a numpy array.')
-    
+        raise ValueError("volshow expects a 3D image as a numpy array.")
+
     # create texture
     t = vv.Texture3D(axes, vol, renderStyle)
-    
+
     # set clim
-    if isinstance(clim,list):
+    if isinstance(clim, list):
         clim = tuple(clim)
     if isinstance(clim, tuple):
         t.SetClim(clim)
-    
+
     # set colormap
     if cm is not None:
         t.colormap = cm
-    
+
     # adjust axes
     if axesAdjust:
         if axes.daspectAuto is None:
             axes.daspectAuto = False
-        axes.cameraType = '3d'
+        axes.cameraType = "3d"
         axes.SetLimits()
-    
+
     # done
     axes.Draw()
     return t
@@ -81,5 +81,5 @@ def volshow3(vol, clim=None, renderStyle='mip', cm=None,
 if __name__ == "__main__":
     vol = vv.aVolume()
     t = vv.volshow3(vol)
-    t.renderStyle = 'iso' # Isosurface rendering instead of MIP
+    t.renderStyle = "iso"  # Isosurface rendering instead of MIP
     t.isoThreshold = 0.1

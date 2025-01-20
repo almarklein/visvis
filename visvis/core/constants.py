@@ -4,9 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Module constants
-
-"""
+"""Module constants"""
 
 # (The keys values are the same as for wx, but this is arbitrary.)
 
@@ -141,45 +139,67 @@ w+gEV+P+j5Zz/1YxM+"""
 
 colormaps = {}
 
-colormaps['gray'] = [(0,0,0), (1,1,1)]
-colormaps['cool'] = [(0,1,1), (1,0,1)]
-colormaps['hot'] = [(0,0,0), (1,0,0), (1,1,0), (1,1,1)]
-colormaps['bone'] = [(0,0,0), (0.333, 0.333, 0.444), (0.666, 0.777, 0.777), (1,1,1)]
-colormaps['copper'] = [(0,0,0), (1,0.7,0.5)]
-colormaps['pink'] = [(0.1,0,0), (0.75,0.5,0.5), (0.9,0.9,0.7), (1,1,1)]
+colormaps["gray"] = [(0, 0, 0), (1, 1, 1)]
+colormaps["cool"] = [(0, 1, 1), (1, 0, 1)]
+colormaps["hot"] = [(0, 0, 0), (1, 0, 0), (1, 1, 0), (1, 1, 1)]
+colormaps["bone"] = [(0, 0, 0), (0.333, 0.333, 0.444), (0.666, 0.777, 0.777), (1, 1, 1)]
+colormaps["copper"] = [(0, 0, 0), (1, 0.7, 0.5)]
+colormaps["pink"] = [(0.1, 0, 0), (0.75, 0.5, 0.5), (0.9, 0.9, 0.7), (1, 1, 1)]
 
-colormaps['spring'] = [(1,0,1), (1,1,0)]
-colormaps['summer'] = [(0,0.5,0.4), (1,1,0.4)]
-colormaps['autumn'] = [(1,0,0), (1,1,0)]
-colormaps['winter'] = [(0,0,1), (0,1,0.5)]
+colormaps["spring"] = [(1, 0, 1), (1, 1, 0)]
+colormaps["summer"] = [(0, 0.5, 0.4), (1, 1, 0.4)]
+colormaps["autumn"] = [(1, 0, 0), (1, 1, 0)]
+colormaps["winter"] = [(0, 0, 1), (0, 1, 0.5)]
 
-colormaps['jet'] = [(0,0,0.5), (0,0,1), (0,0.5,1), (0,1,1), (0.5,1,0.5),
-                    (1,1,0), (1,0.5,0), (1,0,0), (0.5,0,0)]
-colormaps['hsv'] = [(1,0,0), (1,1,0), (0,1,0), (0,1,1),(0,0,1), (1,0,1), (1,0,0)]
+colormaps["jet"] = [
+    (0, 0, 0.5),
+    (0, 0, 1),
+    (0, 0.5, 1),
+    (0, 1, 1),
+    (0.5, 1, 0.5),
+    (1, 1, 0),
+    (1, 0.5, 0),
+    (1, 0, 0),
+    (0.5, 0, 0),
+]
+colormaps["hsv"] = [
+    (1, 0, 0),
+    (1, 1, 0),
+    (0, 1, 0),
+    (0, 1, 1),
+    (0, 0, 1),
+    (1, 0, 1),
+    (1, 0, 0),
+]
 
 import sys
 import base64
 import numpy as np
-base64decode = base64.decodebytes if sys.version_info > (3, ) else base64.decodestring
-colormaps['magma'] = np.frombuffer(base64decode(_magma), np.float32).reshape(256, 3)
-colormaps['viridis'] = np.frombuffer(base64decode(_viridis), np.float32).reshape(256, 3)
+
+base64decode = base64.decodebytes if sys.version_info > (3,) else base64.decodestring
+colormaps["magma"] = np.frombuffer(base64decode(_magma), np.float32).reshape(256, 3)
+colormaps["viridis"] = np.frombuffer(base64decode(_viridis), np.float32).reshape(256, 3)
 
 # Medical colormaps
 c1, c2 = 1200 / 4096.0, 1550 / 4096.0
-colormaps['ct1'] = {    'r': [(0, 0), (c2, 1.0), (1.0, 0.0)],
-                        'g': [(0, 0), (c1, 0.0), (c2, 1.0)],
-                        'b': [(0, 0), (c1, 0.0), (c2, 1.0), (1.0, 0.0) ]}
+colormaps["ct1"] = {
+    "r": [(0, 0), (c2, 1.0), (1.0, 0.0)],
+    "g": [(0, 0), (c1, 0.0), (c2, 1.0)],
+    "b": [(0, 0), (c1, 0.0), (c2, 1.0), (1.0, 0.0)],
+}
 # Colormap design by Maaike Koenrades, best viewed with clim (0, 2500)
-colormaps['ct2'] = {    'r': [(0, 0), (0.1773, 1.0)],
-                        'g': [(0, 0), (0.2727, 1.0)],
-                        'b': [(0, 0), (0.3454, 1.0)],
-                        'a': [(0, 1), (1.0, 1.0)]}
+colormaps["ct2"] = {
+    "r": [(0, 0), (0.1773, 1.0)],
+    "g": [(0, 0), (0.2727, 1.0)],
+    "b": [(0, 0), (0.3454, 1.0)],
+    "a": [(0, 1), (1.0, 1.0)],
+}
 del c1, c2, base64, np
 
 
 # Inject colormaps in this namespace as constants
 L = locals()
 for key in colormaps:
-    key2 = 'CM_' + key.upper()
+    key2 = "CM_" + key.upper()
     L[key2] = colormaps[key]
 del L, key, key2

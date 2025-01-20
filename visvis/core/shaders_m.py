@@ -4,7 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Module shaders_m
+"""Module shaders_m
 
 Contains the source for various shaders for the Mesh wobject,
 divided in different parts.
@@ -20,13 +20,16 @@ The names consists of different parts, seperated by underscores:
     part for meshes
 
 """
+
 from visvis.core.shaders import ShaderCodePart
 
 
 ## Mesh base vertex
 
-SH_MV_BASE = ShaderCodePart('base', 'mesh-vertex-default',
-"""
+SH_MV_BASE = ShaderCodePart(
+    "base",
+    "mesh-vertex-default",
+    """
     // Uniforms
     //--uniforms--
     
@@ -59,13 +62,16 @@ SH_MV_BASE = ShaderCodePart('base', 'mesh-vertex-default',
         // (Gouraud and flat shading)
         //--light--
     }
-""")
+""",
+)
 
 
 ## Mesh base fragment
 
-SH_MF_BASE = ShaderCodePart('base', 'mesh-fragment-default',
-"""
+SH_MF_BASE = ShaderCodePart(
+    "base",
+    "mesh-fragment-default",
+    """
     // Uniforms
     // --uniforms--
     
@@ -93,7 +99,8 @@ SH_MF_BASE = ShaderCodePart('base', 'mesh-fragment-default',
         gl_FragColor.rgb = final_color.rgb;
         gl_FragColor.a = albeido.a;
     }
-""")
+""",
+)
 
 ## LIGHT / SHADING
 
@@ -156,29 +163,41 @@ _SH_LIGHT = """
 
 ## Mesh shading plain
 
-SH_MV_SHADING_PLAIN = ShaderCodePart('shading', 'plain',
-"""
+SH_MV_SHADING_PLAIN = ShaderCodePart(
+    "shading",
+    "plain",
+    """
     >>--light--
     // No lighting calculations
-""")
-SH_MF_SHADING_PLAIN = ShaderCodePart('shading', 'plain',
-"""
+""",
+)
+SH_MF_SHADING_PLAIN = ShaderCodePart(
+    "shading",
+    "plain",
+    """
     >>--light--
     // No lighting calculations
     >>--final-color--
     final_color = albeido = vColor; // Plain shading -> only use vertex color
-""")
+""",
+)
 
 ## Mesh shading gouraud
 
-SH_MV_SHADING_GOURAUD = ShaderCodePart('shading', 'gouraud',
-    _SH_LIGHT + """\n
+SH_MV_SHADING_GOURAUD = ShaderCodePart(
+    "shading",
+    "gouraud",
+    _SH_LIGHT
+    + """\n
     >>--varyings--
     varying vec4 ambient_color, diffuse_color, specular_color; // to fragment
     //--varyings--
-""")
-SH_MF_SHADING_GOURAUD = ShaderCodePart('shading', 'gouraud',
-"""
+""",
+)
+SH_MF_SHADING_GOURAUD = ShaderCodePart(
+    "shading",
+    "gouraud",
+    """
     >>--varyings--
     varying vec4 ambient_color, diffuse_color, specular_color; // from vertex
     //--varyings--
@@ -188,20 +207,28 @@ SH_MF_SHADING_GOURAUD = ShaderCodePart('shading', 'gouraud',
     
     >>--final-color--
     final_color = albeido * ( ambient_color + diffuse_color) + specular_color;
-""")
+""",
+)
 
 ## Mesh shading smooth (aka phong-shading)
 
-SH_MV_SHADING_SMOOTH = ShaderCodePart('shading', 'smooth',
-"""
+SH_MV_SHADING_SMOOTH = ShaderCodePart(
+    "shading",
+    "smooth",
+    """
     >>--light--
     // Lighting calculations performed in fragment shader
-""")
-SH_MF_SHADING_SMOOTH = ShaderCodePart('shading', 'smooth',
-    _SH_LIGHT + """\n
+""",
+)
+SH_MF_SHADING_SMOOTH = ShaderCodePart(
+    "shading",
+    "smooth",
+    _SH_LIGHT
+    + """\n
     >>--final-color--
     final_color = albeido * ( ambient_color + diffuse_color) + specular_color;
-""")
+""",
+)
 
 ## Mesh shading toon (aka cel-shading)
 # Toon shading is a type of shading that produces a cartoonish look.
@@ -211,10 +238,12 @@ SH_MF_SHADING_SMOOTH = ShaderCodePart('shading', 'smooth',
 # The colours are reduced in a way that does not use if-statements.
 # There is also a simple form of anti-aliasing.
 
-SH_MV_SHADING_TOON = ShaderCodePart('shading', 'toon',
-    SH_MV_SHADING_SMOOTH.rawCode)
-SH_MF_SHADING_TOON = ShaderCodePart('shading', 'toon',
-    _SH_LIGHT + """\n
+SH_MV_SHADING_TOON = ShaderCodePart("shading", "toon", SH_MV_SHADING_SMOOTH.rawCode)
+SH_MF_SHADING_TOON = ShaderCodePart(
+    "shading",
+    "toon",
+    _SH_LIGHT
+    + """\n
     >>--final-color--
     
     // Discretisize diffuse part
@@ -236,7 +265,8 @@ SH_MF_SHADING_TOON = ShaderCodePart('shading', 'toon',
     
     // Compose final color
     final_color = albeido * ( ambient_color + diffuse_color) + specular_color;
-""")
+""",
+)
 
 ## Let there be light (but how many?)
 
@@ -247,32 +277,38 @@ _NLIGHTS = """
     varying vec3 lightDirs[%i];
 """
 
-SH_NLIGHTS_2 = ShaderCodePart('nlights', '2', _NLIGHTS % (2,2))
-SH_NLIGHTS_3 = ShaderCodePart('nlights', '3', _NLIGHTS % (3,3))
-SH_NLIGHTS_4 = ShaderCodePart('nlights', '4', _NLIGHTS % (4,4))
-SH_NLIGHTS_5 = ShaderCodePart('nlights', '5', _NLIGHTS % (5,5))
-SH_NLIGHTS_6 = ShaderCodePart('nlights', '6', _NLIGHTS % (6,6))
-SH_NLIGHTS_7 = ShaderCodePart('nlights', '7', _NLIGHTS % (7,7))
-SH_NLIGHTS_8 = ShaderCodePart('nlights', '8', _NLIGHTS % (8,8))
+SH_NLIGHTS_2 = ShaderCodePart("nlights", "2", _NLIGHTS % (2, 2))
+SH_NLIGHTS_3 = ShaderCodePart("nlights", "3", _NLIGHTS % (3, 3))
+SH_NLIGHTS_4 = ShaderCodePart("nlights", "4", _NLIGHTS % (4, 4))
+SH_NLIGHTS_5 = ShaderCodePart("nlights", "5", _NLIGHTS % (5, 5))
+SH_NLIGHTS_6 = ShaderCodePart("nlights", "6", _NLIGHTS % (6, 6))
+SH_NLIGHTS_7 = ShaderCodePart("nlights", "7", _NLIGHTS % (7, 7))
+SH_NLIGHTS_8 = ShaderCodePart("nlights", "8", _NLIGHTS % (8, 8))
 
 # Make one light extra lightweight
 # (I know at least one occurance where it meant the difference between
 # success and failure for the iso volume renderer).
-SH_NLIGHTS_1 = ShaderCodePart('nlights', '1',
-"""
+SH_NLIGHTS_1 = ShaderCodePart(
+    "nlights",
+    "1",
+    """
     >>for (int i=0; i<nlights; i++)
     int i = 0;
-""")
+""",
+)
 
-SH_NLIGHTS_0 = ShaderCodePart('nlights', '0',
-"""
+SH_NLIGHTS_0 = ShaderCodePart(
+    "nlights",
+    "0",
+    """
     >>int nlights = 1;
     int nlights = 0;
     >>varying vec3 lightDirs[1];
     // no lightDirs
     >>lightDirs[i] =
     // Removed Assignment to lightDirs
-""")
+""",
+)
 
 
 ## ALBEIDO
@@ -281,14 +317,19 @@ SH_NLIGHTS_0 = ShaderCodePart('nlights', '0',
 # with another color before the specular reflection is added. This
 # can be a colormap, texture, RGB or RGBA value.
 
-SH_MF_ALBEIDO_UNIT = ShaderCodePart('albeido', 'unit',
-"""
+SH_MF_ALBEIDO_UNIT = ShaderCodePart(
+    "albeido",
+    "unit",
+    """
     >>--albeido--
     // Albeido stays unit, but takes alpha from vColor
     albeido.a = vColor.a;
-""")
-SH_MF_ALBEIDO_LUT1 = ShaderCodePart('albeido', '1D LUT',
-"""
+""",
+)
+SH_MF_ALBEIDO_LUT1 = ShaderCodePart(
+    "albeido",
+    "1D LUT",
+    """
     >>--uniforms--
     uniform sampler1D colormap;
     // --uniforms--
@@ -296,9 +337,12 @@ SH_MF_ALBEIDO_LUT1 = ShaderCodePart('albeido', '1D LUT',
     >>--albeido--
     albeido = texture1D( colormap, gl_TexCoord[0].x);
     albeido.a *= vColor.a;
-""")
-SH_MF_ALBEIDO_LUT2 = ShaderCodePart('albeido', '2D LUT',
-"""
+""",
+)
+SH_MF_ALBEIDO_LUT2 = ShaderCodePart(
+    "albeido",
+    "2D LUT",
+    """
     >>--uniforms--
     uniform sampler2D texture;
     // --uniforms--
@@ -306,14 +350,21 @@ SH_MF_ALBEIDO_LUT2 = ShaderCodePart('albeido', '2D LUT',
     >>--albeido--
     albeido = texture2D( texture, gl_TexCoord[0].xy);
     albeido.a *= vColor.a;
-""")
-SH_MF_ALBEIDO_RGB = ShaderCodePart('albeido', 'RGB', # No transparency possible here
-"""
+""",
+)
+SH_MF_ALBEIDO_RGB = ShaderCodePart(
+    "albeido",
+    "RGB",  # No transparency possible here
+    """
     >>--albeido--
     albeido = vec4(vColor.rgb, 1.0);
-""")
-SH_MF_ALBEIDO_RGBA = ShaderCodePart('albeido', 'RGBA',
-"""
+""",
+)
+SH_MF_ALBEIDO_RGBA = ShaderCodePart(
+    "albeido",
+    "RGBA",
+    """
     >>--albeido--
     albeido = vColor.rgba;
-""")
+""",
+)

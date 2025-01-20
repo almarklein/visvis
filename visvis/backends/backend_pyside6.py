@@ -13,12 +13,14 @@
 import visvis
 
 # Check if qtlib is already set
-if visvis.backends.qtlib not in [None, '', 'pyside6']:
-    raise ImportError('Cannot import PySide6 because Qt was already loaded from "%s".' %
-                        visvis.backends.qtlib)
+if visvis.backends.qtlib not in [None, "", "pyside6"]:
+    raise ImportError(
+        'Cannot import PySide6 because Qt was already loaded from "%s".'
+        % visvis.backends.qtlib
+    )
 
 # Set qtlib so that the qtcommon module knows how it should import Qt.
-visvis.backends.qtlib = 'pyside6'
+visvis.backends.qtlib = "pyside6"
 
 # Load backend from qtcommon
 from visvis.backends.qtcommon import Figure, newFigure, App, app

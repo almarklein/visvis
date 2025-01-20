@@ -6,7 +6,7 @@
 # The full license can be found in 'license.txt'.
 
 
-""" Subpackage visvis.text
+"""Subpackage visvis.text
 
 For rendering text in visvis.
 

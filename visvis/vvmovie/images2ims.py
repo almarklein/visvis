@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Module images2ims
+"""Module images2ims
 
 Use PIL to create a series of images.
 
@@ -46,80 +46,79 @@ except ImportError:
 
 
 def checkImages(images):
-    """ checkImages(images)
+    """checkImages(images)
     Check numpy images and correct intensity range etc.
     The same for all movie formats.
     """
     # Init results
     images2 = []
-    
+
     for im in images:
         if PIL and isinstance(im, PIL.Image.Image):
             # We assume PIL images are allright
             images2.append(im)
-        
+
         elif np and isinstance(im, np.ndarray):
             # Check and convert dtype
             if im.dtype == np.uint8:
-                images2.append(im) # Ok
+                images2.append(im)  # Ok
             elif im.dtype in [np.float32, np.float64]:
                 theMax = im.max()
                 if theMax > 128 and theMax < 300:
-                    pass # assume 0:255
+                    pass  # assume 0:255
                 else:
                     im = im.copy()
-                    im[im<0] = 0
-                    im[im>1] = 1
+                    im[im < 0] = 0
+                    im[im > 1] = 1
                     im *= 255
-                images2.append( im.astype(np.uint8) )
+                images2.append(im.astype(np.uint8))
             else:
                 im = im.astype(np.uint8)
                 images2.append(im)
             # Check size
             if im.ndim == 2:
-                pass # ok
+                pass  # ok
             elif im.ndim == 3:
-                if im.shape[2] not in [3,4]:
-                    raise ValueError('This array can not represent an image.')
+                if im.shape[2] not in [3, 4]:
+                    raise ValueError("This array can not represent an image.")
             else:
-                raise ValueError('This array can not represent an image.')
+                raise ValueError("This array can not represent an image.")
         else:
-            raise ValueError('Invalid image type: ' + str(type(im)))
-    
+            raise ValueError("Invalid image type: " + str(type(im)))
+
     # Done
     return images2
 
 
 def _getFilenameParts(filename):
-    if '*' in filename:
-        return tuple( filename.split('*',1) )
+    if "*" in filename:
+        return tuple(filename.split("*", 1))
     else:
         return os.path.splitext(filename)
 
 
 def _getFilenameWithFormatter(filename, N):
-    
     # Determine sequence number formatter
-    formatter = '%04i'
+    formatter = "%04i"
     if N < 10:
-        formatter = '%i'
+        formatter = "%i"
     elif N < 100:
-        formatter = '%02i'
+        formatter = "%02i"
     elif N < 1000:
-        formatter = '%03i'
-    
+        formatter = "%03i"
+
     # Insert sequence number formatter
     part1, part2 = _getFilenameParts(filename)
     return part1 + formatter + part2
-    
+
 
 def _getSequenceNumber(filename, part1, part2):
     # Get string bit
-    seq = filename[len(part1):-len(part2)]
+    seq = filename[len(part1) : -len(part2)]
     # Get all numeric chars
-    seq2 = ''
+    seq2 = ""
     for c in seq:
-        if c in '0123456789':
+        if c in "0123456789":
             seq2 += c
         else:
             break
@@ -128,83 +127,82 @@ def _getSequenceNumber(filename, part1, part2):
 
 
 def writeIms(filename, images):
-    """ writeIms(filename, images)
-    
+    """writeIms(filename, images)
+
     Export movie to a series of image files. If the filenenumber
     contains an asterix, a sequence number is introduced at its
     location. Otherwise the sequence number is introduced right
     before the final dot.
-    
+
     To enable easy creation of a new directory with image files,
     it is made sure that the full path exists.
-    
+
     Images should be a list consisting of PIL images or numpy arrays.
     The latter should be between 0 and 255 for integer types, and
     between 0 and 1 for float types.
-    
+
     """
-    
+
     # Check PIL
     if PIL is None:
         raise RuntimeError("Need PIL to write series of image files.")
-    
+
     # Check images
     images = checkImages(images)
-    
+
     # Get dirname and filename
     filename = os.path.abspath(filename)
     dirname, filename = os.path.split(filename)
-    
+
     # Create dir(s) if we need to
     if not os.path.isdir(dirname):
         os.makedirs(dirname)
-    
+
     # Insert formatter
     filename = _getFilenameWithFormatter(filename, len(images))
-    
+
     # Write
     seq = 0
     for frame in images:
         seq += 1
         # Get filename
-        fname = os.path.join(dirname, filename%seq)
+        fname = os.path.join(dirname, filename % seq)
         # Write image
         if np and isinstance(frame, np.ndarray):
-            frame =  PIL.Image.fromarray(frame)
+            frame = PIL.Image.fromarray(frame)
         frame.save(fname)
 
 
-
 def readIms(filename, asNumpy=True):
-    """ readIms(filename, asNumpy=True)
-    
+    """readIms(filename, asNumpy=True)
+
     Read images from a series of images in a single directory. Returns a
     list of numpy arrays, or, if asNumpy is false, a list if PIL images.
-    
+
     """
-    
+
     # Check PIL
     if PIL is None:
         raise RuntimeError("Need PIL to read a series of image files.")
-    
+
     # Check Numpy
     if asNumpy and np is None:
         raise RuntimeError("Need Numpy to return numpy arrays.")
-    
+
     # Get dirname and filename
     filename = os.path.abspath(filename)
     dirname, filename = os.path.split(filename)
-    
+
     # Check dir exists
     if not os.path.isdir(dirname):
-        raise IOError('Directory not found: '+str(dirname))
-    
+        raise IOError("Directory not found: " + str(dirname))
+
     # Get two parts of the filename
     part1, part2 = _getFilenameParts(filename)
-    
+
     # Init images
     images = []
-    
+
     # Get all files in directory
     for fname in os.listdir(dirname):
         if fname.startswith(part1) and fname.endswith(part2):
@@ -213,25 +211,25 @@ def readIms(filename, asNumpy=True):
             # Get Pil image and store copy (to prevent keeping the file)
             im = PIL.Image.open(os.path.join(dirname, fname))
             images.append((im.copy(), nr))
-    
+
     # Sort images
-    images.sort(key=lambda x:x[1])
+    images.sort(key=lambda x: x[1])
     images = [im[0] for im in images]
-    
+
     # Convert to numpy if needed
     if asNumpy:
         images2 = images
         images = []
         for im in images2:
             # Make without palette
-            if im.mode == 'P':
+            if im.mode == "P":
                 im = im.convert()
             # Make numpy array
             a = np.asarray(im)
-            if len(a.shape)==0:
+            if len(a.shape) == 0:
                 raise MemoryError("Too little memory to convert PIL image to array")
             # Add
             images.append(a)
-    
+
     # Done
     return images

@@ -7,15 +7,16 @@
 import visvis as vv
 import numpy as np
 
+
 def hist(data, bins=None, drange=None, normed=False, weights=None):
-    """ hist(a, bins=None, range=None, normed=False, weights=None)
-    
+    """hist(a, bins=None, range=None, normed=False, weights=None)
+
     Make a histogram plot of the data. Uses np.histogram (new version)
     internally. See its docs for more information.
-    
+
     See the kde() function for a more accurate density estimate.
     See the vv.StatData for more statistics on data.
-    
+
     Parameters
     ----------
     a : array_like
@@ -41,31 +42,32 @@ def hist(data, bins=None, drange=None, normed=False, weights=None):
         only contributes its associated weight towards the bin count
         (instead of 1). If `normed` is True, the weights are normalized,
         so that the integral of the density over the range remains 1.
-    
+
     """
-    
+
     # Auto determine bins?
     if bins is None:
         from visvis.processing.statistics import StatData
+
         stats = StatData(data)
         bins = stats.best_number_of_bins()
-    
+
     # let numpy do the work
     values, edges = np.histogram(data, bins, drange, normed, weights)
-    
+
     # the bins are the left bin edges, let's get the centers
     centers = np.empty(values.shape, np.float64)
     for i in range(len(values)):
-        centers[i] = (edges[i] + edges[i+1]) * 0.5
-    
+        centers[i] = (edges[i] + edges[i + 1]) * 0.5
+
     # plot
     dbin = centers[1] - centers[0]
-    return vv.bar(centers, values, width=dbin*0.9)
-    #return vv.plot(centers, values, **kwargs)
+    return vv.bar(centers, values, width=dbin * 0.9)
+    # return vv.plot(centers, values, **kwargs)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     vv.clf()
-    data = np.random.normal(7,2,size=(100,100))
+    data = np.random.normal(7, 2, size=(100, 100))
     b = vv.hist(data)
-    b.color = 'r'
+    b.color = "r"

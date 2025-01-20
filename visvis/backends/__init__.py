@@ -4,7 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Package visvis.backends
+"""Package visvis.backends
 
 Visvis allows multiple backends. I tried to make implementing a
 backend as easy as possible. Each backend is defined in a single
@@ -57,10 +57,10 @@ from visvis.core.misc import isFrozen, getExceptionInstance
 try:
     import importlib.util
     import importlib.machinery
+
     def load_source(modname, filename):
         loader = importlib.machinery.SourceFileLoader(modname, filename)
-        spec = importlib.util.spec_from_file_location(
-            modname, filename, loader=loader)
+        spec = importlib.util.spec_from_file_location(modname, filename, loader=loader)
         module = importlib.util.module_from_spec(spec)
         loader.exec_module(module)
         return module
@@ -69,23 +69,34 @@ except ImportError:
 
 
 # The order in which to try loading a backend (foo is a dummy backend)
-backendOrder = ['glfw', 'pyside6', 'pyqt5', 'pyside2', 'pyside', 'pyqt4', 'wx', 'gtk', 'fltk']
-backendMap = {'glfw': 'glfw',
-              'pyqt5':'PyQt5',
-              'pyside':'PySide',
-              'pyside2':'PySide2',
-              'pyside6':'PySide6',
-              'pyqt4':'PyQt4',
-              'wx':'wx',
-              'gtk':'gtk',
-              'fltk':'fltk',
-              }
+backendOrder = [
+    "glfw",
+    "pyside6",
+    "pyqt5",
+    "pyside2",
+    "pyside",
+    "pyqt4",
+    "wx",
+    "gtk",
+    "fltk",
+]
+backendMap = {
+    "glfw": "glfw",
+    "pyqt5": "PyQt5",
+    "pyside": "PySide",
+    "pyside2": "PySide2",
+    "pyside6": "PySide6",
+    "pyqt4": "PyQt4",
+    "wx": "wx",
+    "gtk": "gtk",
+    "fltk": "fltk",
+}
 
 # Define aliases for backend names (for backward compatibility)
-backendAliases = {'qt4': 'pyqt4', 'qt5':'pyqt5'}
+backendAliases = {"qt4": "pyqt4", "qt5": "pyqt5"}
 
 # Set Qt lib to empty string (will be set by backend_pyside or backend_pyqt4)
-qtlib = ''
+qtlib = ""
 
 # Put the preferredBackend in front
 if True:
@@ -93,7 +104,7 @@ if True:
     be = backendAliases.get(be, be)
     if be in backendOrder:
         backendOrder.remove(be)
-        backendOrder.insert(0,be)
+        backendOrder.insert(0, be)
 
 # Establish preference based on loaded backends modules
 # In this way, in an interactive interpreter the right backend is picked
@@ -104,75 +115,77 @@ if visvis.settings.preferAlreadyLoadedBackend:
         # If loaded, move up front
         if modName in sys.modules:
             backendOrder.remove(be)
-            backendOrder.insert(0,be)
+            backendOrder.insert(0, be)
 
 
 # Placeholder
 class BackendDescription:
     def __init__(self):
-        self.name = ''
+        self.name = ""
         self.newFigure = None
         self.app = None
+
+
 currentBackend = BackendDescription()
 
 # Set __file__ absolute when loading
 __file__ = os.path.abspath(__file__)
 
+
 def testLoaded():
-    """ Tests to see whether a backend is already loaded.
+    """Tests to see whether a backend is already loaded.
     Returns the name of the loaded backend, or an empty
     string if nothing is loaded.
     If visvis is part of a frozen app, returns "" always.
     """
-    
+
     if isFrozen():
         return ""
-    
+
     else:
-        
         # see which backends we have
         path = __file__
-        path = os.path.dirname( path )
+        path = os.path.dirname(path)
         files = os.listdir(path)
-        
+
         for filename in files:
-            if not filename.startswith('backend_'):
+            if not filename.startswith("backend_"):
                 continue
-            if not filename.endswith('.py'):
+            if not filename.endswith(".py"):
                 continue
             be = filename[:-3]
-            modNameFull = 'visvis.backends.' + be
+            modNameFull = "visvis.backends." + be
             if modNameFull in sys.modules:
-                i = be.find('_')
-                return be[i+1:]
+                i = be.find("_")
+                return be[i + 1 :]
         # nothing found...
-        return ''
+        return ""
 
 
 def _loadBackend(name):
-    """ Load the backend with the specified name.
+    """Load the backend with the specified name.
     Returns True on success and False otherwise.
     """
-    
+
     # Get module names
-    modName = 'backend_' + name
-    modNameFull = 'visvis.backends.backend_'+name
-    modFileName = os.path.join(os.path.dirname(__file__), modName+'.py')
-    
+    modName = "backend_" + name
+    modNameFull = "visvis.backends.backend_" + name
+    modFileName = os.path.join(os.path.dirname(__file__), modName + ".py")
+
     # Test whether to use the pyc version
     if not os.path.isfile(modFileName):
-        modFileName += "c" # Probably a frozen app
-    
+        modFileName += "c"  # Probably a frozen app
+
     # Try importing the backend toolkit
     try:
         modNameTk = backendMap[name]
         __import__(modNameTk)
     except ImportError:
         return False
-    
+
     # Try importing the visvis backend module
     try:
-        if modFileName.endswith('.pyc'):
+        if modFileName.endswith(".pyc"):
             module = __import__(modNameFull, fromlist=[modName])
         else:
             module = load_source(modNameFull, modFileName)
@@ -182,13 +195,13 @@ def _loadBackend(name):
             # Only show if not frozen. If frozen, it can easily happen that
             # the GUI toolkit is available, but the visvis backend is not.
             why = str(getExceptionInstance())
-            print('Error importing %s backend: %s' % (name, why))
+            print("Error importing %s backend: %s" % (name, why))
         return False
-    
+
     # Do some tests
-    if not hasattr(module,'newFigure'):
+    if not hasattr(module, "newFigure"):
         raise Exception("Backend %s does not implement newFigure!" % be)
-    elif not hasattr(module,'Figure'):
+    elif not hasattr(module, "Figure"):
         raise Exception("Backend %s does not implement Figure class!" % be)
     else:
         # All good (as far as I can tell). Update stuff if name does not match.
@@ -201,36 +214,36 @@ def _loadBackend(name):
 
 
 def use(backendName=None):
-    """ use(backendName=None)
-    
+    """use(backendName=None)
+
     Use the specified backend and return an App instance that has a run()
     method to enter the GUI toolkit's mainloop.
-    
+
     If no backend is given, a suitable backend is tried automatically.
-    
+
     """
-    
+
     # Make case insensitive and check
     if backendName:
         backendName = backendName.lower()
         backendName = backendAliases.get(backendName, backendName)
         if backendName not in backendOrder:
-            raise RuntimeError('Invalid backend name given: "%s".'%backendName)
-    
+            raise RuntimeError('Invalid backend name given: "%s".' % backendName)
+
     # Get name of the backend currently loaded (can be '')
     loadedName = testLoaded()
-    
+
     # Prevent resetting the backend to use
     if loadedName and backendName and loadedName != backendName:
         print("Warning: changing backend while %s already loaded." % loadedName)
-        #raise RuntimeError("Cannot change backend, %s already loaded." % loadedName)
-    
+        # raise RuntimeError("Cannot change backend, %s already loaded." % loadedName)
+
     # Process
     if backendName:
         # Use given
         if not _loadBackend(backendName):
             tmp = backendName
-            tmp = os.path.join(os.path.dirname(__file__), backendName+'.xxx')
+            tmp = os.path.join(os.path.dirname(__file__), backendName + ".xxx")
             raise RuntimeError('Given backend "%s" could not be loaded.' % tmp)
     elif loadedName:
         # Use loaded (redo to make sure the placeholder is ok)
@@ -243,7 +256,7 @@ def use(backendName=None):
                 break
         else:
             tmp = "Install glfw, PySide6, PySide2, PyQt5, PySide, PyQt4, wxPython, GTK, or fltk."
-            raise RuntimeError("None of the backends could be loaded. "+tmp)
-    
+            raise RuntimeError("None of the backends could be loaded. " + tmp)
+
     # Return instance
     return currentBackend.app

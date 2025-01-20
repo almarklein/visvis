@@ -13,12 +13,14 @@
 import visvis
 
 # Check if qtlib is already set
-if visvis.backends.qtlib not in [None, '', 'pyqt5']:
-    raise ImportError('Cannot import PyQt5 because Qt was already loaded from "%s".' %
-                        visvis.backends.qtlib)
+if visvis.backends.qtlib not in [None, "", "pyqt5"]:
+    raise ImportError(
+        'Cannot import PyQt5 because Qt was already loaded from "%s".'
+        % visvis.backends.qtlib
+    )
 
 # Set qtlib so that the qtcommon module knows how it should import Qt.
-visvis.backends.qtlib = 'pyqt5'
+visvis.backends.qtlib = "pyqt5"
 
 # Load backend from qtcommon
 from visvis.backends.qtcommon import Figure, newFigure, App, app

@@ -6,23 +6,24 @@
 
 import visvis as vv
 
+
 def title(text, axes=None):
-    """ title(text, axes=None)
-    
+    """title(text, axes=None)
+
     Show title above axes. Remove title by suplying an empty string.
-    
+
     Parameters
     ----------
     text : string
         The text to display.
     axes : Axes instance
         Display the image in this axes, or the current axes if not given.
-    
+
     """
-    
+
     if axes is None:
         axes = vv.gca()
-    
+
     # seek Title object
     for child in axes.children:
         if isinstance(child, vv.Title):
@@ -31,7 +32,7 @@ def title(text, axes=None):
             break
     else:
         ob = vv.Title(axes, text)
-    
+
     # destroy if no text, return object otherwise
     if not text:
         ob.Destroy()
@@ -40,6 +41,6 @@ def title(text, axes=None):
         return ob
 
 
-if __name__=='__main__':
+if __name__ == "__main__":
     a = vv.gca()
-    vv.title('test title')
+    vv.title("test title")

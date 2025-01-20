@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" This example illustrates how you can visualize
+"""This example illustrates how you can visualize
 a volume using 2D slices.
 
 We explicitly use volshow2() here. Note that volshow() calls
@@ -8,8 +8,8 @@ not support 3D rendering (OpenGL version <2.0).
 
 """
 
-
 import visvis as vv
+
 vol = vv.aVolume()
 
 t = vv.volshow2(vol)

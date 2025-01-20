@@ -9,12 +9,12 @@ vv.clf()
 vol = vv.aVolume(size=64)
 
 # set labels
-vv.xlabel('x axis')
-vv.ylabel('y axis')
-vv.zlabel('z axis')
+vv.xlabel("x axis")
+vv.ylabel("y axis")
+vv.zlabel("z axis")
 
 # show
-t = vv.volshow(vol, renderStyle='mip')
+t = vv.volshow(vol, renderStyle="mip")
 # try the differtent render styles, for examample
 # "t.renderStyle='iso'" or "t.renderStyle='ray'"
 # If the drawing hangs, your video drived decided to render in software mode.

@@ -6,16 +6,17 @@
 
 import visvis as vv
 
+
 def volshow(*args, **kwargs):
-    """ volshow(vol, clim=None, cm=CM_GRAY, axesAdjust=True, axes=None)
-    
+    """volshow(vol, clim=None, cm=CM_GRAY, axesAdjust=True, axes=None)
+
     Display a 3D image (a volume).
-    
+
     This is a convenience function that calls either volshow3() or
     volshow2(). If the current system supports it (OpenGL version >= 2.0),
     displays a 3D  rendering (volshow3). Otherwise shows three slices
     that can be moved interactively (volshow2).
-    
+
     Parameters
     ----------
     vol : numpy array
@@ -33,16 +34,16 @@ def volshow(*args, **kwargs):
         set to False.
     axes : Axes instance
         Display the image in this axes, or the current axes if not given.
-    
+
     Any other keyword arguments are passed to either volshow2() or volshow3().
-    
+
     """
-    
+
     # Make sure that a figure exists
     vv.gcf()
-    
+
     # Test and run
-    if vv.settings.volshowPreference==3 and vv.misc.getOpenGlCapable(2.0):
+    if vv.settings.volshowPreference == 3 and vv.misc.getOpenGlCapable(2.0):
         return vv.volshow3(*args, **kwargs)
     else:
         return vv.volshow2(*args, **kwargs)

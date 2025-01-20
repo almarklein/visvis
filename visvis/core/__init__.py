@@ -5,7 +5,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Subpackage core
+"""Subpackage core
 
 The core of visvis. Defines the core classes of visvis (such as Wibject
 and Wobject), and the core visualization system (such as the BaseFigure
@@ -28,8 +28,14 @@ the deeper functionality of visvis if they want to.
 
 # Import everything that we want to expose to the user
 from visvis.core.constants import *
-from visvis.core.misc import (Range, settings,
-        Transform_Base, Transform_Translate, Transform_Rotate, Transform_Scale)
+from visvis.core.misc import (
+    Range,
+    settings,
+    Transform_Base,
+    Transform_Translate,
+    Transform_Rotate,
+    Transform_Scale,
+)
 from visvis.core.events import Timer
 from visvis.core.base import BaseObject, Wibject, Wobject, Position
 from visvis.core.baseTexture import TextureObject, Colormap, Colormapable

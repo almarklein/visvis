@@ -9,17 +9,18 @@ correct scale and position.
 
 import visvis as vv
 from visvis import Aarray
+
 app = vv.use()
 
 # Load image and make Aarray
-im = vv.imread('astronaut.png')
+im = vv.imread("astronaut.png")
 im = Aarray(im)
 
 # Cut in four pieces, but also change resolution using different step sizes
-im1 = im[:300,:300]
-im2 = im[300:,:300:7]
-im3 = im[:300:5,300:]
-im4 = im[300::4,300::4]
+im1 = im[:300, :300]
+im2 = im[300:, :300:7]
+im3 = im[:300:5, 300:]
+im4 = im[300::4, 300::4]
 
 # Get an axes
 a = vv.gca()

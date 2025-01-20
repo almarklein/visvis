@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-""" This example illustrates visualizing a four dimensional data set
+"""This example illustrates visualizing a four dimensional data set
 (a series of 3D volumes). The same method can be used to visualize
 the motion of lines, images, meshes, etc.
 """
+
 import visvis as vv
 
 # create multiple instances of the same volume (simulate motion)
@@ -24,14 +25,14 @@ for vol in vols:
     t.parent = m
     t.colormap = vv.CM_HOT
     # Remove comments to use iso-surface rendering
-    #t.renderStyle = 'iso'
-    #t.isoThreshold = 0.2
+    # t.renderStyle = 'iso'
+    # t.isoThreshold = 0.2
 
 # set some settings
-a.daspect = 1,1,-1
-a.xLabel = 'x'
-a.yLabel = 'y'
-a.zLabel = 'z'
+a.daspect = 1, 1, -1
+a.xLabel = "x"
+a.yLabel = "y"
+a.zLabel = "z"
 
 # Enter main loop
 app = vv.use()

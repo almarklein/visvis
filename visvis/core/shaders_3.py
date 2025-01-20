@@ -4,7 +4,7 @@
 # Visvis is distributed under the terms of the (new) BSD License.
 # The full license can be found in 'license.txt'.
 
-""" Module shaders_3
+"""Module shaders_3
 
 Contains the source for various shaders for the Texture3D wobject,
 divided in different parts.
@@ -20,14 +20,17 @@ The names consists of different parts, seperated by underscores:
     part for meshes
 
 """
+
 from visvis.core.shaders import ShaderCodePart
 
 
 ## 3D vertex base
 # The vertex shader only has one part
 
-SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
-"""
+SH_3V_BASE = ShaderCodePart(
+    "base",
+    "3D-vertex-default",
+    """
     // Uniforms obtained from OpenGL
     uniform vec3 shape; // The dimensions of the data
     uniform float stepRatio; // Ratio to tune the number of steps
@@ -101,15 +104,18 @@ SH_3V_BASE = ShaderCodePart('base', '3D-vertex-default',
     
     }
 
-""")
+""",
+)
 
 
 ## 3D fragment base
 # Base for volume rendering
 # The 3D fragment shader needs calcsteps, and a type
 
-SH_3F_BASE = ShaderCodePart('base', '3D-fragment-default',
-"""
+SH_3F_BASE = ShaderCodePart(
+    "base",
+    "3D-fragment-default",
+    """
     // 3D_FRAGMENT_SHADER (used to recognize that this is a renderStyle)
     
     // Uniforms obtained from OpenGL
@@ -174,14 +180,17 @@ SH_3F_BASE = ShaderCodePart('base', '3D-fragment-default',
         gl_FragDepth = (iproj.z+1.0)/2.0;
     }
     
-""")
+""",
+)
 
 
 ## 3D fragment calcsteps
 # Calculates the amount of steps that the volume rendering should take
 
-SH_3F_CALCSTEPS = ShaderCodePart('calcsteps', 'default',
-"""
+SH_3F_CALCSTEPS = ShaderCodePart(
+    "calcsteps",
+    "default",
+    """
     >>--functions--
     // --functions--
     
@@ -225,15 +234,18 @@ SH_3F_CALCSTEPS = ShaderCodePart('calcsteps', 'default',
         return int( ceil(smallest) );
     }
 
-""")
+""",
+)
 
 
 ## 3D fragment STYLE MIP
 # Casts a ray all the way through. Displays the highest encountered
 # intensity; there is only one pixel that contributes to the final color.
 
-SH_3F_STYLE_MIP = ShaderCodePart('renderstyle', 'mip',
-"""
+SH_3F_STYLE_MIP = ShaderCodePart(
+    "renderstyle",
+    "mip",
+    """
     >>--pre-loop--
     
     // Remember that we made sure that the total range of the data is
@@ -271,15 +283,18 @@ SH_3F_STYLE_MIP = ShaderCodePart('renderstyle', 'mip',
     gl_FragColor = color2;
     // --post-loop--
     
-""")
+""",
+)
 
 
 ## 3D fragment STYLE RAY
 # Casts a ray all the way through. All voxels contribute (using their alpha
 # value).
 
-SH_3F_STYLE_RAY = ShaderCodePart('renderstyle', 'ray',
-"""
+SH_3F_STYLE_RAY = ShaderCodePart(
+    "renderstyle",
+    "ray",
+    """
     >>--uniforms--
     uniform float stepRatio;
     // --uniforms--
@@ -313,7 +328,8 @@ SH_3F_STYLE_RAY = ShaderCodePart('renderstyle', 'ray',
     gl_FragColor = color3;
     // --post-loop--
     
-""")
+""",
+)
 
 
 ## 3D fragment STYLE EDGERAY
@@ -321,8 +337,10 @@ SH_3F_STYLE_RAY = ShaderCodePart('renderstyle', 'ray',
 # makes it easier to "quickly" visualize a volume without having to play
 # with the alpha channel in the ColormapEditor.
 
-SH_3F_STYLE_EDGERAY = ShaderCodePart('renderstyle', 'edgeray',
-"""
+SH_3F_STYLE_EDGERAY = ShaderCodePart(
+    "renderstyle",
+    "edgeray",
+    """
     >>--uniforms--
     uniform float stepRatio;
     // --uniforms--
@@ -382,7 +400,8 @@ SH_3F_STYLE_EDGERAY = ShaderCodePart('renderstyle', 'edgeray',
     gl_FragColor = color3;
     // --post-loop--
     
-""")
+""",
+)
 
 
 ## 3D fragment STYLE ISO
@@ -391,8 +410,10 @@ SH_3F_STYLE_EDGERAY = ShaderCodePart('renderstyle', 'edgeray',
 # the lighting is calculated. When the threshold is passed X times (usually 3)
 # the program exits. Final color thus corresponds to couple of voxels.
 
-SH_3F_STYLE_ISO = ShaderCodePart('renderstyle', 'iso',
-"""
+SH_3F_STYLE_ISO = ShaderCodePart(
+    "renderstyle",
+    "iso",
+    """
     >>--uniforms--
     uniform float th; // isosurface treshold
     uniform float stepRatio;
@@ -452,7 +473,8 @@ SH_3F_STYLE_ISO = ShaderCodePart('renderstyle', 'iso',
     gl_FragColor = color3;
     // --post-loop--
     
-""")
+""",
+)
 
 
 ## 3D fragment_STYLE LITRAY
@@ -461,8 +483,10 @@ SH_3F_STYLE_ISO = ShaderCodePart('renderstyle', 'iso',
 # All contributions are combined untill alpha value saturates.
 # Most pretty and most demanding for the GPU.
 
-SH_3F_STYLE_LITRAY = ShaderCodePart('renderstyle', 'litray',
-"""
+SH_3F_STYLE_LITRAY = ShaderCodePart(
+    "renderstyle",
+    "litray",
+    """
     >>--uniforms--
     uniform float stepRatio;
     // --uniforms--
@@ -503,14 +527,17 @@ SH_3F_STYLE_LITRAY = ShaderCodePart('renderstyle', 'litray',
     gl_FragColor = color3;
     // --post-loop--
     
-""")
+""",
+)
 
 ## 3D fragment_LITVOXEL (for ISO and ISORAY styles)
 # Calculates light using the binn-phong reflectance model
 # Requires 'nlights' part (SH_NLIGHTS_X from shaders_m.py)
 
-SH_3F_LITVOXEL = ShaderCodePart('litvoxel', 'default',
-"""
+SH_3F_LITVOXEL = ShaderCodePart(
+    "litvoxel",
+    "default",
+    """
     >>--uniforms--
     // lighting
     uniform vec4 ambient;
@@ -604,4 +631,5 @@ SH_3F_LITVOXEL = ShaderCodePart('litvoxel', 'default',
         return final_color;
     }
     
-""")
+""",
+)

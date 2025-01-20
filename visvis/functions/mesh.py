@@ -8,13 +8,23 @@ import visvis as vv
 from visvis.wobjects.polygonalModeling import checkDimsOfArray
 
 
-def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
-        colormap=None, clim=None, texture=None, axesAdjust=True, axes=None):
-    """ mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
+def mesh(
+    vertices,
+    faces=None,
+    normals=None,
+    values=None,
+    verticesPerFace=3,
+    colormap=None,
+    clim=None,
+    texture=None,
+    axesAdjust=True,
+    axes=None,
+):
+    """mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
         colormap=None, clim=None, texture=None, axesAdjust=True, axes=None)
-    
+
     Display a mesh of polygons, either triangles or quads.
-    
+
     Parameters
     ----------
     vertices : Nx3 array
@@ -43,12 +53,12 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
     axes : Axes instance
         The axes into which the mesh will be added.  If None, the current
         axes will be used.
-    
+
     """
-    
+
     if axes is None:
         axes = vv.gca()
-    
+
     # Accept basemesh instances
     if isinstance(vertices, vv.BaseMesh):
         other = vertices
@@ -57,7 +67,7 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
         normals = other._normals
         values = other._values
         verticesPerFace = other._verticesPerFace
-    
+
     # Check that vertices is (converted to) a Nx3 array; otherwise user
     # will see odd behavior from Mesh
     if not isinstance(vertices, vv.BaseMesh):
@@ -65,20 +75,22 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
             vertices = checkDimsOfArray(vertices, 3)
         except ValueError:
             raise ValueError("Vertices should represent an array of 3D vertices.")
-    
+
     # Set the method for coloring
     if values is not None:
         try:
             values = checkDimsOfArray(values, 0, 1, 2, 3, 4)
             # Returned values is always a 2D numpy array
         except ValueError:
-            raise ValueError('values must be 1D, Nx2, Nx3, or Nx4 array.')
+            raise ValueError("values must be 1D, Nx2, Nx3, or Nx4 array.")
         if values.shape[0] != vertices.shape[0]:
-            raise ValueError('First dimension of values must be same length as vertices.')
-    
+            raise ValueError(
+                "First dimension of values must be same length as vertices."
+            )
+
     # Instantiate Mesh
     m = vv.Mesh(axes, vertices, faces, normals, values, verticesPerFace)
-    
+
     # Set colormap or texture
     if values is not None and values.shape[1] == 1:
         if colormap is not None:
@@ -89,21 +101,21 @@ def mesh(vertices, faces=None, normals=None, values=None, verticesPerFace=3,
             m.clim = values.min(), values.max()
     elif texture is not None and values is not None and values.shape[1] == 2:
         m.SetTexture(texture)
-    
+
     # Adjust axes
     if axesAdjust:
         if axes.daspectAuto is None:
             axes.daspectAuto = False
-        axes.cameraType = '3d'
+        axes.cameraType = "3d"
         axes.SetLimits()
-    
+
     # Return
     axes.Draw()
     return m
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Create BaseMesh object (has no visualization props)
-    bm = vv.meshRead('teapot.ssdf')
+    bm = vv.meshRead("teapot.ssdf")
     # Show it, returning a Mesh object (which does have visualization props)
     m = vv.mesh(bm)

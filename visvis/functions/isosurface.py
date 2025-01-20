@@ -8,11 +8,11 @@ import visvis as vv
 
 
 def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
-    """ isosurface(vol, isovalue=None, step=1, useClassic=False, useValues=False)
-    
+    """isosurface(vol, isovalue=None, step=1, useClassic=False, useValues=False)
+
     Uses scikit-image to calculate the isosurface for the given 3D image.
     Returns a vv.BaseMesh object.
-    
+
     Parameters
     ----------
     vol : 3D numpy array
@@ -32,13 +32,13 @@ def isosurface(im, isovalue=None, step=1, useClassic=False, useValues=False):
         If True, the returned BaseMesh object will also have a value for
         each vertex, which is related to the maximum value in a local region
         near the isosurface.
-    
+
     """
-    
+
     from visvis.utils.iso import isosurface as _isosurface
-    
+
     return _isosurface(im, isovalue, step, useClassic, useValues)
 
 
-if __name__ == '__main__':
-    vv.mesh(isosurface(vv.volread('stent')))
+if __name__ == "__main__":
+    vv.mesh(isosurface(vv.volread("stent")))

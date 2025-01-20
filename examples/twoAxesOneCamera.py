@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-""" This example shows how to use the same camera for multiple axes,
+"""This example shows how to use the same camera for multiple axes,
 which can be helpful if for example the axes show a different view
 on the same data.
 """
 
 import visvis as vv
+
 app = vv.use()
 
 # Read lena
-im1 = vv.imread('astronaut.png')
+im1 = vv.imread("astronaut.png")
 
 # Our second image is a thresholded image
 im2 = im1 > 100

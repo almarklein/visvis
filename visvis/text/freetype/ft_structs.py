@@ -6,7 +6,7 @@
 #  Distributed under the terms of the new BSD license.
 #
 # -----------------------------------------------------------------------------
-'''
+"""
 Freetype structured types
 -------------------------
 
@@ -57,14 +57,36 @@ FT_SfntName: A structure used to model an SFNT 'name' table entry.
 FT_Stroker: Opaque handler to a path stroker object.
 
 FT_BitmapGlyph: A structure used for bitmap glyph images.
-'''
+"""
 
-from ctypes import POINTER, Structure, c_void_p, c_char, c_ubyte, c_short, c_int, c_uint, c_long
-from visvis.text.freetype.ft_types import (FT_Pointer, FT_String_p, FT_Fixed,
-                                           FT_Pos, FT_Glyph_Format, FT_Generic_Finalizer,
-                                           FT_Encoding, FT_F2Dot14,
-                                           FT_Byte, FT_Short, FT_UShort, FT_Int, FT_UInt,
-                                           FT_Long, FT_ULong)
+from ctypes import (
+    POINTER,
+    Structure,
+    c_void_p,
+    c_char,
+    c_ubyte,
+    c_short,
+    c_int,
+    c_uint,
+    c_long,
+)
+from visvis.text.freetype.ft_types import (
+    FT_Pointer,
+    FT_String_p,
+    FT_Fixed,
+    FT_Pos,
+    FT_Glyph_Format,
+    FT_Generic_Finalizer,
+    FT_Encoding,
+    FT_F2Dot14,
+    FT_Byte,
+    FT_Short,
+    FT_UShort,
+    FT_Int,
+    FT_UInt,
+    FT_Long,
+    FT_ULong,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -72,30 +94,31 @@ from visvis.text.freetype.ft_types import (FT_Pointer, FT_String_p, FT_Fixed,
 # independent from the others; it is the 'root' of a set of objects like fonts,
 # faces, sizes, etc.
 class FT_LibraryRec(Structure):
-    '''
+    """
     A handle to a FreeType library instance. Each 'library' is completely
     independent from the others; it is the 'root' of a set of objects like
     fonts, faces, sizes, etc.
-    '''
-    _fields_ = [ ]
-FT_Library = POINTER(FT_LibraryRec)
+    """
 
+    _fields_ = []
+
+
+FT_Library = POINTER(FT_LibraryRec)
 
 
 # -----------------------------------------------------------------------------
 # A simple structure used to store a 2D vector; coordinates are of the FT_Pos
 # type.
 class FT_Vector(Structure):
-    '''
+    """
     A simple structure used to store a 2D vector; coordinates are of the FT_Pos
     type.
 
     x: The horizontal coordinate.
     y: The vertical coordinate.
-    '''
-    _fields_ = [('x', FT_Pos),
-                ('y', FT_Pos)]
+    """
 
+    _fields_ = [("x", FT_Pos), ("y", FT_Pos)]
 
 
 # -----------------------------------------------------------------------------
@@ -114,7 +137,7 @@ class FT_Vector(Structure):
 # of the glyph's bounding box. If 'xMin' is negative, the glyph extends to the
 # left of the origin.
 class FT_BBox(Structure):
-    '''
+    """
     A structure used to hold an outline's bounding box, i.e., the coordinates
     of its extrema in the horizontal and vertical directions.
 
@@ -134,12 +157,9 @@ class FT_BBox(Structure):
     yMin: The vertical minimum (bottom-most).
     xMax: The horizontal maximum (right-most).
     yMax: The vertical maximum (top-most).
-    '''
-    _fields_ = [('xMin', FT_Pos),
-                ('yMin', FT_Pos),
-                ('xMax', FT_Pos),
-                ('yMax', FT_Pos)]
+    """
 
+    _fields_ = [("xMin", FT_Pos), ("yMin", FT_Pos), ("xMax", FT_Pos), ("yMax", FT_Pos)]
 
 
 # -----------------------------------------------------------------------------
@@ -148,7 +168,7 @@ class FT_BBox(Structure):
 #   x' = x*xx + y*xy
 #   y' = x*yx + y*yy
 class FT_Matrix(Structure):
-    '''
+    """
     A simple structure used to store a 2x2 matrix. Coefficients are in 16.16
     fixed float format. The computation performed is:
 
@@ -159,35 +179,31 @@ class FT_Matrix(Structure):
     xy: Matrix coefficient.
     yx: Matrix coefficient.
     yy: Matrix coefficient.
-    '''
-    _fields_ = [('xx', FT_Fixed),
-                ('xy', FT_Fixed),
-                ('yx', FT_Fixed),
-                ('yy', FT_Fixed)]
+    """
 
+    _fields_ = [("xx", FT_Fixed), ("xy", FT_Fixed), ("yx", FT_Fixed), ("yy", FT_Fixed)]
 
 
 # -----------------------------------------------------------------------------
 # A simple structure used to store a 2D vector unit vector. Uses FT_F2Dot14
 # types.
 class FT_UnitVector(Structure):
-    '''
+    """
     A simple structure used to store a 2D vector unit vector. Uses FT_F2Dot14
     types.
 
     x: The horizontal coordinate.
     y: The vertical coordinate.
-    '''
-    _fields_ = [('x', FT_F2Dot14),
-                ('y', FT_F2Dot14)]
+    """
 
+    _fields_ = [("x", FT_F2Dot14), ("y", FT_F2Dot14)]
 
 
 # -----------------------------------------------------------------------------
 # A structure used to describe a bitmap or pixmap to the raster. Note that we
 # now manage pixmaps of various depths through the 'pixel_mode' field.
 class FT_Bitmap(Structure):
-    '''
+    """
     A structure used to describe a bitmap or pixmap to the raster. Note that we
     now manage pixmaps of various depths through the 'pixel_mode' field.
 
@@ -226,32 +242,32 @@ class FT_Bitmap(Structure):
 
     palette: A typeless pointer to the bitmap palette; this field is intended
     for paletted pixel modes. Not used currently.
-    '''
-    _fields_ = [
-        ('rows',         c_int),
-        ('width',        c_int),
-        ('pitch',        c_int),
-        # declaring buffer as c_char_p confuses ctypes
-        ('buffer',       POINTER(c_ubyte)),
-        ('num_grays',    c_short),
-        ('pixel_mode',   c_ubyte),
-        ('palette_mode', c_char),
-        ('palette',      c_void_p) ]
+    """
 
+    _fields_ = [
+        ("rows", c_int),
+        ("width", c_int),
+        ("pitch", c_int),
+        # declaring buffer as c_char_p confuses ctypes
+        ("buffer", POINTER(c_ubyte)),
+        ("num_grays", c_short),
+        ("pixel_mode", c_ubyte),
+        ("palette_mode", c_char),
+        ("palette", c_void_p),
+    ]
 
 
 # -----------------------------------------------------------------------------
 # Read-only binary data represented as a pointer and a length.
 class FT_Data(Structure):
-    '''
+    """
     Read-only binary data represented as a pointer and a length.
 
     pointer: The data.
     length: The length of the data in bytes.
-    '''
-    _fields_ = [('pointer', POINTER(FT_Byte)),
-                ('y',       FT_Int)]
+    """
 
+    _fields_ = [("pointer", POINTER(FT_Byte)), ("y", FT_Int)]
 
 
 # -----------------------------------------------------------------------------
@@ -267,11 +283,11 @@ class FT_Data(Structure):
 # object is destroyed (for example, the previous client example would put the
 # address of the glyph cache destructor in the 'finalizer' field).
 class FT_Generic(Structure):
-    '''
+    """
     Client applications often need to associate their own data to a variety of
     FreeType core objects. For example, a text layout API might want to
     associate a glyph cache to a given size object.
-    
+
     Most FreeType object contains a 'generic' field, of type FT_Generic, which
     usage is left to client applications and font servers.
 
@@ -285,11 +301,9 @@ class FT_Generic(Structure):
     finalizer: A pointer to a 'generic finalizer' function, which will be
                called when the object is destroyed. If this field is set to
                NULL, no code will be called.
-    '''
-    _fields_ = [('data',      c_void_p),
-                ('finalizer', FT_Generic_Finalizer)]
+    """
 
-
+    _fields_ = [("data", c_void_p), ("finalizer", FT_Generic_Finalizer)]
 
 
 # -----------------------------------------------------------------------------
@@ -297,11 +311,11 @@ class FT_Generic(Structure):
 # for a given point size and resolution) in a bitmap font. It is used for the
 # 'available_sizes' field of FT_Face.
 class FT_Bitmap_Size(Structure):
-    '''
+    """
     This structure models the metrics of a bitmap strike (i.e., a set of glyphs
     for a given point size and resolution) in a bitmap font. It is used for the
     'available_sizes' field of FT_Face.
-    
+
     height: The vertical distance, in pixels, between two consecutive
             baselines. It is always positive.
 
@@ -313,20 +327,21 @@ class FT_Bitmap_Size(Structure):
     x_ppem: The horizontal ppem (nominal width) in 26.6 fractional pixels.
 
     y_ppem: The vertical ppem (nominal height) in 26.6 fractional pixels.
-    '''
-    _fields_ = [
-        ('height', FT_Short),
-        ('width',  FT_Short),
-        ('size',   FT_Pos),
-        ('x_ppem', FT_Pos),
-        ('y_ppem', FT_Pos) ]
+    """
 
+    _fields_ = [
+        ("height", FT_Short),
+        ("width", FT_Short),
+        ("size", FT_Pos),
+        ("x_ppem", FT_Pos),
+        ("y_ppem", FT_Pos),
+    ]
 
 
 # -----------------------------------------------------------------------------
 # The base charmap structure.
 class FT_CharmapRec(Structure):
-    '''
+    """
     The base charmap structure.
 
     face : A handle to the parent face object.
@@ -340,15 +355,17 @@ class FT_CharmapRec(Structure):
 
     encoding_id: A platform specific encoding number. This also comes from the
                  TrueType specification and should be emulated similarly.
-    '''
-    _fields_ = [
-        ('face',        c_void_p),  # Shoudl be FT_Face
-        ('encoding',    FT_Encoding),
-        ('platform_id', FT_UShort),
-        ('encoding_id', FT_UShort),
-        ]
-FT_Charmap = POINTER(FT_CharmapRec)
+    """
 
+    _fields_ = [
+        ("face", c_void_p),  # Shoudl be FT_Face
+        ("encoding", FT_Encoding),
+        ("platform_id", FT_UShort),
+        ("encoding_id", FT_UShort),
+    ]
+
+
+FT_Charmap = POINTER(FT_CharmapRec)
 
 
 # -----------------------------------------------------------------------------
@@ -357,7 +374,7 @@ FT_Charmap = POINTER(FT_CharmapRec)
 # been used while loading the glyph, values are expressed in font units
 # instead.
 class FT_Glyph_Metrics(Structure):
-    '''
+    """
     A structure used to model the metrics of a single glyph. The values are
     expressed in 26.6 fractional pixel format; if the flag FT_LOAD_NO_SCALE has
     been used while loading the glyph, values are expressed in font units
@@ -378,24 +395,24 @@ class FT_Glyph_Metrics(Structure):
     vertBearingY: Top side bearing for vertical layout.
 
     vertAdvance: Advance height for vertical layout.
-    '''
-    _fields_ = [
-        ('width',        FT_Pos),
-        ('height',       FT_Pos),
-        ('horiBearingX', FT_Pos),
-        ('horiBearingY', FT_Pos),
-        ('horiAdvance',  FT_Pos),
-        ('vertBearingX', FT_Pos),
-        ('vertBearingY', FT_Pos),
-        ('vertAdvance',  FT_Pos),
-    ]
+    """
 
+    _fields_ = [
+        ("width", FT_Pos),
+        ("height", FT_Pos),
+        ("horiBearingX", FT_Pos),
+        ("horiBearingY", FT_Pos),
+        ("horiAdvance", FT_Pos),
+        ("vertBearingX", FT_Pos),
+        ("vertBearingY", FT_Pos),
+        ("vertAdvance", FT_Pos),
+    ]
 
 
 # -----------------------------------------------------------------------------
 # This structure is used to describe an outline to the scan-line converter.
 class FT_Outline(Structure):
-    '''
+    """
     This structure is used to describe an outline to the scan-line converter.
 
     n_contours: The number of contours in the outline.
@@ -429,15 +446,16 @@ class FT_Outline(Structure):
     flags: A set of bit flags used to characterize the outline and give hints
            to the scan-converter and hinter on how to convert/grid-fit it. See
            FT_OUTLINE_FLAGS.
-    '''
+    """
+
     _fields_ = [
-        ('n_contours', c_short),
-        ('n_points',   c_short),
-        ('points',     POINTER(FT_Vector)),
+        ("n_contours", c_short),
+        ("n_points", c_short),
+        ("points", POINTER(FT_Vector)),
         # declaring buffer as c_char_p would prevent us to acces all tags
-        ('tags',       POINTER(c_ubyte)),
-        ('contours',   POINTER(c_short)),
-        ('flags',      c_int),
+        ("tags", POINTER(c_ubyte)),
+        ("contours", POINTER(c_short)),
+        ("flags", c_int),
     ]
 
 
@@ -445,8 +463,9 @@ class FT_Outline(Structure):
 # The root glyph structure contains a given glyph image plus its advance width
 # in 16.16 fixed float format.
 
+
 class FT_GlyphRec(Structure):
-    '''
+    """
     The root glyph structure contains a given glyph image plus its advance
     width in 16.16 fixed float format.
 
@@ -457,22 +476,24 @@ class FT_GlyphRec(Structure):
     format: The format of the glyph's image.
 
     advance: A 16.16 vector that gives the glyph's advance width.
-    '''
-    _fields_ = [
-        ('library',    FT_Library),
-        ('clazz',      c_void_p),
-        ('format',     FT_Glyph_Format),
-        ('advance',    FT_Vector)
-    ]
-FT_Glyph = POINTER(FT_GlyphRec)
+    """
 
+    _fields_ = [
+        ("library", FT_Library),
+        ("clazz", c_void_p),
+        ("format", FT_Glyph_Format),
+        ("advance", FT_Vector),
+    ]
+
+
+FT_Glyph = POINTER(FT_GlyphRec)
 
 
 # -----------------------------------------------------------------------------
 # FreeType root glyph slot class structure. A glyph slot is a container where
 # individual glyphs can be loaded, be they in outline or bitmap format.
 class FT_GlyphSlotRec(Structure):
-    '''
+    """
     FreeType root glyph slot class structure. A glyph slot is a container where
     individual glyphs can be loaded, be they in outline or bitmap format.
 
@@ -560,45 +581,41 @@ class FT_GlyphSlotRec(Structure):
 
     rsb_delta: The difference between hinted and unhinted right side bearing
                while autohinting is active. Zero otherwise.
-    '''
+    """
+
     _fields_ = [
-        ('library',           FT_Library),
-        ('face',              c_void_p),
-        ('next',              c_void_p),
-        ('reserved',          c_uint),
-        ('generic',           FT_Generic),
-
-        ('metrics',           FT_Glyph_Metrics),
-        ('linearHoriAdvance', FT_Fixed),
-        ('linearVertAdvance', FT_Fixed),
-        ('advance',           FT_Vector),
-
-        ('format',            FT_Glyph_Format),
-
-        ('bitmap',            FT_Bitmap),
-        ('bitmap_left',       FT_Int),
-        ('bitmap_top',        FT_Int),
-
-        ('outline',           FT_Outline),
-        ('num_subglyphs',     FT_UInt),
-        ('subglyphs',         c_void_p),
-
-        ('control_data',      c_void_p),
-        ('control_len',       c_long),
-
-        ('lsb_delta',         FT_Pos),
-        ('rsb_delta',         FT_Pos),
-        ('other',             c_void_p),
-        ('internal',          c_void_p),
+        ("library", FT_Library),
+        ("face", c_void_p),
+        ("next", c_void_p),
+        ("reserved", c_uint),
+        ("generic", FT_Generic),
+        ("metrics", FT_Glyph_Metrics),
+        ("linearHoriAdvance", FT_Fixed),
+        ("linearVertAdvance", FT_Fixed),
+        ("advance", FT_Vector),
+        ("format", FT_Glyph_Format),
+        ("bitmap", FT_Bitmap),
+        ("bitmap_left", FT_Int),
+        ("bitmap_top", FT_Int),
+        ("outline", FT_Outline),
+        ("num_subglyphs", FT_UInt),
+        ("subglyphs", c_void_p),
+        ("control_data", c_void_p),
+        ("control_len", c_long),
+        ("lsb_delta", FT_Pos),
+        ("rsb_delta", FT_Pos),
+        ("other", c_void_p),
+        ("internal", c_void_p),
     ]
-FT_GlyphSlot = POINTER(FT_GlyphSlotRec)
 
+
+FT_GlyphSlot = POINTER(FT_GlyphSlotRec)
 
 
 # -----------------------------------------------------------------------------
 # The size metrics structure gives the metrics of a size object.
 class FT_Size_Metrics(Structure):
-    '''
+    """
     The size metrics structure gives the metrics of a size object.
 
     x_ppem: The width of the scaled EM square in pixels, hence the term 'ppem'
@@ -626,27 +643,25 @@ class FT_Size_Metrics(Structure):
 
     max_advance: The maximal advance width in 26.6 fractional pixels. See
                  FT_FaceRec for the details.
-    '''
+    """
+
     _fields_ = [
-        ('x_ppem',      FT_UShort),
-        ('y_ppem',      FT_UShort),
-
-        ('x_scale',     FT_Fixed),
-        ('y_scale',     FT_Fixed),
-
-        ('ascender',    FT_Pos),
-        ('descender',   FT_Pos),
-        ('height',      FT_Pos),
-        ('max_advance', FT_Pos),
+        ("x_ppem", FT_UShort),
+        ("y_ppem", FT_UShort),
+        ("x_scale", FT_Fixed),
+        ("y_scale", FT_Fixed),
+        ("ascender", FT_Pos),
+        ("descender", FT_Pos),
+        ("height", FT_Pos),
+        ("max_advance", FT_Pos),
     ]
-
 
 
 # -----------------------------------------------------------------------------
 # FreeType root size class structure. A size object models a face object at a
 # given size.
 class FT_SizeRec(Structure):
-    '''
+    """
     FreeType root size class structure. A size object models a face object at a
     given size.
 
@@ -657,22 +672,24 @@ class FT_SizeRec(Structure):
              their own data to each size object.
 
     metrics: Metrics for this size object. This field is read-only.
-    '''
-    _fields_ = [
-        ('face',     c_void_p),
-        ('generic',  FT_Generic),
-        ('metrics',  FT_Size_Metrics),
-        ('internal', c_void_p),
-    ]
-FT_Size = POINTER(FT_SizeRec)
+    """
 
+    _fields_ = [
+        ("face", c_void_p),
+        ("generic", FT_Generic),
+        ("metrics", FT_Size_Metrics),
+        ("internal", c_void_p),
+    ]
+
+
+FT_Size = POINTER(FT_SizeRec)
 
 
 # -----------------------------------------------------------------------------
 # FreeType root face class structure. A face object models a typeface in a font
 # file.
 class FT_FaceRec(Structure):
-    '''
+    """
     FreeType root face class structure. A face object models a typeface in a
     font file.
 
@@ -774,78 +791,68 @@ class FT_FaceRec(Structure):
     size: The current active size for this face.
 
     charmap: The current active charmap for this face.
-    '''
+    """
+
     _fields_ = [
-          ('num_faces',  FT_Long),
-          ('face_index', FT_Long),
-
-          ('face_flags',  FT_Long),
-          ('style_flags', FT_Long),
-
-          ('num_glyphs',  FT_Long),
-
-          ('family_name', FT_String_p),
-          ('style_name',  FT_String_p),
-
-          ('num_fixed_sizes', FT_Int),
-          ('available_sizes', POINTER(FT_Bitmap_Size)),
-
-          ('num_charmaps', c_int),
-          ('charmaps',     POINTER(FT_Charmap)),
-
-          ('generic', FT_Generic),
-
-          # The following member variables (down to `underline_thickness')
-          # are only relevant to scalable outlines; cf. @FT_Bitmap_Size
-          # for bitmap fonts.
-          ('bbox', FT_BBox),
-
-          ('units_per_EM', FT_UShort),
-          ('ascender',     FT_Short),
-          ('descender',    FT_Short),
-          ('height',       FT_Short),
-
-          ('max_advance_width',  FT_Short),
-          ('max_advance_height', FT_Short),
-
-          ('underline_position',  FT_Short),
-          ('underline_thickness', FT_Short),
-
-          ('glyph',   FT_GlyphSlot),
-          ('size',    FT_Size),
-          ('charmap', FT_Charmap),
-
-          # private
-          ('driver',          c_void_p),
-          ('memory',          c_void_p),
-          ('stream',          c_void_p),
-          ('sizes_list_head', c_void_p),
-          ('sizes_list_tail', c_void_p),
-          ('autohint',        FT_Generic),
-          ('extensions',      c_void_p),
-          ('internal',        c_void_p),
+        ("num_faces", FT_Long),
+        ("face_index", FT_Long),
+        ("face_flags", FT_Long),
+        ("style_flags", FT_Long),
+        ("num_glyphs", FT_Long),
+        ("family_name", FT_String_p),
+        ("style_name", FT_String_p),
+        ("num_fixed_sizes", FT_Int),
+        ("available_sizes", POINTER(FT_Bitmap_Size)),
+        ("num_charmaps", c_int),
+        ("charmaps", POINTER(FT_Charmap)),
+        ("generic", FT_Generic),
+        # The following member variables (down to `underline_thickness')
+        # are only relevant to scalable outlines; cf. @FT_Bitmap_Size
+        # for bitmap fonts.
+        ("bbox", FT_BBox),
+        ("units_per_EM", FT_UShort),
+        ("ascender", FT_Short),
+        ("descender", FT_Short),
+        ("height", FT_Short),
+        ("max_advance_width", FT_Short),
+        ("max_advance_height", FT_Short),
+        ("underline_position", FT_Short),
+        ("underline_thickness", FT_Short),
+        ("glyph", FT_GlyphSlot),
+        ("size", FT_Size),
+        ("charmap", FT_Charmap),
+        # private
+        ("driver", c_void_p),
+        ("memory", c_void_p),
+        ("stream", c_void_p),
+        ("sizes_list_head", c_void_p),
+        ("sizes_list_tail", c_void_p),
+        ("autohint", FT_Generic),
+        ("extensions", c_void_p),
+        ("internal", c_void_p),
     ]
-FT_Face = POINTER(FT_FaceRec)
 
+
+FT_Face = POINTER(FT_FaceRec)
 
 
 # -----------------------------------------------------------------------------
 # A simple structure used to pass more or less generic parameters to
 # FT_Open_Face.
 class FT_Parameter(Structure):
-    '''
+    """
     A simple structure used to pass more or less generic parameters to
     FT_Open_Face.
 
     tag: A four-byte identification tag.
 
     data: A pointer to the parameter data
-    '''
-    _fields_ = [
-        ('tag',  FT_ULong),
-        ('data', FT_Pointer) ]
-FT_Parameter_p = POINTER(FT_Parameter)
+    """
 
+    _fields_ = [("tag", FT_ULong), ("data", FT_Pointer)]
+
+
+FT_Parameter_p = POINTER(FT_Parameter)
 
 
 # -----------------------------------------------------------------------------
@@ -853,7 +860,7 @@ FT_Parameter_p = POINTER(FT_Parameter)
 # to such a structure can be used as a parameter for the functions FT_Open_Face
 # and FT_Attach_Stream.
 class FT_Open_Args(Structure):
-    '''
+    """
     A structure used to indicate how to open a new font file or stream. A pointer
     to such a structure can be used as a parameter for the functions FT_Open_Face
     and FT_Attach_Stream.
@@ -875,24 +882,26 @@ class FT_Open_Args(Structure):
     num_params: The number of extra parameters.
 
     params: Extra parameters passed to the font driver when opening a new face.
-    '''
-    _fields_ = [
-        ('flags',        FT_UInt),
-        ('memory_base',  POINTER(FT_Byte)),
-        ('memory_size',  FT_Long),
-        ('pathname',     FT_String_p),
-        ('stream',       c_void_p),
-        ('driver',       c_void_p),
-        ('num_params',   FT_Int),
-        ('params',       FT_Parameter_p) ]
+    """
 
+    _fields_ = [
+        ("flags", FT_UInt),
+        ("memory_base", POINTER(FT_Byte)),
+        ("memory_size", FT_Long),
+        ("pathname", FT_String_p),
+        ("stream", c_void_p),
+        ("driver", c_void_p),
+        ("num_params", FT_Int),
+        ("params", FT_Parameter_p),
+    ]
 
 
 # -----------------------------------------------------------------------------
 # A structure used to model an SFNT 'name' table entry.
 
+
 class FT_SfntName(Structure):
-    '''
+    """
     platform_id: The platform ID for 'string'.
 
     encoding_id: The encoding ID for 'string'.
@@ -909,26 +918,29 @@ class FT_SfntName(Structure):
             to the TrueType specification for details.
 
     string_len: The length of 'string' in bytes.
-    '''
+    """
 
     _fields_ = [
-        ('platform_id', FT_UShort),
-        ('encoding_id', FT_UShort),
-        ('language_id', FT_UShort),
-        ('name_id',     FT_UShort),
+        ("platform_id", FT_UShort),
+        ("encoding_id", FT_UShort),
+        ("language_id", FT_UShort),
+        ("name_id", FT_UShort),
         # this string is *not* null-terminated!
-        ('string',      POINTER(FT_Byte)),
-        ('string_len',  FT_UInt) ]
-
+        ("string", POINTER(FT_Byte)),
+        ("string_len", FT_UInt),
+    ]
 
 
 # -----------------------------------------------------------------------------
 # Opaque handler to a path stroker object.
 class FT_StrokerRec(Structure):
-    '''
+    """
     Opaque handler to a path stroker object.
-    '''
-    _fields_ = [ ]
+    """
+
+    _fields_ = []
+
+
 FT_Stroker = POINTER(FT_StrokerRec)
 
 
@@ -937,14 +949,17 @@ FT_Stroker = POINTER(FT_StrokerRec)
 # FT_GlyphRec.
 #
 class FT_BitmapGlyphRec(Structure):
-    '''
+    """
     A structure used for bitmap glyph images. This really is a 'sub-class' of
     FT_GlyphRec.
-    '''
+    """
+
     _fields_ = [
-        ('root' , FT_GlyphRec),
-        ('left', FT_Int),
-        ('top', FT_Int),
-        ('bitmap', FT_Bitmap)
+        ("root", FT_GlyphRec),
+        ("left", FT_Int),
+        ("top", FT_Int),
+        ("bitmap", FT_Bitmap),
     ]
+
+
 FT_BitmapGlyph = POINTER(FT_BitmapGlyphRec)

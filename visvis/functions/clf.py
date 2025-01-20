@@ -6,19 +6,20 @@
 
 import visvis as vv
 
+
 def clf():
-    """ clf()
-    
+    """clf()
+
     Clear current figure.
-    
+
     """
     f = vv.gcf()
     f.Clear()
     return f
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Show plot
-    vv.plot([1,2,3,1,4])
+    vv.plot([1, 2, 3, 1, 4])
     # Clear the whole figure
     vv.clf()
