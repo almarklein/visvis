@@ -1,11 +1,18 @@
-import ssdf
+import os
+import sys
 
-# Load from file
-s1 = ssdf.load('test1.ssdf')
+if __name__ == "__main__":
 
-# Write to string and read back
-tmp = ssdf.saves(s1)
-s2 = ssdf.loads(tmp)
+    sys.path.insert(0, os.path.abspath(os.path.join(__file__, "..", "..", "..")))
 
-# Print, manually inspection required to see whether it matches the test file
-print(s2)
+    import ssdf
+
+    # Load from file
+    s1 = ssdf.load('test1.ssdf')
+
+    # Write to string and read back
+    tmp = ssdf.saves(s1)
+    s2 = ssdf.loads(tmp)
+
+    # Print, manually inspection required to see whether it matches the test file
+    print(s2)
